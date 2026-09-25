@@ -7,7 +7,7 @@
 
 const GEZINME = [
   { id: "arsiv", ad: "Arşiv", ikon: "▤", bolumler: [
-    ["arsiv", "Karakterler"], ["evren", "Evren"], ["kayip", "Kayıp"],
+    ["kesif", "Keşif ve arama"], ["arsiv", "Karakterler"], ["evren", "Evren"], ["kayip", "Kayıp"],
     ["bilinmeyenler", "Bilinmeyenler"] ] },
 
   { id: "baglar", ad: "Bağlar", ikon: "▥", bolumler: [
@@ -40,12 +40,10 @@ const GEZINME = [
     ["moodboard", "Moodboard"], ["degisiklik", "Değişiklik günlüğü"] ] },
 
   { id: "sen", ad: "Sen", ikon: "▭", bolumler: [
-    ["arsivci", "Arşivci kartın"], ["defter", "Defterin"], ["basarim", "Başarımlar"],
-    ["kesif", "Keşif"] ] },
+    ["arsivci", "Arşivci kartın"], ["defter", "Defterin"], ["basarim", "Başarımlar"] ] },
 ];
 
-let menuAcik = null;
-
+/* Üst şerit: her düğme kendi sayfasını açar. Bölüm listesi İçindekiler'de. */
 function gezinmeCiz() {
   const alan = document.querySelector("#gezinme");
   if (!alan) { return; }
@@ -54,22 +52,16 @@ function gezinmeCiz() {
     '<button class="gez-btn" id="icindekilerBtn" aria-label="İçindekiler">☰ İçindekiler</button>' +
     GEZINME.map(function (g, i) {
       const bu = aktifSayfa === g.id;
-      return '<div class="gez-grup">' +
-               '<button class="gez-btn' + (menuAcik === i ? " acik" : "") +
-                 (bu ? " bu-sayfa" : "") +
-                 '" data-gez-grup="' + i + '" title="' + (i + 1) + ". sayfa" + '" aria-expanded="' +
-                 (menuAcik === i ? "true" : "false") + '">' +
-                 kacir(g.ad) + "</button>" +
-               (menuAcik === i
-                 ? '<div class="gez-liste">' +
-                     g.bolumler.map(function (b) {
-                       return '<button class="gez-oge" data-gez-git="' + b[0] + '">' +
-                              kacir(b[1]) + kanonKilitIsareti(b[0]) + "</button>";
-                     }).join("") +
-                   "</div>"
-                 : "") +
-             "</div>";
+      return '<a class="gez-btn' + (bu ? " bu-sayfa" : "") + '" href="#/' + g.id + '"' +
+               ' title="' + (i + 1) + '. sayfa"' + (bu ? ' aria-current="page"' : "") + ">" +
+               kacir(g.ad) + "</a>";
     }).join("");
+
+  /* seçili sayfa şeritte görünür kalsın (mobilde şerit yatay kayar) */
+  const bu = alan.querySelector(".bu-sayfa");
+  if (bu && bu.scrollIntoView && alan.scrollWidth > alan.clientWidth) {
+    alan.scrollLeft = Math.max(0, bu.offsetLeft - (alan.clientWidth - bu.offsetWidth) / 2);
+  }
 }
 
 /* ==================== İÇİNDEKİLER PANELİ ==================== */
@@ -173,6 +165,7 @@ function aktifBolumIsaretle() {
   let aktif = null;
 
   for (let i = 0; i < bolumler.length; i++) {
+    if (bolumler[i].hidden) { continue; }   /* başka sayfanın bölümü */
     const k = bolumler[i].getBoundingClientRect ? bolumler[i].getBoundingClientRect() : null;
     if (!k) { continue; }
     if (k.top <= 120) { aktif = bolumler[i]; }
@@ -262,20 +255,10 @@ document.addEventListener("click", function (e) {
     return;
   }
 
-  const gg = e.target.closest("[data-gez-grup]");
-  if (gg) {
-    const i = parseInt(gg.dataset.gezGrup, 10);
-    menuAcik = (menuAcik === i) ? null : i;
-    gezinmeCiz();
-    return;
-  }
-
   const git = e.target.closest("[data-gez-git]");
   if (git) {
     const p = document.querySelector("#icindekiler");
     if (p) { p.remove(); }
-    menuAcik = null;
-    gezinmeCiz();
 
     const perde = document.querySelector("#perde");
     if (perde) { perde.hidden = true; }
@@ -400,22 +383,27 @@ GEZINME.forEach(function (g) { SAYFA_BASLIK[g.id] = g.ad; });
 
 const SAYFA_ANAHTARI = "tentiforapp_sayfa";
 
-/* Her sayfada kalıcı olarak görünenler: keşif, yönetici. */
-const HER_SAYFADA = ["kesif", "yonetici"];
+/* Menüde listelenmeyen ama bir sayfaya ait bölümler. Yönetici girişi
+   yalnızca "Sen" sayfasının sonunda durur, her sayfada tekrar etmez. */
+const SAYFA_GIZLI_BOLUMLER = { sen: ["yonetici"] };
+
+/* Kendi içeriği olmayan yardımcı bölümler: kanon kilidi sayımına girmez. */
+const YARDIMCI_BOLUMLER = ["kesif", "yonetici"];
 
 let aktifSayfa = null;
 
 function sayfaKimlikleri() {
   const m = {};
   GEZINME.forEach(function (g) {
-    m[g.id] = g.bolumler.map(function (b) { return b[0]; });
+    m[g.id] = g.bolumler.map(function (b) { return b[0]; })
+      .concat(SAYFA_GIZLI_BOLUMLER[g.id] || []);
   });
   return m;
 }
 
 function sayfaBolumleri(sayfa) {
   const m = sayfaKimlikleri();
-  return (m[sayfa] || []).concat(HER_SAYFADA);
+  return m[sayfa] || [];
 }
 
 /** Bilinen sayfa mı? */
@@ -452,6 +440,7 @@ function sayfaGoster(sayfa, kaydirma) {
 
   document.title = SAYFA_BASLIK[sayfa] + " — TentiforApp";
   hataSayfasiKapat();
+  sayfaBasiCiz(sayfa);
   sayfalamaCiz(sayfa);
   if (typeof kanonKilitUygula === "function") { kanonKilitUygula(); }
   gezinmeCiz();
@@ -555,6 +544,8 @@ function hataSayfasiAc(istenen) {
   if (hero) { hero.hidden = true; }
   const sc = document.querySelector("#sayfalama");
   if (sc) { sc.hidden = true; }
+  const sb = document.querySelector("#sayfaBasi");
+  if (sb) { sb.hidden = true; }
 
   document.title = "404 — TentiforApp";
 }
@@ -623,6 +614,35 @@ function gecisAnimasyonu() {
    Her sayfanın sonunda: önceki / numaralar / sonraki. */
 
 const SAYFA_SIRASI = GEZINME.map(function (g) { return g.id; });
+
+/** Sayfanın en üstündeki başlık: "3 / 10 · Dünya" ve bu sayfadaki bölümler.
+    Arşiv sayfasında hero bu işi gördüğü için gösterilmez. */
+function sayfaBasiCiz(sayfa) {
+  let c = document.querySelector("#sayfaBasi");
+  if (!c) {
+    const ana = document.querySelector("main");
+    if (!ana) { return; }
+    c = document.createElement("header");
+    c.id = "sayfaBasi";
+    c.className = "sayfa-basi";
+    ana.insertBefore(c, ana.firstChild);
+  }
+
+  const i = SAYFA_SIRASI.indexOf(sayfa);
+  const g = GEZINME[i];
+  c.hidden = !g || sayfa === "arsiv";
+  if (c.hidden) { return; }
+
+  c.innerHTML =
+    '<p class="sayfa-no">Sayfa ' + (i + 1) + " / " + SAYFA_SIRASI.length + "</p>" +
+    "<h1>" + kacir(g.ad) + "</h1>" +
+    '<div class="sayfa-icerik">' +
+      g.bolumler.map(function (b) {
+        return '<button class="sayfa-icerik-oge" data-gez-git="' + b[0] + '">' +
+                 kacir(b[1]) + kanonKilitIsareti(b[0]) + "</button>";
+      }).join("") +
+    "</div>";
+}
 
 function sayfalamaCiz(sayfa) {
   let c = document.querySelector("#sayfalama");

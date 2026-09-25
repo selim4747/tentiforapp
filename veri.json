@@ -6078,83 +6078,183 @@
           "id": "neot",
           "ad": "Neot",
           "tur": "Kıta",
-          "x": 45,
-          "y": 42,
-          "etiketX": 45,
-          "etiketY": 12,
-          "not": "Tömye'nin büyük kıtası. Blero, Yegim ve Oseg — üç ana şehrin hepsi buradadır; Etaku ve Tesru da bu kıtanın küçük yerleşimleridir."
+          "x": 34,
+          "y": 32,
+          "etiketX": 38,
+          "etiketY": 46,
+          "not": "Tömye'nin büyük kıtası. Blero, Yegim ve Oseg — üç ana şehrin hepsi buradadır; Etaku ve Tesru da bu kıtanın küçük yerleşimleridir.",
+          "sekil": [
+            [
+              8,
+              18
+            ],
+            [
+              20,
+              10
+            ],
+            [
+              36,
+              12
+            ],
+            [
+              50,
+              8
+            ],
+            [
+              62,
+              13
+            ],
+            [
+              67,
+              24
+            ],
+            [
+              61,
+              34
+            ],
+            [
+              63,
+              44
+            ],
+            [
+              53,
+              52
+            ],
+            [
+              40,
+              50
+            ],
+            [
+              30,
+              58
+            ],
+            [
+              18,
+              55
+            ],
+            [
+              9,
+              45
+            ],
+            [
+              5,
+              31
+            ]
+          ]
         },
         {
           "id": "votu",
           "ad": "Votu",
           "tur": "Kıta",
-          "x": 70,
-          "y": 84,
-          "etiketX": 70,
-          "etiketY": 94,
-          "not": "Tömye'nin ikinci kıtası. Şehir yoktur ama bir sırrı vardır: yedi bin yıl önce düşen meteorun kraterini barındırır."
+          "x": 75,
+          "y": 73,
+          "etiketX": 76,
+          "etiketY": 75,
+          "not": "Tömye'nin ikinci kıtası. Şehir yoktur. Yedi bin yıl önce düşen meteorun krateri kıyısının hemen açığında, buz okyanusunun içindedir.",
+          "sekil": [
+            [
+              60,
+              62
+            ],
+            [
+              72,
+              56
+            ],
+            [
+              85,
+              58
+            ],
+            [
+              95,
+              64
+            ],
+            [
+              96,
+              77
+            ],
+            [
+              88,
+              87
+            ],
+            [
+              74,
+              90
+            ],
+            [
+              62,
+              86
+            ],
+            [
+              55,
+              78
+            ],
+            [
+              56,
+              68
+            ]
+          ]
         },
         {
           "id": "blero",
           "ad": "Blero",
           "tur": "Şehir",
-          "x": 46,
-          "y": 30,
+          "x": 40,
+          "y": 27,
           "not": "Tömye Kütüphanesi burada. Deniz aşırı bir şehir — ama arada duran deniz katı."
         },
         {
           "id": "oseg",
           "ad": "Oseg",
           "tur": "Şehir",
-          "x": 30,
-          "y": 66,
+          "x": 22,
+          "y": 48,
           "not": "Neot kıtasının üçüncü şehri. Yalnızca coğrafi doldurma değil — bazı hikâyeler ileride burada geçecek."
         },
         {
           "id": "buz",
           "ad": "Buz Okyanusu",
           "tur": "Su",
-          "x": 50,
-          "y": 52,
-          "not": "Mevsimlerden etkilenmez, hep donuktur. Şehirler arası ulaşım üstünden yapılır."
+          "x": 32,
+          "y": 78,
+          "not": "Mevsimlerden etkilenmez, hep donuktur. Neot ile Votu arasındaki her şey onun parçasıdır; şehirler arası ulaşım üstünden yapılır."
         },
         {
           "id": "ada1",
           "ad": "Volkanik Adalar",
           "tur": "Ada",
-          "x": 24,
-          "y": 52,
+          "x": 14,
+          "y": 68,
           "not": "Buz okyanusunun ortasına serpilmiş küçük kara parçaları."
         },
         {
           "id": "ada2",
           "ad": "Kayalık Adalar",
           "tur": "Ada",
-          "x": 80,
-          "y": 50,
+          "x": 84,
+          "y": 36,
           "not": "Düz kayalık. Buza delik açıp dalanların uğrak yeri."
         },
         {
           "id": "yegim",
           "ad": "Yegim",
           "tur": "Şehir",
-          "x": 68,
-          "y": 52,
+          "x": 55,
+          "y": 38,
           "not": "Saek'in ve Kyldo Zarın'ın şehri. Bir market, bir laboratuvar ve yıllarca kimsenin bağlantı kuramadığı iki adam. Aynı şehirde yaşadıkları için karşılaşmaları kaçınılmazdı."
         },
         {
           "id": "dere",
           "ad": "Geçiş Deresi",
           "tur": "Bölge",
-          "x": 34,
-          "y": 44,
+          "x": 28,
+          "y": 38,
           "not": "Blero yakınında bir dere. İki ayrı karakter, birbirinden habersiz, burada huzur arar."
         },
         {
           "id": "ax24",
           "ad": "Ax-24",
           "tur": "Uzak",
-          "x": 88,
+          "x": 86,
           "y": 14,
           "not": "Başka bir gezegen. Gücünü bırakan biri burada sıradan bir hayat sürüyor."
         },
@@ -6162,7 +6262,7 @@
           "id": "orman",
           "ad": "Gırı Ormanları",
           "tur": "Bölge",
-          "x": 32,
+          "x": 24,
           "y": 20,
           "not": "Bir zamanlar galaksiyi gezen türün bugün hayvan olarak yaşadığı yer."
         },
@@ -6170,24 +6270,24 @@
           "id": "etaku",
           "ad": "Etaku",
           "tur": "Küçük Yerleşim",
-          "x": 58,
-          "y": 22,
+          "x": 52,
+          "y": 17,
           "not": "Neot kıtasının küçük yerleşimlerinden biri. Üç büyük şehrin gölgesinde kalır."
         },
         {
           "id": "tesru",
           "ad": "Tesru",
           "tur": "Küçük Yerleşim",
-          "x": 20,
-          "y": 36,
+          "x": 14,
+          "y": 33,
           "not": "Neot kıtasının küçük yerleşimlerinden biri. Üç büyük şehrin gölgesinde kalır."
         },
         {
           "id": "meteor",
           "ad": "Meteor Krateri",
           "tur": "Bölge",
-          "x": 66,
-          "y": 80,
+          "x": 46,
+          "y": 73,
           "not": "Yedi bin yıl önce düşen radyoaktif meteorun izi. Geriye kalan küçük taşa radyasyonu yüzünden hâlâ yaklaşılamaz — Beyaz Taşlarla hiçbir ilgisi yoktur.",
           "baslangic": -7000
         }

@@ -553,7 +553,7 @@ function haritaYolSvg(h, kar, adimlar, w, hh, cx, cy, k, t0, t1) {
 
 /* ---------- sahne ---------- */
 
-function haritaIsaret(y, sx, sy, secili, etkilesim, hayalet) {
+function haritaIsaret(y, sx, sy, secili, etkilesim, hayalet, etiketsiz) {
   const sinif = haritaTurSinifi(y.tur);
   const r = (HARITA_ISARET_R[sinif] || 6) + (secili ? 3 : 0);
   return '<g class="hm-nokta t-' + sinif + (secili ? " secili" : "") + (hayalet ? " hayalet" : "") + (y.gecit ? " gecit" : "") + '"' +
@@ -563,8 +563,23 @@ function haritaIsaret(y, sx, sy, secili, etkilesim, hayalet) {
            (secili ? '<circle class="hm-halka" r="' + (r + 6) + '"/>' : "") +
            (y.gecit ? '<circle class="hm-gecit" r="' + (r + 5) + '"/>' : "") +
            '<circle class="hm-nkt" r="' + r + '"/>' +
-           '<text y="' + (-(r + 7)) + '" text-anchor="middle">' + kacir(y.ad) + "</text>" +
+           (etiketsiz ? "<title>" + kacir(y.ad) + "</title>"
+                      : '<text y="' + (-(r + 7)) + '" text-anchor="middle">' + kacir(y.ad) + "</text>") +
          "</g>";
+}
+
+/* Etiket önceliği: sığmayanlar arasında önce düşük öncelikli olanların adı gizlenir. */
+const HARITA_ETIKET_ONCELIK = { sehir: 1, su: 2, bolge: 3, ada: 4, kucuk: 5, uzak: 6, diger: 7 };
+
+/** Etiket kutusu (piksel): yazı işaretin üstünde, ortalı. Mono 12px ≈ 7.3px/harf. */
+function haritaEtiketKutusu(y, sx, sy, secili) {
+  const r = (HARITA_ISARET_R[haritaTurSinifi(y.tur)] || 6) + (secili ? 3 : 0);
+  const gen = String(y.ad || "").length * 7.3 + 6;
+  return { x0: sx - gen / 2, x1: sx + gen / 2, y0: sy - r - 21, y1: sy - r - 3, nx: sx, ny: sy, nr: r };
+}
+
+function haritaKutuCakisir(a, b) {
+  return a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
 }
 
 /** Düzenleme tutamaçları: seçili kıtanın köşeleri, ortası ve orta noktaları. */
@@ -622,7 +637,7 @@ function haritaSahne(h, w, hh, cx, cy, k, sec) {
   let gece = "";
   if (sec.gece && m.gunSaat) { gece = haritaGeceSvg(m, sec.gece.saat, sec.gece.yilKesri, cx, yarim); }
 
-  const kitaAd = [], isaretler = [], ustte = [];
+  const kitaAd = [], isaretler = [], ustte = [], adaylar = [], kitaKutular = [];
   for (let t = t0; t <= t1; t++) {
     yerler.forEach(function (y) {
       if (durum[y.id] === "gizli") { return; }
@@ -636,6 +651,7 @@ function haritaSahne(h, w, hh, cx, cy, k, sec) {
         if (ax < -160 || ax > w + 160 || ay < -40 || ay > hh + 40) { return; }
         const ad = String(y.ad || "").toLocaleUpperCase("tr");
         const gen = Math.max(60, ad.length * 13);
+        kitaKutular.push({ x0: ax - gen / 2, x1: ax + gen / 2, y0: ay - 16, y1: ay + 6 });
         kitaAd.push('<g class="hm-kita-g' + (hayalet ? " hayalet" : "") + '"' + (sec.etkilesim ? ' data-hyer="' + kacir(y.id) + '"' : "") + ">" +
           (sec.etkilesim ? '<rect class="hm-vuru" x="' + (ax - gen / 2).toFixed(1) + '" y="' + (ay - 16).toFixed(1) +
                            '" width="' + gen + '" height="28"/>' : "") +
@@ -645,9 +661,25 @@ function haritaSahne(h, w, hh, cx, cy, k, sec) {
       if (haritaGizliTurler[y.tur]) { return; }
       if (sx < -120 || sx > w + 120 || sy < -50 || sy > hh + 50) { return; }
       const secili = !!sec.etkilesim && haritaSecili === y.id;
-      (secili ? ustte : isaretler).push(haritaIsaret(y, sx, sy, secili, !!sec.etkilesim, hayalet));
+      adaylar.push({ y: y, sx: sx, sy: sy, secili: secili, hayalet: hayalet,
+                     oncelik: secili ? 0 : (HARITA_ETIKET_ONCELIK[haritaTurSinifi(y.tur)] || 9) });
     });
   }
+
+  /* Uzaklaştırınca adlar üst üste binmesin: öncelik sırasıyla yerleştir,
+     çakışan etiketi gizle (nokta kalır, yakınlaşınca adı geri gelir). */
+  adaylar.sort(function (a, b) { return a.oncelik - b.oncelik; });
+  const yerlesen = kitaKutular.slice();
+  adaylar.forEach(function (a) {
+    const kutu = haritaEtiketKutusu(a.y, a.sx, a.sy, a.secili);
+    const cakisir = !a.secili && yerlesen.some(function (b) {
+      return haritaKutuCakisir(kutu, b) ||
+             /* başka bir işaretin noktasını da örtmesin */
+             (b.nr && haritaKutuCakisir(kutu, { x0: b.nx - b.nr, x1: b.nx + b.nr, y0: b.ny - b.nr, y1: b.ny + b.nr }));
+    });
+    if (!cakisir) { yerlesen.push(kutu); }
+    (a.secili ? ustte : isaretler).push(haritaIsaret(a.y, a.sx, a.sy, a.secili, !!sec.etkilesim, a.hayalet, cakisir));
+  });
 
   let yol = "";
   if (sec.yol) {
@@ -820,7 +852,9 @@ function haritaSinirla() {
 }
 
 function haritaKMin() {
-  return HT.donen ? HT.h / 100 : Math.max(HT.h, HT.w) / 100;   /* düz evren: tamamı ekranı doldursun */
+  /* En uzak görünümde de gezegen yan yana tekrar etmesin: geniş ekranda genişliğe,
+     dar ekranda yüksekliğe göre sığar. Düz evrende de tamamı ekranı doldurur. */
+  return Math.max(HT.h, HT.w) / 100;
 }
 
 function haritaTamOlcu(ilk) {
@@ -951,6 +985,16 @@ function haritaSeciliYer() {
   return (haritaSecili && h) ? (h.yerler || []).find(function (y) { return y.id === haritaSecili; }) || null : null;
 }
 
+/** Kıtanın tamamı ekrana sığacak yakınlık (kıyı çizgisi yoksa eski sabit oran). */
+function haritaKitaSigdir(y) {
+  if (!y.sekil || y.sekil.length < 3) { return HT.kMin * 1.8; }
+  const xs = y.sekil.map(function (p) { return p[0]; });
+  const ys = y.sekil.map(function (p) { return p[1]; });
+  const gen = Math.max.apply(null, xs) - Math.min.apply(null, xs) + 8;
+  const yuk = Math.max.apply(null, ys) - Math.min.apply(null, ys) + 8;
+  return haritaKis(Math.min(HT.w / gen, HT.h / yuk), HT.kMin, HT.kMax);
+}
+
 /** Bir yeri seçer, bilgi kartını açar ve ona uçar. yakin: yere doğru belirgin yakınlaş. */
 function haritaYereGit(id, yakin) {
   const h = aktifHarita();
@@ -962,7 +1006,7 @@ function haritaYereGit(id, yakin) {
   if (HT.panel && window.matchMedia && window.matchMedia("(max-width:719px)").matches) { HT.panel = false; haritaPanelCiz(); }
   haritaBilgiCiz();
   let k = HT.k;
-  if (yakin) { k = (y.tur === "Kıta") ? HT.kMin * 1.8 : Math.max(HT.k, HT.kMin * 3.5); }
+  if (yakin) { k = (y.tur === "Kıta") ? haritaKitaSigdir(y) : Math.max(HT.k, HT.kMin * 3.5); }
   /* Yer, bilgi kartının altında kalmasın diye ekranın üst yarısına yerleşir. */
   haritaGecis(y.x, y.y + 0.1 * HT.h / k, k, 520);
 }
@@ -1595,7 +1639,9 @@ function haritaTamHaritaYukle() {
   HT.kMax = HT.kMin * 10;
   const b = haritaBaslangicNoktasi(h);
   HT.cx = b.x; HT.cy = b.y;
-  HT.k = HT.h / 50;                     /* başlangıçta yaklaşık 50 birimlik yükseklik görünür */
+  /* Açılışta yerler iç içe görünmesin ama kıta da ekrana sığsın:
+     yaklaşık 50 birim yükseklik ya da 60 birim genişlik, hangisi daha genişse. */
+  HT.k = Math.max(HT.kMin, Math.min(HT.h / 50, HT.w / 60));
   haritaSinirla();
   haritaTamBaslikDoldur();
   haritaTamLejantCiz();

@@ -149,7 +149,7 @@ function kanonKilitUygula() {
     if (kilitli(b)) { b.classList.add("kanon-kilitli"); }
   });
 
-  const ortak = (typeof HER_SAYFADA !== "undefined") ? HER_SAYFADA : [];
+  const ortak = (typeof YARDIMCI_BOLUMLER !== "undefined") ? YARDIMCI_BOLUMLER : [];
   const gorunen = hepsi.filter(function (b) { return !b.hidden && b.id !== "yokSayfa" && ortak.indexOf(b.id) === -1; });
   const kilitliler = gorunen.filter(kilitli);
   if (!kilitliler.length) { return; }

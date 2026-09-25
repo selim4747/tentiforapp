@@ -1923,24 +1923,13 @@ html[data-ayar-duzenleme="1"] .madde{outline:1px dotted var(--sig);outline-offse
   backdrop-filter:blur(8px);border-bottom:1px solid var(--buz);padding:9px 14px;
 }
 .gezinme::-webkit-scrollbar{display:none}
-.gez-grup{position:relative;flex-shrink:0}
 .gez-btn{
   cursor:pointer;white-space:nowrap;font-family:var(--mono);font-size:11px;
   letter-spacing:.06em;background:transparent;color:var(--murekkep-2);
   border:1px solid transparent;border-radius:2px;padding:7px 11px;transition:.16s;
 }
 .gez-btn:hover{color:var(--deniz)}
-.gez-btn.acik{color:var(--deniz);border-color:var(--buz);background:var(--beyaz)}
-.gez-liste{
-  position:absolute;top:calc(100% + 6px);left:0;z-index:50;min-width:180px;
-  background:var(--beyaz);border:1px solid var(--sig);border-radius:3px;
-  box-shadow:0 8px 24px rgba(13,53,96,.14);padding:5px;
-}
-.gez-oge{
-  display:block;width:100%;text-align:left;cursor:pointer;font:inherit;font-size:14px;
-  background:transparent;color:var(--murekkep);border:none;border-radius:2px;padding:9px 11px;
-}
-.gez-oge:hover{background:var(--buz);color:var(--deniz)}
+a.gez-btn{display:inline-block;flex-shrink:0;text-decoration:none}
 
 .aktif-serit{
   position:sticky;top:44px;z-index:35;padding:0 14px;pointer-events:none;
@@ -2018,6 +2007,22 @@ html[data-ayar-duzenleme="1"] .madde{outline:1px dotted var(--sig);outline-offse
 .gez-btn.bu-sayfa{
   color:var(--deniz);background:var(--buz);border-color:var(--sig);font-weight:700;
 }
+
+/* ================= SAYFA BAŞI ================= */
+.sayfa-basi{max-width:var(--en);margin:0 auto;padding:46px 22px 10px}
+.sayfa-basi[hidden]{display:none}
+.sayfa-no{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--deniz);margin-bottom:8px;
+}
+.sayfa-basi h1{font-family:var(--display);font-weight:400;font-size:clamp(38px,7vw,64px);line-height:1.05}
+.sayfa-icerik{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+.sayfa-icerik-oge{
+  cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.04em;
+  background:transparent;color:var(--murekkep-2);border:1px solid var(--buz);border-radius:2px;padding:6px 10px;
+}
+.sayfa-icerik-oge:hover{color:var(--deniz);border-color:var(--sig)}
+.sayfa-basi + .bolum,.sayfa-basi ~ .hero[hidden] + .bolum{border-top:1px solid var(--buz)}
 
 /* ================= SAYFALAMA ÇUBUĞU ================= */
 .sayfalama{
@@ -2191,7 +2196,7 @@ main.sayfa-girdi{animation:sayfaGir .22s ease-out}
 /* ================= YAZDIRMA ================= */
 @media print{
   .gezinme,.aktif-serit,.ust-satir,.duzenle-cubuk,.ilerleme,.yukari-btn,
-  #icindekilerBtn,.hero-eylem,.oyun-sekme,.filtre,.dc-btn,.dugme,.gez-liste,
+  #icindekilerBtn,.hero-eylem,.oyun-sekme,.filtre,.dc-btn,.dugme,.sayfalama,.sayfa-icerik,
   .vurgu-balon,#kesif,.arac-blok:has(#brifingAlan),section#yonetici,section#kesif,
   .kart-onizleme,.okuma-sure,.pencere-geri,.pencere-kapat,.ic-bag,.capraz{display:none !important}
   html[data-ayar-tema]{--kar:#fff;--beyaz:#fff;--buz:#eee;--murekkep:#000;--murekkep-2:#333}

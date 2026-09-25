@@ -438,6 +438,13 @@ document.addEventListener("keydown", function (e) {
   if (e.key === "/") {
     e.preventDefault();
     const g = document.querySelector("#aramaGiris");
+    const k = document.querySelector("#kesif");
+    /* arama kutusu Arşiv sayfasında; başka sayfadaysan önce oraya geç */
+    if (k && k.hidden && typeof sayfayaGit === "function") {
+      sayfayaGit("arsiv");
+      setTimeout(function () { const g2 = document.querySelector("#aramaGiris"); if (g2) { g2.focus(); } }, 120);
+      return;
+    }
     if (g) { g.focus(); }
     return;
   }

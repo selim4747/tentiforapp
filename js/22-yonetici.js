@@ -1469,10 +1469,11 @@ function yayilmaDenetimi() {
   /* 6. SAYFALAMA: her bölüm bir sayfaya atanmış mı?
      Bu kontrol olmadığı için Başarımlar ve Değişiklik günlüğü bir süre
      tamamen erişilemez kalmıştı. */
-  if (typeof GEZINME !== "undefined" && typeof HER_SAYFADA !== "undefined") {
-    const atanmis = new Set(HER_SAYFADA);
-    GEZINME.forEach(function (g) {
-      g.bolumler.forEach(function (b) { atanmis.add(b[0]); });
+  if (typeof sayfaKimlikleri === "function") {
+    const atanmis = new Set();
+    const m = sayfaKimlikleri();
+    Object.keys(m).forEach(function (sf) {
+      m[sf].forEach(function (id) { atanmis.add(id); });
     });
 
     document.querySelectorAll("section.bolum").forEach(function (s) {
