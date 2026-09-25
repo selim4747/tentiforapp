@@ -6148,9 +6148,9 @@
           "tur": "Kıta",
           "x": 75,
           "y": 73,
-          "etiketX": 76,
-          "etiketY": 75,
-          "not": "Tömye'nin ikinci kıtası. Şehir yoktur. Yedi bin yıl önce düşen meteorun krateri kıyısının hemen açığında, buz okyanusunun içindedir.",
+          "etiketX": 74,
+          "etiketY": 76,
+          "not": "Tömye'nin ikinci kıtası. Şehir yoktur; Gırı Ormanları buradadır. Bir de sırrı vardır: yedi bin yıl önce düşen meteorun kraterini barındırır.",
           "sekil": [
             [
               60,
@@ -6251,19 +6251,11 @@
           "not": "Blero yakınında bir dere. İki ayrı karakter, birbirinden habersiz, burada huzur arar."
         },
         {
-          "id": "ax24",
-          "ad": "Ax-24",
-          "tur": "Uzak",
-          "x": 86,
-          "y": 14,
-          "not": "Başka bir gezegen. Gücünü bırakan biri burada sıradan bir hayat sürüyor."
-        },
-        {
           "id": "orman",
           "ad": "Gırı Ormanları",
           "tur": "Bölge",
-          "x": 24,
-          "y": 20,
+          "x": 67,
+          "y": 65,
           "not": "Bir zamanlar galaksiyi gezen türün bugün hayvan olarak yaşadığı yer."
         },
         {
@@ -6286,8 +6278,8 @@
           "id": "meteor",
           "ad": "Meteor Krateri",
           "tur": "Bölge",
-          "x": 46,
-          "y": 73,
+          "x": 85,
+          "y": 79,
           "not": "Yedi bin yıl önce düşen radyoaktif meteorun izi. Geriye kalan küçük taşa radyasyonu yüzünden hâlâ yaklaşılamaz — Beyaz Taşlarla hiçbir ilgisi yoktur.",
           "baslangic": -7000
         }
@@ -6297,6 +6289,16 @@
         "donen": true,
         "takvim": "tomye"
       }
+    },
+    {
+      "id": "ax24",
+      "ad": "Ax-24",
+      "aciklama": "Tömye ile aynı sistemdeki başka bir gezegen. Başka bir gezegen. Gücünü bırakan biri burada sıradan bir hayat sürüyor.",
+      "evren": {
+        "tur": "gezegen",
+        "donen": true
+      },
+      "yerler": []
     },
     {
       "id": "e26",
