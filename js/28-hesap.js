@@ -150,6 +150,9 @@ function hesapBildir(m) { if (typeof eckaBildir === "function") { eckaBildir(m);
 
 function kullaniciAdiGecerli(a) { return /^[a-z0-9_]{3,20}$/.test(a); }
 
+/** Yazılan kullanıcı adını sadeleştirir: "Selİm" → "selim", "Şule" → "sule". */
+function kullaniciAdiSade(a) { return trNormal(String(a || "").trim()); }
+
 /** Türkçe harfleri sadeleştirip kullanıcı adı önerir: "Selim K." → "selim_k" */
 function kullaniciAdiOner(ad) {
   return trNormal(String(ad || "")).replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 20);
@@ -168,7 +171,9 @@ function hesapHataMetni(hata) {
     [/unable to validate email|invalid email|email address .* is invalid/i, "Geçerli bir e-posta adresi yaz."],
     [/same password|should be different/i, "Yeni şifre eskisiyle aynı olamaz."],
     [/database error saving new user|duplicate key|profiller_kullanici_adi_key/i, "Bu kullanıcı adı alınmış. Başka bir ad seç."],
-    [/failed to fetch|network/i, "Bağlantı kurulamadı. İnternetini kontrol et."]
+    [/failed to fetch|network/i, "Bağlantı kurulamadı. İnternetini kontrol et."],
+    [/schema cache|could not find the (table|column)|relation .* does not exist/i,
+      "Veritabanı kurulumu eksik: Supabase'de supabase/kurulum.sql dosyası çalıştırılmalı."]
   ];
   for (let i = 0; i < esle.length; i++) { if (esle[i][0].test(m)) { return esle[i][1]; } }
   return m || "Bir şeyler ters gitti.";
@@ -325,7 +330,7 @@ async function hesapFormGonder(tur, form) {
 
     if (tur === "kayit") {
       const ad = al("hKayitAd");
-      const kadi = al("hKayitKullanici").toLowerCase();
+      const kadi = kullaniciAdiSade(al("hKayitKullanici"));
       const sifre = form.querySelector("#hKayitSifre").value;
       if (!ad) { hesapDurum("Görünen ad gerekli."); return; }
       if (!kullaniciAdiGecerli(kadi)) { hesapDurum("Kullanıcı adı 3–20 karakter olmalı: küçük harf, rakam ya da _."); return; }
@@ -629,7 +634,7 @@ function hesapEsitDurumCiz() {
 
 async function hesapProfilKaydet(form) {
   const al = function (id) { return (form.querySelector("#" + id) || {}).value || ""; };
-  const kadi = al("hpKadi").trim().toLowerCase();
+  const kadi = kullaniciAdiSade(al("hpKadi"));
   const durum = form.querySelector("#hesapProfilDurum");
   const yaz = function (m, iyi) { if (durum) { durum.textContent = m; durum.className = "pencere-durum " + (iyi ? "iyi" : "kotu"); } };
 
@@ -776,7 +781,7 @@ document.addEventListener("input", function (e) {
   }
   if (e.target.id !== "hKayitKullanici") { return; }
   if (e.isTrusted) { e.target.dataset.eliyle = "1"; }
-  const deger = e.target.value.trim().toLowerCase();
+  const deger = kullaniciAdiSade(e.target.value);
   const durum = document.querySelector("#hKayitKullaniciDurum");
   if (!durum) { return; }
   clearTimeout(hesapKayitAdKontrol);
@@ -785,7 +790,7 @@ document.addEventListener("input", function (e) {
   durum.textContent = "kontrol ediliyor…"; durum.className = "hesap-ipucu";
   hesapKayitAdKontrol = setTimeout(async function () {
     const bos = await hesapKullaniciAdiBos(deger);
-    if (document.querySelector("#hKayitKullanici") && document.querySelector("#hKayitKullanici").value.trim().toLowerCase() !== deger) { return; }
+    if (document.querySelector("#hKayitKullanici") && kullaniciAdiSade(document.querySelector("#hKayitKullanici").value) !== deger) { return; }
     durum.textContent = bos === false ? "alınmış" : "@" + deger + " uygun";
     durum.className = "hesap-ipucu " + (bos === false ? "kotu" : "iyi");
   }, 400);
