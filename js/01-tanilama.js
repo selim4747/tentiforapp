@@ -13,6 +13,10 @@
     var anahtar = baslik + mesaj;
     if (goruldu[anahtar]) { return; }
     goruldu[anahtar] = true;
+    /* yöneticiye de gitsin (32-bakim.js hazır değilse kuyrukta bekler) */
+    var kayit = { baslik: baslik, mesaj: mesaj, yigin: yigin || "" };
+    if (typeof window.hataGonder === "function") { window.hataGonder(kayit); }
+    else { (window.__hataKuyrugu = window.__hataKuyrugu || []).push(kayit); }
     function kur() {
       var kutu = document.getElementById("tanilamaSeridi");
       if (!kutu) {

@@ -3272,6 +3272,31 @@
       "id": "tumYazilar",
       "ad": "Kyldo Okuru",
       "not": "Yazı Çözme'yi hem oku hem yaz modunda zor seviyede bitir."
+    },
+    {
+      "id": "gk7",
+      "ad": "Yedi Sabah",
+      "not": "Günün Kelimesi'ni 7 gün üst üste bul."
+    },
+    {
+      "id": "kyldo100",
+      "ad": "Kyldo Kâtibi",
+      "not": "Kyldo Hız Çevirisi'nde toplam 100 kelime çevir."
+    },
+    {
+      "id": "tumYarislar",
+      "ad": "Yarış Ustası",
+      "not": "Bütün yarışlarda en az bir kez puan al."
+    },
+    {
+      "id": "ilkKasif",
+      "ad": "İlk Kâşif",
+      "not": "Yeni eklenen bir içeriği ilk açan 10 kişiden biri ol."
+    },
+    {
+      "id": "kanonTeori",
+      "ad": "Kanon Yazarı",
+      "not": "Bir teorin yazar tarafından kanon olarak işaretlensin."
     }
   ],
   "yaziTipleri": [
