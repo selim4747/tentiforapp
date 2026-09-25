@@ -3077,3 +3077,58 @@ html[data-site-tema~="oyunbozan"][data-site-tema~="katiller"] .ust{
 .isim-kart-yol{margin-top:10px}
 .isim-kart-yol button{display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}
 .isim-kart-yol-ad{font-size:9px;letter-spacing:.08em;opacity:.7;text-transform:lowercase}
+
+/* ================= HESAP ================= */
+.hesap-btn{
+  flex-shrink:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  min-width:34px;height:34px;padding:0 10px;border-radius:17px;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;
+  color:var(--beyaz);background:var(--deniz);border:1px solid var(--deniz);transition:.16s;
+}
+html[data-hesap="acik"] .hesap-btn{padding:0;background:transparent;border-color:var(--sig)}
+.hesap-btn:hover,.hesap-btn:focus-visible{filter:brightness(1.1)}
+/* dar ekranda başlık taşmasın: rastgele düğmesi hero'da ve "r" kısayolunda zaten var */
+@media(max-width:460px){
+  html[data-hesap] #rastgeleBtn{display:none}
+  html[data-hesap] .ust{gap:10px;padding:0 12px}
+}
+.hesap-avatar{
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:50%;
+  background:var(--beyaz);border:1px solid var(--sig);color:var(--deniz);
+  font-family:var(--display);font-size:18px;overflow:hidden;
+}
+.hesap-avatar .yz-hece{width:80%;height:80%}
+.hesap-pencere form{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.hesap-pencere .kod-giris{margin-bottom:6px}
+.hesap-etiket{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--murekkep-2);margin-top:4px}
+.hesap-ipucu{font-family:var(--mono);font-size:11px;color:var(--murekkep-2);margin:-4px 0 4px;min-height:14px}
+.hesap-ipucu.iyi{color:var(--deniz)}
+.hesap-ipucu.kotu,.pencere-durum.kotu{color:#A33}
+.hesap-alt{margin-top:14px;font-size:14px;text-align:center}
+.hesap-bilgi{font-size:16px;line-height:1.55}
+.hesap-secim{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.hesap-secim .dugme{display:flex;flex-direction:column;gap:3px;text-align:left;align-items:flex-start}
+.hesap-secim .dugme span{font-size:10px;letter-spacing:.04em;opacity:.8;text-transform:none}
+.hesap-kutu{background:var(--beyaz);border:1px solid var(--buz);border-radius:3px;padding:18px}
+.hesap-kimlik{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.hesap-ad{font-family:var(--display);font-size:28px;line-height:1.1}
+.hesap-kadi{font-family:var(--mono);font-size:12px;color:var(--deniz);margin-top:2px}
+.hesap-tentifor{font-size:15px;margin:6px 0}
+.hesap-tentifor-blok{margin:10px 0 4px}
+.hesap-hakkinda{font-size:16px;line-height:1.55;margin:8px 0 12px;white-space:pre-line}
+.hesap-duzen{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.hesap-esit{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:16px 0 6px;padding-top:12px;border-top:1px solid var(--buz)}
+.hesap-esit .oyun-etiket{margin:0}
+#hesapEsitDurum{font-family:var(--mono);font-size:11px;color:var(--murekkep-2);flex:1}
+.hesap-ozet{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin:14px 0}
+.hesap-ozet div{display:flex;flex-direction:column;gap:2px;border:1px solid var(--buz);border-radius:2px;padding:10px}
+.hesap-ozet .oyun-etiket{margin:0}
+.hesap-ozet b{font-family:var(--display);font-weight:400;font-size:20px}
+.hesap-madalya{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}
+.hesap-madalya span{font-family:var(--mono);font-size:11px;border:1px solid var(--sig);border-radius:2px;padding:4px 8px;color:var(--yarik)}
+@media(max-width:380px){
+  html[data-hesap] .ust{gap:8px;padding:0 10px}
+  html[data-hesap] .kod-btn{padding:8px 10px}
+  html[data-hesap] .marka-ad{font-size:19px}
+  html[data-hesap] .ust-ikon{padding:8px 9px}
+}

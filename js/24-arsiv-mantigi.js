@@ -770,6 +770,7 @@ veriKaynak
       ["günlük özet", function () { if (typeof gunlukOzetCiz === "function") { gunlukOzetCiz(); } }],
       ["gezinme", function () { gezinmeCiz(); ilerlemeKur(); gecCizimKur(); }],
       ["sayfalama", sayfaYonlendir],
+      ["hesap", function () { if (typeof hesapBaslat === "function") { hesapBaslat(); } }],
       ["bağlantı", baglantiyiUygula]
     ];
 

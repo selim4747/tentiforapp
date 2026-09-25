@@ -346,7 +346,10 @@ function sifirlamaCiz() {
 }
 
 function tumunuSifirla() {
-  if (!confirm("Tüm ilerlemen silinecek ve site sıfırdan başlayacak.\n\nEmin misin?")) { return; }
+  const hesapli = typeof hesapKullanici !== "undefined" && hesapKullanici;
+  if (!confirm("Tüm ilerlemen silinecek ve site sıfırdan başlayacak." +
+               (hesapli ? "\n\nGiriş yaptığın için hesabındaki ilerleme de sıfırlanacak." : "") +
+               "\n\nEmin misin?")) { return; }
   if (!confirm("Son uyarı: bu işlem geri alınamaz. Devam edilsin mi?")) { return; }
 
   TUM_ANAHTARLAR.forEach(function (a) {
@@ -360,6 +363,8 @@ function tumunuSifirla() {
       if (k.indexOf("tentiforapp") === 0) { window.localStorage.removeItem(k); }
     });
   } catch (e) { /* sandbox */ }
+
+  if (typeof hesapSifirlandi === "function") { hesapSifirlandi(); }
 
   location.hash = "";
   location.reload();

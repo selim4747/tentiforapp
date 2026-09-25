@@ -40,7 +40,7 @@ const GEZINME = [
     ["moodboard", "Moodboard"], ["degisiklik", "Değişiklik günlüğü"] ] },
 
   { id: "sen", ad: "Sen", ikon: "▭", bolumler: [
-    ["arsivci", "Arşivci kartın"], ["defter", "Defterin"], ["basarim", "Başarımlar"] ] },
+    ["hesap", "Hesabın"], ["arsivci", "Arşivci kartın"], ["defter", "Defterin"], ["basarim", "Başarımlar"] ] },
 ];
 
 /* Üst şerit: her düğme kendi sayfasını açar. Bölüm listesi İçindekiler'de. */
@@ -466,6 +466,13 @@ function sayfaYonlendir() {
 
   const parca = h.split("/");
   const bas = parca[0];
+
+  /* herkese açık profil: #/u/kullaniciadi — bulunduğun sayfanın üstünde açılır */
+  if (bas === "u") {
+    if (!aktifSayfa) { sayfaGoster("arsiv", false); }
+    if (typeof hesapProfilAc === "function") { hesapProfilAc(parca[1] || ""); }
+    return;
+  }
 
   /* derin bağlantılar: #/karakter/tari, #/evren/xxx, #/meydan/... */
   if (["karakter", "evren", "meydan"].indexOf(bas) !== -1) {
