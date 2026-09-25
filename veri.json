@@ -6306,22 +6306,49 @@
   "profiller": [
     {
       "id": "p_baslangic",
-      "ad": "Başlangıç",
-      "selamlama": "Hoş geldin! Evren ve Karakter Arşivi açıldı.",
-      "dogrulama": "425be75851b3f325d1c76deaa3adf8bedc0bc44f8d2a31432162df4d673dc747",
-      "anahtarlar": {},
+      "ad": "Samikoooooş",
+      "selamlama": "Naber lan İbneeeeee!",
+      "dogrulama": "8b4e40726588d5c9e614d4f1b4d2ca9788c248c413434dfafba209a6fc48a3fc",
+      "anahtarlar": {
+        "son": "fwf6/OJBgS1yNmTh",
+        "kimlik": "fwf6/OJBgi0AIwKX",
+        "tas": "fwf6/OJBgy1/NGGF",
+        "kutuphane": "fwf6/OJBhC0DOQeb",
+        "kenar": "fwf6/OJBhS0ZLA2Z",
+        "kitap": "fwf6/OJBhi0dJQaR",
+        "kanon": "eBz874JC+0EFIXs="
+      },
       "erisim": {
         "bolumler": [
+          "arsiv",
           "evren",
-          "arsiv"
+          "aile",
+          "ag",
+          "zaman",
+          "harita",
+          "yankilar",
+          "karsi",
+          "sozluk",
+          "bilinmeyenler",
+          "yapimlar",
+          "roman",
+          "mektuplar",
+          "alintilar",
+          "hikaye",
+          "kisaHikayeler",
+          "olaylar",
+          "kayip",
+          "notlar",
+          "sohbet"
         ],
         "evrenler": [
-          "tomye"
+          "tomye",
+          "e26"
         ]
       },
-      "kodSifreli": "CZFWMzcQzEz0oQ=="
+      "kodSifreli": "CZFWMzcZoCqM1rAcZQ=="
     }
   ],
   "baslangicProfil": "p_baslangic",
-  "baslangicKodu": "TNTF-BASLA"
+  "baslangicKodu": "TNTF-K-546JVV"
 }
