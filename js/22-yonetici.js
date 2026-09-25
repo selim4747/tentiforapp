@@ -227,7 +227,7 @@ function yoneticiDisaAktar() {
 const Y_GRUPLARI = {
   icerik: { ad: "İçerik", sekmeler: ["karakterler", "evren", "roman", "haritaDuzen", "yollar", "kisiler", "basin", "anahtarlar", "bosluklar"] },
   ekle:   { ad: "Ekle",   sekmeler: ["hizli", "yapimEkle", "olayEkle", "hikayeEkle", "gorselEkle", "sesEkle", "dosyaEkle"] },
-  bakim:  { ad: "Bakım",  sekmeler: ["denetim", "yayilma", "araclar", "test", "kaydet"] },
+  bakim:  { ad: "Bakım",  sekmeler: ["denetim", "liderlik", "yayilma", "araclar", "test", "kaydet"] },
 };
 
 let yoneticiGrup = "icerik";
@@ -263,7 +263,7 @@ function yoneticiCiz() {
         const ad = { karakterler: "Karakterler", evren: "Evren", hizli: "Hızlı Karakter",
                      yapimEkle: "Yapım Ekle", haritaDuzen: "Evren / Harita", yollar: "Yollar", kisiler: "Kişiler",
                      olayEkle: "Olay Ekle", hikayeEkle: "Hikâye Ekle", gorselEkle: "Görsel Ekle",
-                     dosyaEkle: "Kilitli Dosya Ekle", roman: "Roman", sesEkle: "Ses Ekle", basin: "Basın Kiti",
+                     dosyaEkle: "Kilitli Dosya Ekle", roman: "Roman", sesEkle: "Ses Ekle", basin: "Basın Kiti", liderlik: "Liderlik",
                      anahtarlar: "Anahtarlar", bosluklar: "Boşluklar",
                      denetim: "Denetim", yayilma: "Yayılma", araclar: "Araçlar",
                      test: "Test", kaydet: "Kaydet" }[s];
@@ -293,6 +293,7 @@ function yoneticiCiz() {
   else if (yoneticiSekme === "roman") { govde = yoneticiRoman(); }
   else if (yoneticiSekme === "sesEkle") { govde = yoneticiSesEkle(); }
   else if (yoneticiSekme === "basin") { govde = yoneticiBasin(); }
+  else if (yoneticiSekme === "liderlik") { govde = yoneticiLiderlik(); }
   else if (yoneticiSecili === null) { govde = yoneticiListe(); }
   else { govde = yoneticiForm(); }
 

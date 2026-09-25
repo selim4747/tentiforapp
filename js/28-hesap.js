@@ -136,6 +136,8 @@ async function hesapOturumAyarla(kullanici, olay) {
   hesapHazir = true;
   hesapDugmesiCiz();
   hesapCiz();
+  if (typeof liderlikCiz === "function") { liderlikCiz(); }
+  if (hesapKullanici && typeof liderlikGonder === "function") { liderlikGonder(); }
 }
 
 async function hesapProfilYukle() {
@@ -452,6 +454,7 @@ async function hesapEsitle(zorla) {
     await hesapIstemci.from("profiller").update({ ozet: hesapOzet(), guncelleme: simdi }).eq("id", hesapKullanici.id);
     hesapEsitKaydiYaz(iz);
     hesapEsitDurum = "kaydedildi";
+    if (typeof liderlikGonder === "function") { liderlikGonder(); }
   } catch (e) {
     hesapEsitDurum = "kaydedilemedi — " + hesapHataMetni(e);
   } finally {
@@ -495,6 +498,7 @@ async function hesapIlkEsitleme() {
   if (sifir && sifir === hesapKullanici.id) {
     try { window.localStorage.removeItem(HESAP_SIFIR_ANAHTAR); } catch (_) { /* yoksay */ }
     await hesapEsitle(true);        /* sıfırlanmış hâli hesaba da yaz */
+    if (typeof liderlikSifirla === "function") { await liderlikSifirla(); }
     return;
   }
 
@@ -615,6 +619,7 @@ function hesapCiz() {
         '<span class="oyun-etiket">İlerleme eşitleme</span>' +
         '<span id="hesapEsitDurum"></span>' +
         '<button class="dugme dugme-sade" data-hesap-esitle="1">Şimdi eşitle</button>' +
+        '<button class="dugme dugme-sade" data-gez-git="liderlik">Liderlik tabloları</button>' +
       "</div>" +
       '<div class="oyun-sira">' +
         '<button class="dugme dugme-sade" data-hesap-pencere="yenisifre">Şifreyi değiştir</button>' +
@@ -712,6 +717,7 @@ async function hesapProfilAc(ad) {
           (typeof o.gun === "number" ? '<div><span class="oyun-etiket">Gün</span><b>' + o.gun + "</b></div>" : "") +
         "</div>"
       : "") +
+    '<div id="profilDereceler"></div>' +
     (o.madalyalar && o.madalyalar.length
       ? '<div class="hesap-madalya">' + o.madalyalar.map(function (m) { return "<span>" + kacir(m) + "</span>"; }).join("") + "</div>"
       : "") +
@@ -720,6 +726,7 @@ async function hesapProfilAc(ad) {
       (bu ? '<button class="dugme dugme-sade" data-hesap-git="1">Profilini düzenle</button>' : "") +
     "</div>"
   );
+  if (typeof liderlikProfilDereceleri === "function") { liderlikProfilDereceleri(p.kullanici_adi); }
 }
 
 /* ==================== olaylar ==================== */

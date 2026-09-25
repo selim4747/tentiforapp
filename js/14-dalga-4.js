@@ -244,6 +244,8 @@ function bulmacaCevapla(giris) {
   if (!kilitAcik(anahtar)) {
     cuzdan.acilan.push(anahtar);
     eckaKazan(25, "Günün bulmacası");
+    /* hesap varsa çözüş saati sunucuya: günün bulmacası tablosu */
+    if (typeof liderlikBulmacaCozuldu === "function") { liderlikBulmacaCozuldu(); }
   }
 
   bulmacaCiz();
