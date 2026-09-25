@@ -118,112 +118,21 @@ function arsivciCiz() {
         "<span>kayıt <b>" + o.kayit + "</b></span>" +
       "</div>" +
     "</div>" +
-    '<button class="dugme" data-arsivci="indir">Kartı görsel olarak indir</button>' +
+    '<div class="kart-onizleme" id="arsivciOnizleme" hidden></div>' +
+    '<div class="oyun-sira">' +
+      '<button class="dugme" data-arsivci="paylas">' +
+        ((typeof kartPaylasilabilir === "function" && kartPaylasilabilir()) ? "Kartı paylaş" : "Kartı görsel olarak indir") + "</button>" +
+      ((typeof kartPaylasilabilir === "function" && kartPaylasilabilir())
+        ? '<button class="dugme dugme-sade" data-arsivci="indir">İndir</button>' : "") +
+    "</div>" +
     '<p class="pencere-durum" id="arsivciDurum"></p>';
 
   if (typeof tamlikCiz === "function") { tamlikCiz(); }
+  if (typeof arsivciKartOnizle === "function") { arsivciKartOnizle(); }
 }
 
 
-function arsivciKart() {
-  const o = arsivciOlculeri();
-  const rol = arsivciRol();
-  const kis = arsivciKisilik();
-
-  const en = 1080;
-  const t = document.createElement("canvas");
-  t.width = en;
-  t.height = en;
-  const c = t.getContext ? t.getContext("2d") : null;
-  if (!c) { return null; }   /* canvas desteklenmiyor */
-
-  c.fillStyle = "#F4F9FD";
-  c.fillRect(0, 0, en, en);
-
-  const g = c.createLinearGradient(0, en * 0.66, 0, en);
-  g.addColorStop(0, "#DFEDF8");
-  g.addColorStop(1, "#B8D6EC");
-  c.fillStyle = g;
-  c.fillRect(0, en * 0.66, en, en * 0.34);
-
-  c.strokeStyle = "rgba(28,92,150,.3)";
-  c.lineWidth = 3;
-  [[200, en, 330, en * 0.66], [660, en * 0.66, 570, en], [900, en, 980, en * 0.66]]
-    .forEach(function (p) {
-      c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(p[2], p[3]); c.stroke();
-    });
-
-  c.fillStyle = "#1C5C96";
-  c.fillRect(120, 150, 6, 80);
-
-  c.fillStyle = "#3D4A57";
-  c.font = "26px monospace";
-  c.fillText("ARŞİVCİ KARTI", 145, 180);
-
-  c.fillStyle = "#0A0F14";
-  c.font = "700 82px Georgia, serif";
-  c.fillText(rol.ad, 140, 300);
-
-  c.fillStyle = "#1C5C96";
-  c.font = "italic 44px Georgia, serif";
-  c.fillText(kis.ad, 140, 372);
-
-  c.fillStyle = "#3D4A57";
-  c.font = "27px Georgia, serif";
-  const satirlar = [];
-  let satir = "";
-  String(kis.not || "").split(/\s+/).forEach(function (k) {
-    const d = satir ? satir + " " + k : k;
-    if (c.measureText(d).width > en - 300 && satir) { satirlar.push(satir); satir = k; }
-    else { satir = d; }
-  });
-  if (satir) { satirlar.push(satir); }
-
-  let y = 430;
-  satirlar.slice(0, 3).forEach(function (s) { c.fillText(s, 140, y); y += 40; });
-
-  c.fillStyle = "#0D3560";
-  c.font = "600 30px monospace";
-  const olculer = [
-    "oyun " + o.oyun + "/" + o.oyunToplam,
-    "katman " + o.katman + "/" + o.katmanToplam,
-    "galeri " + o.galeri + "/" + o.galeriToplam,
-    "gün " + o.gun
-  ];
-  olculer.forEach(function (s, i) { c.fillText(s, 140 + (i % 2) * 380, 620 + Math.floor(i / 2) * 50); });
-
-  c.fillStyle = "#0D3560";
-  c.font = "26px monospace";
-  c.fillText("TENTIFORAPP", 140, en - 70);
-
-  return t;
-}
-
-function arsivciIndir() {
-  const tuval = arsivciKart();
-  const d0 = document.querySelector("#arsivciDurum");
-
-  if (!tuval) {
-    if (d0) { d0.textContent = "Tarayıcı görsel üretmeyi desteklemiyor"; d0.className = "pencere-durum kotu"; }
-    return;
-  }
-
-  tuval.toBlob(function (blob) {
-    const d = document.querySelector("#arsivciDurum");
-    if (!blob) { if (d) { d.textContent = "Kart üretilemedi"; d.className = "pencere-durum kotu"; } return; }
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "tentifor-arsivci.png";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-
-    if (d) { d.textContent = "İndirildi"; d.className = "pencere-durum iyi"; }
-  }, "image/png");
-}
+/* Kartın görseli (önizleme, paylaş, indir) 27-kartlar.js'te çizilir. */
 
 /* ==================== TEMA MAĞAZASI ==================== */
 
@@ -555,7 +464,8 @@ function erisimCiz() {
 /* ==================== olaylar ==================== */
 
 document.addEventListener("click", function (e) {
-  if (e.target.closest("[data-arsivci]")) { arsivciIndir(); return; }
+  const ak = e.target.closest("[data-arsivci]");
+  if (ak) { arsivciKartDisari(ak.dataset.arsivci); return; }
 
   const ts = e.target.closest("[data-tema-sec]");
   if (ts) {

@@ -746,8 +746,9 @@ veriKaynak
       ["cüzdan", function () { cuzdanYukle(); cuzdanGoster(); }],
       ["yönetici", function () { yoneticiHatirla(); katmanKodlariYukle(); ustaAnahtarlariYukle(); yoneticiCiz();
         duzenlemeYukle(); duzenlemeCubugu(); }],
+      ["yenilikler", function () { if (typeof ziyaretKarsilastir === "function") { ziyaretKarsilastir(); yeniliklerCiz(); } }],
       ["hero", cizHero], ["delilik", cizDelilik], ["karakterler", cizKarakterler],
-      ["evren", cizEvren], ["isim", isimCiz], ["takvim", takvimCiz], ["nöbet", oyunCiz], ["çevirmen", cevirmenCiz],
+      ["evren", cizEvren], ["isim", isimCiz], ["isim kartı", function () { if (typeof isimKartCiz === "function") { isimKartCiz(); } }], ["takvim", takvimCiz], ["nöbet", oyunCiz], ["çevirmen", cevirmenCiz],
       ["vardiya", vardiyaCiz], ["boyut", boyutCiz], ["günün kaydı", gununCiz], ["başlangıç", baslangicCiz], ["başarım", basarimCiz], ["kesişmeler", kesismeCiz],
       ["spoiler", spoilerCiz],
       ["yazı oyunu", yaziOyunCiz], ["baloncuk", baloncukCiz], ["görev", gorevCiz],

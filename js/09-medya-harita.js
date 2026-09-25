@@ -119,7 +119,7 @@ function romanCiz() {
       return '<button class="satir" data-roman="' + b.no + '">' +
                '<span class="satir-no">' + String(b.no).padStart(2, "0") + "</span>" +
                '<span class="satir-govde">' +
-                 '<span class="satir-baslik">' + kacir(b.baslik || b.ad || "") + "</span>" +
+                 '<span class="satir-baslik">' + kacir(b.baslik || b.ad || "") + yeniRozet(b) + "</span>" +
                  '<span class="satir-alt">' + kacir(b.ozet) + "</span>" +
                "</span>" + sag +
              "</button>";
@@ -152,8 +152,8 @@ function romanAc(no) {
   document.querySelector("#perde").innerHTML =
     '<div class="pencere pencere-genis" role="dialog" aria-modal="true">' +
       '<button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button>' +
-      "<h3>" + kacir(b.ad) + "</h3>" +
-      '<p class="pencere-alt">' + veri.roman.baslik + " · " + b.no + ". bölüm</p>" +
+      "<h3>" + kacir(b.baslik || b.ad || "") + "</h3>" +
+      '<p class="pencere-alt">' + kacir(veri.roman.baslik || "") + " · " + b.no + ". bölüm</p>" +
       '<div class="okuma">' + paragraf(b.metin) + "</div>" +
     "</div>";
 
@@ -2134,8 +2134,7 @@ function basinCiz() {
                  '<img src="' + kacir(g) + '" alt="Delilik ekran görüntüsü" loading="lazy">' +
                  "</div></div>";
         }).join("") + "</div>"
-      : '<p class="oyun-not">Ekran görüntüleri henüz eklenmedi. ' +
-        "veri_ek.py → BASIN → gorseller alanına dosya yollarını yaz.</p>") +
+      : '<p class="oyun-not">Ekran görüntüleri henüz eklenmedi.</p>') +
     (b.baglantilar && b.baglantilar.length
       ? '<div class="oyun-sira">' + b.baglantilar.map(function (l) {
           return '<a class="dugme" href="' + kacir(l.url) + '" target="_blank" rel="noopener">' +

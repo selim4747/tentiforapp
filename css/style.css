@@ -3034,3 +3034,46 @@ html[data-site-tema~="oyunbozan"][data-site-tema~="katiller"] .ust{
 .kutu-y label.y-alan-secim{display:flex;align-items:center;gap:7px;margin:0;font-family:inherit;font-size:13.5px;letter-spacing:0;text-transform:none;color:var(--murekkep)}
 .kutu-y label.y-alan-secim input{flex:none;width:17px;height:17px;margin:0}
 .kutu-y label.hf-onay{display:flex;text-transform:none;letter-spacing:0;font-family:inherit;font-size:13.5px;color:var(--murekkep)}
+
+/* ================= PANEL: ROMAN / BASIN ================= */
+.y-roman-metin{min-height:320px;font-family:"EB Garamond",Georgia,serif;font-size:15px;line-height:1.6}
+.y-basin-izgara{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
+.y-basin-kart{display:flex;flex-direction:column;gap:6px}
+.y-basin-kart img{width:100%;aspect-ratio:16/10;object-fit:cover;border:1px solid var(--buz);border-radius:2px;background:var(--buz)}
+
+/* ================= SON ZİYARETTEN BERİ ================= */
+.madde-baslik .yeni-rozet,.satir-baslik .yeni-rozet,.olay-baslik .yeni-rozet,.yenilik-satir .yeni-rozet{
+  position:static;margin-left:8px;vertical-align:middle;
+}
+.yeni-rozet.guncel{background:transparent;color:var(--deniz);border:1px solid var(--deniz)}
+.yenilik-kart{
+  background:var(--beyaz);border:1px solid var(--sig);border-left:3px solid var(--deniz);
+  border-radius:3px;padding:14px 16px;margin:14px 0 18px;
+}
+.yenilik-ust{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.yenilik-ust .oyun-etiket{margin:0}
+.yenilik-sayi{font-family:var(--mono);font-size:11px;color:var(--deniz)}
+.yenilik-liste{display:flex;flex-direction:column}
+.yenilik-satir{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;cursor:pointer;font:inherit;
+  background:transparent;border:none;border-bottom:1px solid var(--buz);padding:9px 2px;color:var(--murekkep);
+}
+.yenilik-satir:hover .yenilik-ad{color:var(--deniz)}
+.yenilik-tur{
+  flex:0 0 88px;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--murekkep-2);
+}
+.yenilik-ad{flex:1;min-width:0;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.yenilik-kart .oyun-sira{margin-top:10px}
+.gez-yeni{
+  display:inline-block;width:6px;height:6px;margin-left:6px;border-radius:50%;
+  background:var(--deniz);vertical-align:2px;
+}
+@media (max-width:480px){ .yenilik-tur{flex-basis:70px} }
+
+/* ================= PAYLAŞILABİLİR KARTLAR ================= */
+.kart-onizleme{max-width:360px;margin:14px 0}
+.kart-onizleme[hidden]{display:none}
+.kart-onizleme-tuval{display:block;width:100%;height:auto;border:1px solid var(--sig);border-radius:3px;box-shadow:0 8px 24px rgba(13,53,96,.12)}
+.isim-kart-yol{margin-top:10px}
+.isim-kart-yol button{display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}
+.isim-kart-yol-ad{font-size:9px;letter-spacing:.08em;opacity:.7;text-transform:lowercase}
