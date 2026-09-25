@@ -372,7 +372,7 @@ function kisayolCiz() {
   if (!alan) { return; }
 
   const liste = [["/", "arama"], ["r", "rastgele keşif"], ["g", "gece modu"],
-                 ["Esc", "pencereyi kapat"], ["?", "bu liste"]];
+                 ["1–9, 0", "sayfalar arası geçiş"], ["Esc", "pencereyi kapat"], ["?", "bu liste"]];
 
   alan.innerHTML = '<div class="kisayol-liste">' + liste.map(function (k) {
     return '<div class="kisayol"><kbd>' + kacir(k[0]) + "</kbd><span>" + kacir(k[1]) + "</span></div>";
@@ -438,6 +438,13 @@ document.addEventListener("keydown", function (e) {
   if (e.key === "/") {
     e.preventDefault();
     const g = document.querySelector("#aramaGiris");
+    const k = document.querySelector("#kesif");
+    /* arama kutusu Arşiv sayfasında; başka sayfadaysan önce oraya geç */
+    if (k && k.hidden && typeof sayfayaGit === "function") {
+      sayfayaGit("arsiv");
+      setTimeout(function () { const g2 = document.querySelector("#aramaGiris"); if (g2) { g2.focus(); } }, 120);
+      return;
+    }
     if (g) { g.focus(); }
     return;
   }
