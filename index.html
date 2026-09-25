@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4F9FD">
+<title>TentiforApp — Tentiforverse Arşivi</title>
+<meta name="description" content="Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker. Tentiforverse evren arşivi: karakterler, kozmoloji, isim sistemi, takvim ve oyunlar.">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TentiforApp">
+<meta property="og:title" content="TentiforApp — Tentiforverse Arşivi">
+<meta property="og:description" content="Aysız bir gezegen, ayları 28 gün çeken bir takvim. Karakterler, kozmoloji, isim sistemi ve oyunlar.">
+<meta property="og:image" content="paylasim.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="tr_TR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TentiforApp — Tentiforverse Arşivi">
+<meta name="twitter:description" content="Aysız bir gezegen, ayları 28 gün çeken bir takvim.">
+<meta name="twitter:image" content="paylasim.png">
+<!-- Alan adı belli olunca <link rel="canonical"> ve og:url/twitter:url
+     etiketlerine gerçek adresi ekle, örn. https://notjust.com/tentiforapp/ -->
+<meta name="robots" content="index, follow">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRjRGOUZEIi8+CiAgPHJlY3QgeT0iNDIiIHdpZHRoPSI2NCIgaGVpZ2h0PSIyMiIgZmlsbD0iI0RGRURGOCIvPgogIDxwYXRoIGQ9Ik0wIDQyIEw2NCA0MiIgc3Ryb2tlPSIjQjhENkVDIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8cGF0aCBkPSJNMTQgNjQgTDI2IDQyIE00NCA2NCBMMzQgNDIiIHN0cm9rZT0iIzFDNUM5NiIgc3Ryb2tlLXdpZHRoPSIxLjUiIG9wYWNpdHk9Ii41Ii8+CiAgPHRleHQgeD0iMzIiIHk9IjM0IiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiIgZm9udC1zaXplPSIzNCIgZm9udC13ZWlnaHQ9IjcwMCIKICAgICAgICBmaWxsPSIjMEEwRjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UPC90ZXh0Pgo8L3N2Zz4K">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "TentiforApp",
+  "alternateName": "Tentiforverse Arşivi",
+  "description": "Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker. Tentiforverse evren arşivi: karakterler, kozmoloji, isim sistemi, takvim ve oyunlar.",
+  "inLanguage": "tr"
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;0,6..96,700;1,6..96,400&family=Karla:wght@400;500;700&family=DM+Mono:wght@400;500&family=Kalam:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="atla" href="#tepe">İçeriğe atla</a>
+
+<header class="ust">
+  <a class="marka" href="#tepe">
+    <span class="marka-ad">Tentifor<span class="marka-vurgu">App</span></span>
+  </a>
+  <button class="cuzdan-rozet" id="cuzdanRozet" aria-label="Cüzdan ve yedekleme">
+    <span class="cuzdan-etiket">cüzdan</span>
+    <span class="cuzdan-tutar" id="cuzdanTutar">—</span>
+  </button>
+  <button class="ust-ikon" id="temaAnahtar" aria-label="Gece modu">☀</button>
+  <button class="ust-ikon" id="rastgeleBtn" aria-label="Rastgele keşif">⤳</button>
+  <button class="kod-btn" id="btnKod">Kod</button>
+</header>
+
+<nav class="gezinme" id="gezinme" aria-label="Bölümler"></nav>
+<button class="komut-tetik" id="komutTetikBtn" aria-label="Hızlı arama">⌘K</button>
+<div class="aktif-serit"><span id="aktifBolum"></span></div>
+
+<main id="tepe">
+
+  <!-- HERO: gezegenin kendisi -->
+  <section class="hero">
+    <div class="hero-buz" aria-hidden="true">
+      <div class="hero-catlak"></div>
+    </div>
+    <div class="hero-ic">
+      <p class="hero-eyebrow">24. Evren · Tömye</p>
+      <h1 class="hero-baslik">Aysız bir gezegen,<br>ayları 28 gün çeken bir takvim.</h1>
+      <p class="hero-metin">
+        Tömye'nin gökyüzünde ay yoktur. Buna rağmen aylarını sayarlar — ve neden saydıklarını bilmezler.
+        Cevap, isyanda yakılmış bir dilde yazılıdır.
+      </p>
+      <div class="hero-eylem">
+        <button class="dugme" data-gez-git="sira">Okumaya başla</button>
+        <button class="dugme dugme-sade" data-gez-git="oyunlar">Oynamaya başla</button>
+        <button class="dugme dugme-sade" id="rastgeleHero">Rastgele keşfet</button>
+      </div>
+    </div>
+    <div class="hero-sayac" id="heroSayac"></div>
+  </section>
+
+  <!-- ARAMA + GUNUN KAYDI -->
+  <section class="bolum" id="kesif">
+    <div class="arama-kutu">
+      <input class="arama-giris" id="aramaGiris" type="search" autocomplete="off"
+             spellcheck="false" placeholder="arşivde ara — isim, yer, kavram">
+      <div class="arama-sonuc" id="aramaSonuc" hidden></div>
+    </div>
+    <div id="gunlukOzetAlan"></div>
+    <div id="gununAlan"></div>
+    <details class="baslangic">
+      <summary>İlk kez mi geldin?</summary>
+      <div id="baslangicAlan"></div>
+    </details>
+      <div class="arac-blok">
+      <div class="oyun-etiket">Rastgele brifing</div>
+      <div id="brifingAlan"></div>
+    </div>
+  </section>
+
+  <!-- DELILIK -->
+  <section class="bolum" id="delilik">
+    <div class="bolum-basi">
+      <span class="etiket">Oyun ve roman</span>
+      <h2 id="delilikBaslik">Delilik</h2>
+    </div>
+    <div id="delilikIcerik" class="uzun-metin"></div>
+  </section>
+
+  <!-- ARSIV -->
+  <section class="bolum" id="arsiv">
+    <div class="bolum-basi">
+      <span class="etiket">Kayıtlar</span>
+      <h2>Karakter Arşivi</h2>
+      <p class="bolum-alt">Bazı kayıtlar buz altında. Kod girerek çözebilirsin.</p>
+    </div>
+    <div class="izgara" id="karakterIzgara"></div>
+  </section>
+
+  <!-- EVREN -->
+  <section class="bolum" id="evren">
+    <div class="bolum-basi">
+      <span class="etiket">Rehber</span>
+      <h2>Evren</h2>
+    </div>
+    <div class="filtre" id="evrenFiltre"></div>
+    <div class="madde-liste" id="evrenListe"></div>
+  </section>
+
+  <!-- ILISKI AGI -->
+  <section class="bolum" id="ag">
+    <div class="bolum-basi">
+      <span class="etiket">Şema</span>
+      <h2>İlişki Ağı</h2>
+      <p class="bolum-alt">Kim kimin nesi. Kilitli bağlar kod çözdükçe belirir.</p>
+    </div>
+    <div id="agAlan"></div>
+  </section>
+
+  <!-- ISIM SISTEMI -->
+  <section class="bolum" id="isim">
+    <div class="bolum-basi">
+      <span class="etiket">Araç</span>
+      <h2>İsim Sistemi</h2>
+      <p class="bolum-alt">Tentiforverse'te isimler ses çiftleriyle üretilir. Sekiz kanon isminden yedisi bu tabloyla birebir çıkıyor.</p>
+    </div>
+    <div id="isimAlan"></div>
+  </section>
+
+  <!-- TAKVIM -->
+  <section class="bolum" id="takvim">
+    <div class="bolum-basi">
+      <span class="etiket">Araç</span>
+      <h2>Tömye Takvimi</h2>
+      <p class="bolum-alt">25 saatlik gün, 310 günlük yıl, 6 günlük hafta. Aysız bir gezegende 28 günlük aylar.</p>
+    </div>
+    <div id="takvimAlan"></div>
+  </section>
+
+  <!-- OYUNLAR -->
+  <section class="bolum" id="oyunlar">
+    <div class="bolum-basi">
+      <span class="etiket">Oyunlar</span>
+      <h2>Oyunlar</h2>
+      <p class="bolum-alt">Kazandığın eçka site genelinde geçerli. Galeri ve kilitli oyun oradan açılır.</p>
+    </div>
+
+    <div class="oyun-sekme" id="oyunSekme">
+      <button data-oyun-sekme="nobet" class="secili">Nöbet</button>
+      <button data-oyun-sekme="cevirmen">Gırı Çevirmeni</button>
+      <button data-oyun-sekme="vardiya">Gündüz Vardiyası</button>
+      <button data-oyun-sekme="boyut">Boyut Sürüklenmesi</button>
+      <button data-oyun-sekme="baloncuk">Baloncuk Evren</button>
+      <button data-oyun-sekme="yazi">Yazı Çözme</button>
+      <button data-oyun-sekme="supheli">Şüpheli Tahtası</button>
+    </div>
+
+    <div class="oyun-panel" id="panel-nobet">
+      <p class="oyun-giris">Necale olarak bir Tömye ayı dayan: 28 gün. Gündüz kitap sat, gece nöbet tut.</p>
+      <div id="oyunAlan"></div>
+    </div>
+
+    <div class="oyun-panel gizli" id="panel-cevirmen"><div id="cevirmenAlan"></div></div>
+    <div class="oyun-panel gizli" id="panel-vardiya"><div id="vardiyaAlan"></div></div>
+    <div class="oyun-panel gizli" id="panel-boyut"><div id="boyutAlan"></div></div>
+    <div class="oyun-panel gizli" id="panel-baloncuk">
+      <div id="baloncukAlan"></div>
+      <div class="arac-blok">
+        <div class="oyun-etiket">Kurduğun evrenler</div>
+        <div id="evrenGaleriAlan"></div>
+      </div>
+      <div class="arac-blok">
+        <div class="oyun-etiket">Evren Ansiklopedisi</div>
+        <div id="ansiklopediAlan"></div>
+      </div>
+    </div>
+
+    <div class="oyun-panel gizli" id="panel-yazi">
+      <p class="oyun-not">Kyldo alfabesinin nasıl okunduğunu
+        <button class="ic-bag" data-gez-git="yazi">Araçlar'da görebilirsin</button>.</p>
+      <div id="yaziOyunAlan"></div>
+    </div>
+
+    <div class="oyun-panel gizli" id="panel-supheli">
+      <div id="supheliAlan"></div>
+    </div>
+  </section>
+
+  <!-- GALERI -->
+  <section class="bolum" id="galeri">
+    <div class="bolum-basi">
+      <span class="etiket">Görsel</span>
+      <h2>Galeri</h2>
+      <p class="bolum-alt">Çizimler ve çizgi roman sayfaları. Bazıları eçka ile açılır.</p>
+    </div>
+    <div id="galeriAlan"></div>
+  </section>
+
+  <!-- KAYIP -->
+  <section class="bolum" id="kayip">
+    <div class="bolum-basi">
+      <span class="etiket">Ana tema</span>
+      <h2>Kayıp</h2>
+      <p class="bolum-alt">Kimse bir şeyi bedelsiz kazanmıyor.</p>
+    </div>
+    <div id="kayipAlan"></div>
+  </section>
+
+  <!-- ZAMAN CIZELGESI -->
+  <section class="bolum" id="zaman">
+    <div id="zamanSvgAlan" class="arac-blok"></div>
+    <div class="bolum-basi">
+      <span class="etiket">Kronoloji</span>
+      <h2>Zaman Çizelgesi</h2>
+      <p class="bolum-alt">Tömye zaman çizgisinden bakıldığında. Beyaz Taşlar zamanda serbest gezindiği için bazı adımların yeri bilinçli olarak açıktır.</p>
+    </div>
+    <div id="zamanAlan"></div>
+  </section>
+
+  <!-- HARITA -->
+  <section class="bolum" id="harita">
+    <div class="bolum-basi">
+      <span class="etiket">Gezegen</span>
+      <h2>Harita</h2>
+    </div>
+    <div id="haritaAlan"></div>
+  </section>
+
+  <!-- ROMAN -->
+  <section class="bolum" id="roman">
+    <div class="bolum-basi">
+      <span class="etiket">Okuma</span>
+      <h2>Delilik — Roman</h2>
+    </div>
+    <div id="romanAlan"></div>
+  </section>
+
+  <!-- ALINTILAR -->
+  <section class="bolum" id="alintilar">
+    <div class="bolum-basi">
+      <span class="etiket">Satırlar</span>
+      <h2>Alıntılar</h2>
+    </div>
+    <div id="alintiAlan"></div>
+  </section>
+
+  <!-- YAPIMLAR -->
+  <section class="bolum" id="yapimlar">
+    <div class="bolum-basi">
+      <span class="etiket">Yol haritası</span>
+      <h2>Yapımlar</h2>
+      <p class="bolum-alt">Hepsi NJG Games etiketi altında.</p>
+    </div>
+    <div id="yapimAlan"></div>
+  </section>
+
+  <!-- BASIN -->
+  <section class="bolum" id="basin">
+    <div class="bolum-basi">
+      <span class="etiket">Basın kiti</span>
+      <h2>Delilik</h2>
+    </div>
+    <div id="basinAlan"></div>
+  </section>
+
+  <!-- YAZAR NOTLARI -->
+  <section class="bolum" id="notlar">
+    <div class="bolum-basi">
+      <span class="etiket">Perde arkası</span>
+      <h2>Yazar Notları</h2>
+    </div>
+    <div id="notlarAlan"></div>
+  </section>
+
+  <!-- BASARIMLAR -->
+  <section class="bolum" id="basarim">
+    <div class="bolum-basi">
+      <span class="etiket">İlerleme</span>
+      <h2>Arşiv Durumu</h2>
+    </div>
+    <div id="basarimAlan"></div>
+  </section>
+
+  <!-- DEGISIKLIK -->
+  <section class="bolum" id="degisiklik">
+    <div class="bolum-basi">
+      <span class="etiket">Günlük</span>
+      <h2>Ne Değişti</h2>
+    </div>
+    <div id="degisiklikAlan"></div>
+  </section>
+
+  <!-- TEST -->
+  <section class="bolum" id="test">
+    <div class="bolum-basi">
+      <span class="etiket">Test</span>
+      <h2>Hangi Delilik Karakterisin?</h2>
+      <p class="bolum-alt">Yalnızca Tömye Kütüphanesi'nde geçenler. Kısa ve odaklı.</p>
+    </div>
+    <div id="testAlan"></div>
+  </section>
+
+  <!-- KIMLIK SINAVI -->
+  <section class="bolum" id="kimlik">
+    <div class="bolum-basi">
+      <span class="etiket">Geniş Test</span>
+      <h2>Kimlik Sınavı</h2>
+      <p class="bolum-alt">Bütün evrenden. Bir tepki oyunu, bir kaynak dağıtımı, birkaç ikilem.</p>
+    </div>
+    <div id="kimlikAlan"></div>
+  </section>
+
+  <!-- YANKILAR -->
+  <section class="bolum" id="yankilar">
+    <div class="bolum-basi">
+      <span class="etiket">Tekrarlar</span>
+      <h2>Yankılar</h2>
+    </div>
+    <div id="yankiAlan"></div>
+  </section>
+
+  <!-- AILE AGACI -->
+  <section class="bolum" id="aile">
+    <div class="bolum-basi">
+      <span class="etiket">Soy</span>
+      <h2>Luyot Ailesi</h2>
+      <p class="bolum-alt">Bir adamın sakladığı şey, üç kuşak sonra üç hayatı belirledi.</p>
+    </div>
+    <div id="aileAlan"></div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Kesişmeler</div>
+      <div id="kesismeAlan"></div>
+    </div>
+  </section>
+
+  <!-- OLAYLAR -->
+  <section class="bolum" id="olaylar">
+    <div class="bolum-basi">
+      <span class="etiket">Okuma</span>
+      <h2>Olaylar</h2>
+    </div>
+    <div id="olaylarAlan"></div>
+  </section>
+
+  <!-- KISA HİKÂYELER -->
+  <section class="bolum" id="kisaHikayeler">
+    <div class="bolum-basi">
+      <span class="etiket">Okuma</span>
+      <h2>Kısa Hikâyeler</h2>
+    </div>
+    <div id="kisaHikayelerAlan"></div>
+  </section>
+
+  <!-- KARAKTER SOHBETİ -->
+  <section class="bolum" id="sohbet">
+    <div class="bolum-basi">
+      <span class="etiket">Eğlence</span>
+      <h2>Karakter Sohbeti</h2>
+    </div>
+    <div id="sohbetAlan"></div>
+  </section>
+
+  <!-- KARSILASTIRMA -->
+  <section class="bolum" id="karsi">
+    <div class="bolum-basi">
+      <span class="etiket">Araç</span>
+      <h2>Karşılaştır</h2>
+      <p class="bolum-alt">İki ismi yan yana koy: aynı çevrede miler, aralarında bağ var mı, kimi ortak tanıyorlar.</p>
+    </div>
+    <div id="karsiAlan"></div>
+  </section>
+
+  <!-- OKUMA SIRASI -->
+  <section class="bolum" id="sira">
+    <div class="bolum-basi">
+      <span class="etiket">Yol</span>
+      <h2>Nereden Başlamalı</h2>
+      <p class="bolum-alt">Kronolojik sıra, üretim sırası ve önerilen sıra aynı şey değil.</p>
+    </div>
+    <div id="siraAlan"></div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Spoiler seviyesi</div>
+      <div id="spoilerAlan"></div>
+    </div>
+  </section>
+
+  <!-- SOZLUK -->
+  <section class="bolum" id="sozluk">
+    <div class="bolum-basi">
+      <span class="etiket">Terimler</span>
+      <h2>Sözlük</h2>
+      <p class="bolum-alt">Evrende sık geçen kavramlar.</p>
+    </div>
+    <div id="sozlukAlan"></div>
+  </section>
+
+  <!-- KYLDO YAZISI -->
+  <section class="bolum" id="yazi">
+    <div class="bolum-basi">
+      <span class="etiket">Alfabe</span>
+      <h2>Kyldo Yazısı</h2>
+      <p class="bolum-alt">Çizgiler ünsüzü, çarpılar ünlüyü verir. Her simge iki harflik bir hece.</p>
+    </div>
+    <div id="yaziAlan"></div>
+    <p class="oyun-not">Yazıyı oyunla pratik etmek için Oyunlar sayfasındaki
+      <button class="ic-bag" data-gez-git="oyunlar">Yazı Çözme</button> sekmesine bak.</p>
+  </section>
+
+  <!-- KİLİTLİ DOSYALAR -->
+  <section class="bolum" id="dosyalar">
+    <div class="bolum-basi">
+      <span class="etiket">İndir</span>
+      <h2>Dosyalar</h2>
+      <p class="bolum-alt">Şifreli tutulan dosyalar. Doğru kodu girince indirilebilir hâle gelir.</p>
+    </div>
+    <div id="dosyalarAlan"></div>
+  </section>
+
+  <!-- BILINMEYENLER -->
+  <section class="bolum" id="bilinmeyenler">
+    <div class="bolum-basi">
+      <span class="etiket">Açık sorular</span>
+      <h2>Bilinmeyenler</h2>
+    </div>
+    <div id="bilinmeyenAlan"></div>
+  </section>
+
+  <!-- ARSIVCI KARTI -->
+  <section class="bolum" id="arsivci">
+    <div class="bolum-basi">
+      <span class="etiket">Sen</span>
+      <h2>Arşivci Kartın</h2>
+      <p class="bolum-alt">Rolün ne kadar ilerlediğini, kişiliğin nasıl ilerlediğini söyler.</p>
+    </div>
+    <div id="arsivciAlan"></div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Site tamlığın</div>
+      <div id="tamlikAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Rol yolun</div>
+      <div id="rolYoluAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Giriş serisi</div>
+      <div id="seriAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Günün görevi</div>
+      <div id="gorevAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Günün bulmacası</div>
+      <div id="bulmacaAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Eçka geçmişi</div>
+      <div id="gecmisAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Sezonluk</div>
+      <div id="sezonAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Temalar</div>
+      <div id="temaAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Site Temaları</div>
+      <p class="oyun-not">Renk temasından bağımsız — kapalı kutuların şeklini değiştirir, herhangi bir renk temasıyla birlikte kullanılabilir.</p>
+      <div id="siteTemaAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Erişim</div>
+      <div id="erisimAlan"></div>
+    </div>
+  </section>
+
+  <!-- MOODBOARD -->
+  <section class="bolum" id="moodboard">
+    <div class="bolum-basi">
+      <span class="etiket">Atmosfer</span>
+      <h2>Moodboard</h2>
+      <p class="bolum-alt">Portreler gelene kadar bir ara durak.</p>
+    </div>
+    <div id="moodboardAlan"></div>
+  </section>
+
+  <!-- HIKAYE -->
+  <section class="bolum" id="hikaye">
+    <div class="bolum-basi">
+      <span class="etiket">Kısa</span>
+      <h2>Gece Vardiyası</h2>
+    </div>
+    <div id="hikayeAlan"></div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Olmayan yollar</div>
+      <div id="dalAlan"></div>
+    </div>
+  </section>
+
+  <!-- MEKTUPLAR, GUNLUKLER, KAYITLAR -->
+  <section class="bolum" id="mektuplar">
+    <div class="bolum-basi">
+      <span class="etiket">Belgeler</span>
+      <h2>Mektuplar ve Günlükler</h2>
+      <p class="bolum-alt">Gönderilmemiş mektuplar, tutulmuş günlükler, dinlenmemiş kayıtlar.</p>
+    </div>
+    <div id="mektupAlan"></div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Günlükler</div>
+      <div id="gunlukAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Ara evren kayıtları</div>
+      <div id="kayitAlan"></div>
+    </div>
+  </section>
+
+  <!-- DEFTERIM -->
+  <section class="bolum" id="defter">
+    <div class="bolum-basi">
+      <span class="etiket">Sana özel</span>
+      <h2>Defterin</h2>
+      <p class="bolum-alt">İşaretlediğin alıntılar, gezdiğin kayıtlar, kazandığın madalyalar. Hepsi bu cihazda.</p>
+    </div>
+    <div id="defterAlan"></div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Vurguların</div>
+      <div id="vurguAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Okuma geçmişin</div>
+      <div id="okumaGecmisAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Madalyalar</div>
+      <div id="madalyaAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Kişisel rekorların</div>
+      <div id="rekorAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Meydan okuma</div>
+      <div id="meydanAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Yazı tipi</div>
+      <div id="yaziTipiAlan"></div>
+    </div>
+    <div class="arac-blok" id="kisayol">
+      <div class="oyun-etiket">Klavye kısayolları</div>
+      <div id="kisayolAlan"></div>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Dışa aktar</div>
+      <p class="oyun-not">Notlarını, vurgularını ve gezdiğin kayıtları tek bir metin
+        dosyası olarak indir. Tamamen yerel; hiçbir yere gönderilmez.</p>
+      <button class="dugme dugme-sade" id="disaAktarBtn">Okuma günlüğünü indir</button>
+    </div>
+    <div class="arac-blok">
+      <div class="oyun-etiket">Sıfırlama</div>
+      <div id="sifirlaAlan"></div>
+    </div>
+  </section>
+
+  <!-- OYUN BAGI -->
+  <section class="bolum" id="bag">
+    <div class="bolum-basi">
+      <span class="etiket">Aktarım</span>
+      <h2>Oyuna Taşı</h2>
+    </div>
+    <div id="bagAlan"></div>
+  </section>
+
+  <!-- YONETICI -->
+  <section class="bolum" id="yonetici">
+    <div class="bolum-basi">
+      <span class="etiket">Kapalı</span>
+      <h2>Yönetici</h2>
+    </div>
+    <div id="yoneticiAlan"></div>
+  </section>
+
+</main>
+
+<footer class="alt">
+  <p class="alt-marka">NJG Games</p>
+  <p class="alt-not">Tentiforverse · Sürüm <span id="surumNo">—</span></p>
+</footer>
+
+<div class="perde" id="perde" hidden></div>
+
+<script src="js/01-tanilama.js"></script>
+
+<script src="js/02-kripto.js"></script>
+<script src="js/03-cuzdan.js"></script>
+<script src="js/04-araclar-isim-takvim.js"></script>
+<script src="js/05-nobet.js"></script>
+<script src="js/06-karakter-oyunlari.js"></script>
+<script src="js/07-kisilik-ag-galeri.js"></script>
+<script src="js/08-kesif.js"></script>
+<script src="js/09-medya-harita.js"></script>
+<script src="js/10-kyldo-yazisi.js"></script>
+<script src="js/11-ek-katman.js"></script>
+<script src="js/12-dalga-2.js"></script>
+<script src="js/13-dalga-3.js"></script>
+<script src="js/14-dalga-4.js"></script>
+<script src="js/15-dalga-5.js"></script>
+<script src="js/16-yerinde-duzenleme.js"></script>
+<script src="js/17-dalga-6-aile.js"></script>
+<script src="js/18-dalga-7-gezinme.js"></script>
+<script src="js/19-dalga-8-kimlik.js"></script>
+<script src="js/20-dalga-9-brifing.js"></script>
+<script src="js/21-dalga-10-komut.js"></script>
+<script src="js/22-yonetici.js"></script>
+<script src="js/23-kanon-kilidi.js"></script>
+<script src="js/24-arsiv-mantigi.js"></script>
+
+</body>
+</html>

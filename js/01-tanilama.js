@@ -1,0 +1,53 @@
+/* Tanılama şeridi: yakalanmayan bir hata olursa ekranın altında görünür.
+   "Kopyala" ile tam metni (hata, sürüm, adres, tarayıcı) panoya alabilirsin;
+   yenileyince çıkan tuhaf hataları böyle yakalayacağız. */
+(function () {
+  var goruldu = {};
+  function detay(baslik, mesaj, yigin) {
+    var sur = "";
+    try { sur = (window.veri && window.veri.surum) || (window.__VERI__ && window.__VERI__.surum) || ""; } catch (e) {}
+    return baslik + ": " + mesaj + "\n" + (yigin ? yigin + "\n" : "") +
+      "sürüm: " + sur + "\nadres: " + location.href.slice(0, 160) + "\ntarayıcı: " + navigator.userAgent;
+  }
+  window.tanilamaGoster = function (baslik, mesaj, yigin) {
+    var anahtar = baslik + mesaj;
+    if (goruldu[anahtar]) { return; }
+    goruldu[anahtar] = true;
+    function kur() {
+      var kutu = document.getElementById("tanilamaSeridi");
+      if (!kutu) {
+        kutu = document.createElement("div");
+        kutu.id = "tanilamaSeridi";
+        kutu.setAttribute("role", "alert");
+        kutu.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:2000;background:#7a1f1f;color:#fff;" +
+          "font:12px/1.5 ui-monospace,monospace;padding:10px 14px;display:flex;gap:10px;align-items:flex-start;" +
+          "box-shadow:0 -4px 16px rgba(0,0,0,.3)";
+        kutu.innerHTML = '<div id="tanilamaMetin" style="flex:1;min-width:0;word-break:break-word"></div>' +
+          '<button type="button" id="tanilamaKopya" style="flex-shrink:0;font:inherit;padding:4px 10px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer">Kopyala</button>' +
+          '<button type="button" id="tanilamaKapat" style="flex-shrink:0;font:inherit;padding:4px 10px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer">Kapat</button>';
+        document.body.appendChild(kutu);
+        kutu.querySelector("#tanilamaKapat").onclick = function () { kutu.remove(); };
+        kutu.querySelector("#tanilamaKopya").onclick = function () {
+          var metin = kutu.getAttribute("data-detay") || "";
+          try { navigator.clipboard.writeText(metin); } catch (e) {
+            var t = document.createElement("textarea"); t.value = metin; document.body.appendChild(t); t.select();
+            try { document.execCommand("copy"); } catch (e2) {} t.remove();
+          }
+          this.textContent = "Kopyalandı";
+        };
+      }
+      kutu.querySelector("#tanilamaMetin").textContent = baslik + ": " + mesaj;
+      kutu.setAttribute("data-detay", detay(baslik, mesaj, yigin));
+    }
+    if (document.body) { kur(); } else { document.addEventListener("DOMContentLoaded", kur); }
+  };
+  window.addEventListener("error", function (e) {
+    if (!e.message) { return; }
+    window.tanilamaGoster("Hata", e.message + " (" + String(e.filename || "").split("/").pop() + ":" + e.lineno + ")",
+      e.error && e.error.stack ? String(e.error.stack).slice(0, 600) : "");
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    var r = e.reason;
+    window.tanilamaGoster("Söz reddi", String((r && r.message) || r), r && r.stack ? String(r.stack).slice(0, 600) : "");
+  });
+})();

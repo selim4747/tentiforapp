@@ -1,0 +1,3 @@
+# Derleme yok: dosyalar olduğu gibi yayınlanır.
+[build]
+  publish = "."
