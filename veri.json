@@ -13,7 +13,7 @@
       "unvan": "8. Görevli",
       "grup": "Kütüphane",
       "ozet": "Adı \"deli\" demektir. Romanda bu ismi hiç duymazsınız.",
-      "detay": "Çocukluğundan beri kararsız biriydi; büyüdüğünde ne olmak istediğine hiçbir zaman kesin bir cevap veremedi. Ona göre yaptığı işten çok, kendini ait hissedebileceği bir yerde olması önemliydi. Kütüphanede çalışmaya başladığında sonunda aradığı yeri bulduğunu düşündü.\n\nYalnız yaşar ama insanlardan uzak durmaz: karşılaştığı herkesin anlatılmayı bekleyen bir hikâyesi olduğuna inanır. Ziyaretçileri fark ettirmeden gözlemler, geçmişlerini ve geleceklerini zihninde kurar. Yakın çevresinde yalnızca iki gerçek arkadaşı vardır.\n\nEn sevdiği tür polisiyedir; Egir'le bu ortak ilgiyi paylaşır ve Egir'in Oyunbozan üzerine fan hikâyeleri yazma isteğini destekleyen ilk kişilerden biri olur. Gençliğinde Zafkı Eşci'ye âşık oldu ama hislerini hiçbir zaman söyleyemedi; hayatındaki en büyük pişmanlığı budur. Onunla ilk kez kütüphanede, Polisiye rafının karşısında tanıştı — rafa bakmak için geri çekilirken arkasında duran Zafkı'ya çarptı. \"Sanki bütün evren onunla aşk yaşamamı istiyor\" diye düşündüğü anları oldu, ama gitmesi gereken her an içini kaplayan devasa bir boşluk onu durdurdu: \"Gidebilirdi ama gitmiyordu. Konuşabilirdi ama konuşmuyordu. Korkmuştu.\"\n\nKütüphanedeki işe, aslında babası Tamıs'ın deniz mesleğini seçmemek için girdi — annesi İzdag'ı yalnız bırakmak istemedi. İşe başlamadan bir gece önce tuhaf bir rüya gördü: beş kollu bir varlık onu uzayda kovalıyor, alev alev yanan ama çoğunluğu sudan oluşan, delik deşik bir uydusu olan bilinmedik bir gezegende kendi türüne benzeyen canlılar birbirine saldırıyordu. Rüyanın Tömye'nin bir geleceği olup olmadığını hiçbir zaman öğrenemedi — ama uyandığında yeni, tanımlayamadığı bir korku edindiğini fark etti.\n\nEn belirgin özelliği hayal kurmasıdır — ve sebebi gerçeklikten kaçmak değildir. Hayal dünyasında her şey kendi kontrolündedir; gerçekte değiştiremediği olayları zihninde dilediği gibi şekillendirebilir. Ama zamanla denge bozulur: kendi yönettiği hayaller, kendi iradeleri varmış gibi davranmaya başlar.\n\nBorçları yüzünden uzun saatler çalışsa da kütüphaneden nefret etmez. En huzurlu hissettiği yer Geçiş Deresi'dir; akan suyun sesi zihnini dinlendirir ve hayal gücünü besler.",
+      "detay": "Çocukluğundan beri kararsız biriydi; büyüdüğünde ne olmak istediğine hiçbir zaman kesin bir cevap veremedi. Ona göre yaptığı işten çok, kendini ait hissedebileceği bir yerde olması önemliydi. Kütüphanede çalışmaya başladığında sonunda aradığı yeri bulduğunu düşündü. En Sevilen Karakter.\n\nYalnız yaşar ama insanlardan uzak durmaz: karşılaştığı herkesin anlatılmayı bekleyen bir hikâyesi olduğuna inanır. Ziyaretçileri fark ettirmeden gözlemler, geçmişlerini ve geleceklerini zihninde kurar. Yakın çevresinde yalnızca iki gerçek arkadaşı vardır.\n\nEn sevdiği tür polisiyedir; Egir'le bu ortak ilgiyi paylaşır ve Egir'in Oyunbozan üzerine fan hikâyeleri yazma isteğini destekleyen ilk kişilerden biri olur. Gençliğinde Zafkı Eşci'ye âşık oldu ama hislerini hiçbir zaman söyleyemedi; hayatındaki en büyük pişmanlığı budur. Onunla ilk kez kütüphanede, Polisiye rafının karşısında tanıştı — rafa bakmak için geri çekilirken arkasında duran Zafkı'ya çarptı. \"Sanki bütün evren onunla aşk yaşamamı istiyor\" diye düşündüğü anları oldu, ama gitmesi gereken her an içini kaplayan devasa bir boşluk onu durdurdu: \"Gidebilirdi ama gitmiyordu. Konuşabilirdi ama konuşmuyordu. Korkmuştu.\"\n\nKütüphanedeki işe, aslında babası Tamıs'ın deniz mesleğini seçmemek için girdi — annesi İzdag'ı yalnız bırakmak istemedi. İşe başlamadan bir gece önce tuhaf bir rüya gördü: beş kollu bir varlık onu uzayda kovalıyor, alev alev yanan ama çoğunluğu sudan oluşan, delik deşik bir uydusu olan bilinmedik bir gezegende kendi türüne benzeyen canlılar birbirine saldırıyordu. Rüyanın Tömye'nin bir geleceği olup olmadığını hiçbir zaman öğrenemedi — ama uyandığında yeni, tanımlayamadığı bir korku edindiğini fark etti.\n\nEn belirgin özelliği hayal kurmasıdır — ve sebebi gerçeklikten kaçmak değildir. Hayal dünyasında her şey kendi kontrolündedir; gerçekte değiştiremediği olayları zihninde dilediği gibi şekillendirebilir. Ama zamanla denge bozulur: kendi yönettiği hayaller, kendi iradeleri varmış gibi davranmaya başlar.\n\nBorçları yüzünden uzun saatler çalışsa da kütüphaneden nefret etmez. En huzurlu hissettiği yer Geçiş Deresi'dir; akan suyun sesi zihnini dinlendirir ve hayal gücünü besler.",
       "gizli": [
         {
           "katman": "son",
@@ -3200,7 +3200,7 @@
       "cesaret": 9,
       "itibar": 3,
       "stok": 6,
-      "canavarGuc": 1.0,
+      "canavarGuc": 1,
       "gece": "Rafların arasında bir şey var ve senden önce oradaydı."
     },
     {
@@ -3222,7 +3222,7 @@
       "cesaret": 13,
       "itibar": 2,
       "stok": 4,
-      "canavarGuc": 1.0,
+      "canavarGuc": 1,
       "ekCanavar": 1,
       "gece": "Taş konuşuyor. Dinlemek zorundasın; yol bu."
     }
