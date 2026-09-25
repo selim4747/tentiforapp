@@ -1,3 +1,13 @@
-# Derleme yok: dosyalar olduğu gibi yayınlanır.
+# Yayın paketi: scripts/paketle.mjs dosyaları küçültüp dist/ klasörüne koyar.
 [build]
-  publish = "."
+  command = "npm ci --omit=dev --no-audit --no-fund && npm run paketle"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Profil kısa adresi: /u/kullaniciadi → site açılır, profil gösterilir
+[[redirects]]
+  from = "/u/*"
+  to = "/?profil=:splat"
+  status = 302

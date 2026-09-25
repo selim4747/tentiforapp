@@ -225,9 +225,9 @@ function yoneticiDisaAktar() {
 
 /* Dokuz sekme bir şeritte sığmıyordu; iki gruba ayrıldı. */
 const Y_GRUPLARI = {
-  icerik: { ad: "İçerik", sekmeler: ["karakterler", "evren", "roman", "haritaDuzen", "yollar", "kisiler", "basin", "anahtarlar", "bosluklar"] },
+  icerik: { ad: "İçerik", sekmeler: ["karakterler", "evren", "roman", "haritaDuzen", "yollar", "kisiler", "basin", "listeler", "anahtarlar", "bosluklar"] },
   ekle:   { ad: "Ekle",   sekmeler: ["hizli", "yapimEkle", "olayEkle", "hikayeEkle", "gorselEkle", "sesEkle", "dosyaEkle"] },
-  bakim:  { ad: "Bakım",  sekmeler: ["denetim", "liderlik", "yayilma", "araclar", "test", "kaydet"] },
+  bakim:  { ad: "Bakım",  sekmeler: ["denetim", "istatistik", "liderlik", "teoriler", "hatalar", "yedek", "yayilma", "araclar", "test", "kaydet"] },
 };
 
 let yoneticiGrup = "icerik";
@@ -264,6 +264,7 @@ function yoneticiCiz() {
                      yapimEkle: "Yapım Ekle", haritaDuzen: "Evren / Harita", yollar: "Yollar", kisiler: "Kişiler",
                      olayEkle: "Olay Ekle", hikayeEkle: "Hikâye Ekle", gorselEkle: "Görsel Ekle",
                      dosyaEkle: "Kilitli Dosya Ekle", roman: "Roman", sesEkle: "Ses Ekle", basin: "Basın Kiti", liderlik: "Liderlik",
+                     listeler: "Listeler", istatistik: "İstatistik", teoriler: "Teoriler", hatalar: "Hatalar", yedek: "Yedek",
                      anahtarlar: "Anahtarlar", bosluklar: "Boşluklar",
                      denetim: "Denetim", yayilma: "Yayılma", araclar: "Araçlar",
                      test: "Test", kaydet: "Kaydet" }[s];
@@ -294,6 +295,11 @@ function yoneticiCiz() {
   else if (yoneticiSekme === "sesEkle") { govde = yoneticiSesEkle(); }
   else if (yoneticiSekme === "basin") { govde = yoneticiBasin(); }
   else if (yoneticiSekme === "liderlik") { govde = yoneticiLiderlik(); }
+  else if (yoneticiSekme === "listeler") { govde = yoneticiListeler(); }
+  else if (yoneticiSekme === "istatistik") { govde = yoneticiIstatistik(); }
+  else if (yoneticiSekme === "teoriler") { govde = yoneticiTeoriler(); }
+  else if (yoneticiSekme === "hatalar") { govde = yoneticiHatalar(); }
+  else if (yoneticiSekme === "yedek") { govde = yoneticiYedek(); }
   else if (yoneticiSecili === null) { govde = yoneticiListe(); }
   else { govde = yoneticiForm(); }
 

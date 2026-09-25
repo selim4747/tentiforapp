@@ -3244,3 +3244,90 @@ html[data-hesap="acik"] .hesap-btn{padding:0;background:transparent;border-color
 .kulup-savas p{font-size:14px;margin:6px 0}
 .dagilim-satir.ben span:first-child{font-weight:700;color:var(--deniz)}
 @media(max-width:420px){ .gk-hucre{width:34px;height:34px;font-size:15px} }
+
+/* ---------- topluluk: teori panosu, oylama, profil, seviye, haftalık ---------- */
+#teoriAlan,#oylamaAlan{margin-top:22px}
+.teori-konu{max-width:100%}
+.teori-liste{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.teori{background:var(--beyaz);border:1px solid var(--buz);border-radius:3px;padding:12px 14px}
+.teori.kanon{border-color:var(--deniz);box-shadow:inset 3px 0 0 var(--deniz)}
+.teori.yakin{box-shadow:inset 3px 0 0 var(--sig)}
+.teori-isaret{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--deniz)}
+.teori-metin{margin:4px 0 8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.teori-alt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:13.5px}
+.teori-begen{border:1px solid var(--buz);background:transparent;color:var(--murekkep-2);border-radius:99px;padding:2px 10px;cursor:pointer;font:inherit}
+.teori-begen.acik{color:var(--deniz);border-color:var(--deniz)}
+.teori-begen:disabled{cursor:default;opacity:.75}
+.teori-yon{display:inline-flex;gap:8px;flex-wrap:wrap}
+.teori-form{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.teori-form textarea{width:100%;font-family:var(--govde);font-size:15px;letter-spacing:normal;text-transform:none;text-align:left}
+.teori-form textarea::placeholder{text-transform:none;letter-spacing:normal}
+.oylama{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.dagilim-satir.oy{grid-template-columns:minmax(0,1.4fr) minmax(0,2fr) auto auto;align-items:center}
+.oy-dugme{padding:4px 10px;font-size:13px;white-space:nowrap;min-width:0}
+@media(max-width:520px){ .dagilim-satir.oy{grid-template-columns:minmax(0,1fr) 64px auto auto} }
+.oy-dugme.acik{color:var(--deniz)}
+.profil-topluluk{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.profil-seviye{display:flex;align-items:center;gap:10px}
+.seviye-rozet{display:inline-grid;place-items:center;min-width:34px;height:34px;padding:0 6px;border-radius:99px;
+  background:var(--deniz);color:var(--kar);font-family:var(--mono);font-weight:700}
+.profil-takip{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font-size:14.5px}
+.profil-vitrin{background:var(--beyaz);border:1px solid var(--buz);border-radius:3px;padding:10px 14px}
+.profil-vitrin blockquote{font-family:var(--display);font-size:18px;margin-top:4px}
+.seviye-kutu .lider-cubuk{display:block;margin:8px 0}
+.haftalik{background:var(--beyaz);border:1px solid var(--buz);border-radius:3px;padding:14px 16px;margin-bottom:14px}
+.haftalik-liste{list-style:none;display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.haftalik-liste li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:6px 0;border-bottom:1px solid var(--buz)}
+.haftalik-liste li span:first-child{flex:1;min-width:160px}
+.haftalik-liste li.alindi span:first-child{text-decoration:line-through;color:var(--murekkep-2)}
+.haftalik-liste li.hazir span:first-child{font-weight:700}
+.haftalik-liste li.kilitli{color:var(--murekkep-2)}
+
+/* ---------- gizlilik, sesli okuma, paylaş ---------- */
+.gizlilik-kutu h3{font-family:var(--display);font-weight:400;font-size:21px;margin-bottom:6px}
+.gizlilik-kutu ul{padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.sesli-dugme{margin:0 0 8px;padding:4px 12px;font-size:13px}
+.sesli-dugme.okuyor{color:var(--deniz);border-color:var(--deniz)}
+.sayfa-paylas{margin:10px 0 4px;padding:4px 14px;font-size:13px}
+
+/* ---------- panel: listeler ---------- */
+.y-liste-secici{flex-wrap:wrap}
+.y-liste-satirlar{display:flex;flex-direction:column;gap:4px;margin:8px 0 12px}
+.y-liste-satir{display:flex;align-items:stretch;gap:6px}
+.y-liste-satir .satir{flex:1;min-width:0;display:flex;gap:10px;align-items:center;text-align:left;
+  background:transparent;border:1px solid var(--buz);border-radius:3px;padding:6px 10px;cursor:pointer;color:inherit;font:inherit}
+.y-liste-satir .satir-no{font-family:var(--mono);font-size:12px;color:var(--murekkep-2)}
+.y-liste-satir .satir-govde{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.y-liste-sira{display:flex;gap:4px}
+.y-json{font-family:var(--mono);font-size:12.5px}
+.y-kod-satir{font-family:var(--mono);font-size:12px;overflow-wrap:anywhere}
+
+/* ---------- panel: istatistik ---------- */
+#yIstAlan{position:relative}
+.ist-kutular{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.ist-kutu{background:var(--beyaz);border:1px solid var(--buz);border-radius:3px;padding:12px 14px;display:flex;flex-direction:column}
+.ist-kutu-ad{font-size:12.5px;color:var(--murekkep-2)}
+.ist-kutu-deger{font-family:var(--display);font-size:30px;line-height:1.15;color:var(--murekkep)}
+.ist-kutu-not{font-size:12px;color:var(--murekkep-2)}
+.ist-coklu{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:10px}
+.ist-grafik{background:var(--beyaz);border:1px solid var(--buz);border-radius:3px;padding:12px 14px;margin:0}
+.ist-grafik figcaption{font-size:13px;color:var(--murekkep-2);margin-bottom:6px}
+.ist-grafik svg{width:100%;height:auto;display:block;overflow:visible}
+.ist-dolgu{fill:var(--deniz)}
+.ist-isaret:hover .ist-dolgu,.ist-isaret:focus .ist-dolgu{fill:var(--yarik)}
+.ist-isaret:focus{outline:none}
+.ist-taban{stroke:var(--sig);stroke-width:1}
+.ist-deger{font-family:var(--mono);font-size:10px;fill:var(--murekkep)}
+.ist-eksen{font-family:var(--mono);font-size:9.5px;fill:var(--murekkep-2)}
+.ist-cubuklar{display:flex;flex-direction:column;gap:2px}
+.ist-cubuk-satir{display:grid;grid-template-columns:minmax(0,9em) 1fr auto;align-items:center;gap:8px;padding:3px 0;font-size:13px}
+.ist-cubuk-satir:focus{outline:1px dotted var(--sig)}
+.ist-cubuk-ad{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ist-cubuk-iz{height:14px;border-left:1px solid var(--sig)}
+.ist-cubuk{display:block;height:100%;background:var(--deniz);border-radius:0 4px 4px 0;min-width:2px}
+.ist-cubuk-deger{font-family:var(--mono);font-size:12px;color:var(--murekkep)}
+.ist-tablo{margin-top:6px;font-size:13px}
+.ist-tablo table{border-collapse:collapse;width:100%;margin-top:6px}
+.ist-tablo th,.ist-tablo td{text-align:left;padding:3px 8px;border-bottom:1px solid var(--buz)}
+.ist-ipucu{position:absolute;transform:translate(-50%,-100%);background:var(--murekkep);color:var(--kar);
+  font-family:var(--mono);font-size:12px;padding:4px 8px;border-radius:3px;pointer-events:none;white-space:nowrap;z-index:5}

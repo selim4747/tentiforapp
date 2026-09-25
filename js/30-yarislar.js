@@ -222,7 +222,16 @@ function yarisPaketiUret() {
     oyun: (typeof OYUNLAR !== "undefined") ? OYUNLAR.length : 6
   };
 
-  const govde = { banka: banka, kesif: kesif, sayilar: sayilar };
+  /* sıradaki içerik oylaması: henüz başlanmamış yapımlar (yapımda/yazımda/yayında olanlar hariç) */
+  const baslanmis = /^(yapımda|yazımda|yayında|çıktı|tamamlandı)$/i;
+  const yapimlar = [];
+  (veri.yapimlar || []).forEach(function (y) {
+    if (!y || !y.ad || baslanmis.test(String(y.durum || "").trim())) { return; }
+    const ad = yapimlar.indexOf(y.ad) === -1 ? y.ad : y.ad + " (" + y.tur + ")";
+    if (yapimlar.indexOf(ad) === -1) { yapimlar.push(ad.slice(0, 120)); }
+  });
+
+  const govde = { banka: banka, kesif: kesif, sayilar: sayilar, yapimlar: yapimlar };
   govde.ozet = YARIS_SURUM + "-" + metinTohumu(JSON.stringify(govde)).toString(36);
   return govde;
 }

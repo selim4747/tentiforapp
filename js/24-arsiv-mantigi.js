@@ -771,6 +771,7 @@ veriKaynak
       ["gezinme", function () { gezinmeCiz(); ilerlemeKur(); gecCizimKur(); }],
       ["sayfalama", sayfaYonlendir],
       ["hesap", function () { if (typeof hesapBaslat === "function") { hesapBaslat(); } }],
+      ["bakım", function () { if (typeof bakimBaslat === "function") { bakimBaslat(); } }],
       ["bağlantı", baglantiyiUygula]
     ];
 

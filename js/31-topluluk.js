@@ -127,7 +127,7 @@ async function oylamaCiz() {
         '<span class="lider-cubuk"><i style="width:' + Math.round(100 * x.oy / enCok) + '%"></i></span><b>' + x.oy + "</b>" +
         (toplulukGirisli()
           ? '<button class="dugme dugme-sade oy-dugme' + (benim ? " acik" : "") + '" data-oyla="' + kacir(x.yapim) + '"' +
-              (!benim && oylarim.length >= 3 ? " disabled" : "") + ">" + (benim ? "oyumu geri al" : "oy ver") + "</button>"
+              (!benim && oylarim.length >= 3 ? " disabled" : "") + ">" + (benim ? "geri al" : "oy ver") + "</button>"
           : "") +
         "</div>";
     }).join("") + "</div>" +

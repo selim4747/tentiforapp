@@ -1276,7 +1276,7 @@ begin
   if not public.yonetici_mi() then raise exception 'yetki yok'; end if;
   return jsonb_build_object(
     'zaman', now(),
-    'kullanicilar', (select coalesce(jsonb_agg(jsonb_build_object('id', id, 'email', email, 'created_at', created_at)), '[]') from auth.users),
+    'kullanicilar', (select coalesce(jsonb_agg(jsonb_build_object('id', id, 'created_at', created_at)), '[]') from auth.users),  -- e-posta bilerek yok
     'profiller', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.profiller t),
     'ilerlemeler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.ilerlemeler t),
     'istatistikler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.istatistikler t),
