@@ -658,6 +658,7 @@ function haritaSahne(h, w, hh, cx, cy, k, sec) {
           '<text class="hm-kita-ad" x="' + ax.toFixed(1) + '" y="' + ay.toFixed(1) + '">' + kacir(ad) + "</text></g>");
         return;
       }
+      if (sec.yersiz) { return; }            /* harita bulmacası: yalnızca kıtalar görünür */
       if (haritaGizliTurler[y.tur]) { return; }
       if (sx < -120 || sx > w + 120 || sy < -50 || sy > hh + 50) { return; }
       const secili = !!sec.etkilesim && haritaSecili === y.id;

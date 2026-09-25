@@ -152,7 +152,8 @@ async function liderlikIcerikYukle(t) {
   const kutu = document.querySelector("#liderlikIcerik");
   if (!kutu) { return; }
   try {
-    if (t.id === "bulmaca") { await liderlikBulmacaCiz(kutu); }
+    if (t.yukle) { await t.yukle(kutu, t); }
+    else if (t.id === "bulmaca") { await liderlikBulmacaCiz(kutu); }
     else if (t.id === "kulupler") { await liderlikKuluplerCiz(kutu); }
     else if (t.id === "topluluk") { await liderlikToplulukCiz(kutu); }
     else { await liderlikSiralamaCiz(kutu, t); }
@@ -286,7 +287,7 @@ async function liderlikBenCiz(t) {
   else if (b && b.askida) { metin = "Kaydın incelemede; bu sürede tablolarda görünmüyorsun." + (b.askida_neden ? " (" + b.askida_neden + ")" : ""); }
   else if (b && b.gizli) { metin = "Tablolarda görünmemeyi seçtin."; }
   else if (!b) { metin = "Bir sonraki eşitlemede tablolara yazılacaksın."; }
-  else if (["bulmaca", "kulupler", "topluluk"].indexOf(t.id) === -1 && liderlikBenimAdim()) {
+  else if (!t.yukle && ["bulmaca", "kulupler", "topluluk"].indexOf(t.id) === -1 && liderlikBenimAdim()) {
     const { data } = await hesapIstemci.from("liderlik").select(t.id).eq("kullanici_adi", liderlikBenimAdim()).maybeSingle();
     const v = data ? data[t.id] : 0;
     if (!v) { metin = "Bu tabloda henüz puanın yok."; }

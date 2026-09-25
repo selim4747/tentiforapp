@@ -24,6 +24,7 @@ function tavanBilgi(oyun) {
 let C = null;
 
 function cevirmenBaslat(zorluk) {
+  if (typeof meydanTohumla === "function") { meydanTohumla("cevirmen"); }
   const havuz = (veri.kelimeler[zorluk] || []).slice();
 
   for (let i = havuz.length - 1; i > 0; i--) {
@@ -165,6 +166,7 @@ function cevirmenCiz() {
 let V = null;
 
 function vardiyaBaslat() {
+  if (typeof meydanTohumla === "function") { meydanTohumla("vardiya"); }
   V = { sira: 0, toplam: 10, kazanc: 0, memnun: 0, sabir: 5, bitti: false, musteri: null };
   vardiyaMusteri();
 }

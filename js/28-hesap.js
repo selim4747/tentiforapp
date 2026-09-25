@@ -138,6 +138,8 @@ async function hesapOturumAyarla(kullanici, olay) {
   hesapCiz();
   if (typeof liderlikCiz === "function") { liderlikCiz(); }
   if (hesapKullanici && typeof liderlikGonder === "function") { liderlikGonder(); }
+  if (typeof yarislarCiz === "function") { yarislarCiz(); }
+  if (hesapKullanici && typeof yarisIcerikEsitle === "function") { yarisIcerikEsitle(); }
 }
 
 async function hesapProfilYukle() {
@@ -718,6 +720,7 @@ async function hesapProfilAc(ad) {
         "</div>"
       : "") +
     '<div id="profilDereceler"></div>' +
+    '<div id="profilYaris"></div>' +
     (o.madalyalar && o.madalyalar.length
       ? '<div class="hesap-madalya">' + o.madalyalar.map(function (m) { return "<span>" + kacir(m) + "</span>"; }).join("") + "</div>"
       : "") +
@@ -727,6 +730,7 @@ async function hesapProfilAc(ad) {
     "</div>"
   );
   if (typeof liderlikProfilDereceleri === "function") { liderlikProfilDereceleri(p.kullanici_adi); }
+  if (typeof yarisProfilEk === "function") { yarisProfilEk(p); }
 }
 
 /* ==================== olaylar ==================== */

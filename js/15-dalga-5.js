@@ -248,8 +248,23 @@ function meydanUygula() {
   bolumeGit("oyunlar");
 }
 
+/** Meydan okumada oyun başlarken tohum verilir: aynı dizi, aynı sıra.
+    (Önceden tohum hiç ayarlanmıyordu; meydan aslında farklı diziyle oynanıyordu.) */
+function meydanTohumla(oyun) {
+  if (meydan && meydan.oyun === oyun && !meydan.sonuc) { tohumAyarla(meydan.tohum); }
+}
+
 function meydanBitir(oyun, skor) {
   if (!meydan || meydan.oyun !== oyun) { return; }
+
+  /* Nöbet haftalık meydanı (30-yarislar.js): skor sunucuya gider */
+  if (meydan.haftalik) {
+    meydan = null;
+    tohumAyarla(null);
+    if (typeof yarisMeydanBitti === "function") { yarisMeydanBitti(skor); }
+    meydanCiz();
+    return;
+  }
 
   const kazandi = skor > meydan.skor;
   meydan.sonuc = { skor: skor, kazandi: kazandi };
@@ -293,7 +308,7 @@ function meydanCiz() {
 
   alan.innerHTML =
     '<div class="meydan">' +
-      '<div class="gorev-etiket">meydan okuma</div>' +
+      '<div class="gorev-etiket">' + (meydan.haftalik ? "haftalık meydan" : "meydan okuma") + "</div>" +
       '<div class="gorev-ad">' + kacir(MEYDAN_OYUNLARI[meydan.oyun]) + "</div>" +
       "<p>Geçmen gereken skor: <b>" + meydan.skor + "</b></p>" +
       '<p class="oyun-not">Aynı dizi, aynı sıra. Oyunu aşağıdan başlat.</p>' +
