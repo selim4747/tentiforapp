@@ -14,8 +14,12 @@ function yeniMi(kayit) {
   return fark >= 0 && fark <= YENI_GUN;
 }
 
+/** "yeni" rozeti: kayıt son ziyaretten beri eklendiyse ya da eklendi tarihi yakınsa.
+    Son ziyaretten beri değiştiyse "güncellendi". Bkz. 26-ziyaret-yenilikleri.js */
 function yeniRozet(kayit) {
-  return yeniMi(kayit) ? '<span class="yeni-rozet">yeni</span>' : "";
+  const z = (typeof ziyaretDurumu === "function") ? ziyaretDurumu(kayit) : "";
+  if (z === "guncel") { return '<span class="yeni-rozet guncel">güncellendi</span>'; }
+  return (z === "yeni" || yeniMi(kayit)) ? '<span class="yeni-rozet">yeni</span>' : "";
 }
 
 /** Türkçe karakterleri sadeleştirir: "tari" yazınca "Tarı" bulunsun. */

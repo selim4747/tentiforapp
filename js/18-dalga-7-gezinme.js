@@ -52,9 +52,11 @@ function gezinmeCiz() {
     '<button class="gez-btn" id="icindekilerBtn" aria-label="İçindekiler">☰ İçindekiler</button>' +
     GEZINME.map(function (g, i) {
       const bu = aktifSayfa === g.id;
+      const yeni = (typeof ziyaretSayfaSayisi === "function") ? ziyaretSayfaSayisi(g.id) : 0;
       return '<a class="gez-btn' + (bu ? " bu-sayfa" : "") + '" href="#/' + g.id + '"' +
-               ' title="' + (i + 1) + '. sayfa"' + (bu ? ' aria-current="page"' : "") + ">" +
-               kacir(g.ad) + "</a>";
+               ' title="' + (i + 1) + ". sayfa" + (yeni ? " · " + yeni + " yenilik" : "") + '"' +
+               (bu ? ' aria-current="page"' : "") + ">" +
+               kacir(g.ad) + (yeni ? '<span class="gez-yeni" aria-label="' + yeni + ' yenilik"></span>' : "") + "</a>";
     }).join("");
 
   /* seçili sayfa şeritte görünür kalsın (mobilde şerit yatay kayar) */

@@ -339,7 +339,7 @@ function olaylarCiz() {
     }).join("");
 
     return '<div class="olay-kart">' +
-        '<h3 class="olay-baslik">' + kacir(o.baslik) + "</h3>" +
+        '<h3 class="olay-baslik">' + kacir(o.baslik) + yeniRozet(o) + "</h3>" +
         (o.yasanmaSekli ? '<p class="olay-sekil">' + kacir(o.yasanmaSekli) + "</p>" : "") +
         '<div class="detay-metin">' + paragraf(o.anlatim) + "</div>" +
         (kisiler ? '<div class="olay-kisiler">' + kisiler + "</div>" : "") +
@@ -369,7 +369,7 @@ function kisaHikayelerCiz() {
     }).join("");
 
     return '<div class="olay-kart">' +
-        '<h3 class="olay-baslik">' + kacir(h.baslik) + "</h3>" +
+        '<h3 class="olay-baslik">' + kacir(h.baslik) + yeniRozet(h) + "</h3>" +
         '<div class="detay-metin">' + paragraf(h.metin) + "</div>" +
         (kisiler ? '<div class="olay-kisiler">' + kisiler + "</div>" : "") +
       "</div>";

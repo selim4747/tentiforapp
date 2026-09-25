@@ -225,8 +225,8 @@ function yoneticiDisaAktar() {
 
 /* Dokuz sekme bir şeritte sığmıyordu; iki gruba ayrıldı. */
 const Y_GRUPLARI = {
-  icerik: { ad: "İçerik", sekmeler: ["karakterler", "evren", "haritaDuzen", "yollar", "kisiler", "anahtarlar", "bosluklar"] },
-  ekle:   { ad: "Ekle",   sekmeler: ["hizli", "yapimEkle", "olayEkle", "hikayeEkle", "gorselEkle", "dosyaEkle"] },
+  icerik: { ad: "İçerik", sekmeler: ["karakterler", "evren", "roman", "haritaDuzen", "yollar", "kisiler", "basin", "anahtarlar", "bosluklar"] },
+  ekle:   { ad: "Ekle",   sekmeler: ["hizli", "yapimEkle", "olayEkle", "hikayeEkle", "gorselEkle", "sesEkle", "dosyaEkle"] },
   bakim:  { ad: "Bakım",  sekmeler: ["denetim", "yayilma", "araclar", "test", "kaydet"] },
 };
 
@@ -263,7 +263,7 @@ function yoneticiCiz() {
         const ad = { karakterler: "Karakterler", evren: "Evren", hizli: "Hızlı Karakter",
                      yapimEkle: "Yapım Ekle", haritaDuzen: "Evren / Harita", yollar: "Yollar", kisiler: "Kişiler",
                      olayEkle: "Olay Ekle", hikayeEkle: "Hikâye Ekle", gorselEkle: "Görsel Ekle",
-                     dosyaEkle: "Kilitli Dosya Ekle",
+                     dosyaEkle: "Kilitli Dosya Ekle", roman: "Roman", sesEkle: "Ses Ekle", basin: "Basın Kiti",
                      anahtarlar: "Anahtarlar", bosluklar: "Boşluklar",
                      denetim: "Denetim", yayilma: "Yayılma", araclar: "Araçlar",
                      test: "Test", kaydet: "Kaydet" }[s];
@@ -290,6 +290,9 @@ function yoneticiCiz() {
   else if (yoneticiSekme === "hikayeEkle") { govde = yoneticiHikayeEkle(); }
   else if (yoneticiSekme === "gorselEkle") { govde = yoneticiGorselEkle(); }
   else if (yoneticiSekme === "dosyaEkle") { govde = yoneticiDosyaEkle(); }
+  else if (yoneticiSekme === "roman") { govde = yoneticiRoman(); }
+  else if (yoneticiSekme === "sesEkle") { govde = yoneticiSesEkle(); }
+  else if (yoneticiSekme === "basin") { govde = yoneticiBasin(); }
   else if (yoneticiSecili === null) { govde = yoneticiListe(); }
   else { govde = yoneticiForm(); }
 
