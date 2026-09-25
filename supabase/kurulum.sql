@@ -487,5 +487,461 @@ grant execute on function public.istatistik_gonder(jsonb), public.istatistik_sif
                           public.bildir(text, text), public.liderlik_denetim(),
                           public.liderlik_karar(uuid, text) to authenticated;
 
+-- ======================================================================
+-- ============ YARIŞLAR ================================================
+-- ======================================================================
+-- Sorular ve doğru cevaplar sunucudadır. Oyuncuya sorular cevapsız gider;
+-- puanı, süreyi ve doğruluğu veritabanı hesaplar. Soru bankasını yönetici
+-- hesabıyla giriş yapıldığında site kendisi üretip yükler (yaris_icerik_yukle).
+
+create table if not exists public.yaris_tanim (
+  yaris text primary key,
+  tur text not null check (tur in ('secenek', 'metin', 'sira', 'nokta', 'set', 'serbest')),
+  soru_sayisi int not null,
+  sure_sn int not null,
+  en_az_ms int not null default 0      -- bir doğru cevap için insanın en az harcayacağı süre
+);
+insert into public.yaris_tanim (yaris, tur, soru_sayisi, sure_sn, en_az_ms) values
+  ('kyldo_hiz',   'metin',   40,   60, 900),
+  ('isim_avi',    'secenek', 30,  120, 600),
+  ('arsiv_sinavi','secenek', 10,  120, 900),
+  ('alinti',      'secenek', 10,   60, 700),
+  ('harita',      'nokta',    5,   90, 1200),
+  ('takvim',      'secenek',  8,   90, 1500),
+  ('kronoloji',   'sira',     1,   60, 4000),
+  ('muhur',       'set',     10,   90, 1500),
+  ('oyunbozan',   'set',      1,  180, 8000),
+  ('nobet_meydan','serbest',  0, 3600, 4000)
+on conflict (yaris) do update set tur = excluded.tur, soru_sayisi = excluded.soru_sayisi,
+  sure_sn = excluded.sure_sn, en_az_ms = excluded.en_az_ms;
+alter table public.yaris_tanim enable row level security;
+drop policy if exists "yarışlar herkese açık" on public.yaris_tanim;
+create policy "yarışlar herkese açık" on public.yaris_tanim for select using (true);
+
+-- soru bankası: cevap sütunu hiçbir istemciye gösterilmez (politika yok)
+create table if not exists public.yaris_banka (
+  yaris text not null,
+  no int not null,
+  soru jsonb not null,
+  cevap jsonb not null,
+  primary key (yaris, no)
+);
+alter table public.yaris_banka enable row level security;
+
+create table if not exists public.yaris_ayar (
+  id int primary key default 1 check (id = 1),
+  icerik_ozet text,
+  guncelleme timestamptz
+);
+insert into public.yaris_ayar (id) values (1) on conflict (id) do nothing;
+alter table public.yaris_ayar enable row level security;
+drop policy if exists "yarış ayarı herkese açık" on public.yaris_ayar;
+create policy "yarış ayarı herkese açık" on public.yaris_ayar for select using (true);
+
+create table if not exists public.yaris_oturumlari (
+  id uuid primary key default gen_random_uuid(),
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  yaris text not null,
+  sorular int[] not null default '{}',
+  tohum bigint,
+  baslangic timestamptz not null default now(),
+  bitis timestamptz,
+  durum text not null default 'acik'
+);
+create index if not exists yaris_oturumlari_kullanici on public.yaris_oturumlari (kullanici, baslangic);
+alter table public.yaris_oturumlari enable row level security;
+
+create table if not exists public.yaris_skorlari (
+  no bigserial primary key,
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  yaris text not null,
+  puan int not null,
+  dogru int not null default 0,
+  sure_ms int not null,
+  hafta date not null,
+  sezon int not null,
+  supheli boolean not null default false,
+  zaman timestamptz not null default now()
+);
+create index if not exists yaris_skorlari_yaris on public.yaris_skorlari (yaris, hafta);
+alter table public.yaris_skorlari enable row level security;
+
+-- ---------- içerik yükleme (yönetici) ----------
+create table if not exists public.kesif_anahtarlari (
+  anahtar text primary key,
+  eklenme timestamptz not null default now()
+);
+alter table public.kesif_anahtarlari enable row level security;
+
+create or replace function public.yaris_icerik_yukle(p jsonb) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  y text;
+  ilk boolean;
+begin
+  if not public.yonetici_mi() then raise exception 'yetki yok'; end if;
+
+  for y in select jsonb_object_keys(coalesce(p->'banka', '{}')) loop
+    if not exists (select 1 from public.yaris_tanim where yaris = y) and y <> 'gunun_kelimesi' then continue; end if;
+    delete from public.yaris_banka where yaris = y;
+    insert into public.yaris_banka (yaris, no, soru, cevap)
+      select y, e.ord::int, coalesce(e.v->'soru', '{}'), coalesce(e.v->'cevap', '{}')
+      from jsonb_array_elements(p->'banka'->y) with ordinality as e(v, ord);
+  end loop;
+
+  -- İlk Kâşif: ilk yüklemede var olan her şey "eski" sayılır; sonra eklenenler yeni
+  select not exists (select 1 from public.kesif_anahtarlari) into ilk;
+  insert into public.kesif_anahtarlari (anahtar, eklenme)
+    select a, case when ilk then timestamptz '2000-01-01' else now() end
+    from jsonb_array_elements_text(coalesce(p->'kesif', '[]')) as a
+  on conflict (anahtar) do nothing;
+
+  -- liderlikteki sınırlar içerikle birlikte güncellenir
+  if p ? 'sayilar' then
+    update public.liderlik_ayar set
+      karakter = greatest(coalesce((p->'sayilar'->>'karakter')::int, karakter), 1),
+      katman   = greatest(coalesce((p->'sayilar'->>'katman')::int, katman), 1),
+      galeri   = greatest(coalesce((p->'sayilar'->>'galeri')::int, galeri), 1),
+      madalya  = greatest(coalesce((p->'sayilar'->>'madalya')::int, madalya), 1),
+      oyun     = greatest(coalesce((p->'sayilar'->>'oyun')::int, oyun), 1)
+    where id = 1;
+  end if;
+
+  update public.yaris_ayar set icerik_ozet = p->>'ozet', guncelleme = now() where id = 1;
+  return jsonb_build_object('durum', 'tamam',
+    'soru', (select count(*) from public.yaris_banka), 'kesif', (select count(*) from public.kesif_anahtarlari));
+end;
+$$;
+
+-- ---------- yarış oturumu ----------
+create or replace function public.yaris_baslat(p_yaris text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  uid uuid := auth.uid();
+  t public.yaris_tanim;
+  secilen int[];
+  oid uuid;
+  tohum bigint;
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  select * into t from public.yaris_tanim where yaris = p_yaris;
+  if not found then return jsonb_build_object('durum', 'yok'); end if;
+  -- sıklık: saatte en çok 60 oturum
+  if (select count(*) from public.yaris_oturumlari where kullanici = uid and baslangic > now() - interval '1 hour') >= 60 then
+    return jsonb_build_object('durum', 'sinir');
+  end if;
+  update public.yaris_oturumlari set durum = 'terk' where kullanici = uid and yaris = p_yaris and durum = 'acik';
+
+  if t.tur = 'serbest' then
+    secilen := '{}';
+    -- haftalık meydan: o hafta herkes aynı tohumla oynar
+    tohum := (hashtext(p_yaris || ':' || date_trunc('week', now() at time zone 'utc')::date::text)::bigint & 2147483647);
+  else
+    select array_agg(no) into secilen from (
+      select no from public.yaris_banka where yaris = p_yaris order by random() limit t.soru_sayisi) x;
+    if secilen is null then return jsonb_build_object('durum', 'bos'); end if;
+  end if;
+
+  insert into public.yaris_oturumlari (kullanici, yaris, sorular, tohum) values (uid, p_yaris, secilen, tohum)
+    returning id into oid;
+
+  return jsonb_build_object('durum', 'tamam', 'oturum', oid, 'sure', t.sure_sn, 'tohum', tohum,
+    'sorular', coalesce((select jsonb_agg(jsonb_build_object('no', b.no, 'soru', b.soru) order by u.ord)
+                         from unnest(secilen) with ordinality as u(no, ord)
+                         join public.yaris_banka b on b.yaris = p_yaris and b.no = u.no), '[]'::jsonb));
+end;
+$$;
+
+-- metin karşılaştırması için Türkçe küçük harf
+create or replace function public.tr_kucuk(m text) returns text
+language sql immutable set search_path = '' as $$
+  select lower(translate(trim(coalesce(m, '')), 'İIÇĞÖŞÜ', 'iıçğöşü'));
+$$;
+
+create or replace function public.yaris_bitir(p_oturum uuid, p_cevaplar jsonb) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  uid uuid := auth.uid();
+  o public.yaris_oturumlari;
+  t public.yaris_tanim;
+  b public.yaris_banka;
+  gecen_ms int;
+  i int;
+  v jsonb;
+  dogru int := 0;
+  puan int := 0;
+  seri int := 0;
+  seri_bitti boolean := false;
+  ok boolean;
+  mesafe double precision;
+  dx double precision;
+  kismi int;
+  sonuclar jsonb := '[]'::jsonb;
+  supheli boolean := false;
+  skor int;
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  select * into o from public.yaris_oturumlari where id = p_oturum and kullanici = uid for update;
+  if not found or o.durum <> 'acik' then return jsonb_build_object('durum', 'gecersiz'); end if;
+  select * into t from public.yaris_tanim where yaris = o.yaris;
+  gecen_ms := (extract(epoch from (now() - o.baslangic)) * 1000)::int;
+
+  -- süre dolduktan 10 sn sonra gelen cevap geçersiz
+  if gecen_ms > (t.sure_sn + 10) * 1000 then
+    update public.yaris_oturumlari set durum = 'gec', bitis = now() where id = o.id;
+    return jsonb_build_object('durum', 'gec');
+  end if;
+
+  if t.tur = 'serbest' then
+    -- Nöbet haftalık meydanı: skor istemciden gelir; sınırlanır ve süreyle karşılaştırılır
+    skor := least(greatest(coalesce((p_cevaplar->>'skor')::int, 0), 0), 28);
+    puan := skor; dogru := skor;
+    if gecen_ms < skor * t.en_az_ms then supheli := true; end if;
+  else
+    for i in 1 .. coalesce(array_length(o.sorular, 1), 0) loop
+      select * into b from public.yaris_banka where yaris = o.yaris and no = o.sorular[i];
+      v := p_cevaplar -> (i - 1);
+      ok := false; kismi := 0;
+      if b.no is not null and v is not null and v <> 'null'::jsonb then
+        if t.tur = 'secenek' then
+          ok := public.tr_kucuk(v #>> '{}') = public.tr_kucuk(b.cevap->>'dogru');
+        elsif t.tur = 'metin' then
+          ok := public.tr_kucuk(v #>> '{}') in (select public.tr_kucuk(x) from jsonb_array_elements_text(b.cevap->'kabul') x);
+        elsif t.tur = 'set' then
+          ok := jsonb_typeof(v) = 'array' and
+                (select coalesce(array_agg(public.tr_kucuk(x) order by public.tr_kucuk(x)), '{}') from jsonb_array_elements_text(v) x) =
+                (select coalesce(array_agg(public.tr_kucuk(x) order by public.tr_kucuk(x)), '{}') from jsonb_array_elements_text(b.cevap->'dogru') x);
+        elsif t.tur = 'sira' then
+          if jsonb_typeof(v) = 'array' then
+            select count(*) into kismi from jsonb_array_elements_text(v) with ordinality a(x, n)
+              join jsonb_array_elements_text(b.cevap->'dogru') with ordinality d(x, n) on a.n = d.n and a.x = d.x;
+            ok := kismi = jsonb_array_length(b.cevap->'dogru');
+          end if;
+        elsif t.tur = 'nokta' then
+          dx := abs((v->>'x')::double precision - (b.cevap->>'x')::double precision);
+          dx := least(dx, 100 - dx);    -- gezegen yatayda döner
+          mesafe := sqrt(dx * dx + power((v->>'y')::double precision - (b.cevap->>'y')::double precision, 2));
+          kismi := greatest(0, round(100 - mesafe * 4))::int;
+          ok := mesafe <= 6;
+        end if;
+      end if;
+
+      if ok then dogru := dogru + 1; end if;
+      if not seri_bitti then if ok then seri := seri + 1; else seri_bitti := true; end if; end if;
+      if t.tur = 'nokta' then puan := puan + kismi;
+      elsif t.tur = 'sira' then puan := puan + kismi * 10;
+      end if;
+      sonuclar := sonuclar || jsonb_build_object('dogru', ok, 'cevap', b.cevap, 'kismi', kismi);
+    end loop;
+
+    if o.yaris = 'isim_avi' then puan := seri;                                        -- seri kırılana kadar
+    elsif o.yaris = 'arsiv_sinavi' then puan := dogru * 10 + case when dogru > 0 then greatest(0, t.sure_sn - gecen_ms / 1000) else 0 end;
+    elsif o.yaris = 'kronoloji' then puan := puan + case when dogru = 1 then greatest(0, t.sure_sn - gecen_ms / 1000) else 0 end;
+    elsif o.yaris = 'oyunbozan' then puan := case when dogru = 1 then 30 + greatest(0, t.sure_sn - gecen_ms / 1000) else 0 end;
+    elsif t.tur in ('secenek', 'metin', 'set') then puan := dogru;
+    end if;
+
+    -- insan hızı: her doğru için en az t.en_az_ms
+    if dogru > 0 and gecen_ms < dogru * t.en_az_ms then supheli := true; end if;
+  end if;
+
+  update public.yaris_oturumlari set durum = 'bitti', bitis = now() where id = o.id;
+  insert into public.yaris_skorlari (kullanici, yaris, puan, dogru, sure_ms, hafta, sezon, supheli)
+    values (uid, o.yaris, puan, dogru, gecen_ms, date_trunc('week', now() at time zone 'utc')::date, public.tomye_ay(now()), supheli);
+  if supheli then
+    insert into public.liderlik_suphe (id, neden, veri)
+      values (uid, o.yaris || ': insan hızının üstünde (' || dogru || ' doğru, ' || gecen_ms || ' ms)', p_cevaplar);
+  end if;
+
+  return jsonb_build_object('durum', 'tamam', 'puan', puan, 'dogru', dogru, 'sure_ms', gecen_ms,
+                            'supheli', supheli, 'sonuclar', sonuclar);
+end;
+$$;
+
+-- ---------- Günün Kelimesi (cevap sunucuda) ----------
+create table if not exists public.gk_tahminler (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  gun date not null,
+  tahminler text[] not null default '{}',
+  cozuldu boolean not null default false,
+  bitis timestamptz,
+  primary key (kullanici, gun)
+);
+alter table public.gk_tahminler enable row level security;
+
+create or replace function public.gk_cevap(p_gun date) returns text
+language sql stable security definer set search_path = '' as $$
+  select public.tr_kucuk(cevap->>'kelime') from public.yaris_banka
+  where yaris = 'gunun_kelimesi'
+    and no = (select (abs(p_gun - date '2026-01-01') % count(*)) + 1 from public.yaris_banka where yaris = 'gunun_kelimesi');
+$$;
+
+-- harf harf: d = doğru yerde, v = kelimede var, y = yok (tekrarlı harfler doğru sayılır)
+create or replace function public.gk_karsilastir(tahmin text, cevap text) returns text[]
+language plpgsql immutable set search_path = '' as $$
+declare
+  t text[] := regexp_split_to_array(tahmin, '');
+  c text[] := regexp_split_to_array(cevap, '');
+  s text[] := array_fill('y'::text, array[array_length(t, 1)]);
+  kalan text[] := '{}';
+  i int; j int;
+begin
+  for i in 1 .. array_length(t, 1) loop
+    if t[i] = c[i] then s[i] := 'd'; else kalan := kalan || c[i]; end if;
+  end loop;
+  for i in 1 .. array_length(t, 1) loop
+    if s[i] <> 'd' then
+      j := array_position(kalan, t[i]);
+      if j is not null then s[i] := 'v'; kalan := kalan[1:j-1] || kalan[j+1:]; end if;
+    end if;
+  end loop;
+  return s;
+end;
+$$;
+
+create or replace function public.gk_durum() returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  uid uuid := auth.uid();
+  v_gun date := (now() at time zone 'utc')::date;
+  cevap text := public.gk_cevap((now() at time zone 'utc')::date);
+  k public.gk_tahminler;
+  bitti boolean;
+begin
+  if cevap is null then return jsonb_build_object('durum', 'bos'); end if;
+  select * into k from public.gk_tahminler t where t.kullanici = uid and t.gun = v_gun;
+  bitti := coalesce(k.cozuldu, false) or coalesce(array_length(k.tahminler, 1), 0) >= 6;
+  return jsonb_build_object('durum', 'tamam', 'gun', v_gun, 'uzunluk', char_length(cevap), 'hak', 6,
+    'tahminler', coalesce((select jsonb_agg(jsonb_build_object('kelime', x, 'sonuc', to_jsonb(public.gk_karsilastir(x, cevap))) order by n)
+                           from unnest(k.tahminler) with ordinality u(x, n)), '[]'::jsonb),
+    'cozuldu', coalesce(k.cozuldu, false), 'bitti', bitti,
+    'cevap', case when bitti then cevap end);
+end;
+$$;
+
+create or replace function public.gk_tahmin(p text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  uid uuid := auth.uid();
+  v_gun date := (now() at time zone 'utc')::date;
+  cevap text := public.gk_cevap((now() at time zone 'utc')::date);
+  tahmin text := public.tr_kucuk(p);
+  k public.gk_tahminler;
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if cevap is null then return jsonb_build_object('durum', 'bos'); end if;
+  if char_length(tahmin) <> char_length(cevap) or tahmin !~ '^[a-zçğıöşü]+$' then
+    return jsonb_build_object('durum', 'gecersiz', 'uzunluk', char_length(cevap));
+  end if;
+  insert into public.gk_tahminler (kullanici, gun) values (uid, v_gun) on conflict do nothing;
+  select * into k from public.gk_tahminler t where t.kullanici = uid and t.gun = v_gun for update;
+  if k.cozuldu or coalesce(array_length(k.tahminler, 1), 0) >= 6 then return public.gk_durum(); end if;
+  update public.gk_tahminler set tahminler = tahminler || tahmin,
+    cozuldu = (tahmin = cevap),
+    bitis = case when tahmin = cevap or coalesce(array_length(tahminler, 1), 0) + 1 >= 6 then now() end
+  where gk_tahminler.kullanici = uid and gk_tahminler.gun = v_gun;
+  return public.gk_durum();
+end;
+$$;
+
+-- ---------- İlk Kâşif ----------
+create table if not exists public.kesifler (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  anahtar text not null references public.kesif_anahtarlari(anahtar) on delete cascade,
+  zaman timestamptz not null default now(),
+  primary key (kullanici, anahtar)
+);
+alter table public.kesifler enable row level security;
+
+-- yalnızca son 60 günde eklenen içerik sayılır; dakikada en çok 30 kayıt
+create or replace function public.kesif_kaydet(p text) returns void
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then return; end if;
+  if not exists (select 1 from public.kesif_anahtarlari where anahtar = p and eklenme > now() - interval '60 days') then return; end if;
+  if (select count(*) from public.kesifler where kullanici = uid and zaman > now() - interval '1 minute') >= 30 then return; end if;
+  insert into public.kesifler (kullanici, anahtar) values (uid, p) on conflict do nothing;
+end;
+$$;
+
+-- ---------- herkese açık görünümler ----------
+drop view if exists public.yaris_tablolari;
+drop view if exists public.kyldo_toplam;
+drop view if exists public.kulup_savasi;
+drop view if exists public.gk_bugun;
+drop view if exists public.kasif_sayilari;
+drop view if exists public.ilk_kasifler;
+
+-- tablolarda görünebilecek kullanıcılar (gizli, askıda, engelli değil)
+create or replace view public.gorunur_kullanicilar as
+  select p.id, p.kullanici_adi, p.gorunen_ad, s.kisilik
+  from public.profiller p left join public.istatistikler s on s.id = p.id
+  where p.kullanici_adi is not null and not coalesce(s.gizli or s.askida or s.engelli, false);
+
+create view public.yaris_tablolari as
+  select k.yaris, 'tum'::text as kapsam, g.kullanici_adi, g.gorunen_ad, max(k.puan) as puan, count(*) as oyun
+    from public.yaris_skorlari k join public.gorunur_kullanicilar g on g.id = k.kullanici
+    where not k.supheli group by k.yaris, g.kullanici_adi, g.gorunen_ad
+  union all
+  select k.yaris, 'hafta', g.kullanici_adi, g.gorunen_ad, max(k.puan), count(*)
+    from public.yaris_skorlari k join public.gorunur_kullanicilar g on g.id = k.kullanici
+    where not k.supheli and k.hafta = date_trunc('week', now() at time zone 'utc')::date
+    group by k.yaris, g.kullanici_adi, g.gorunen_ad
+  union all
+  select k.yaris, 'sezon', g.kullanici_adi, g.gorunen_ad, max(k.puan), count(*)
+    from public.yaris_skorlari k join public.gorunur_kullanicilar g on g.id = k.kullanici
+    where not k.supheli and k.sezon = public.tomye_ay(now())
+    group by k.yaris, g.kullanici_adi, g.gorunen_ad;
+
+-- toplam çeviri: Kyldo hız yarışlarında doğru çevrilen bütün kelimeler
+create view public.kyldo_toplam as
+  select g.kullanici_adi, g.gorunen_ad, sum(k.dogru) as toplam,
+         sum(k.dogru) filter (where k.hafta = date_trunc('week', now() at time zone 'utc')::date) as hafta
+  from public.yaris_skorlari k join public.gorunur_kullanicilar g on g.id = k.kullanici
+  where k.yaris = 'kyldo_hiz' and not k.supheli
+  group by g.kullanici_adi, g.gorunen_ad;
+
+-- kulüp savaşı: bu hafta ve geçen hafta en çok Kyldo kelimesi çeviren kulüp
+create view public.kulup_savasi as
+  select g.kisilik,
+         coalesce(sum(k.dogru) filter (where k.hafta = date_trunc('week', now() at time zone 'utc')::date), 0) as bu_hafta,
+         coalesce(sum(k.dogru) filter (where k.hafta = date_trunc('week', now() at time zone 'utc')::date - 7), 0) as gecen_hafta,
+         count(distinct g.id) as katilan
+  from public.yaris_skorlari k join public.gorunur_kullanicilar g on g.id = k.kullanici
+  where k.yaris = 'kyldo_hiz' and not k.supheli and g.kisilik is not null
+  group by g.kisilik;
+
+create view public.gk_bugun as
+  select g.kullanici_adi, g.gorunen_ad, array_length(t.tahminler, 1) as deneme, t.bitis,
+         row_number() over (order by array_length(t.tahminler, 1), t.bitis) as sira
+  from public.gk_tahminler t join public.gorunur_kullanicilar g on g.id = t.kullanici
+  where t.gun = (now() at time zone 'utc')::date and t.cozuldu;
+
+create view public.ilk_kasifler as
+  select * from (
+    select k.anahtar, g.kullanici_adi, g.gorunen_ad, k.zaman,
+           row_number() over (partition by k.anahtar order by k.zaman) as sira
+    from public.kesifler k join public.gorunur_kullanicilar g on g.id = k.kullanici) x
+  where sira <= 10;
+
+create view public.kasif_sayilari as
+  select kullanici_adi, gorunen_ad, count(*) as ilk_on, count(*) filter (where sira = 1) as birinci
+  from public.ilk_kasifler group by kullanici_adi, gorunen_ad;
+
+revoke all on public.gorunur_kullanicilar from anon, authenticated;
+grant select on public.yaris_tablolari, public.kyldo_toplam, public.kulup_savasi, public.gk_bugun,
+                public.ilk_kasifler, public.kasif_sayilari to anon, authenticated;
+
+revoke insert, update, delete on public.yaris_tanim, public.yaris_banka, public.yaris_ayar, public.yaris_oturumlari,
+  public.yaris_skorlari, public.gk_tahminler, public.kesif_anahtarlari, public.kesifler from anon, authenticated;
+revoke select on public.yaris_banka, public.yaris_oturumlari, public.yaris_skorlari, public.gk_tahminler,
+  public.kesif_anahtarlari, public.kesifler from anon, authenticated;
+revoke execute on function public.yaris_icerik_yukle(jsonb), public.yaris_baslat(text), public.yaris_bitir(uuid, jsonb),
+  public.gk_durum(), public.gk_tahmin(text), public.kesif_kaydet(text), public.gk_cevap(date) from public, anon;
+grant execute on function public.yaris_icerik_yukle(jsonb), public.yaris_baslat(text), public.yaris_bitir(uuid, jsonb),
+  public.gk_durum(), public.gk_tahmin(text), public.kesif_kaydet(text) to authenticated;
+revoke execute on function public.gk_cevap(date) from authenticated;
+
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';

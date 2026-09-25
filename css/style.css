@@ -3178,3 +3178,69 @@ html[data-hesap="acik"] .hesap-btn{padding:0;background:transparent;border-color
   .lider-satir{grid-template-columns:28px 1fr auto 22px;gap:6px}
   .dagilim-satir{grid-template-columns:96px 1fr 36px}
 }
+
+/* ================= YARIŞLAR ================= */
+.yaris-etkinlik{border:1px solid var(--sig);border-left:3px solid var(--deniz);background:var(--beyaz);border-radius:3px;padding:14px 16px;margin-bottom:16px}
+.yaris-etkinlik p{margin:6px 0 10px;font-size:15px}
+.yaris-izgara{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin:16px 0}
+.yaris-kart{position:relative;display:flex;flex-direction:column;gap:6px;background:var(--beyaz);border:1px solid var(--buz);border-radius:3px;padding:14px}
+.yaris-kart.one{border-color:var(--deniz)}
+.yaris-kart h4{font-family:var(--display);font-weight:400;font-size:21px}
+.yaris-kart .oyun-not{flex:1}
+.yaris-kart-alt{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.yaris-eniyi{font-family:var(--mono);font-size:11px;color:var(--murekkep-2)}
+.yaris-rozet{position:absolute;top:-9px;right:10px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;background:var(--deniz);color:var(--beyaz);border-radius:2px;padding:3px 7px}
+.yaris-oyun{background:var(--beyaz);border:1px solid var(--sig);border-radius:3px;padding:16px}
+.yaris-ust{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.yaris-ust .oyun-etiket{margin:0;flex:1}
+.yaris-ilerleme{font-family:var(--mono);font-size:12px;color:var(--murekkep-2)}
+.yaris-saat{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--deniz);min-width:52px;text-align:right}
+.yaris-saat.az{color:#A33}
+.yaris-soru{font-size:18px;line-height:1.45;margin-bottom:12px}
+.yaris-secenekler{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:12px}
+.yaris-secenekler .dugme{text-align:left;text-transform:none;letter-spacing:.02em}
+.yaris-kyldo{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:18px 0}
+.yaris-form{display:flex;gap:8px;align-items:stretch}
+.yaris-form .yaris-giris{flex:1;margin:0;text-transform:none;letter-spacing:.06em}
+.yaris-harita{max-width:420px;margin:0 auto 12px;border:1px solid var(--sig);border-radius:3px;overflow:hidden}
+.yaris-harita svg{display:block;width:100%;height:auto;cursor:crosshair}
+.yaris-nokta{fill:#A33;stroke:var(--beyaz);stroke-width:2}
+.yaris-sira{list-style:decimal inside;display:flex;flex-direction:column;gap:6px;margin:0 0 12px;padding:0}
+.yaris-sira li{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;border:1px solid var(--buz);border-radius:2px;padding:6px 8px;font-size:15px}
+.yaris-sira .dugme{padding:6px 10px}
+.yaris-ipucu{margin:0 0 12px 18px;font-size:15px;line-height:1.5}
+.yaris-sonuc{background:var(--beyaz);border:1px solid var(--sig);border-radius:3px;padding:18px;margin:12px 0;text-align:center}
+.yaris-puan{font-family:var(--display);font-size:56px;line-height:1}
+.yaris-puan span{font-family:var(--mono);font-size:12px;margin-left:6px;color:var(--murekkep-2)}
+.yaris-dokum{text-align:left;margin:10px 0}
+.yaris-dokum ol{margin:8px 0 0 20px;font-size:14px;line-height:1.6}
+.yaris-dokum li.dogru{color:var(--deniz)}
+.yaris-dokum li.yanlis{color:#A33}
+.oyun-not.kotu{color:#A33}
+.yaris-kapsam{margin:8px 0 4px}
+/* mühür: canlı önizleme + parça düğmeleri */
+.muhur-onizleme{display:flex;justify-content:center;margin:4px 0 12px}
+.muhur-onizleme .yz-hece{width:120px;height:120px;background:var(--kar);border:1px dashed var(--sig);border-radius:4px}
+.muhur-onizleme .yz-cizgi{stroke-width:5}
+.muhur-onizleme .yz-carpi{stroke-width:4}
+.muhur-grup{margin-bottom:12px}
+.muhur-dugmeler{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.muhur-dugme{cursor:pointer;font-family:var(--mono);font-size:12px;padding:10px 6px;border-radius:3px;
+  background:var(--beyaz);color:var(--murekkep-2);border:1px solid var(--sig)}
+.muhur-dugme.acik{background:var(--murekkep);color:var(--beyaz);border-color:var(--murekkep)}
+/* günün kelimesi */
+.gk{background:var(--beyaz);border:1px solid var(--buz);border-radius:3px;padding:14px 16px;margin-bottom:14px}
+.gk-ust{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.gk-ust .oyun-etiket{margin:0}
+.gk-izgara{display:flex;flex-direction:column;gap:5px;align-items:center;margin:8px 0 12px}
+.gk-satir{display:flex;gap:5px}
+.gk-hucre{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:18px;font-weight:500;
+  border:1px solid var(--sig);border-radius:3px;background:var(--kar);color:var(--murekkep)}
+.gk-hucre.dogru{background:var(--deniz);border-color:var(--deniz);color:var(--beyaz)}
+.gk-hucre.var{background:#E2B93B;border-color:#E2B93B;color:#1a1400}
+.gk-hucre.yok{background:#C9D3DD;border-color:#C9D3DD;color:#3D4A57}
+.gk-son{text-align:center;margin:6px 0 10px;font-size:16px}
+.kulup-savas{background:var(--beyaz);border:1px solid var(--buz);border-radius:3px;padding:14px 16px;margin-bottom:14px}
+.kulup-savas p{font-size:14px;margin:6px 0}
+.dagilim-satir.ben span:first-child{font-weight:700;color:var(--deniz)}
+@media(max-width:420px){ .gk-hucre{width:34px;height:34px;font-size:15px} }

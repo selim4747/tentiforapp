@@ -26,7 +26,7 @@ const GEZINME = [
     ["sohbet", "Karakter sohbeti"] ] },
 
   { id: "oyunlar", ad: "Oyunlar", ikon: "▩", bolumler: [
-    ["oyunlar", "Yedi oyun"], ["liderlik", "Liderlik"], ["galeri", "Galeri"], ["bag", "Oyuna taşı"] ] },
+    ["oyunlar", "Yedi oyun"], ["yarislar", "Yarışlar"], ["liderlik", "Liderlik"], ["galeri", "Galeri"], ["bag", "Oyuna taşı"] ] },
 
   { id: "testler", ad: "Testler", ikon: "▪", bolumler: [
     ["test", "Hangi karaktersin?"], ["kimlik", "Kimlik Sınavı"] ] },
@@ -306,7 +306,7 @@ const GEC_CIZILENLER = {
   olaylar: "olaylarCiz", kisaHikayeler: "kisaHikayelerCiz", dosyalar: "dosyalarCiz",
   hikaye: "hikayeCiz", defter: "defterCiz", arsivci: "arsivciCiz",
   bag: "bagCiz", sira: "siraCiz", basarim: "basarimCiz",
-  degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz",
+  degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz", yarislar: "yarislarCiz",
 };
 
 const cizildi = {};

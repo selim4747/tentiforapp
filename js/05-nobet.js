@@ -86,6 +86,7 @@ function oyunKaydet() {
 }
 
 function oyunSifirla(sonsuz) {
+  if (typeof meydanTohumla === "function") { meydanTohumla("nobet"); }
   O = oyunVarsayilan(sonsuz);
   not("Necale nöbeti devraldı. Bir ay dayanman gerek.");
   oyunKaydet();

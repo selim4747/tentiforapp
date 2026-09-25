@@ -258,6 +258,7 @@ let Y = null;
 let yaziTers = false;
 
 function yaziOyunBaslat(zorluk, ters) {
+  if (typeof meydanTohumla === "function") { meydanTohumla("yazi"); }
   yaziTers = !!ters;
   const havuz = (veri.kelimeler[zorluk] || []).slice();
 
