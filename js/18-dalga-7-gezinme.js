@@ -6,29 +6,42 @@
 /* ==================== BÖLÜM GRUPLARI ==================== */
 
 const GEZINME = [
-  { ad: "Arşiv", ikon: "▤", bolumler: [
-    ["arsiv", "Karakterler"], ["evren", "Evren"], ["aile", "Aile ağacı"],
-    ["ag", "İlişki ağı"], ["zaman", "Zaman çizelgesi"], ["harita", "Harita"],
-    ["yankilar", "Yankılar"], ["karsi", "Karşılaştır"] ] },
+  { id: "arsiv", ad: "Arşiv", ikon: "▤", bolumler: [
+    ["arsiv", "Karakterler"], ["evren", "Evren"], ["kayip", "Kayıp"],
+    ["bilinmeyenler", "Bilinmeyenler"] ] },
 
-  { ad: "Okuma", ikon: "▥", bolumler: [
-    ["roman", "Roman"], ["mektuplar", "Mektuplar"], ["alintilar", "Alıntılar"],
-    ["hikaye", "Gece Vardiyası"], ["kisaHikayeler", "Kısa Hikâyeler"], ["olaylar", "Olaylar"],
-    ["kayip", "Kayıp"], ["notlar", "Yazar notları"],
-    ["sira", "Nereden başlamalı"], ["sohbet", "Karakter sohbeti"] ] },
+  { id: "baglar", ad: "Bağlar", ikon: "▥", bolumler: [
+    ["aile", "Aile ağacı"], ["ag", "İlişki ağı"], ["karsi", "Karşılaştır"],
+    ["yankilar", "Yankılar"] ] },
 
-  { ad: "Oyunlar", ikon: "▦", bolumler: [
-    ["oyunlar", "Altı oyun"], ["galeri", "Galeri"], ["test", "Hangi karaktersin?"],
-    ["kimlik", "Kimlik Sınavı"], ["bag", "Oyuna taşı"] ] },
+  { id: "dunya", ad: "Dünya", ikon: "▦", bolumler: [
+    ["harita", "Harita"], ["zaman", "Zaman çizelgesi"], ["takvim", "Tömye takvimi"] ] },
 
-  { ad: "Araçlar", ikon: "▧", bolumler: [
-    ["isim", "İsim sistemi"], ["takvim", "Tömye takvimi"], ["yazi", "Kyldo yazısı"],
-    ["sozluk", "Sözlük"], ["dosyalar", "Dosyalar"], ["bilinmeyenler", "Bilinmeyenler"] ] },
+  { id: "okuma", ad: "Okuma", ikon: "▧", bolumler: [
+    ["sira", "Nereden başlamalı"], ["roman", "Roman"], ["olaylar", "Olaylar"],
+    ["hikaye", "Gece Vardiyası"], ["kisaHikayeler", "Kısa Hikâyeler"] ] },
 
-  { ad: "Sen", ikon: "▨", bolumler: [
-    ["arsivci", "Arşivci kartın"], ["moodboard", "Moodboard"], ["defter", "Defterin"],
-    ["basarim", "Başarımlar"], ["kesif", "Keşif"], ["delilik", "Delilik"],
-    ["yapimlar", "Yapımlar"], ["basin", "Basın kiti"], ["degisiklik", "Değişiklik günlüğü"] ] },
+  { id: "belgeler", ad: "Belgeler", ikon: "▨", bolumler: [
+    ["mektuplar", "Mektuplar"], ["alintilar", "Alıntılar"], ["notlar", "Yazar notları"],
+    ["sohbet", "Karakter sohbeti"] ] },
+
+  { id: "oyunlar", ad: "Oyunlar", ikon: "▩", bolumler: [
+    ["oyunlar", "Yedi oyun"], ["galeri", "Galeri"], ["bag", "Oyuna taşı"] ] },
+
+  { id: "testler", ad: "Testler", ikon: "▪", bolumler: [
+    ["test", "Hangi karaktersin?"], ["kimlik", "Kimlik Sınavı"] ] },
+
+  { id: "araclar", ad: "Araçlar", ikon: "▫", bolumler: [
+    ["isim", "İsim sistemi"], ["yazi", "Kyldo yazısı"], ["sozluk", "Sözlük"],
+    ["dosyalar", "Dosyalar"] ] },
+
+  { id: "proje", ad: "Proje", ikon: "▬", bolumler: [
+    ["delilik", "Delilik"], ["yapimlar", "Yapımlar"], ["basin", "Basın kiti"],
+    ["moodboard", "Moodboard"], ["degisiklik", "Değişiklik günlüğü"] ] },
+
+  { id: "sen", ad: "Sen", ikon: "▭", bolumler: [
+    ["arsivci", "Arşivci kartın"], ["defter", "Defterin"], ["basarim", "Başarımlar"],
+    ["kesif", "Keşif"] ] },
 ];
 
 let menuAcik = null;
@@ -40,12 +53,11 @@ function gezinmeCiz() {
   alan.innerHTML =
     '<button class="gez-btn" id="icindekilerBtn" aria-label="İçindekiler">☰ İçindekiler</button>' +
     GEZINME.map(function (g, i) {
-      const sayfaId = ["arsiv", "okuma", "oyunlar", "araclar", "sen"][i];
-      const bu = aktifSayfa === sayfaId;
+      const bu = aktifSayfa === g.id;
       return '<div class="gez-grup">' +
                '<button class="gez-btn' + (menuAcik === i ? " acik" : "") +
                  (bu ? " bu-sayfa" : "") +
-                 '" data-gez-grup="' + i + '" aria-expanded="' +
+                 '" data-gez-grup="' + i + '" title="' + (i + 1) + ". sayfa" + '" aria-expanded="' +
                  (menuAcik === i ? "true" : "false") + '">' +
                  kacir(g.ad) + "</button>" +
                (menuAcik === i
@@ -382,23 +394,21 @@ document.addEventListener("click", function (e) {
    Sayfa dışı bölümler DOM'dan silinmez, gizlenir — ama çizilmemişse hiç
    çizilmez, geç çizimle birlikte çalışır. */
 
-/* Her sayfanın hangi bölümleri taşıdığı GEZINME'den türetilir. */
-const SAYFA_BASLIK = {
-  arsiv: "Arşiv", okuma: "Okuma", oyunlar: "Oyunlar", araclar: "Araçlar", sen: "Sen"
-};
+/* Her sayfanın kimliği, başlığı ve hangi bölümleri taşıdığı GEZINME'den türetilir. */
+const SAYFA_BASLIK = {};
+GEZINME.forEach(function (g) { SAYFA_BASLIK[g.id] = g.ad; });
 
 const SAYFA_ANAHTARI = "tentiforapp_sayfa";
 
-/* Her sayfada kalıcı olarak görünenler: hero, keşif, yönetici. */
+/* Her sayfada kalıcı olarak görünenler: keşif, yönetici. */
 const HER_SAYFADA = ["kesif", "yonetici"];
 
 let aktifSayfa = null;
 
 function sayfaKimlikleri() {
   const m = {};
-  GEZINME.forEach(function (g, i) {
-    const kimlik = ["arsiv", "okuma", "oyunlar", "araclar", "sen"][i];
-    m[kimlik] = g.bolumler.map(function (b) { return b[0]; });
+  GEZINME.forEach(function (g) {
+    m[g.id] = g.bolumler.map(function (b) { return b[0]; });
   });
   return m;
 }
@@ -442,6 +452,7 @@ function sayfaGoster(sayfa, kaydirma) {
 
   document.title = SAYFA_BASLIK[sayfa] + " — TentiforApp";
   hataSayfasiKapat();
+  sayfalamaCiz(sayfa);
   if (typeof kanonKilitUygula === "function") { kanonKilitUygula(); }
   gezinmeCiz();
 
@@ -542,6 +553,8 @@ function hataSayfasiAc(istenen) {
   });
   const hero = document.querySelector(".hero");
   if (hero) { hero.hidden = true; }
+  const sc = document.querySelector("#sayfalama");
+  if (sc) { sc.hidden = true; }
 
   document.title = "404 — TentiforApp";
 }
@@ -606,9 +619,46 @@ function gecisAnimasyonu() {
   }
 }
 
-/* ==================== KLAVYE İLE SAYFA GEÇİŞİ ==================== */
+/* ==================== SAYFALAMA ÇUBUĞU ====================
+   Her sayfanın sonunda: önceki / numaralar / sonraki. */
 
-const SAYFA_SIRASI = ["arsiv", "okuma", "oyunlar", "araclar", "sen"];
+const SAYFA_SIRASI = GEZINME.map(function (g) { return g.id; });
+
+function sayfalamaCiz(sayfa) {
+  let c = document.querySelector("#sayfalama");
+  if (!c) {
+    const ana = document.querySelector("main");
+    if (!ana) { return; }
+    c = document.createElement("nav");
+    c.id = "sayfalama";
+    c.className = "sayfalama";
+    c.setAttribute("aria-label", "Sayfalar");
+    ana.appendChild(c);
+  }
+  c.hidden = false;
+
+  const i = SAYFA_SIRASI.indexOf(sayfa);
+  const onceki = SAYFA_SIRASI[i - 1];
+  const sonraki = SAYFA_SIRASI[i + 1];
+
+  c.innerHTML =
+    (onceki
+      ? '<button class="sayfalama-yon" data-sayfa="' + onceki + '">← ' + kacir(SAYFA_BASLIK[onceki]) + "</button>"
+      : '<span class="sayfalama-yon bos"></span>') +
+    '<div class="sayfalama-no">' +
+      SAYFA_SIRASI.map(function (s, n) {
+        return '<button class="sayfalama-sayi' + (s === sayfa ? " bu" : "") + '" data-sayfa="' + s + '"' +
+               ' title="' + kacir(SAYFA_BASLIK[s]) + '"' +
+               (s === sayfa ? ' aria-current="page"' : "") + ">" + (n + 1) + "</button>";
+      }).join("") +
+    "</div>" +
+    (sonraki
+      ? '<button class="sayfalama-yon" data-sayfa="' + sonraki + '">' + kacir(SAYFA_BASLIK[sonraki]) + " →</button>"
+      : '<span class="sayfalama-yon bos"></span>');
+}
+
+/* ==================== KLAVYE İLE SAYFA GEÇİŞİ ====================
+   1–9 ilk dokuz sayfa, 0 onuncu sayfa. */
 
 document.addEventListener("keydown", function (e) {
   const a = document.activeElement;
@@ -617,9 +667,11 @@ document.addEventListener("keydown", function (e) {
   if (yaziyor || e.ctrlKey || e.metaKey || e.altKey) { return; }
 
   const n = parseInt(e.key, 10);
-  if (n >= 1 && n <= SAYFA_SIRASI.length) {
+  if (isNaN(n)) { return; }
+  const sira = n === 0 ? 10 : n;
+  if (sira >= 1 && sira <= SAYFA_SIRASI.length) {
     e.preventDefault();
-    sayfayaGit(SAYFA_SIRASI[n - 1]);
+    sayfayaGit(SAYFA_SIRASI[sira - 1]);
   }
 });
 

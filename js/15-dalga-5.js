@@ -372,7 +372,7 @@ function kisayolCiz() {
   if (!alan) { return; }
 
   const liste = [["/", "arama"], ["r", "rastgele keşif"], ["g", "gece modu"],
-                 ["Esc", "pencereyi kapat"], ["?", "bu liste"]];
+                 ["1–9, 0", "sayfalar arası geçiş"], ["Esc", "pencereyi kapat"], ["?", "bu liste"]];
 
   alan.innerHTML = '<div class="kisayol-liste">' + liste.map(function (k) {
     return '<div class="kisayol"><kbd>' + kacir(k[0]) + "</kbd><span>" + kacir(k[1]) + "</span></div>";

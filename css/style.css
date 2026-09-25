@@ -2019,6 +2019,33 @@ html[data-ayar-duzenleme="1"] .madde{outline:1px dotted var(--sig);outline-offse
   color:var(--deniz);background:var(--buz);border-color:var(--sig);font-weight:700;
 }
 
+/* ================= SAYFALAMA ÇUBUĞU ================= */
+.sayfalama{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  max-width:980px;margin:40px auto 10px;padding:18px 16px;border-top:1px solid var(--buz);
+}
+.sayfalama[hidden]{display:none}
+.sayfalama-yon{
+  flex:1 1 0;min-width:0;cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  background:transparent;color:var(--deniz);border:1px solid var(--sig);border-radius:2px;
+  padding:9px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.sayfalama-yon:first-child{text-align:left}
+.sayfalama-yon:last-child{text-align:right}
+.sayfalama-yon:hover{background:var(--deniz);color:var(--beyaz)}
+.sayfalama-yon.bos{border-color:transparent;pointer-events:none}
+.sayfalama-no{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
+.sayfalama-sayi{
+  cursor:pointer;min-width:30px;height:30px;font-family:var(--mono);font-size:11px;
+  background:transparent;color:var(--murekkep-2);border:1px solid var(--buz);border-radius:2px;
+}
+.sayfalama-sayi:hover{color:var(--deniz);border-color:var(--sig)}
+.sayfalama-sayi.bu{background:var(--deniz);color:var(--beyaz);border-color:var(--deniz);font-weight:700}
+@media (max-width:640px){
+  .sayfalama{flex-wrap:wrap}
+  .sayfalama-no{order:-1;flex-basis:100%}
+}
+
 /* ================= 404 ================= */
 .yok-sayfa{min-height:60vh;display:flex;align-items:center;justify-content:center}
 .yok-ic{max-width:520px;text-align:center}
