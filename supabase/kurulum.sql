@@ -73,3 +73,6 @@ drop trigger if exists kullanici_olusunca on auth.users;
 create trigger kullanici_olusunca
   after insert on auth.users
   for each row execute procedure public.yeni_kullanici();
+
+-- Supabase'in API'si yeni tablo ve sütunları hemen görsün
+notify pgrst, 'reload schema';

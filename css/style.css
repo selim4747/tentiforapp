@@ -3132,3 +3132,9 @@ html[data-hesap="acik"] .hesap-btn{padding:0;background:transparent;border-color
   html[data-hesap] .marka-ad{font-size:19px}
   html[data-hesap] .ust-ikon{padding:8px 9px}
 }
+/* hesap formları: kod kutusunun büyük harf/ortalı stilini alma */
+.hesap-pencere .kod-giris,.hesap-duzen .kod-giris{
+  text-transform:none;text-align:left;letter-spacing:normal;
+  font-family:var(--govde);font-size:16px;padding:12px 12px;
+}
+#hKayitKullanici,#hpKadi{font-family:var(--mono);font-size:15px;text-transform:lowercase}
