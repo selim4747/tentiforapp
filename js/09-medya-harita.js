@@ -168,6 +168,9 @@ let haritaSeciliId = null;   /* null = ilk (varsayılan) harita */
 /** Şu an gösterilen haritayı döner. Yönetici panelinden birden fazla harita
     eklenebildiği için "harita" artık tekil değil, bir dizi. */
 function aktifHarita() {
+  /* Mobilde "resize" sayfa yüklenirken (adres çubuğu kayarken) tetiklenebilir;
+     o an veri henüz tanımlanmamış ya da yüklenmemiş olabilir. */
+  if (typeof veri === "undefined" || !veri) { return null; }
   const tumu = veri.haritalar || [];
   if (!tumu.length) { return null; }
   /* kişiye özel kodda yalnızca izin verilen evrenler; hiçbiri yoksa (kodsuz) hepsi */
@@ -697,8 +700,9 @@ function haritaGeceDurumu(h, saatEl) {
 
 function haritaOnizlemeBoya() {
   const kutu = document.querySelector("#haritaAlan .harita-onizleme");
+  if (!kutu) { return; }
   const h = aktifHarita();
-  if (!kutu || !h) { return; }
+  if (!h) { return; }
   const w = kutu.clientWidth, hh = kutu.clientHeight;
   if (!w || !hh) { return; }             /* bölüm henüz görünmüyor; boyut gelince gözlemci çağırır */
   const b = haritaBaslangicNoktasi(h);
