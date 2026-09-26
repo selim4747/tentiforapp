@@ -976,7 +976,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("okur örnek evrende kişinin yolunu ve çizelgesini görür (öbür gezegendeki adım dahil)", await N.evaluate(function () {
       const k = document.querySelector("#evrenSayfa .gz-kutu");
       return !!k && /Arvel/.test(k.textContent) && /Bir gemi kiralar/.test(k.textContent) && k.querySelectorAll(".gz-liste li").length === 5 &&
-        document.querySelectorAll("#evrenSayfa .gz-nokta").length === 4 && !k.querySelector("input, [data-gz-ciz]");
+        document.querySelectorAll("#evrenSayfa .gz-nokta").length === 4 && !k.querySelector("input.kod-giris, [data-gz-ciz], [data-gz-yer]");
     }));
     await N.evaluate(function () { EVS.secili = "liman"; evrenSayfaCiz(); }); await bekle(N, 150);
     await N.click("#evrenSayfa [data-sh-evren]"); await bekle(N, 200);
@@ -1006,6 +1006,96 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       delete haritaSeciliYer().sehir; haritaTamKapat(); return r;
     }));
     await N.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(N, 300);
+
+    /* ---------- günlük gezi: şehir şehir, her gün ---------- */
+    const gEv = await N.evaluate(function () {
+      const id = evrenYeniKur();
+      evrenBenimDegistir(id, function (e) {
+        e.ad = "Gün Evreni"; e.kisiler = [{ ad: "Tan" }];
+        e.harita = { yerler: [{ id: "a", ad: "Ada", x: 20, y: 20 }, { id: "b", ad: "Bora", x: 50, y: 40 }, { id: "c", ad: "Cem", x: 80, y: 60 }] };
+        e.gezegenler = [{ id: "g-ay", ad: "Ay", harita: { yerler: [{ id: "k", ad: "Krater", x: 50, y: 50 }] } }];
+      });
+      evrenSonrakiSekme = "harita"; location.hash = "#/ev/benim/" + id; return id;
+    }); await bekle(N, 700);
+    ok("çizelgede yerler dokunulacak düğmeler olarak (gezegenler gruplu)", await N.locator('#evrenSayfa [data-gz-yer]').count() === 4 && /Ay/.test(await N.textContent("#evrenSayfa .gz-yerler")));
+    for (const y of ["a", "b", "b", "c"]) { await N.click('#evrenSayfa [data-gz-yer="' + y + '"]'); await bekle(N, 80); }
+    await N.check("#evrenSayfa [data-gz-ayni]"); await bekle(N, 100);
+    await N.click('#evrenSayfa [data-gz-yer="a"]'); await bekle(N, 80);
+    await N.uncheck("#evrenSayfa [data-gz-ayni]"); await bekle(N, 100);
+    await N.click("#evrenSayfa [data-gz-bekle]"); await bekle(N, 80);
+    await N.click('#evrenSayfa [data-gz-yer="k"][data-gz-g="g-ay"]'); await bekle(N, 80);
+    ok("her dokunuş ertesi gün; aynı gün, kalma ve başka gezegen", await N.evaluate(function (id) {
+      const y = evrenBenimBul(id).kisiler[0].yol;
+      return y.map(function (a) { return (a.g ? a.g + "/" : "") + a.yer + a.gun; }).join(",") === "a1,b2,c3,a3,a4,g-ay/k5";
+    }, gEv));
+    ok("çizelgede gün etiketleri ve “kaldı”", /3\. gün/.test(await N.textContent("#evrenSayfa .gz-liste")) && /\(kaldı\)/.test(await N.textContent("#evrenSayfa .gz-liste")));
+    await N.fill('#evrenSayfa [data-gz-alan="gun"][data-gz-i="2"]', "9"); await N.dispatchEvent('#evrenSayfa [data-gz-alan="gun"][data-gz-i="2"]', "change"); await bekle(N, 200);
+    ok("gün elle değişir", await N.evaluate(function (id) { return evrenBenimBul(id).kisiler[0].yol[2].gun === 9; }, gEv));
+    await N.click("#evrenSayfa [data-gz-numarala]"); await bekle(N, 150);
+    ok("günler 1, 2, 3… diye dizilir", await N.evaluate(function (id) { return evrenBenimBul(id).kisiler[0].yol.map(function (a) { return a.gun; }).join(",") === "1,2,3,4,5,6"; }, gEv));
+    await N.evaluate(function () { const r = document.querySelector("#evrenSayfa [data-gz-gun]"); r.value = "2"; r.dispatchEvent(new Event("change", { bubbles: true })); }); await bekle(N, 200);
+    ok("gün kaydırıcısı: 2. gün Bora'da, bugünkü yer halkalı, sonrası soluk", /2\. gün · Bora/.test(await N.textContent("#evrenSayfa .gz-gun-yaz")) &&
+      await N.locator("#evrenSayfa .gz-nokta.simdi").count() === 1 && await N.locator("#evrenSayfa .gz-liste li.gelecek").count() === 4);
+    await N.evaluate(function () { const r = document.querySelector("#evrenSayfa [data-gz-gun]"); r.value = "6"; r.dispatchEvent(new Event("change", { bubbles: true })); }); await bekle(N, 200);
+    ok("başka gezegendeki güne gelince harita o gezegene geçer", await N.evaluate(function () { return EVS.gezegen === "g-ay" && /Krater/.test(document.querySelector("#evrenSayfa .gz-gun-yaz").textContent); }));
+    await N.click("#evrenSayfa [data-gz-tumu]"); await bekle(N, 100);
+    await N.evaluate(function () { EVS.gezegen = null; evrenSayfaCiz(); });
+    await N.click("#evrenSayfa [data-gz-oynat]"); await bekle(N, 2500);
+    ok("“Gün gün izle” günleri sırayla oynatır", await N.evaluate(function () { return GZ.gun >= 2 && !!GZ.zaman; }));
+    await N.click("#evrenSayfa [data-gz-oynat]"); await bekle(N, 100);
+    ok("durdurulur", await N.evaluate(function () { return !GZ.zaman; }));
+    ok("gün dosyada kalır, bozuk gün atılır", await N.evaluate(function (id) {
+      const x = fanMetindenEser(fanDosyaHtml(evrenBenimBul(id)));
+      const t = fanTemizle({ bicim: FAN_BICIM, tur: "evren", ad: "x", kisiler: [{ ad: "K", yol: [{ yer: "a", gun: "abc" }, { yer: "b", gun: 3.4 }, { yer: "c", gun: -2 }] }] });
+      return x.kisiler[0].yol[5].gun === 6 && x.kisiler[0].yol[5].g === "g-ay" && t.kisiler[0].yol[0].gun === undefined && t.kisiler[0].yol[1].gun === 3 && t.kisiler[0].yol[2].gun === undefined;
+    }, gEv));
+    await N.evaluate(function () { evrenSayfaKapat(); location.hash = "#/arsiv"; }); await bekle(N, 300);
+
+    /* ---------- Claude'un evreni: yolculuklar ---------- */
+    await N.evaluate(function () { location.hash = "#/claude"; }); await bekle(N, 900);
+    ok("Claude'un evreninde “Yolculuklar” sekmesi", await N.locator('[data-ce-sekme="gezi"]').count() === 1);
+    await N.click('[data-ce-sekme="gezi"]'); await bekle(N, 300);
+    ok("okur Gırçık'ın gün gün yolculuğunu görür, düzenleyemez", await N.evaluate(function () {
+      const k = document.querySelector("#ceGezi .gz-kutu");
+      return !!k && /Gırçık/.test(k.textContent) && /Sabah Limanı/.test(k.textContent) && /6 gün/.test(k.textContent) &&
+        !k.querySelector("[data-gz-yer], [data-gzk-yeni], input.kod-giris") && document.querySelectorAll("#ceGezi .gz-nokta").length >= 5;
+    }));
+    await N.evaluate(function () { const r = document.querySelector("#ceGezi [data-gz-gun]"); r.value = "5"; r.dispatchEvent(new Event("change", { bubbles: true })); }); await bekle(N, 200);
+    ok("5. gün: aynı gün iki yer, son yer Gecikme Denizi", /5\. gün · Gecikme Denizi/.test(await N.textContent("#ceGezi .gz-gun-yaz")));
+    await N.click('[data-ce-sekme="kisiler"]'); await bekle(N, 200);
+    ok("kişi kartında “Yolculuğunu gün gün izle”", await N.locator('#ce-cl_gercek [data-ce-gezi]').count() === 1 && await N.locator("[data-ce-gezi]").count() === 1);
+    await N.evaluate(function () { document.querySelector("#ce-cl_gercek").open = true; });
+    await N.click("#ce-cl_gercek [data-ce-gezi]"); await bekle(N, 300);
+    ok("kişiden yolculuğa geçilir", await N.evaluate(function () { return ceSekme === "gezi" && /Gırçık/.test(document.querySelector("#ceGezi [data-gz-kisi]").selectedOptions[0].textContent); }));
+    await N.evaluate(function () { haritaTamAc({ evren: "claude" }); }); await bekle(N, 900);
+    await N.evaluate(function () { HT.panel = false; haritaPanelCiz(); haritaSecili = "cl_liman"; haritaBilgiCiz(); }); await bekle(N, 150);
+    ok("haritada yer kartı: buradan geçen gezginler ve günleri", /Gırçık · 4, 5\. gün/.test(await N.textContent("#htBilgi .gzk-gecenler")));
+    await N.click("#htBilgi [data-gzk-ac]"); await bekle(N, 300);
+    ok("yer kartından o güne açılır (tam ekran haritanın üstünde)", await N.evaluate(function () { return !!document.querySelector("#geziSayfa") && GZ.gun === 4 && /4\. gün · Sabah Limanı/.test(document.querySelector("#geziSayfa .gz-gun-yaz").textContent); }));
+    await N.keyboard.press("Escape"); await bekle(N, 150);
+    ok("Esc gezi penceresini kapatır, harita açık kalır", await N.evaluate(function () { return !document.querySelector("#geziSayfa") && HT.acik; }));
+    await N.evaluate(function () { HT.panel = true; haritaPanelCiz(); });
+    ok("katman panelinde Gezginler", /Gırçık · 6 gün/.test(await N.textContent("#htPanel .gzk-panel")));
+    await N.evaluate(function () { HT.panel = false; haritaTamKapat(); });
+
+    /* yönetici: gezgin ekler, evrenin kişisine bağlar, şehir şehir yol çizer */
+    await N.evaluate(function () { window.__yonCE = window.yoneticiAcik; window.yoneticiAcik = function () { return true; }; ceSekme = "gezi"; claudeEvrenCiz(); }); await bekle(N, 200);
+    await N.click("#ceGezi [data-gzk-yeni]"); await bekle(N, 150);
+    await N.selectOption("#ceGezi [data-gzk-kisi]", "cl_umut"); await bekle(N, 200);
+    for (const y of ["cl_kor", "cl_safak", "cl_yerin", "cl_yerin"]) { await N.click('#ceGezi [data-gz-yer="' + y + '"]'); await bekle(N, 80); }
+    await N.locator('#ceGezi .evh-svg [data-evh-yer="cl_dan"]').first().dispatchEvent("click"); await bekle(N, 120);
+    await N.locator('#ceGezi .evh-svg [data-evh-yer="cl_uzek"]').first().dispatchEvent("click"); await bekle(N, 120);
+    ok("yönetici: gezgin kişiye bağlanır, yerlere ve haritaya dokunarak gün gün yol (kıta sayılmaz)", await N.evaluate(function () {
+      const z = veri.haritalar.find(function (h) { return h.id === "claude"; }).gezginler[1];
+      return z.kisi === "cl_umut" && z.ad === "Ümüt" && z.yol.map(function (a) { return a.yer + a.gun; }).join(",") === "cl_kor1,cl_safak2,cl_yerin3,cl_dan4" &&
+        /Kaydet \(/.test(document.querySelector("#ceGezi [data-gzk-kaydet]").textContent);
+    }));
+    N.once("dialog", function (d) { d.accept(); });
+    await N.click("#ceGezi [data-gzk-sil]"); await bekle(N, 200);
+    ok("gezgin silinir; örnek yolculuk yerinde", await N.evaluate(function () {
+      const l = veri.haritalar.find(function (h) { return h.id === "claude"; }).gezginler; return l.length === 1 && l[0].ad === "Gırçık";
+    }));
+    await N.evaluate(function () { window.yoneticiAcik = window.__yonCE; location.hash = "#/arsiv"; }); await bekle(N, 300);
 
     ok("konuk haritası: kişinin gittiği yerler", await N.evaluate(function () {
       const l = fanEserlerim();
