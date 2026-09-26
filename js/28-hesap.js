@@ -91,6 +91,24 @@ function hesapGerekli() {
   return hesapKuruluyor;
 }
 
+/** Kütüphaneyi ancak alan ekrana yaklaşınca yükler; kod kilidinin arkasındaki (görünmeyen) alanlar hiç yüklemez.
+    Hesap açmamış ziyaretçi 213 KB'lık kütüphaneyi yalnızca gerçekten kullanacağı bir bölüme gelince indirir. */
+const hesapGozlenen = new WeakSet();
+function hesapGorununce(el, fn) {
+  if (!el || !hesapEtkin()) { return; }
+  if (el.closest(".kanon-kilitli")) { return; }
+  if (typeof IntersectionObserver !== "function") { hesapGerekli().then(fn); return; }
+  if (hesapGozlenen.has(el)) { return; }
+  hesapGozlenen.add(el);
+  const g = new IntersectionObserver(function (girdiler) {
+    if (!girdiler.some(function (x) { return x.isIntersecting; })) { return; }
+    g.disconnect();
+    hesapGozlenen.delete(el);
+    hesapGerekli().then(fn);
+  }, { rootMargin: "400px 0px" });
+  g.observe(el);
+}
+
 async function hesapIstemciKur() {
   try {
     await hesapKutuphaneYukle();

@@ -732,7 +732,9 @@ acilanlariYukle();
    Çok dosyalı sürümde veri.json ağdan çekilir. */
 const veriKaynak = window.__VERI__
   ? Promise.resolve(window.__VERI__)
-  : fetch("veri.json?v=" + Date.now()).then(function (y) {
+  /* Tazeliği sunucu sağlar (veri.json için Cache-Control: no-cache): değişmediyse 304 döner, yeniden inmez.
+     (Ön yükleme denendi: içeriği 0,1 sn hızlandırıp ilk çizimi 0,1 sn geciktirdiği için kullanılmadı.) */
+  : fetch("veri.json").then(function (y) {
       if (!y.ok) { throw new Error("veri.json okunamadı"); }
       return y.json();
     });

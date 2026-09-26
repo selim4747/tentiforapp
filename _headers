@@ -12,3 +12,10 @@
 
 /index.html
   Cache-Control: no-cache
+
+# Yayın paketi (scripts/paketle.mjs) bu dosyalara ?v=<içerik özeti> ekler; içerik değişince adres de değişir.
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/css/*
+  Cache-Control: public, max-age=31536000, immutable

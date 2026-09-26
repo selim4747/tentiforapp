@@ -29,7 +29,7 @@ async function teoriCiz() {
   const alan = document.querySelector("#teoriAlan");
   if (!alan) { return; }
   if (typeof hesapEtkin !== "function" || !hesapEtkin()) { alan.innerHTML = ""; return; }
-  if (!toplulukHazir()) { alan.innerHTML = '<p class="oyun-not">Teoriler yükleniyor…</p>'; hesapGerekli().then(teoriCiz); return; }
+  if (!toplulukHazir()) { alan.innerHTML = '<p class="oyun-not">Teoriler yükleniyor…</p>'; hesapGorununce(alan, teoriCiz); return; }
 
   const konular = teoriKonular();
   if (!konular.length) { alan.innerHTML = ""; return; }
@@ -107,7 +107,7 @@ async function oylamaCiz() {
   const alan = document.querySelector("#oylamaAlan");
   if (!alan) { return; }
   if (typeof hesapEtkin !== "function" || !hesapEtkin()) { alan.innerHTML = ""; return; }
-  if (!toplulukHazir()) { alan.innerHTML = '<p class="oyun-not">Oylama yükleniyor…</p>'; hesapGerekli().then(oylamaCiz); return; }
+  if (!toplulukHazir()) { alan.innerHTML = '<p class="oyun-not">Oylama yükleniyor…</p>'; hesapGorununce(alan, oylamaCiz); return; }
 
   const [s, b] = await Promise.all([
     hesapIstemci.from("yapim_oy_sayilari").select("yapim, oy"),

@@ -144,6 +144,14 @@ function ilerlemeKur() {
   y.textContent = "↑";
   document.body.appendChild(y);
 
+  /* kaydırma başına en çok bir kez, bir sonraki karede ölçülür (zorunlu yerleşimi önler) */
+  let bekliyor = false;
+  const tikIste = function () {
+    if (bekliyor) { return; }
+    bekliyor = true;
+    requestAnimationFrame(function () { bekliyor = false; tik(); });
+  };
+
   const tik = function () {
     const h = document.documentElement;
     const en = (h.scrollHeight - h.clientHeight) || 1;
@@ -156,8 +164,8 @@ function ilerlemeKur() {
     aktifBolumIsaretle();
   };
 
-  window.addEventListener("scroll", tik, { passive: true });
-  tik();
+  window.addEventListener("scroll", tikIste, { passive: true });
+  tikIste();
 }
 
 /** Görünen bölümün adını üst şeride yazar. */
@@ -458,6 +466,9 @@ function sayfaGoster(sayfa, kaydirma) {
   }
 
   aktifBolumIsaretle();
+
+  /* tarayıcı boşalınca bu sayfanın bölümlerini bir kez ölç: sonraki kaydırmalar doğru yere gitsin */
+  (window.requestIdleCallback || function (f) { return setTimeout(f, 300); })(bolumleriOlc);
 }
 
 /** Adresi okur ve sayfayı açar. Bilinmeyen adres 404'e gider. */
@@ -595,6 +606,16 @@ function konumKaydet() {
   jsonYaz(KONUM_ANAHTARI, k);
 }
 
+/* Bölümler ekran dışındayken çizilmiyor (content-visibility: auto); yükseklikleri o sırada tahmindir.
+   Bir yere programla kaydırmadan önce hepsi bir kez gerçek boyutuyla ölçülür; tarayıcı bu boyutları hatırlar
+   (contain-intrinsic-size: auto), sonra bölümler yine ekran dışındayken çizilmez. */
+function bolumleriOlc() {
+  const kok = document.documentElement;
+  kok.classList.add("bolum-olc");
+  void document.body.offsetHeight;
+  requestAnimationFrame(function () { requestAnimationFrame(function () { kok.classList.remove("bolum-olc"); }); });
+}
+
 function konumGeriYukle(sayfa) {
   const k = jsonOku(KONUM_ANAHTARI, {}) || {};
   const y = k[sayfa];
@@ -602,7 +623,7 @@ function konumGeriYukle(sayfa) {
   if (!y || y < 100 || !window.scrollTo) { return false; }
 
   /* geç çizim bölümleri yerleştirsin diye bir tur bekle */
-  setTimeout(function () { window.scrollTo({ top: y, behavior: "auto" }); }, 60);
+  setTimeout(function () { bolumleriOlc(); window.scrollTo({ top: y, behavior: "auto" }); }, 60);
   return true;
 }
 

@@ -28,7 +28,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
   async function cihaz(ad, secenek) {
     const ctx = await tarayici.newContext(Object.assign({ viewport: { width: 420, height: 1000 }, serviceWorkers: "block", acceptDownloads: true }, secenek || {}));
     await ctx.addInitScript(function () { try { localStorage.setItem("tentiforapp_tur", "bitti"); } catch (e) { /* yok */ } });
-    await ctx.route("**/js/28-hesap.js", function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: hesapKod }); });
+    await ctx.route(/\/js\/28-hesap\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: hesapKod }); });
     await ctx.route(TEST_URL + "/**", function (r) { return sahte.isle(r); });
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, function (r) { return r.abort(); });
     const p = await ctx.newPage();
@@ -56,7 +56,35 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     /* ---------- 1. on sayfa, hatasız ---------- */
     console.log("sayfalar");
     const Z = await cihaz("ziyaretçi");
+    const zIstek = [];
+    Z.on("request", function (r) { zIstek.push(r.url()); });
     await Z.goto(adres + "/"); await bekle(Z, 1500);
+
+    /* ---------- performans ---------- */
+    ok("veri.json tek kez iner", zIstek.filter(function (u) { return /\/veri\.json/.test(u); }).length === 1,
+      zIstek.filter(function (u) { return /veri\.json/.test(u); }));
+    ok("betik ve stil adresleri sürümlü", zIstek.filter(function (u) { return /\/(js|css)\/[^?]+$/.test(u) && !/vendor/.test(u); }).length === 0,
+      zIstek.filter(function (u) { return /\/(js|css)\/[^?]+$/.test(u); }));
+    await Z.evaluate(function () { location.hash = "#/bilinmeyenler"; }); await bekle(Z, 800);
+    await Z.evaluate(function () { location.hash = "#/yapimlar"; }); await bekle(Z, 800);
+    ok("hesap kütüphanesi ziyaretçiye inmez (kilitli bölümler dahil)", !zIstek.some(function (u) { return /supabase-2/.test(u); }));
+    ok("bölümler ekran dışındayken çizilmez", await Z.evaluate(function () {
+      return getComputedStyle(document.querySelector("section.bolum")).contentVisibility === "auto";
+    }));
+    /* ekran dışı çizim (content-visibility) kaydırma hedefini kaydırmamalı: kapalı hâliyle aynı yere inmeli */
+    const Zk = await cihaz("ziyaretçi-cv-kapalı");
+    await Zk.addInitScript(function () {
+      document.addEventListener("DOMContentLoaded", function () { document.documentElement.classList.add("bolum-olc"); });
+      window.requestAnimationFrame = (function (r) { return function (f) { return r(function (t) { document.documentElement.classList.add("bolum-olc"); f(t); }); }; })(window.requestAnimationFrame);
+    });
+    for (const hedef of ["claudeEvren", "liderlik", "gizlilik", "mektuplar"]) {
+      await Z.goto(adres + "/#/" + hedef); await bekle(Z, 2500);
+      await Zk.goto(adres + "/#/" + hedef); await bekle(Zk, 2500);
+      const ust = function (h) { return Math.round(document.getElementById(h).getBoundingClientRect().top); };
+      const a = await Z.evaluate(ust, hedef), b = await Zk.evaluate(ust, hedef);
+      ok("doğrudan bağlantı aynı yere iner: " + hedef, Math.abs(a - b) < 40, [a, b]);
+    }
+    await Zk.close();
     const sayfaIdleri = await Z.evaluate(function () { return GEZINME.map(function (g) { return g.id; }); });
     ok("10 sayfa tanımlı", sayfaIdleri.length === 10, sayfaIdleri);
     for (const s of sayfaIdleri) {

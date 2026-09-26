@@ -415,6 +415,7 @@ async function sonucPaylas(sonucId) {
 /** Bir bölüme yumuşak kaydırır. (Bir düzenlemede kazara silinmişti.) */
 function bolumeGit(id) {
   const el = document.getElementById(id);
+  if (typeof bolumleriOlc === "function") { bolumleriOlc(); }
   if (el && el.scrollIntoView) { el.scrollIntoView({ behavior: "smooth", block: "start" }); }
 }
 
