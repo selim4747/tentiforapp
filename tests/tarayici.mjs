@@ -153,6 +153,28 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       const dolu = await Z.evaluate(function () { return document.querySelector("#claudeEvrenAlan .ce-govde").textContent.trim().length; });
       ok("sekme dolu: " + sekme, dolu > 100, dolu);
     }
+    /* Şomdo oyunları */
+    await Z.click('[data-ce-sekme="oyunlar"]'); await bekle(Z, 200);
+    ok("isim kayması", await Z.evaluate(function () { return [isimKaydir("şimdi"), isimKaydir("Şomdo", -1), isimKaydir("Özlem")].join(" "); }) === "şomdo Şimdi Uzlım");
+    await Z.click('[data-sf="basla"]');
+    const yb = await Z.locator('[data-sf="yuru"]').boundingBox();
+    await Z.mouse.move(yb.x + 10, yb.y + 10); await Z.mouse.down(); await bekle(Z, 1500);
+    await Z.mouse.move(yb.x + 10, yb.y - 300); await Z.mouse.up();
+    await bekle(Z, 300);
+    ok("şafak: parmak kayarak kalksa da yürüyüş durur", await Z.evaluate(function () { return SF && !SF.tus.yuru; }));
+    ok("tanık ayna: her karede tam bir sahte, kural gerçekten çiğnenmiş", await Z.evaluate(function () {
+      let bozuk = 0;
+      for (let n = 0; n < 200; n++) {
+        aynaDava = n % 7;
+        const k = aynaUret(); const s = k.filter(function (x) { return x.sahte; });
+        if (s.length !== 1) { bozuk++; continue; }
+        const f = s[0], i = k.indexOf(f);
+        if (!(f.golgeSag !== f.korSol || f.renk !== f.hareket || (i > 0 && f.parlak > k[i - 1].parlak))) { bozuk++; }
+        k.forEach(function (x) { if (!x.sahte && (x.golgeSag !== x.korSol || x.renk !== x.hareket)) { bozuk++; } });
+      }
+      return bozuk === 0;
+    }));
+    await Z.click('[data-so-oyun="isim"]'); await bekle(Z, 150);
     await Z.click('[data-ce-sekme="genel"]'); await bekle(Z, 150);
     await Z.click("[data-ce-harita]"); await bekle(Z, 900);
     ok("harita kodsuz açılır", await Z.evaluate(function () { return HT.acik && aktifHarita().id === "claude"; }));

@@ -3371,3 +3371,23 @@ html.bolum-olc section.bolum{content-visibility:visible}
 .xp-dokum summary{cursor:pointer;color:var(--deniz)}
 .xp-dokum ul{list-style:none;margin:8px 0;display:flex;flex-direction:column;gap:4px}
 .xp-dokum li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--buz);padding:3px 0}
+
+/* ---------- Şomdo oyunları ---------- */
+.so-secici{flex-wrap:wrap;margin-bottom:12px}
+.so-alan{display:flex;flex-direction:column;gap:10px}
+.so-tuval{display:block;width:100%;border-radius:3px;touch-action:none;cursor:pointer;background:#101820}
+.so-kontrol{display:flex;gap:8px;flex-wrap:wrap}
+.so-kontrol .dugme{flex:1;min-width:90px;user-select:none;-webkit-user-select:none;touch-action:none}
+.so-secenek{font-size:14px;display:flex;gap:6px;align-items:center}
+.ayna-kural{padding-left:18px;font-size:14.5px;display:flex;flex-direction:column;gap:2px}
+.ayna-dava{background:var(--beyaz);border:1px solid var(--buz);border-radius:3px;padding:10px 12px;font-size:14.5px}
+.ayna-izgara{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ayna-kare{display:flex;flex-direction:column;gap:4px;padding:6px;background:var(--beyaz);border:1px solid var(--buz);border-radius:3px;cursor:pointer;font:inherit;color:inherit;text-align:left}
+.ayna-kare:hover,.ayna-kare:focus-visible{border-color:var(--deniz)}
+.ayna-kare svg{width:100%;height:auto;display:block;border-radius:2px}
+.ayna-alt{font-family:var(--mono);font-size:11px;color:var(--murekkep-2)}
+.ayna-defter details{border-bottom:1px solid var(--buz);padding:6px 0;font-size:14.5px}
+.ayna-defter summary{cursor:pointer}
+.kayma-sonuc{font-size:18px;min-height:28px}
+.kayma-yeni{font-family:var(--display);font-size:32px;font-weight:400;color:var(--deniz)}
+@media(min-width:640px){ .ayna-izgara{grid-template-columns:repeat(4,minmax(0,1fr))} }
