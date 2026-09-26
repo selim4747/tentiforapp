@@ -268,8 +268,13 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await Z.click('#evrenSayfa [data-fan-hedef="e99-katkim"] [data-fan-ekle="kurallar"]'); await bekle(Z, 200);
     await Z.fill('#evrenSayfa [data-fan-hedef="e99-katkim"] [data-fan-alan="kurallar.0.ad"]', "Tuz hafızadır"); await bekle(Z, 450);
     ok("E99 katkısı yalnızca bu cihazda tutulur", await Z.evaluate(function () { return e99Katki().kurallar[0].ad === "Tuz hafızadır" && veri.e99.kurallar.length === 0; }));
-    await Z.click("[data-e99-gonder]"); await bekle(Z, 800);
-    ok("girişsiz gönderilemez, katkı kaybolmaz", /giriş/.test(await Z.textContent("#e99Durum")) && await Z.evaluate(function () { return e99Katki().kurallar.length === 1; }));
+    const [zE99] = await Promise.all([Z.waitForEvent("download"), Z.click("[data-e99-gonder]")]); await bekle(Z, 300);
+    ok("E99 katkısı girişsiz dosya olur, sunucuya gitmez", /\.tentifor\.html$/.test(zE99.suggestedFilename()) &&
+      await Z.evaluate(function () { return e99Katki().kurallar.length === 0 && /^e99k/.test(e99Gonderilenler()[0].id); }), zE99.suggestedFilename());
+    ok("E99 dosyası yazarın e-postasına gönderilir", await Z.evaluate(function () {
+      return /fan@ornek\.test/.test(document.querySelector(".e99-katki").textContent) && !!document.querySelector('.e99-katki a[href^="mailto:fan@ornek.test"]') &&
+        !!document.querySelector("[data-e99-indir]");
+    }));
     await Z.evaluate(function () { const p = document.querySelector("#perde"); if (p) { p.hidden = true; } evrenSayfaKapat(); });
     ok("sayfa paylaş düğmesi", await Z.locator("#sayfaBasi [data-sayfa-paylas]").count() === 1);
     await Z.evaluate(function () { location.hash = "#/mektuplar"; }); await bekle(Z, 800);
@@ -602,16 +607,22 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       e.harita = { yerler: [{ id: "k1", ad: "Dönen Liman", tur: "Şehir", not: "", x: 40, y: 40 }] };
       fanEserlerimYaz(t); EVS.sekme = "bilgi"; evrenSayfaCiz(); void l; void k;
     });
-    await B.evaluate(function () { document.querySelector("[data-e99-gonder]").click(); }); await bekle(B, 1500);
-    ok("E99 katkısı onay kuyruğuna gider", (await sahte.kokSorgu("select count(*)::int n from public.e99_onerileri where veri->'kurallar'->0->>'ad' = 'Kuzey hiç yoktur'")).rows[0].n === 1,
-      await B.textContent("#e99Durum"));
-    ok("gönderince katkı sıfırlanır, gönderilenlerde durur", await B.evaluate(function () { return e99Katki().kurallar.length === 0 && e99Gonderilenler().length === 1; }));
-    await panel("bakim", "e99", 1500);
-    ok("yönetici bekleyen katkıyı görür", /Kuzey hiç yoktur/.test(await A.textContent("#yE99Alan")));
-    await A.evaluate(function () { document.querySelector("[data-y-e99-onay]").click(); }); await bekle(A, 1000);
+    const [bE99] = await Promise.all([B.waitForEvent("download"), B.evaluate(function () { document.querySelector("[data-e99-gonder]").click(); })]);
+    const e99Yol = await bE99.path(); await bekle(B, 300);
+    ok("gönderince katkı sıfırlanır, dosyası gönderilenlerde durur", await B.evaluate(function () { return e99Katki().kurallar.length === 0 && e99Gonderilenler().length === 1; }));
+    await panel("bakim", "e99", 500);
+    await A.setInputFiles("#yE99Dosya", e99Yol); await bekle(A, 600);
+    ok("yönetici e-postayla gelen dosyayı açar", /Kuzey hiç yoktur/.test(await A.textContent("#yE99Alan")));
+    await A.evaluate(function () { document.querySelector("[data-y-e99-onay]").click(); }); await bekle(A, 500);
     const e99 = await A.evaluate(function () { return JSON.parse(JSON.stringify(veri.e99)); });
     ok("onaylanan katkı E99'a eklenir", e99.kurallar.length === 1 && e99.harita.yerler.length === 1 && e99.oneriler.length === 1, e99);
-    ok("onay sunucuya yazılır", (await sahte.kokSorgu("select count(*)::int n from public.e99_onerileri where durum = 'onaylandi'")).rows[0].n === 1);
+    ok("E99 dosyası Fan → Aç ile açılınca da E99'a eklenebilir", await A.evaluate(function () {
+      fanPencere({ bicim: "tentifor-eser", tur: "evren", id: "e99kdeneme", ad: "E99 katkısı", harita: { yerler: [] } }, "acilan");
+      const var_ = !!document.querySelector('[data-fan-p="e99"]') && !document.querySelector('[data-fan-p="siteye"]');
+      document.querySelector("#perde").hidden = true;
+      return var_;
+    }));
+    ok("aynı katkı iki kez eklenmez", await A.evaluate(function (id) { return e99Birlestir({ id: id, tur: "evren" }) === false && veri.e99.kurallar.length === 1; }, e99.oneriler[0]));
     ok("yayınlanınca okurun cihazındaki kopya kalkar", await B.evaluate(function (y) { veri.e99 = y; return e99GonderilenleriTemizle().length === 0; }, e99));
 
     /* ---------- elle yayın ---------- */

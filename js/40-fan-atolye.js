@@ -429,6 +429,8 @@ function fanPencere(e, kaynak) {
   if (!perde) { return; }
   const yonetici = typeof panelAcik === "function" && panelAcik();
   const sitede = fanSiteListesi(e.tur).some(function (x) { return x.id === e.id; });
+  /* okurun gönderdiği E99 katkısı: tam yönetici onu E99'a ekler */
+  const e99Dosyasi = e.tur === "evren" && /^e99k/.test(e.id) && kaynak !== "site" && typeof yoneticiAcik === "function" && yoneticiAcik() && typeof e99Birlestir === "function";
   perde.innerHTML =
     '<div class="pencere pencere-genis fan-pencere" role="dialog" aria-modal="true" aria-label="' + kacir(fanAd(e)) + '">' +
       '<button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button>' +
@@ -439,7 +441,8 @@ function fanPencere(e, kaynak) {
         '<button class="dugme dugme-sade" data-fan-p="paylas">Paylaş</button>' +
         (kaynak === "site" ? '<button class="dugme dugme-sade" data-fan-p="baglanti">Bağlantıyı kopyala</button>' : "") +
         (kaynak !== "benim" ? '<button class="dugme dugme-sade" data-fan-p="kopyala">Taslaklarıma ekle</button>' : "") +
-        (yonetici && kaynak !== "site" ? '<button class="dugme" data-fan-p="siteye">' + (sitede ? "Sitedekini bununla güncelle" : "Siteye fanmade olarak ekle") + "</button>" : "") +
+        (e99Dosyasi ? '<button class="dugme" data-fan-p="e99">E99\'a ekle</button>' : "") +
+        (yonetici && kaynak !== "site" && !e99Dosyasi ? '<button class="dugme" data-fan-p="siteye">' + (sitede ? "Sitedekini bununla güncelle" : "Siteye fanmade olarak ekle") + "</button>" : "") +
         (yonetici && kaynak === "site" ? '<button class="dugme dugme-sade y-sil" data-fan-p="kaldir">Siteden kaldır</button>' : "") +
       "</div>" +
       '<p class="pencere-durum" id="fanPDurum" role="status"></p>' +
@@ -718,6 +721,8 @@ document.addEventListener("click", async function (ev) {
       fanSekme[e.tur] = "yaz";
       fanCiz(e.tur);
       fanPDurum("Taslaklarına eklendi — " + (e.tur === "hikaye" ? "Fan hikâyeleri" : "Fan evrenleri") + " → düzenle", true);
+    } else if (d.fanP === "e99") {
+      fanPDurum(e99Birlestir(e) ? "E99'a eklendi. Yayına almak için panelde Bakım → Kaydet, sonra Yayınla." : "Bu katkı zaten E99'da.", true);
     } else if (d.fanP === "siteye") {
       if (fanSiteyeEkle(e)) { fanPDurum("Fanmade olarak eklendi. Yayına almak için panelde Bakım → Kaydet.", true); }
     } else if (d.fanP === "kaldir") {

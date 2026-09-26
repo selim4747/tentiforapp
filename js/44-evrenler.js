@@ -136,7 +136,7 @@ function e99Gonderilenler() {
 function e99GonderilenleriTemizle() {
   const yayinda = (veri.e99 && veri.e99.oneriler) || [];
   const l = e99Gonderilenler();
-  const kalan = l.filter(function (g) { return yayinda.indexOf(g.id) === -1 && g.durum !== "reddedildi-goruldu"; });
+  const kalan = l.filter(function (g) { return yayinda.indexOf(g.id) === -1; });
   if (kalan.length !== l.length) { jsonYaz(E99_GONDERILEN_ANAHTAR, kalan); }
   return kalan;
 }
@@ -470,116 +470,127 @@ function evrenBilgiBolumu(v) {
       ? '<p class="oyun-giris">' + kacir((veri.e99 && veri.e99.ozet) || "") + "</p><p class=\"oyun-not\">Henüz yayında bir şey yok. İlk kuralı sen yaz.</p>"
       : fanEserGovde(veri.e99, false)) + "</div>" +
     '<div class="kutu-y e99-katki"><div class="oyun-etiket">Senin katkın · yalnızca bu cihazda</div>' +
-      '<p class="oyun-not">Yazdıkların gönderene kadar yalnızca sende görünür. Gönderdiğinde yönetici okur; onaylayıp yayınlarsa E99\'a herkes için eklenir.</p>' +
+      '<p class="oyun-not">Yazdıkların yalnızca bu cihazda durur; hiçbir sunucuya gitmez. Gönder dediğinde bir dosya hazırlanır ve e-postanla yazara gönderirsin. ' +
+        "Yazar onaylayıp yayınlarsa E99'a herkes için eklenir.</p>" +
       '<div class="fan-form" data-fan-form="evren" data-fan-hedef="' + E99_KATKI_ID + '">' + fanEvrenFormHtml(katki, false) + "</div>" +
-      '<div class="oyun-sira"><button class="dugme" data-e99-gonder>Yöneticiye gönder</button></div>' +
+      '<div class="oyun-sira"><button class="dugme" data-e99-gonder>Dosya hazırla ve yazara gönder</button></div>' +
       '<p class="pencere-durum" id="e99Durum" role="status"></p>' +
+      (e99SonGonderilen && e99GonderilenBul(e99SonGonderilen) ? e99EpostaHtml(e99GonderilenBul(e99SonGonderilen)) : "") +
     "</div>" +
     (gonderilen.length ? '<div class="kutu-y"><div class="oyun-etiket">Gönderdiklerin</div><ul class="e99-gonderilen">' +
       gonderilen.map(function (g) {
         return "<li>" + kacir(new Date(g.t).toLocaleDateString("tr-TR")) + " · " +
-          kacir(({ bekliyor: "onay bekliyor", onaylandi: "onaylandı, yayın bekliyor", reddedildi: "yayımlanmadı" })[g.durum] || "onay bekliyor") +
-          " · " + e99Ozet(g.veri) + "</li>";
+          "yazarın onayını bekliyor · " + e99Ozet(g.veri || {}) +
+          ' <button class="e99-mini" data-e99-paylas="' + kacir(g.id) + '">Gönder</button>' +
+          ' <button class="e99-mini" data-e99-indir="' + kacir(g.id) + '">İndir</button></li>';
       }).join("") + "</ul></div>" : "");
 }
 
-function e99Ozet(v) {
+function e99OzetDuz(v) {
   const p = [];
   FAN_EVREN_GRUPLARI.forEach(function (g) { const n = (v[g.k] || []).length; if (n) { p.push(n + " " + g.tekil); } });
   const y = ((v.harita || {}).yerler || []).length;
   if (y) { p.push(y + " harita yeri"); }
-  return kacir(p.join(", ") || "boş");
+  return p.join(", ") || "boş";
 }
 
+function e99Ozet(v) { return kacir(e99OzetDuz(v)); }
+
+/** Katkıdan gönderilecek dosyanın eserini kurar: boş satırlar atılır, kimliği "e99k" ile başlar. */
+function e99DosyaEseri(katki) {
+  const t = fanTemizle(Object.assign({}, katki, { id: "e99k" + fanId().slice(1), ad: "E99 katkısı" }));
+  FAN_EVREN_GRUPLARI.forEach(function (g) {
+    t[g.k] = (t[g.k] || []).filter(function (x) { return Object.keys(x).some(function (k) { return String(x[k] || "").trim(); }); });
+  });
+  t.olusturma = new Date().toISOString();
+  return t;
+}
+
+function e99GonderilenBul(id) {
+  return e99Gonderilenler().find(function (g) { return g.id === id; }) || null;
+}
+
+/** Dosyayı e-postayla gönderme adımları (sunucu yok: dosya kişinin e-postasından yazara gider). */
+function e99EpostaHtml(g) {
+  const adres = fanEposta();
+  if (!adres) {
+    return '<p class="oyun-not">Yazar henüz bir gönderim adresi tanımlamadı. Dosya bu cihazda duruyor; aşağıdan tekrar indirip yazara ulaştırabilirsin.</p>';
+  }
+  const govde = "Merhaba,\n\nE99 için bir katkı gönderiyorum (" + e99OzetDuz(g.veri || {}) + "). Dosya ekte.\n\n";
+  return '<p class="oyun-not">Alıcı: <b class="fan-adres">' + kacir(adres) + "</b>. Paylaş menüsünde e-posta uygulamasını seçersen dosya ekli gider; " +
+      "“E-postayı aç” bağlantısı dosyayı kendisi ekleyemez, indirdiğin dosyayı sen eklersin.</p>" +
+    '<div class="oyun-sira">' +
+      '<button class="dugme" data-e99-paylas="' + kacir(g.id) + '">Dosyayla e-posta at</button>' +
+      '<a class="dugme dugme-sade" href="mailto:' + adres + "?subject=" + encodeURIComponent("TentiforApp E99 katkısı") + "&body=" + encodeURIComponent(govde) + '">E-postayı aç</a>' +
+      '<button class="dugme dugme-sade" data-fan-adres-kopyala>Adresi kopyala</button>' +
+    "</div>";
+}
+
+let e99SonGonderilen = null;   /* az önce hazırlanan dosyanın kimliği: gönderme adımları onun için gösterilir */
+
 async function e99Gonder() {
-  const durum = document.querySelector("#e99Durum");
-  const yaz = function (m, iyi) { if (durum) { durum.textContent = m; durum.className = "pencere-durum " + (iyi ? "iyi" : "kotu"); } };
   fanBekleyeniYaz();
   const katki = e99Katki();
-  if (e99KatkiBosMu(katki)) { yaz("Önce bir şey yaz.", false); return; }
-  if (typeof hesapGerekli === "function") { try { await hesapGerekli(); } catch (_) { /* aşağıda */ } }
-  if (typeof hesapKullanici === "undefined" || !hesapKullanici) {
-    yaz("Göndermek için giriş yap (yazdıkların kaybolmaz).", false);
-    if (typeof hesapPencere === "function") { hesapPencere("giris"); }
-    return;
-  }
-  const temiz = fanTemizle(Object.assign({}, katki, { ad: "E99 katkısı" }));
-  const veriGonder = { ozet: temiz.ozet, harita: temiz.harita };
-  FAN_EVREN_GRUPLARI.forEach(function (g) {
-    veriGonder[g.k] = (temiz[g.k] || []).filter(function (x) { return Object.keys(x).some(function (k) { return String(x[k] || "").trim(); }); });
-  });
-  const { data, error } = await hesapIstemci.rpc("e99_oner", { p_veri: veriGonder });
-  if (error) { yaz(hesapHataMetni(error), false); return; }
-  if (!data || data.durum !== "tamam") {
-    yaz(({ sinir: "Bugünlük yeterince gönderdin; yarın tekrar dene.", bekleyen: "Onay bekleyen 5 önerin var; önce onlar değerlendirilsin.", gecersiz: "Gönderilemedi: katkı çok büyük." })[data && data.durum] || "Gönderilemedi.", false);
-    return;
-  }
+  if (e99KatkiBosMu(katki)) { e99DurumYaz("Önce bir şey yaz.", false); return; }
+  const e = e99DosyaEseri(katki);
   const l = e99Gonderilenler();
-  l.unshift({ id: data.id, t: Date.now(), durum: "bekliyor", veri: veriGonder });
+  l.unshift({ id: e.id, t: Date.now(), durum: "gonderildi", veri: e });
   jsonYaz(E99_GONDERILEN_ANAHTAR, l.slice(0, 30));
-  /* katkı sıfırlanır; gönderilen kopya "Gönderdiklerin"de durur */
+  /* katkı sıfırlanır; dosyası "Gönderdiklerin"de durur */
   const t = fanEserlerim();
   const k = t.find(function (x) { return x.id === E99_KATKI_ID; });
   FAN_EVREN_GRUPLARI.forEach(function (g) { k[g.k] = []; });
   k.ozet = "";
   k.harita = { yerler: [] };
   fanEserlerimYaz(t);
+  e99SonGonderilen = e.id;
+  /* paylaşım menüsü dokunuşun hemen ardından açılmalı (tarayıcı izni) */
+  const s = await fanPaylas(e, "E99 katkısı — TentiforApp" + (fanEposta() ? ". Alıcı: " + fanEposta() : ""));
   evrenSayfaCiz();
-  yaz("Gönderildi. Yönetici onaylayıp yayınlayınca E99'da herkes görecek.", true);
+  e99DurumYaz((s ? s + ". " : "") + "Yazar dosyayı açıp onaylarsa E99'da herkes görecek.", true);
 }
 
-/** Gönderilen önerilerin son durumunu sunucudan tazeler. */
-async function e99DurumTazele() {
-  if (!e99Gonderilenler().length || typeof hesapKullanici === "undefined" || !hesapKullanici || !hesapIstemci) { return; }
-  const { data, error } = await hesapIstemci.rpc("e99_onerilerim");
-  if (error || !Array.isArray(data)) { return; }
-  const l = e99Gonderilenler();
-  let degisti = false;
-  l.forEach(function (g) {
-    const s = data.find(function (x) { return Number(x.id) === Number(g.id); });
-    if (s && s.durum !== g.durum) { g.durum = s.durum; degisti = true; }
-  });
-  if (degisti) { jsonYaz(E99_GONDERILEN_ANAHTAR, l); if (EVS && EVS.kaynak === "e99" && EVS.sekme === "bilgi") { evrenSayfaCiz(); } }
+function e99DurumYaz(m, iyi) {
+  const d = document.querySelector("#e99Durum");
+  if (d) { d.textContent = m; d.className = "pencere-durum " + (iyi ? "iyi" : "kotu"); }
 }
 
-/* ==================== panel: E99 önerileri ve Yayınla ==================== */
+/* ==================== panel: E99 katkıları ve Yayınla ==================== */
+
+let yE99Dosya = null;
 
 function yoneticiE99() {
   if (!(typeof yoneticiAcik === "function" && yoneticiAcik())) { return '<p class="oyun-not">Bu sekme yalnızca tam yöneticiye açık.</p>'; }
-  setTimeout(yoneticiE99Yukle, 0);
   const e = veri.e99 || {};
-  return '<p class="oyun-not">Okurların E99\'a gönderdiği katkılar. Onayladığın katkı E99\'a eklenir; herkesin görmesi için sonra <b>Kaydet</b> ve <b>Yayınla</b>. ' +
+  return '<p class="oyun-not">Okurlar E99 katkılarını dosya olarak e-postana gönderir (gönderim adresi: İçerik → Listeler → Site ayarları). ' +
+      "Gelen dosyayı burada aç; beğenirsen E99'a ekle, sonra <b>Kaydet</b> ve <b>Yayınla</b>. " +
+      "Dosyayı telefonda doğrudan TentiforApp ile ya da Fan → Aç ile açarsan orada da “E99'a ekle” düğmesi çıkar. " +
       "Yayındaki E99'dan bir şeyi çıkarmak için İçerik → Listeler → E99.</p>" +
-    '<p class="oyun-not">Yayındaki E99: ' + e99Ozet(e) + "</p>" +
-    '<div id="yE99Alan"><p class="oyun-not">Yükleniyor…</p></div>';
+    '<p class="oyun-not">Yayındaki E99: ' + e99Ozet(e) + " · eklenen katkı: " + ((e.oneriler || []).length) + "</p>" +
+    '<div class="kutu-y"><label for="yE99Dosya">Gelen katkı dosyası</label>' +
+      '<input type="file" id="yE99Dosya" accept=".html,.htm,.json,text/html,application/json"></div>' +
+    '<div id="yE99Alan">' + yoneticiE99Onizleme() + "</div>";
 }
 
-let yE99Liste = [];
-
-async function yoneticiE99Yukle() {
-  const alan = document.querySelector("#yE99Alan");
-  if (!alan) { return; }
-  const ist = (typeof bakimIstemci === "function") ? await bakimIstemci(alan) : null;
-  if (!ist) { return; }
-  const { data, error } = await ist.rpc("e99_oneriler", { p_durum: "bekliyor" });
-  if (error) { if (typeof bakimYetkiHatasi === "function") { bakimYetkiHatasi(alan, error); } return; }
-  yE99Liste = data || [];
-  if (!yE99Liste.length) { alan.innerHTML = '<p class="oyun-not">Bekleyen katkı yok.</p>'; return; }
-  alan.innerHTML = yE99Liste.map(function (o) {
-    const temiz = fanTemizle(Object.assign({ bicim: FAN_BICIM, tur: "evren", id: "o" + o.id, ad: "Katkı #" + o.id }, o.veri || {})) || {};
-    return '<div class="kutu-y y-e99">' +
-      '<div class="oyun-etiket">#' + Number(o.id) + " · " + kacir(o.kullanici_adi || "?") + " · " + kacir(new Date(o.olusturma).toLocaleString("tr-TR")) + "</div>" +
-      '<div class="fan-oku">' + fanEserGovde(temiz, false) + "</div>" +
-      '<div class="oyun-sira"><button class="dugme" data-y-e99-onay="' + Number(o.id) + '">Onayla ve E99\'a ekle</button>' +
-        '<button class="dugme dugme-sade y-sil" data-y-e99-red="' + Number(o.id) + '">Reddet</button></div></div>';
-  }).join("");
+function yoneticiE99Onizleme() {
+  const e = yE99Dosya;
+  if (!e) { return ""; }
+  const ekli = ((veri.e99 && veri.e99.oneriler) || []).indexOf(e.id) !== -1;
+  return '<div class="kutu-y y-e99">' +
+    '<div class="oyun-etiket">' + kacir(e.yazar || "İmzasız") + (e.olusturma ? " · " + kacir(new Date(e.olusturma).toLocaleString("tr-TR")) : "") + " · " + e99Ozet(e) + "</div>" +
+    '<div class="fan-oku">' + fanEserGovde(e, false) + "</div>" +
+    '<div class="oyun-sira">' + (ekli ? '<p class="oyun-not">Bu katkı zaten E99\'da.</p>'
+      : '<button class="dugme" data-y-e99-onay>Onayla ve E99\'a ekle</button><button class="dugme dugme-sade" data-y-e99-red>Vazgeç</button>') +
+    "</div></div>";
 }
 
-/** Onaylanan katkıyı veri.e99'a ekler (kaynak öneri numarasıyla). */
-function e99Birlestir(o) {
+/** Onaylanan katkıyı veri.e99'a ekler (katkının dosya kimliğiyle; aynı dosya iki kez eklenmez). */
+function e99Birlestir(t) {
+  if (!t) { return false; }
   if (!veri.e99) { veri.e99 = { bicim: FAN_BICIM, surum: 1, tur: "evren", id: "e99", ad: "E99", harita: { yerler: [] }, oneriler: [] }; }
   const e = veri.e99;
-  const t = fanTemizle(Object.assign({ bicim: FAN_BICIM, tur: "evren", id: "o" + o.id, ad: "katkı" }, o.veri || {})) || {};
+  if (!Array.isArray(e.oneriler)) { e.oneriler = []; }
+  if (e.oneriler.indexOf(t.id) !== -1) { return false; }
   FAN_EVREN_GRUPLARI.forEach(function (g) {
     const eklenecek = (t[g.k] || []).filter(function (x) { return Object.keys(x).some(function (k) { return String(x[k] || "").trim(); }); });
     e[g.k] = (e[g.k] || []).concat(eklenecek);
@@ -587,10 +598,12 @@ function e99Birlestir(o) {
   if (t.ozet && String(t.ozet).trim()) { e.ozet = (e.ozet ? e.ozet + "\n\n" : "") + t.ozet; }
   if (!e.harita) { e.harita = { yerler: [] }; }
   ((t.harita || {}).yerler || []).forEach(function (y) {
-    y.id = "e99_" + o.id + "_" + y.id;
-    e.harita.yerler.push(y);
+    const k = JSON.parse(JSON.stringify(y));
+    k.id = "e99_" + t.id + "_" + y.id;
+    e.harita.yerler.push(k);
   });
-  e.oneriler = (e.oneriler || []).concat([Number(o.id)]);
+  e.oneriler.push(t.id);
+  return true;
 }
 
 function yoneticiYayinla() {
@@ -640,7 +653,6 @@ function evrenAdresiAc() {
     if (typeof hataSayfasiAc === "function") { hataSayfasiAc(location.hash.slice(2)); }
     return;
   }
-  if (m[1] === "e99") { e99DurumTazele(); }
 }
 
 window.addEventListener("hashchange", function () { evrenSeciciKapat(); evrenAdresiAc(); });
@@ -648,7 +660,7 @@ window.addEventListener("hashchange", function () { evrenSeciciKapat(); evrenAdr
 document.addEventListener("click", async function (ev) {
   const h = ev.target.closest("[data-evren-sec], #evrenSecBtn, [data-evren-git], [data-es-kapat], [data-es-yeni], .es-katman, " +
     "[data-evs-kapat], [data-evs-kod], [data-evs-sekme], [data-evs-kopyala], [data-evh-mod], [data-evh-bitir], [data-evh-iptal], [data-evh-sil], " +
-    "[data-e99-gonder], [data-y-e99-onay], [data-y-e99-red], [data-y-yayinla], [data-y-yayin-kaydet]");
+    "[data-e99-gonder], [data-e99-paylas], [data-e99-indir], [data-y-e99-onay], [data-y-e99-red], [data-y-yayinla], [data-y-yayin-kaydet]");
   if (!h) { return; }
   const d = h.dataset;
   if (h.classList.contains("es-katman")) { if (ev.target === h) { evrenSeciciKapat(); } return; }
@@ -691,16 +703,20 @@ document.addEventListener("click", async function (ev) {
     return;
   }
   if (h.hasAttribute("data-e99-gonder")) { h.disabled = true; try { await e99Gonder(); } finally { h.disabled = false; } return; }
-  if (d.yE99Onay || d.yE99Red) {
-    const id = Number(d.yE99Onay || d.yE99Red);
-    const o = yE99Liste.find(function (x) { return Number(x.id) === id; });
-    if (!o) { return; }
-    if (d.yE99Onay) { e99Birlestir(o); }
-    const { error } = await hesapIstemci.rpc("e99_karar", { p_id: id, p_durum: d.yE99Onay ? "onaylandi" : "reddedildi" });
-    if (typeof yoneticiDurum === "function") {
-      yoneticiDurum(error ? hesapHataMetni(error) : (d.yE99Onay ? "E99'a eklendi — herkesin görmesi için Kaydet, sonra Yayınla" : "Reddedildi"), !error);
-    }
-    yoneticiE99Yukle();
+  if (h.hasAttribute("data-y-e99-onay")) {
+    const ok = e99Birlestir(yE99Dosya);
+    if (typeof yoneticiDurum === "function") { yoneticiDurum(ok ? "E99'a eklendi — herkesin görmesi için Kaydet, sonra Yayınla" : "Bu katkı zaten E99'da", ok); }
+    yE99Dosya = null;
+    if (typeof yoneticiCiz === "function") { yoneticiCiz(); }
+    return;
+  }
+  if (h.hasAttribute("data-y-e99-red")) { yE99Dosya = null; const a = document.querySelector("#yE99Alan"); if (a) { a.innerHTML = ""; } return; }
+  if (d.e99Paylas || d.e99Indir) {
+    const g = e99GonderilenBul(d.e99Paylas || d.e99Indir);
+    if (!g) { return; }
+    if (d.e99Indir) { fanIndir(g.veri); return; }
+    const m = await fanPaylas(g.veri, "E99 katkısı — TentiforApp" + (fanEposta() ? ". Alıcı: " + fanEposta() : ""));
+    if (m) { e99DurumYaz(m, true); }
     return;
   }
   if (h.hasAttribute("data-y-yayin-kaydet")) {
@@ -712,6 +728,20 @@ document.addEventListener("click", async function (ev) {
     return;
   }
   if (h.hasAttribute("data-y-yayinla")) { siteyiYayinla(); }
+});
+
+document.addEventListener("change", async function (ev) {
+  if (!ev.target || ev.target.id !== "yE99Dosya") { return; }
+  const alan = document.querySelector("#yE99Alan");
+  try {
+    const e = await fanDosyaOku(ev.target.files && ev.target.files[0]);
+    if (e.tur !== "evren") { throw new Error("Bu bir evren dosyası değil"); }
+    yE99Dosya = e;
+    if (alan) { alan.innerHTML = yoneticiE99Onizleme(); }
+  } catch (hata) {
+    yE99Dosya = null;
+    if (alan) { alan.innerHTML = '<p class="pencere-durum kotu">' + kacir((hata && hata.message) || "Açılamadı") + "</p>"; }
+  }
 });
 
 document.addEventListener("keydown", function (e) {
