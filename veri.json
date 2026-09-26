@@ -1,5 +1,5 @@
 {
-  "surum": "1.9.0",
+  "surum": "1.9.1",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -317,6 +317,15 @@
       "ozet": "Analitik, kitapsever. Romandaki sosyal köprü.",
       "detay": "Tarı'nın çevresindeki en dengeli figür ve dış dünyayla bağını kuran isim.\n\nRomanın yapısı hastalığı taklit eder: diyalogla başlar, anlatımla biter. Egir o diyalogların büyük kısmını taşıyan kişidir — yani sayfalar ilerledikçe Egir'in sesinin azalması, Tarı'nın dünyayla bağının kopuşunun ölçüsüdür.\n\nGözünden hiçbir şey kaçmaz; yabancılarla konuşurken zorlanır ama ilgisini çeken biriyle (bir denizciyle bile) dakikalar içinde açılabilir. Parayı ya da statüyü değil, özgür zamanı önemser — düşük mesaili, haftada dört günden fazla olmayan bir iş arar, çünkü \"İş bulunca hayatım değişsin istemiyorum. Siz olun, ailem olsun, kitaplar olsun... Mutlu olayım.\" Kütüphanedeki görevlinin ayrılacağını öğrenince yeri Tarı'ya önerecek kadar da sadık bir dosttur.",
       "gizli": null
+    },
+    {
+      "id": "niraz",
+      "ad": "Nıraz",
+      "unvan": "Müdavim",
+      "grup": "Blero",
+      "ozet": "Kütüphaneye ara sıra uğrayan biri. Soruları nettir. Kendini anlatmaz.",
+      "detay": "Blero'da, Tarı–Egir–Danpar çevresinin kenarında durur. Bir yere girdiğinde önce işleyişi öğrenir, sonra konuşur. Kalabalıkta öne çıkmaz. Gördüğünü biriktirir, yorumunu kendine saklar. Delilik kadrosunun arkasındaki yüzlerden biridir; hikâyeyi çevirmez.",
+      "kart": false
     },
     {
       "id": "zafki",
@@ -1683,6 +1692,12 @@
       "istek": "Desenler, kumaş motifleri olan bir şey arıyorum.",
       "sabir": 4,
       "bahsis": 5
+    },
+    {
+      "ad": "Nıraz",
+      "sohbet": true,
+      "istek": "Burası nasıl işliyor?",
+      "cevap": "Anladım."
     }
   ],
   "galeri": [
@@ -6841,6 +6856,14 @@
   ],
   "degisiklik": [
     {
+      "surum": "1.9.1",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Arşive yeni bir müdavim: Nıraz"
+      ],
+      "yeniler": []
+    },
+    {
       "surum": "1.9.0",
       "tarih": "2026-09-26",
       "maddeler": [
@@ -8034,7 +8057,14 @@
       "erisim": "evren",
       "ozet": "Evrengezerlerin evreni: Beyaz Taşlar, evrenler arası geçiş ve Evrengezer halkı. Melezlerin (Sabıka soyu) bilgileri burada ve Tömye'de ortaktır; anıları ve hikâyeleri Tömye arşivinde kalır.",
       "kurallar": [],
-      "kisiler": [],
+      "kisiler": [
+        {
+          "id": "e25-isimsiz",
+          "ad": "",
+          "kutu": true,
+          "aciklama": "Bir yere girdiğinde önce işleyişi öğrenir, sonra konuşur. Kalabalıkta öne çıkmaz. Gördüğünü biriktirir, yorumunu kendine saklar. Soruları nettir. Kendini anlatmaz."
+        }
+      ],
       "yerler": [],
       "tarih": [],
       "sozluk": [],

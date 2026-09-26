@@ -214,7 +214,7 @@ function kartParlak(k) { return !!k && (k.gunler || []).length >= ((veri.koleksi
 /** Kart kazanma/ilerletme. kaynak: okuma | test | nobet */
 function kartKazan(id, kaynak) {
   const kar = (veri.karakterler || []).find(function (k) { return k.id === id; });
-  if (!kar) { return; }
+  if (!kar || kar.kart === false) { return; }
   const t = koleksiyonOku();
   const bugun = bugununAdi();
   const yeni = !t[id];
@@ -238,6 +238,7 @@ function kartKazan(id, kaynak) {
 function kartSetleri() {
   const setler = {};
   (veri.karakterler || []).forEach(function (k, i) {
+    if (k.kart === false) { return; }   /* koleksiyona girmeyen kayıt */
     const g = k.grup || "Diğer";
     (setler[g] = setler[g] || []).push({ k: k, i: i });
   });
@@ -269,7 +270,7 @@ function koleksiyonCiz() {
   const t = koleksiyonOku();
   const arsivAcik = bolumErisimi("arsiv");
   const setler = kartSetleri();
-  const toplam = (veri.karakterler || []).length;
+  const toplam = (veri.karakterler || []).filter(function (k) { return k.kart !== false; }).length;
   const sahip = Object.keys(t).length;
   const tamam = tamamlananSetler();
 

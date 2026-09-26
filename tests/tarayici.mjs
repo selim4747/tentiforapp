@@ -848,7 +848,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("set tamamlanınca madalya", await A.evaluate(function () { return madalyaVar("setTamam"); }));
     await A.evaluate(function () { location.hash = "#/koleksiyon"; }); await bekle(A, 500);
     await A.evaluate(function () { koleksiyonCiz(); });
-    ok("koleksiyon çizilir", await A.locator("#koleksiyonAlan .kol-kart").count() === await A.evaluate(function () { return veri.karakterler.length; }));
+    ok("koleksiyon çizilir (koleksiyona girmeyen kayıt hariç)", await A.locator("#koleksiyonAlan .kol-kart").count() === await A.evaluate(function () { return veri.karakterler.filter(function (k) { return k.kart !== false; }).length; }));
     ok("kodsuz ziyaretçi kart unvanı ve set adını görmez", await A.locator("#koleksiyonAlan .kol-unvan-k").count() === 0 &&
       !/Luyot/.test(await A.textContent("#koleksiyonAlan")));
 
@@ -988,6 +988,57 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await A.click('#evrenSayfa .kart-ortak [data-evren-git="#/karakter/feil"]'); await bekle(A, 900);
     ok("melezin anıları Tömye'de açılır", await A.evaluate(function () { return !document.querySelector("#evrenSayfa") && /karakter\/feil/.test(rota()); }));
     await A.evaluate(function () { if (typeof perdeKapat === "function") { perdeKapat(); } location.hash = "#/sen"; }); await bekle(A, 500);
+
+    /* ---------- Nıraz: Tömye'de adıyla, E25'te isimsiz; iki metin birbirini işaret etmez ---------- */
+    const YASAK = /Evrengezer|gezgin|taş|Yansıma|Selim|yazar|izdüşüm|E25|başka evren/i;
+    ok("Nıraz Tömye'de: Müdavim, Egir'in yanında, Evrengezer yok", await A.evaluate(function (yasak) {
+      location.hash = "#/arsiv"; cizKarakterler();
+      const kartlar = Array.from(document.querySelectorAll("#karakterIzgara .kart"));
+      const adlar = kartlar.map(function (k) { return k.querySelector(".kart-ad").textContent; });
+      const i = adlar.indexOf("Nıraz");
+      const kart = kartlar[i];
+      const k = veri.karakterler.find(function (x) { return x.id === "niraz"; });
+      const re = new RegExp(yasak, "i");
+      return i > 0 && adlar[i - 1] === "Egir" && /Müdavim/.test(kart.textContent) && !re.test(kart.textContent) &&
+        !k.gizli && !k.evrenler && !re.test(JSON.stringify(k));
+    }, YASAK.source));
+    ok("Nıraz'ın kaydı açılınca da Evrengezer yazmaz", await A.evaluate(function (yasak) {
+      karakterAc(veri.karakterler.findIndex(function (x) { return x.id === "niraz"; }));
+      const t = document.querySelector("#perde").textContent;
+      perdeKapat();
+      return /Müdavim/.test(t) && /Kendini anlatmaz/.test(t) && !new RegExp(yasak, "i").test(t.replace(/Tentiforverse/g, ""));
+    }, YASAK.source));
+    ok("Nıraz kart koleksiyonuna ve yarış sorularına girmez", await A.evaluate(function () {
+      kartKazan("niraz", "okuma");
+      const setler = kartSetleri();
+      return !kartSahip("niraz") && !Object.keys(setler).some(function (g) { return setler[g].some(function (x) { return x.k.id === "niraz"; }); });
+    }));
+    await A.evaluate(function () { location.hash = "#/ev/site/e25"; }); await bekle(A, 700);
+    ok("E25'te isimsiz kutu: isim satırı yok, aynı kişilik, ad yok", await A.evaluate(function (yasak) {
+      const s = document.querySelector("#evrenSayfa");
+      const kutu = s && s.querySelector(".kisi-kutu");
+      if (!kutu) { return false; }
+      const t = kutu.textContent;
+      return !kutu.querySelector("h1,h2,h3,h4,dt,b,strong") && /önce işleyişi öğrenir/.test(t) && /Kendini anlatmaz/.test(t) &&
+        !/—|Adsız|\?\?\?/.test(kutu.innerHTML) && !/Nıraz/.test(s.textContent) && !new RegExp(yasak, "i").test(t) &&
+        veri.kanonEvrenleri.e25.kisiler.length === 1;
+    }, YASAK.source));
+    await A.evaluate(function () { location.hash = "#/sen"; }); await bekle(A, 400);
+    ok("Gündüz Vardiyası: iki kısa replik, sıraya ve puana sayılmaz", await A.evaluate(function () {
+      const m = veri.musteriler.find(function (x) { return x.ad === "Nıraz"; });
+      let alan = document.querySelector("#vardiyaAlan");
+      const yapay = !alan;
+      if (yapay) { alan = document.createElement("div"); alan.id = "vardiyaAlan"; document.body.appendChild(alan); }
+      V = { sira: 3, toplam: 10, kazanc: 0, memnun: 0, sabir: 5, bitti: false, musteri: m, secim: null };
+      vardiyaCiz();
+      const once = alan.textContent;
+      alan.querySelector("[data-vardiya-anlat]").click();
+      const sonra = alan.textContent;
+      const tamam = /Burası nasıl işliyor\?/.test(once) && /Anladım\./.test(sonra) && V.sira === 3 && V.sabir === 5 && !/taş|evren|gezi/i.test(JSON.stringify(m));
+      V = null; if (yapay) { alan.remove(); }
+      return tamam;
+    }));
+
     ok("E25 evren seçicide, kodsuz ziyaretçiye kilitli", await Z.evaluate(function () {
       const e = evrenSeciciListesi().site.find(function (x) { return x.ad === "E25"; });
       return !!e && e.kilitli && e.git === "#/ev/site/e25";

@@ -179,7 +179,7 @@ function vardiyaMusteri() {
 }
 
 function vardiyaSec(raf) {
-  if (!V || V.bitti || V.secim) { return; }
+  if (!V || V.bitti || V.secim || V.musteri.sohbet) { return; }
 
   V.secim = raf;
   const dogru = raf === V.musteri.raf;
@@ -250,6 +250,15 @@ function vardiyaCiz() {
   }
 
   const m = V.musteri;
+  /* raf istemeyen müşteri: yalnızca konuşur, puana ve sıraya sayılmaz */
+  if (m.sohbet) {
+    alan.innerHTML = tavanBilgi("vardiya") +
+      '<div class="cev-ust"><span>müşteri ' + (V.sira + 1) + " / " + V.toplam + "</span><span>sabır " + "●".repeat(Math.max(0, V.sabir)) + "</span></div>" +
+      '<div class="musteri"><div class="musteri-ad">' + kacir(m.ad) + '</div><div class="musteri-istek">" ' + kacir(m.istek) + ' "</div>' +
+      (V.sohbetCevap ? '<div class="musteri-istek">" ' + kacir(m.cevap || "") + ' "</div>' : "") + "</div>" +
+      (V.sohbetCevap ? "" : '<button class="dugme" data-vardiya-anlat>Anlat</button>');
+    return;
+  }
   const raflar = (veri.raflar || []).map(function (r) {
     let sinif = "raf-btn";
 
@@ -438,6 +447,14 @@ document.addEventListener("click", function (e) {
   }
 
   if (e.target.closest("[data-cev-ipucu]")) { cevirmenIpucu(); return; }
+
+  if (e.target.closest("[data-vardiya-anlat]")) {
+    if (!V || !V.musteri || !V.musteri.sohbet || V.sohbetCevap) { return; }
+    V.sohbetCevap = true;
+    vardiyaCiz();
+    setTimeout(function () { if (V && !V.bitti) { V.sohbetCevap = false; vardiyaMusteri(); } }, 1400);
+    return;
+  }
 
   const v = e.target.closest("[data-vardiya]");
   if (v) { vardiyaBaslat(); return; }

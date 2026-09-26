@@ -86,7 +86,7 @@ function noktaCokgende(p, x, y) {
 function yarisPaketiUret() {
   const banka = {};
   const kelimeler = [].concat((veri.kelimeler || {}).kolay || [], (veri.kelimeler || {}).orta || [], (veri.kelimeler || {}).zor || []);
-  const acikKarakterler = (veri.karakterler || []).filter(function (k) { return k.ad && k.unvan; });
+  const acikKarakterler = (veri.karakterler || []).filter(function (k) { return k.ad && k.unvan && k.kart !== false; });
 
   /* Kyldo hız: kelimenin hece çizimleri, cevap kelimenin kendisi */
   banka.kyldo_hiz = kelimeler.filter(kyldoYazilabilir).map(function (k) {
