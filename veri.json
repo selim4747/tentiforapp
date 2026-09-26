@@ -1,5 +1,5 @@
 {
-  "surum": "1.6.0",
+  "surum": "1.6.1",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -6741,6 +6741,14 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "1.6.1",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "E99 katkıları artık sunucuya gitmez: dosya olarak hazırlanır, e-postanla yazara gönderirsin"
+      ],
+      "yeniler": []
+    },
     {
       "surum": "1.6.0",
       "tarih": "2026-09-26",

@@ -2053,74 +2053,13 @@ revoke execute on function public.bildirim_abone_ol(text, text, text), public.bi
 grant execute on function public.bildirim_abone_ol(text, text, text), public.bildirim_abonelik_sil(text) to anon, authenticated;
 grant execute on function public.bildirim_sayisi() to authenticated;
 
--- ---------- E99: herkesin yazdığı evren ----------
--- Okur katkısını önce kendi cihazında yazar; gönderince buraya düşer. Yönetici panelden onaylarsa
--- katkı veri.json'daki E99'a eklenir ve yönetici siteyi yayınladığında herkes görür. Tabloyu yalnızca
--- bu fonksiyonlar okur/yazar.
-create table if not exists public.e99_onerileri (
-  id bigint generated always as identity primary key,
-  kullanici uuid not null references auth.users(id) on delete cascade,
-  veri jsonb not null,
-  durum text not null default 'bekliyor',
-  olusturma timestamptz not null default now(),
-  karar_zamani timestamptz
-);
-alter table public.e99_onerileri enable row level security;
-do $$ begin
-  alter table public.e99_onerileri add constraint e99_durum check (durum in ('bekliyor', 'onaylandi', 'reddedildi'));
-exception when duplicate_object then null; end $$;
-do $$ begin
-  alter table public.e99_onerileri add constraint e99_boyut check (jsonb_typeof(veri) = 'object' and pg_column_size(veri) < 200000);
-exception when duplicate_object then null; end $$;
-create index if not exists e99_onerileri_kullanici on public.e99_onerileri (kullanici, olusturma desc);
-
-create or replace function public.e99_oner(p_veri jsonb) returns jsonb
-language plpgsql security definer set search_path = '' as $$
-declare uid uuid := auth.uid(); yeni bigint;
-begin
-  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
-  if p_veri is null or jsonb_typeof(p_veri) <> 'object' or pg_column_size(p_veri) >= 200000 then
-    return jsonb_build_object('durum', 'gecersiz');
-  end if;
-  if (select count(*) from public.e99_onerileri where kullanici = uid and olusturma > now() - interval '1 day') >= 10 then
-    return jsonb_build_object('durum', 'sinir');
-  end if;
-  if (select count(*) from public.e99_onerileri where kullanici = uid and durum = 'bekliyor') >= 5 then
-    return jsonb_build_object('durum', 'bekleyen');
-  end if;
-  insert into public.e99_onerileri (kullanici, veri) values (uid, p_veri) returning id into yeni;
-  return jsonb_build_object('durum', 'tamam', 'id', yeni);
-end $$;
-
-create or replace function public.e99_onerilerim()
-returns table (id bigint, durum text, olusturma timestamptz, karar_zamani timestamptz)
-language sql stable security definer set search_path = '' as $$
-  select o.id, o.durum, o.olusturma, o.karar_zamani from public.e99_onerileri o
-  where o.kullanici = auth.uid() order by o.id desc limit 50;
-$$;
-
-create or replace function public.e99_oneriler(p_durum text)
-returns table (id bigint, kullanici_adi text, veri jsonb, durum text, olusturma timestamptz)
-language plpgsql stable security definer set search_path = '' as $$
-begin
-  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
-  return query select o.id, p.kullanici_adi, o.veri, o.durum, o.olusturma
-    from public.e99_onerileri o left join public.profiller p on p.id = o.kullanici
-    where p_durum is null or o.durum = p_durum order by o.id limit 100;
-end $$;
-
-create or replace function public.e99_karar(p_id bigint, p_durum text) returns jsonb
-language plpgsql security definer set search_path = '' as $$
-begin
-  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
-  if p_durum not in ('onaylandi', 'reddedildi') then return jsonb_build_object('durum', 'gecersiz'); end if;
-  update public.e99_onerileri set durum = p_durum, karar_zamani = now() where id = p_id;
-  return jsonb_build_object('durum', case when found then 'tamam' else 'yok' end);
-end $$;
-
-revoke all on public.e99_onerileri from anon, authenticated;
-revoke execute on function public.e99_oner(jsonb), public.e99_onerilerim(), public.e99_oneriler(text), public.e99_karar(bigint, text) from public, anon;
-grant execute on function public.e99_oner(jsonb), public.e99_onerilerim(), public.e99_oneriler(text), public.e99_karar(bigint, text) to authenticated;
+-- ---------- E99 ----------
+-- E99 katkıları sunucuya gelmez: okur dosyayı e-postayla yazara gönderir, yazar panelden E99'a ekler.
+-- Önceki sürümün sunucu fonksiyonları kaldırılır (eski e99_onerileri tablosu varsa dokunulmaz; kimse erişemez).
+drop function if exists public.e99_oner(jsonb);
+drop function if exists public.e99_onerilerim();
+drop function if exists public.e99_oneriler(text);
+drop function if exists public.e99_karar(bigint, text);
 
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';

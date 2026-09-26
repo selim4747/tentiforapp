@@ -3737,5 +3737,6 @@ html.evren-acik{overflow:hidden}
 .evh-bilgi .y-sil{margin-top:10px}
 .e99-katki{margin-top:18px;border-color:var(--deniz)}
 .e99-gonderilen{margin:6px 0;padding-left:18px;font-size:14px}
+.e99-mini{font:inherit;font-size:13px;background:none;border:0;padding:4px 6px;color:var(--deniz);text-decoration:underline;cursor:pointer;min-height:32px}
 .y-e99{margin:10px 0}
 @media (max-width:760px){ .evh-svg text{font-size:3.6px;stroke-width:.7px} }
