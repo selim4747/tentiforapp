@@ -10,7 +10,7 @@
      dosyaya çift tıklamak onu doğrudan Fan → Dosya aç'ta açar (manifest share_target / file_handlers). */
 
 const ALT_MENU = [
-  ["arsiv", "Arşiv", "▤"], ["okuma", "Oku", "▧"], ["oyunlar", "Oyna", "▩"], ["fan", "Fan", "✎"]
+  ["arsiv", "Arşiv", "▤"], ["okuma", "Oku", "▧"], ["oyunlar", "Oyna", "▩"], ["evren", "Evren", "◎"]
 ];
 const MOBIL_ENI = 760;
 
@@ -35,6 +35,11 @@ function altMenuCiz() {
   const bu = typeof aktifSayfa !== "undefined" ? aktifSayfa : "";
   const acik = !!document.querySelector("#mobilMenu");
   n.innerHTML = ALT_MENU.map(function (m) {
+    if (m[0] === "evren") {
+      const ev = location.hash.indexOf("#/ev/") === 0 || !!document.querySelector("#evrenSecici");
+      return '<button class="alt-oge' + (ev ? " bu" : "") + '" data-evren-sec aria-haspopup="dialog">' +
+        '<span class="alt-ikon" aria-hidden="true">' + m[2] + "</span><span>" + kacir(m[1]) + "</span></button>";
+    }
     const yeni = (typeof ziyaretSayfaSayisi === "function") ? ziyaretSayfaSayisi(m[0]) : 0;
     return '<a class="alt-oge' + (bu === m[0] ? " bu" : "") + '" href="#/' + m[0] + '"' + (bu === m[0] ? ' aria-current="page"' : "") + ">" +
       '<span class="alt-ikon" aria-hidden="true">' + m[2] + "</span><span>" + kacir(m[1]) + "</span>" +

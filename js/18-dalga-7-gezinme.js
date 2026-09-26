@@ -500,6 +500,12 @@ function sayfaYonlendir() {
     return;
   }
 
+  /* evren sayfası: #/ev/benim/<id>, #/ev/fan/<id>, #/ev/e99 — Fan sayfasının üstünde açılır (44-evrenler.js) */
+  if (bas === "ev") {
+    if (!aktifSayfa) { sayfaGoster("fan", false); }
+    return;
+  }
+
   /* fan eseri: #/fan/hikaye/<id> ya da #/fan/evren/<id> — Fan sayfasının üstünde açılır */
   if (bas === "fan" && parca[1] && parca[2]) {
     if (aktifSayfa !== "fan") { sayfaGoster("fan", false); }

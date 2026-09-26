@@ -187,7 +187,16 @@ const OZET_LISTELERI = [
   ["claudeEvreni.kisiler", "Claude evreni kişisi", function (x) { return x.ad; }],
   ["claudeEvreni.hikayeler", "Claude evreni hikâyesi", function (x) { return x.baslik; }],
   ["fanEserleri.hikayeler", "fan hikâyesi", function (x) { return x.baslik; }],
-  ["fanEserleri.evrenler", "fan evreni", function (x) { return x.ad; }]
+  ["fanEserleri.evrenler", "fan evreni", function (x) { return x.ad; }],
+  ["kanonEvrenleri.e26.kurallar", "E26 kuralı", function (x) { return x.ad; }],
+  ["kanonEvrenleri.e26.kisiler", "E26 kişisi", function (x) { return x.ad; }],
+  ["kanonEvrenleri.e26.yerler", "E26 yeri", function (x) { return x.ad; }],
+  ["kanonEvrenleri.e26.tarih", "E26 olayı", function (x) { return x.olay; }],
+  ["kanonEvrenleri.e26.ozelAlanlar", "E26 alanı", function (x) { return x.ad; }],
+  ["e99.kurallar", "E99 kuralı", function (x) { return x.ad; }],
+  ["e99.kisiler", "E99 kişisi", function (x) { return x.ad; }],
+  ["e99.yerler", "E99 yeri", function (x) { return x.ad; }],
+  ["e99.harita.yerler", "E99 harita yeri", function (x) { return x.ad; }]
 ];
 
 function bakimAnahtar(x) {
@@ -280,6 +289,15 @@ const Y_LISTELER = {
   "claudeEvreni.sorular":   { ad: "Claude evreni · sorular", ornek: { soru: "", not: "" } },
   "fanEserleri.hikayeler": { ad: "Fanmade · hikâyeler", ornek: { bicim: "tentifor-eser", surum: 1, tur: "hikaye", id: "", baslik: "", yazar: "", evren: "", karakterler: "", etiketler: "", uyari: "", ozet: "", metin: "" } },
   "fanEserleri.evrenler":  { ad: "Fanmade · evrenler", ornek: { bicim: "tentifor-eser", surum: 1, tur: "evren", id: "", ad: "", yazar: "", ozet: "", kurallar: [], kisiler: [], yerler: [], tarih: [], sozluk: [], ozelAlanlar: [] } },
+  "kanonEvrenleri.e26.kurallar": { ad: "E26 · kurallar", ornek: { ad: "", tur: "", aciklama: "" } },
+  "kanonEvrenleri.e26.kisiler": { ad: "E26 · kişiler", ornek: { ad: "", rol: "", aciklama: "" } },
+  "kanonEvrenleri.e26.yerler": { ad: "E26 · yerler", ornek: { ad: "", aciklama: "" } },
+  "kanonEvrenleri.e26.tarih": { ad: "E26 · tarih", ornek: { zaman: "", olay: "" } },
+  "kanonEvrenleri.e26.ozelAlanlar": { ad: "E26 · kendi alanları", ornek: { ad: "", deger: "" } },
+  "e99.kurallar": { ad: "E99 · kurallar", ornek: { ad: "", tur: "", aciklama: "" } },
+  "e99.kisiler": { ad: "E99 · kişiler", ornek: { ad: "", rol: "", aciklama: "" } },
+  "e99.yerler": { ad: "E99 · yerler", ornek: { ad: "", aciklama: "" } },
+  "e99.harita.yerler": { ad: "E99 · harita yerleri", ornek: { id: "", ad: "", tur: "Şehir", not: "", x: 50, y: 50 } },
   takvimEtkinlikleri: { ad: "Tömye takvimi etkinlikleri", ornek: { id: "", ad: "", ay: "Leg", gun: 1, sure: 1, tema: "", metin: "", alinti: "", gorev: { id: "yazi4", adet: 1, ad: "", odul: 30 } } },
   degisiklik:         { ad: "Değişiklik günlüğü",  ozel: true },
   site:               { ad: "Site ayarları",       ozel: true }

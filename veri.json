@@ -1,5 +1,5 @@
 {
-  "surum": "1.5.0",
+  "surum": "1.6.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -6742,6 +6742,17 @@
   ],
   "degisiklik": [
     {
+      "surum": "1.6.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Her sayfada \"Evren seç\": sitedeki evrenler, fanmade evrenler ve senin evrenlerin tek menüde",
+        "Her evrenin kendi sayfası; kendi evreninin tam yöneticisi sensin: haritasına yer ekle, taşı, kıta ve bölge çiz",
+        "E99: herkesin yazabildiği boş evren. Yazdığın önce yalnızca sende durur, yönetici onaylayınca yayına girer",
+        "Site artık Cloudflare Pages'te: tentiforapp.pages.dev"
+      ],
+      "yeniler": []
+    },
+    {
       "surum": "1.5.0",
       "tarih": "2026-09-26",
       "maddeler": [
@@ -7770,6 +7781,64 @@
   "fanEserleri": {
     "hikayeler": [],
     "evrenler": []
+  },
+  "e99": {
+    "bicim": "tentifor-eser",
+    "surum": 1,
+    "tur": "evren",
+    "id": "e99",
+    "ad": "E99",
+    "yazar": "Herkes",
+    "ozet": "Bomboş bir evren. Kuralını, kişisini, yerini, tarihini, haritasını isteyen yazar. Yazdıkların önce yalnızca senin cihazında durur; gönderdiğinde yönetici okur, onaylayıp yayınlarsa herkes görür.",
+    "kurallar": [],
+    "kisiler": [],
+    "yerler": [],
+    "tarih": [],
+    "sozluk": [],
+    "ozelAlanlar": [],
+    "harita": {
+      "yerler": []
+    },
+    "oneriler": []
+  },
+  "kanonEvrenleri": {
+    "e26": {
+      "bicim": "tentifor-eser",
+      "surum": 1,
+      "tur": "evren",
+      "id": "e26",
+      "ad": "E26",
+      "yazar": "",
+      "ozet": "Herkesin saçına bağlı birkaç konuşma topu vardır; sesler bu toplardan yayılır. Biriyle konuşmak için top ona dokunur; karşıdaki sesi bu dokunuşla algılar.",
+      "kurallar": [
+        {
+          "ad": "Konuşma topları",
+          "tur": "ses",
+          "aciklama": "Herkesin saçına bağlı birkaç konuşma topu vardır ve sesler bu toplardan yayılır."
+        },
+        {
+          "ad": "Dokunarak duymak",
+          "tur": "ses",
+          "aciklama": "Biriyle konuşmak için top ona dokunur; karşıdaki sesi bu dokunuşla algılar."
+        }
+      ],
+      "kisiler": [
+        {
+          "ad": "Gearem",
+          "rol": "Topunu önüne alıp kendi kendine konuşan, asosyal biri.",
+          "aciklama": "E26'da yaşar. Asosyaldır; konuşma topunu önüne alıp kendi kendine konuşur.\n\nRastgele birini kaçırır ve konuşma toplarının işleyişini değiştirmek için üzerinde deneyler yapar. Sonunda onun zihnini kontrol eder; kendi konuşma topunun uzayabildiği kısmı artırır ve konuşma topu sayısını çoğaltır."
+        }
+      ],
+      "yerler": [],
+      "tarih": [],
+      "sozluk": [],
+      "ozelAlanlar": [
+        {
+          "ad": "Yabancı öğesi",
+          "deger": "Saça bağlı bir konuşma topu."
+        }
+      ]
+    }
   },
   "bildirim": {
     "acikAnahtar": "BOZ4Cdy6Ed0C8dOiGlH8uPQ7Jvf2vTlb-HQe8UzIzcduLUXwfKzSNjYwuPC9a_WkhX8l4PhFS8yoNzpNNco20ro"

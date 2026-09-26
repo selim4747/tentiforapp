@@ -58,9 +58,26 @@ function fanTemizle(ham) {
         return o;
       });
     });
+    e.harita = fanHaritaTemizle(ham.harita);
     if (!e.ad.trim()) { return null; }
   }
   return e;
+}
+
+/** Evren haritası: yerler (0–100 koordinat), isteğe bağlı alan çokgenleri, deniz rengi. */
+function fanHaritaTemizle(h) {
+  const sayi = function (v) { const n = Number(v); return isFinite(n) ? Math.max(0, Math.min(100, Math.round(n * 100) / 100)) : 50; };
+  const kaynak = (h && Array.isArray(h.yerler)) ? h.yerler : [];
+  const o = { yerler: kaynak.slice(0, 400).map(function (y, i) {
+    const t = { id: fanMetin(y && y.id, 40).replace(/[^\w-]/g, "") || ("y" + i), ad: fanMetin(y && y.ad, 80),
+      tur: fanMetin(y && y.tur, 40), not: fanMetin(y && y.not, 2000), x: sayi(y && y.x), y: sayi(y && y.y) };
+    if (y && Array.isArray(y.sekil) && y.sekil.length >= 3) {
+      t.sekil = y.sekil.slice(0, 120).map(function (n) { return [sayi(n && n[0]), sayi(n && n[1])]; });
+    }
+    return t;
+  }) };
+  if (h && /^#[0-9a-fA-F]{6}$/.test(h.renk || "")) { o.renk = h.renk; }
+  return o;
 }
 
 function fanAd(e) { return (e.tur === "hikaye" ? e.baslik : e.ad) || "Adsız"; }
@@ -109,10 +126,12 @@ function fanEserGovde(e, dosya) {
       (e.ozet ? "<p><i>" + kacir(e.ozet) + "</i></p>" : "") +
       '<div class="' + (dosya ? "" : "okuma-metin fan-metin") + '">' + paragraf(e.metin) + "</div>";
   }
-  return '<p class="ust">Fan evreni · kanon dışı</p>' +
+  return '<p class="ust">' + kacir(e.etiket || "Fan evreni · kanon dışı") + "</p>" +
     "<h1>" + kacir(e.ad || "Adsız evren") + "</h1>" +
     '<div class="bilgi">' + bilgi("Kuran", e.yazar) + "</div>" +
     (e.ozet ? paragraf(e.ozet) : "") +
+    (e.harita && e.harita.yerler && e.harita.yerler.length && typeof evrenHaritaSvg === "function"
+      ? "<h2>Harita</h2>" + evrenHaritaSvg(e.harita, {}) : "") +
     FAN_EVREN_GRUPLARI.map(function (g) {
       const liste = (e[g.k] || []).filter(function (x) { return Object.keys(x).some(function (k) { return String(x[k] || "").trim(); }); });
       if (!liste.length) { return ""; }
@@ -154,6 +173,7 @@ function fanYeni(tur) {
     e.ad = ""; e.ozet = "";
     FAN_EVREN_GRUPLARI.forEach(function (g) { e[g.k] = []; });
     e.kurallar.push({ ad: "", tur: "", aciklama: "" });
+    e.harita = { yerler: [] };
   }
   const l = fanEserlerim();
   l.push(e);
@@ -163,9 +183,11 @@ function fanYeni(tur) {
 }
 
 /** "kurallar.2.ad" gibi bir yola değer yazar ve kaydeder. */
-function fanAlanYaz(tur, yol, deger) {
+/** hedef: formun data-fan-hedef'i (evren sayfası kendi taslağını belirtir); yoksa seçili taslak. */
+function fanAlanYaz(tur, yol, deger, hedef) {
   const l = fanEserlerim();
-  const e = l.find(function (x) { return x.id === fanSecili[tur]; });
+  const id = hedef || fanSecili[tur];
+  const e = l.find(function (x) { return x.id === id; });
   if (!e) { return; }
   const p = yol.split(".");
   let o = e;
@@ -230,7 +252,8 @@ function fanEvrenOnerileri() {
   const adlar = (veri.haritalar || []).filter(function (h) {
     return typeof kanonEvrenErisimi !== "function" || kanonEvrenErisimi(h.id);
   }).map(function (h) { return h.ad; });
-  fanEserlerim().concat(fanSiteListesi("evren")).forEach(function (e) { if (e.tur === "evren" && e.ad) { adlar.push(e.ad); } });
+  fanEserlerim().concat(fanSiteListesi("evren")).forEach(function (e) { if (e.tur === "evren" && e.ad && !e.e99) { adlar.push(e.ad); } });
+  if (veri.e99) { adlar.push("E99"); }
   return adlar.filter(function (x, i, a) { return a.indexOf(x) === i; });
 }
 
@@ -245,9 +268,10 @@ function fanGirdi(yol, deger, etiket, tip, ek) {
 }
 
 function fanDuzenleyici(tur) {
-  const benim = fanEserlerim().filter(function (x) { return x.tur === tur; });
+  const benim = fanEserlerim().filter(function (x) { return x.tur === tur && !x.e99; });
   let e = fanDuzenlenen(tur);
-  if (!e && benim.length) { fanSecili[tur] = benim[benim.length - 1].id; e = fanDuzenlenen(tur); }
+  if (e && e.e99) { e = null; }
+  if (!e && benim.length) { fanSecili[tur] = benim[benim.length - 1].id; e = benim[benim.length - 1]; }
 
   const ust = '<div class="fan-eserlerim">' +
     (benim.length ? '<span class="oyun-etiket">Taslakların</span>' + benim.map(function (x) {
@@ -273,26 +297,13 @@ function fanDuzenleyici(tur) {
       '<p class="oyun-not"><span data-fan-sayac>' + fanKelime(e.metin) + " kelime</span> · paragrafları boş satırla ayır · en fazla " +
         FAN_METIN_SINIR.toLocaleString("tr-TR") + " karakter</p>";
   } else {
-    form = fanGirdi("ad", e.ad, "Evrenin adı") +
-      fanGirdi("yazar", e.yazar, "Kuran (takma ad olabilir)") +
-      fanGirdi("ozet", e.ozet, "Evreni anlat", "uzun", { satir: 4 }) +
-      FAN_EVREN_GRUPLARI.map(function (g) {
-        return '<fieldset class="fan-grup"><legend>' + kacir(g.ad) + "</legend>" +
-          (g.not ? '<p class="oyun-not">' + kacir(g.not) + "</p>" : "") +
-          (e[g.k] || []).map(function (x, i) {
-            return '<div class="fan-oge">' + g.alanlar.map(function (a) {
-              return fanGirdi(g.k + "." + i + "." + a[0], x[a[0]], a[1], a[2] === "uzun" ? "uzun" : "", a[2] === "liste" ? { liste: "fanKuralTur" } : { satir: 2 });
-            }).join("") +
-              '<button class="dugme dugme-sade y-sil" data-fan-cikar="' + g.k + ":" + i + '">Bu ' + g.tekil + "i kaldır</button></div>";
-          }).join("") +
-          '<button class="dugme dugme-sade" data-fan-ekle="' + g.k + '">+ ' + kacir(g.tekil) + " ekle</button></fieldset>";
-      }).join("");
+    form = fanEvrenFormHtml(e, true);
   }
 
   return ust +
     '<datalist id="fanEvrenOneri">' + fanEvrenOnerileri().map(function (a) { return '<option value="' + kacir(a) + '">'; }).join("") + "</datalist>" +
-    '<datalist id="fanKuralTur">' + FAN_KURAL_TURLERI.map(function (a) { return '<option value="' + kacir(a) + '">'; }).join("") + "</datalist>" +
     '<div class="fan-form kutu-y" data-fan-form="' + tur + '">' + form + "</div>" +
+    (tur === "evren" ? '<p class="oyun-not"><a href="#/ev/benim/' + kacir(e.id) + '">Evren sayfasını ve haritasını aç →</a></p>' : "") +
     '<p class="oyun-not" data-fan-kayit="' + tur + '">Taslak bu cihaza kaydediliyor</p>' +
     '<div class="oyun-sira">' +
       '<button class="dugme" data-fan-indir="' + tur + '">Dosya olarak indir</button>' +
@@ -302,6 +313,27 @@ function fanDuzenleyici(tur) {
       '<button class="dugme dugme-sade y-sil" data-fan-sil="' + tur + '">' + (fanSilOnay === e.id ? "Emin misin? Sil" : "Taslağı sil") + "</button>" +
     "</div>" +
     '<div data-fan-gonder-alan="' + tur + '"></div>';
+}
+
+/** Evren formu: ad/yazar/özet (isteğe bağlı) ve bütün gruplar. Evren sayfası (44-evrenler.js) da kullanır. */
+function fanEvrenFormHtml(e, basliklar) {
+  return (basliklar
+      ? fanGirdi("ad", e.ad, "Evrenin adı") +
+        fanGirdi("yazar", e.yazar, "Kuran (takma ad olabilir)") +
+        fanGirdi("ozet", e.ozet, "Evreni anlat", "uzun", { satir: 4 })
+      : "") +
+    FAN_EVREN_GRUPLARI.map(function (g) {
+      return '<fieldset class="fan-grup"><legend>' + kacir(g.ad) + "</legend>" +
+        (g.not ? '<p class="oyun-not">' + kacir(g.not) + "</p>" : "") +
+        (e[g.k] || []).map(function (x, i) {
+          return '<div class="fan-oge">' + g.alanlar.map(function (a) {
+            return fanGirdi(g.k + "." + i + "." + a[0], x[a[0]], a[1], a[2] === "uzun" ? "uzun" : "", a[2] === "liste" ? { liste: "fanKuralTur" } : { satir: 2 });
+          }).join("") +
+            '<button class="dugme dugme-sade y-sil" data-fan-cikar="' + g.k + ":" + i + '">Bu ' + g.tekil + "i kaldır</button></div>";
+        }).join("") +
+        '<button class="dugme dugme-sade" data-fan-ekle="' + g.k + '">+ ' + kacir(g.tekil) + " ekle</button></fieldset>";
+    }).join("") +
+    '<datalist id="fanKuralTur">' + FAN_KURAL_TURLERI.map(function (a) { return '<option value="' + kacir(a) + '">'; }).join("") + "</datalist>";
 }
 
 let fanSilOnay = null;
@@ -552,7 +584,8 @@ document.addEventListener("input", function (ev) {
   if (!form) { return; }
   const tur = form.dataset.fanForm;
   const yol = el.dataset.fanAlan;
-  fanBekleyen[tur + "|" + yol] = { tur: tur, yol: yol, deger: el.value };
+  const hedef = form.dataset.fanHedef || "";
+  fanBekleyen[tur + "|" + hedef + "|" + yol] = { tur: tur, yol: yol, deger: el.value, hedef: hedef };
   clearTimeout(fanKayitZaman);
   fanKayitZaman = setTimeout(fanBekleyeniYaz, 300);
   /* sayaç hemen tepki versin */
@@ -565,7 +598,7 @@ function fanBekleyeniYaz() {
   fanKayitZaman = null;
   const b = fanBekleyen;
   fanBekleyen = {};
-  Object.keys(b).forEach(function (k) { fanAlanYaz(b[k].tur, b[k].yol, b[k].deger); });
+  Object.keys(b).forEach(function (k) { fanAlanYaz(b[k].tur, b[k].yol, b[k].deger, b[k].hedef); });
 }
 
 window.addEventListener("pagehide", fanBekleyeniYaz);
@@ -610,7 +643,9 @@ document.addEventListener("click", async function (ev) {
   if (d.fanSec) { const p = d.fanSec.split(":"); fanSecili[p[0]] = p[1]; fanSilOnay = null; fanCiz(p[0]); return; }
   if (d.fanEkle || d.fanCikar) {
     const l = fanEserlerim();
-    const e = l.find(function (x) { return x.id === fanSecili.evren; });
+    const formu = h.closest("[data-fan-form]");
+    const hedefId = (formu && formu.dataset.fanHedef) || fanSecili.evren;
+    const e = l.find(function (x) { return x.id === hedefId; });
     if (!e) { return; }
     if (d.fanEkle) {
       const g = FAN_EVREN_GRUPLARI.find(function (x) { return x.k === d.fanEkle; });
