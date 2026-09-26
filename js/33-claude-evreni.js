@@ -3,7 +3,7 @@
 
 const CE_SEKMELER = [
   ["genel", "Genel"], ["fizik", "Fizik"], ["dunya", "Dünya"], ["toplum", "Toplum"], ["tarih", "Tarih"],
-  ["kisiler", "Kişiler"], ["hikayeler", "Hikâyeler"], ["belgeler", "Belgeler"], ["sozluk", "Sözlük"], ["sorular", "Açık sorular"]
+  ["kisiler", "Kişiler"], ["hikayeler", "Hikâyeler"], ["belgeler", "Belgeler"], ["sozluk", "Sözlük"], ["sorular", "Açık sorular"], ["oyunlar", "Oyunlar"]
 ];
 let ceSekme = "genel";
 
@@ -119,7 +119,7 @@ function claudeEvrenCiz() {
   if (!alan) { return; }
   if (!ceVeri()) { alan.innerHTML = ""; return; }
   const govde = {
-    genel: ceGenel, kisiler: ceKisiler, hikayeler: ceHikayeler, belgeler: ceBelgeler, sozluk: ceSozluk, sorular: ceSorular
+    genel: ceGenel, oyunlar: function () { return typeof somdoOyunlariHtml === "function" ? somdoOyunlariHtml() : ""; }, kisiler: ceKisiler, hikayeler: ceHikayeler, belgeler: ceBelgeler, sozluk: ceSozluk, sorular: ceSorular
   }[ceSekme];
   alan.innerHTML =
     '<div class="filtre ce-sekmeler">' + CE_SEKMELER.map(function (s) {

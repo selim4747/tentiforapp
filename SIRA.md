@@ -3,10 +3,10 @@
 Yayına girmez (scripts/paketle.mjs bu dosyayı kopyalamaz). Biten madde silinir ya da işaretlenir.
 
 ## Claude'un evreni — oynanabilir kurallar
-1. [ ] **Şafak Yürüyüşü** — şafak halkasıyla birlikte yürüme oyunu. Geride kalınca gece yakalar, hızlanınca ışığı geçer ve görüntü geri oynar; kırağı çizgisi, sabah esintisi. Günlük skor sunucu doğrulamalı yarış olarak liderliğe.
-2. [ ] **Yeveş Avı** — görüntü gecikmeli; Web Audio ile sağ/sol tıkırtıyı dinleyerek vurulur. Görme engelli dostu.
-3. [ ] **Tanık Ayna** — Gırçık'ın davaları: ayna karelerinde gölge açısı ve renk kaymasıyla sahteyi bul; her dava hikâye parçası açar.
-4. [ ] **İsim Kayması çevirici** — adını yaz, Şomdo adını al; evren tarzında paylaşılabilir kart.
+1. [x] **Şafak Yürüyüşü** — şafak halkasıyla birlikte yürüme oyunu. Geride kalınca gece yakalar, hızlanınca ışığı geçer ve görüntü geri oynar; kırağı çizgisi, sabah esintisi. Günlük skor sunucu doğrulamalı yarış olarak liderliğe.
+2. [x] **Yeveş Avı** — görüntü gecikmeli; Web Audio ile sağ/sol tıkırtıyı dinleyerek vurulur. Görme engelli dostu.
+3. [x] **Tanık Ayna** — Gırçık'ın davaları: ayna karelerinde gölge açısı ve renk kaymasıyla sahteyi bul; her dava hikâye parçası açar.
+4. [x] **İsim Kayması çevirici** — adını yaz, Şomdo adını al; evren tarzında paylaşılabilir kart.
 
 ## Canlı ve ortak anlar
 5. [ ] **Kor'un Hıçkırığı** — önceden bilinmeyen anlarda o an sitede olan herkese geçen karanlık halka; sunucu doğrulamalı "Hıçkırık tanığı" rozeti.
