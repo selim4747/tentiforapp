@@ -48,9 +48,27 @@ for (const ad of readdirSync(join(HEDEF, "css"))) {
 ozet.update(readFileSync(join(HEDEF, "index.html")));
 ozet.update(readFileSync(join(HEDEF, "veri.json")));
 
-/* servis çalışanı: yeni paket = yeni önbellek adı */
+/* veri.json: boşluksuz (panel GitHub'a biçimli kaydeder; yayında gerek yok) */
+const veriYol = join(HEDEF, "veri.json");
+writeFileSync(veriYol, JSON.stringify(JSON.parse(readFileSync(veriYol, "utf8"))));
+
+/* sürümlü adresler: js/css adreslerine içerik özeti eklenir; _headers bunları bir yıl önbellekte tutar.
+   index.html her açılışta tazelenir (no-cache), yani eski bir adres asla istenmez. */
+const surum = function (yol) {
+  return createHash("sha256").update(readFileSync(join(HEDEF, yol))).digest("hex").slice(0, 10);
+};
+const surumle = function (metin) {
+  return metin.replace(/((?:js|css)\/[A-Za-z0-9._\/-]+\.(?:js|css))(?=["'])/g, function (tam, yol) {
+    if (yol.indexOf("js/vendor/") === 0) { return yol; }   /* adında sürüm var, lazy yüklenir */
+    try { return yol + "?v=" + surum(yol); } catch (e) { return yol; }
+  });
+};
+const anaYol = join(HEDEF, "index.html");
+writeFileSync(anaYol, surumle(readFileSync(anaYol, "utf8")));
+
+/* servis çalışanı: aynı sürümlü adresleri önceden indirir; yeni paket = yeni önbellek adı */
 const sw = join(HEDEF, "sw.js");
-writeFileSync(sw, readFileSync(sw, "utf8").replace(/tentiforapp-[^"]+"/, "tentiforapp-" + ozet.digest("hex").slice(0, 12) + '"'));
+writeFileSync(sw, surumle(readFileSync(sw, "utf8")).replace(/tentiforapp-[^"]+"/, "tentiforapp-" + ozet.digest("hex").slice(0, 12) + '"'));
 
 /* paylaşım adresleri: /dunya/ → önizleme etiketleri + #/dunya'ya yönlendirme */
 const gez = readFileSync(join(KOK, "js/18-dalga-7-gezinme.js"), "utf8");

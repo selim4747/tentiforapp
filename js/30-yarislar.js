@@ -268,7 +268,7 @@ function yarislarCiz() {
   }
   if (Y2 && !Y2.sonuc) { yarisOyunCiz(); return; }
   /* hesap kütüphanesi gerekince yüklenir; hazır olunca hesapOturumAyarla bu bölümü yeniden çizer */
-  if (typeof hesapIstemci !== "undefined" && !hesapIstemci && typeof hesapGerekli === "function") { hesapGerekli(); }
+  if (typeof hesapIstemci !== "undefined" && !hesapIstemci && typeof hesapGorununce === "function") { hesapGorununce(alan, function () {}); }
 
   const e = tomyeEtkinligi();
   alan.innerHTML =

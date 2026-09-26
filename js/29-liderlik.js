@@ -157,7 +157,7 @@ function liderlikCiz() {
 
   if (typeof hesapIstemci === "undefined" || !hesapIstemci) {
     /* kütüphane gerekince yüklenir; hazır olunca hesapOturumAyarla tabloyu yeniden çizer */
-    if (typeof hesapGerekli === "function") { hesapGerekli(); }
+    if (typeof hesapGorununce === "function") { hesapGorununce(document.querySelector("#liderlikAlan"), function () {}); }
     return;
   }
   liderlikIcerikYukle(t);

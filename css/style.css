@@ -3355,3 +3355,7 @@ html[data-hesap="acik"] .hesap-btn{padding:0;background:transparent;border-color
 .ce-hikaye:not([open]) summary::after{content:"Oku ›";display:block;margin-top:6px;font-family:var(--mono);font-size:12px;color:var(--deniz)}
 .ce-yanki h3{font-family:var(--display);font-weight:400;font-size:20px;margin:4px 0}
 .ce-yanki ul{padding-left:18px;margin-top:6px;font-size:14px}
+
+/* ---------- performans: ekran dışındaki bölümler çizilene kadar yerleştirilmez ---------- */
+section.bolum{content-visibility:auto;contain-intrinsic-size:auto 900px}
+html.bolum-olc section.bolum{content-visibility:visible}
