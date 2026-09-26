@@ -1051,51 +1051,59 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     }, gEv));
     await N.evaluate(function () { evrenSayfaKapat(); location.hash = "#/arsiv"; }); await bekle(N, 300);
 
-    /* ---------- Claude'un evreni: yolculuklar ---------- */
+    /* ---------- Claude'un evreni: karakterlerin yolculukları ---------- */
     await N.evaluate(function () { location.hash = "#/claude"; }); await bekle(N, 900);
-    ok("Claude'un evreninde “Yolculuklar” sekmesi", await N.locator('[data-ce-sekme="gezi"]').count() === 1);
+    ok("Claude'un evreninde “Yolculuklar” sekmesi; ayrı gezgin verisi yok", await N.locator('[data-ce-sekme="gezi"]').count() === 1 &&
+      await N.evaluate(function () { return !veri.haritalar.some(function (h) { return h.gezginler; }) && veri.claudeEvreni.kisiler.some(function (k) { return k.ad === "Hıbır" && k.yol.length === 8; }); }));
     await N.click('[data-ce-sekme="gezi"]'); await bekle(N, 300);
-    ok("okur Gırçık'ın gün gün yolculuğunu görür, düzenleyemez", await N.evaluate(function () {
+    ok("okur yolu olan karakterleri görür (Gırçık, Hıbır), düzenleyemez", await N.evaluate(function () {
       const k = document.querySelector("#ceGezi .gz-kutu");
-      return !!k && /Gırçık/.test(k.textContent) && /Sabah Limanı/.test(k.textContent) && /6 gün/.test(k.textContent) &&
+      const adlar = Array.prototype.map.call(k.querySelectorAll("[data-gz-kisi] option"), function (o) { return o.textContent; }).join("|");
+      return /Gırçık \(7\)/.test(adlar) && /Hıbır \(8\)/.test(adlar) && k.querySelectorAll("[data-gz-kisi] option").length === 2 &&
         !k.querySelector("[data-gz-yer], [data-gzk-yeni], input.kod-giris") && document.querySelectorAll("#ceGezi .gz-nokta").length >= 5;
     }));
+    await N.selectOption("#ceGezi [data-gz-kisi]", { label: "Hıbır (8)" }); await bekle(N, 200);
     await N.evaluate(function () { const r = document.querySelector("#ceGezi [data-gz-gun]"); r.value = "5"; r.dispatchEvent(new Event("change", { bubbles: true })); }); await bekle(N, 200);
-    ok("5. gün: aynı gün iki yer, son yer Gecikme Denizi", /5\. gün · Gecikme Denizi/.test(await N.textContent("#ceGezi .gz-gun-yaz")));
+    ok("Hıbır her gün başka şehirde: 5. gün Dan", /5\. gün · Dan/.test(await N.textContent("#ceGezi .gz-gun-yaz")) && /Hıbır \(8\)/.test(await N.evaluate(function () { return document.querySelector("#ceGezi [data-gz-kisi]").selectedOptions[0].textContent; })));
     await N.click('[data-ce-sekme="kisiler"]'); await bekle(N, 200);
-    ok("kişi kartında “Yolculuğunu gün gün izle”", await N.locator('#ce-cl_gercek [data-ce-gezi]').count() === 1 && await N.locator("[data-ce-gezi]").count() === 1);
+    ok("karakter kartında “Yolculuğunu gün gün izle”", await N.locator('#ce-cl_gercek [data-ce-gezi]').count() === 1 && await N.locator('#ce-cl_haber [data-ce-gezi]').count() === 1 && await N.locator("[data-ce-gezi]").count() === 2);
     await N.evaluate(function () { document.querySelector("#ce-cl_gercek").open = true; });
     await N.click("#ce-cl_gercek [data-ce-gezi]"); await bekle(N, 300);
-    ok("kişiden yolculuğa geçilir", await N.evaluate(function () { return ceSekme === "gezi" && /Gırçık/.test(document.querySelector("#ceGezi [data-gz-kisi]").selectedOptions[0].textContent); }));
+    ok("karakterden yolculuğuna geçilir", await N.evaluate(function () { return ceSekme === "gezi" && /Gırçık/.test(document.querySelector("#ceGezi [data-gz-kisi]").selectedOptions[0].textContent); }));
+    await N.evaluate(function () { const r = document.querySelector("#ceGezi [data-gz-gun]"); r.value = "5"; r.dispatchEvent(new Event("change", { bubbles: true })); }); await bekle(N, 200);
+    ok("Gırçık 5. gün: aynı gün iki yer, son yer Gecikme Denizi", /5\. gün · Gecikme Denizi/.test(await N.textContent("#ceGezi .gz-gun-yaz")));
     await N.evaluate(function () { haritaTamAc({ evren: "claude" }); }); await bekle(N, 900);
     await N.evaluate(function () { HT.panel = false; haritaPanelCiz(); haritaSecili = "cl_liman"; haritaBilgiCiz(); }); await bekle(N, 150);
-    ok("haritada yer kartı: buradan geçen gezginler ve günleri", /Gırçık · 4, 5\. gün/.test(await N.textContent("#htBilgi .gzk-gecenler")));
-    await N.click("#htBilgi [data-gzk-ac]"); await bekle(N, 300);
+    ok("haritada yer kartı: buradan geçenler ve günleri", /Gırçık · 4, 5\. gün/.test(await N.textContent("#htBilgi .gzk-gecenler")) && /Hıbır · 4\. gün/.test(await N.textContent("#htBilgi .gzk-gecenler")));
+    await N.click('#htBilgi [data-gzk-ac][data-gzk-kisi]'); await bekle(N, 300);
     ok("yer kartından o güne açılır (tam ekran haritanın üstünde)", await N.evaluate(function () { return !!document.querySelector("#geziSayfa") && GZ.gun === 4 && /4\. gün · Sabah Limanı/.test(document.querySelector("#geziSayfa .gz-gun-yaz").textContent); }));
     await N.keyboard.press("Escape"); await bekle(N, 150);
-    ok("Esc gezi penceresini kapatır, harita açık kalır", await N.evaluate(function () { return !document.querySelector("#geziSayfa") && HT.acik; }));
+    ok("Esc yolculuk penceresini kapatır, harita açık kalır", await N.evaluate(function () { return !document.querySelector("#geziSayfa") && HT.acik; }));
     await N.evaluate(function () { HT.panel = true; haritaPanelCiz(); });
-    ok("katman panelinde Gezginler", /Gırçık · 6 gün/.test(await N.textContent("#htPanel .gzk-panel")));
+    ok("katman panelinde Yolculuklar", /Gırçık · 6 gün/.test(await N.textContent("#htPanel .gzk-panel")) && /Hıbır · 7 gün/.test(await N.textContent("#htPanel .gzk-panel")));
     await N.evaluate(function () { HT.panel = false; haritaTamKapat(); });
+    ok("Tömye haritasında bu bölüm yok (kanon karakterlerin kendi yol aracı var)", await N.evaluate(function () {
+      const t = veri.haritalar.find(function (h) { return h.id === "tomye"; }); return gzkKisiListesi(t) === null;
+    }));
 
-    /* yönetici: gezgin ekler, evrenin kişisine bağlar, şehir şehir yol çizer */
+    /* yönetici: karakter ekler, adını yazar, şehir şehir yol çizer */
+    const kisiSayisi = await N.evaluate(function () { return veri.claudeEvreni.kisiler.length; });
     await N.evaluate(function () { window.__yonCE = window.yoneticiAcik; window.yoneticiAcik = function () { return true; }; ceSekme = "gezi"; claudeEvrenCiz(); }); await bekle(N, 200);
+    ok("yönetici bütün karakterleri seçebilir", await N.locator("#ceGezi [data-gz-kisi] option").count() === kisiSayisi);
     await N.click("#ceGezi [data-gzk-yeni]"); await bekle(N, 150);
-    await N.selectOption("#ceGezi [data-gzk-kisi]", "cl_umut"); await bekle(N, 200);
+    await N.fill('#ceGezi [data-gzk-alan="ad"]', "Deneme Yolcu"); await N.fill('#ceGezi [data-gzk-alan="unvan"]', "Kervancı"); await bekle(N, 100);
     for (const y of ["cl_kor", "cl_safak", "cl_yerin", "cl_yerin"]) { await N.click('#ceGezi [data-gz-yer="' + y + '"]'); await bekle(N, 80); }
     await N.locator('#ceGezi .evh-svg [data-evh-yer="cl_dan"]').first().dispatchEvent("click"); await bekle(N, 120);
     await N.locator('#ceGezi .evh-svg [data-evh-yer="cl_uzek"]').first().dispatchEvent("click"); await bekle(N, 120);
-    ok("yönetici: gezgin kişiye bağlanır, yerlere ve haritaya dokunarak gün gün yol (kıta sayılmaz)", await N.evaluate(function () {
-      const z = veri.haritalar.find(function (h) { return h.id === "claude"; }).gezginler[1];
-      return z.kisi === "cl_umut" && z.ad === "Ümüt" && z.yol.map(function (a) { return a.yer + a.gun; }).join(",") === "cl_kor1,cl_safak2,cl_yerin3,cl_dan4" &&
+    ok("yönetici: yeni karakter evrenin kişilerine eklenir; yerlere ve haritaya dokunarak gün gün yol (kıta sayılmaz)", await N.evaluate(function (n) {
+      const l = veri.claudeEvreni.kisiler; const k = l[l.length - 1];
+      return l.length === n + 1 && k.ad === "Deneme Yolcu" && k.unvan === "Kervancı" && /^cl_/.test(k.id) &&
+        k.yol.map(function (a) { return a.yer + a.gun; }).join(",") === "cl_kor1,cl_safak2,cl_yerin3,cl_dan4" &&
         /Kaydet \(/.test(document.querySelector("#ceGezi [data-gzk-kaydet]").textContent);
-    }));
-    N.once("dialog", function (d) { d.accept(); });
-    await N.click("#ceGezi [data-gzk-sil]"); await bekle(N, 200);
-    ok("gezgin silinir; örnek yolculuk yerinde", await N.evaluate(function () {
-      const l = veri.haritalar.find(function (h) { return h.id === "claude"; }).gezginler; return l.length === 1 && l[0].ad === "Gırçık";
-    }));
-    await N.evaluate(function () { window.yoneticiAcik = window.__yonCE; location.hash = "#/arsiv"; }); await bekle(N, 300);
+    }, kisiSayisi));
+    await N.click('[data-ce-sekme="kisiler"]'); await bekle(N, 200);
+    ok("yeni karakter Kişiler sekmesinde, yolculuk düğmesiyle", /Deneme Yolcu/.test(await N.textContent("#claudeEvrenAlan .ce-govde")) && await N.locator("[data-ce-gezi]").count() === 3);
+    await N.evaluate(function () { veri.claudeEvreni.kisiler.pop(); window.yoneticiAcik = window.__yonCE; location.hash = "#/arsiv"; }); await bekle(N, 300);
 
     ok("konuk haritası: kişinin gittiği yerler", await N.evaluate(function () {
       const l = fanEserlerim();
