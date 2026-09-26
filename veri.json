@@ -7879,14 +7879,19 @@
       "kur": 0.1
     },
     "e26": {
-      "ad": "E26 jetonu",
       "simge": "",
-      "kur": 0.1
+      "kur": 0.1,
+      "ad": "E26 jetonu"
     },
     "e99": {
-      "ad": "E99 jetonu",
       "simge": "",
-      "kur": 0.05
+      "kur": 0.05,
+      "ad": "E99 jetonu"
     }
+  },
+  "evrengezer": {
+    "acik": "BHwB1ZpVHtD3qgQneTUvCSljdwwVznhAk8Jkm398wH+vH9wg2JLjd1A8As2RpsoV0EoEYXQy8mr9KmY7oJj5fDk=",
+    "tam": "/0rJO3/o5vR7yYP46onJu80kNZ36w9rYXREi5ZbIuOmqV44xHwDAZF4wdIXm/PIRAqOJcQidbbPqDHPQTUlH6VxM1pGyh+8qYWg860TdxP7VH0BNFvm1LnMT2HV4n5lSq2K9b3JWlOqBIuNUIrR55j51mFTvv0IveDBL4i5zMnqBmurj7PVi6cWSlSR3NyobLGA8nRTTliW83ok+OPfHVuqpj25PCREW+Buu6oJV/UAxIMzMXUiXYLTEFg1fFN9dz3v4ukdF7jU5RQBUDYYK28lOzr8=",
+    "sinirli": "E6RanYfhgtcyNLaPBINy1D2OCTG3NwVnTu8OvEAn4Stc797tPz0P3AEUN7uBkYx0Yu/Dkd2744vaxZm3pNsFcMtVvMaKM5LMCbY1fqHkxnBHe/B+mwJWjn1EGvzthnIu38uJlA47sL/XXKqva5gsFtT20REV/pk2+usN1WPOjWzDGK6Ve4GdaCPzh3qHMTW6vMN/SFaqr1gfOl44JqD8cfYSgjWE3btms2ydDAJt1LepuVOUIpSLmURW9lEyySbm28vxtV0diIfUVgHdH2r2Pd/pAL8="
   }
 }
