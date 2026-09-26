@@ -74,12 +74,18 @@ const surumle = function (metin) {
     try { return yol + "?v=" + surum(yol); } catch (e) { return yol; }
   });
 };
+/* paket kimliği: içerik özeti. Açık sayfa kendi kimliğini (index.html'deki etiket) surum.json'dakiyle
+   karşılaştırır; farklıysa yeni sürüm yayındadır (js/46-guncelleme.js). */
+const paket = ozet.digest("hex").slice(0, 12);
+const veriSurum = JSON.parse(readFileSync(join(HEDEF, "veri.json"), "utf8")).surum || "";
+writeFileSync(join(HEDEF, "surum.json"), JSON.stringify({ paket: paket, surum: veriSurum }));
+
 const anaYol = join(HEDEF, "index.html");
-writeFileSync(anaYol, surumle(readFileSync(anaYol, "utf8")));
+writeFileSync(anaYol, surumle(readFileSync(anaYol, "utf8")).replace("</head>", '<meta name="tentifor-paket" content="' + paket + '">\n</head>'));
 
 /* servis çalışanı: aynı sürümlü adresleri önceden indirir; yeni paket = yeni önbellek adı */
 const sw = join(HEDEF, "sw.js");
-writeFileSync(sw, surumle(readFileSync(sw, "utf8")).replace(/tentiforapp-[^"]+"/, "tentiforapp-" + ozet.digest("hex").slice(0, 12) + '"'));
+writeFileSync(sw, surumle(readFileSync(sw, "utf8")).replace(/tentiforapp-[^"]+"/, "tentiforapp-" + paket + '"'));
 
 /* paylaşım adresleri: /dunya/ → önizleme etiketleri + #/dunya'ya yönlendirme */
 const gez = readFileSync(join(KOK, "js/18-dalga-7-gezinme.js"), "utf8");

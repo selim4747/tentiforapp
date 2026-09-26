@@ -3777,3 +3777,10 @@ html.evren-acik{overflow:hidden}
 .evl-ekle summary{cursor:pointer;min-height:32px}
 .evl-kod .oyun-sira input{flex:1;min-width:160px}
 .evkod{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:13px;line-height:1.5;white-space:pre;overflow:auto}
+
+/* yeni sürüm çubuğu (js/46-guncelleme.js) */
+.guncelleme-cubugu{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:70;
+  display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);box-sizing:border-box;padding:8px 8px 8px 14px;
+  background:var(--beyaz);color:var(--murekkep);border:1px solid var(--deniz);border-radius:10px;box-shadow:0 6px 24px rgba(13,53,96,.18);font-size:14px}
+.guncelleme-cubugu .dugme{min-height:36px;padding-top:4px;padding-bottom:4px}
+.guncelleme-cubugu .pencere-kapat{position:static}
