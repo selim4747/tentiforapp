@@ -65,7 +65,8 @@ function gezinmeCiz() {
                ' title="' + (i + 1) + ". sayfa" + (yeni ? " · " + yeni + " yenilik" : "") + '"' +
                (bu ? ' aria-current="page"' : "") + ">" +
                kacir(g.ad) + (yeni ? '<span class="gez-yeni" aria-label="' + yeni + ' yenilik"></span>' : "") + "</a>";
-    }).join("");
+    }).join("") +
+    '<button class="komut-tetik" id="komutTetikBtn" aria-label="Hızlı arama (Ctrl+K)" title="Hızlı arama (Ctrl+K)">⌘K</button>';
 
   /* seçili sayfa şeritte görünür kalsın (mobilde şerit yatay kayar) */
   const bu = alan.querySelector(".bu-sayfa");
@@ -185,7 +186,8 @@ function aktifBolumIsaretle() {
   for (let i = 0; i < bolumler.length; i++) {
     if (bolumler[i].hidden) { continue; }   /* başka sayfanın bölümü */
     const k = bolumler[i].getBoundingClientRect ? bolumler[i].getBoundingClientRect() : null;
-    if (!k) { continue; }
+    /* kilitli ya da gizlenmiş (yüksekliği olmayan) bölüm "buradasın" diye görünmesin */
+    if (!k || k.height < 2) { continue; }
     if (k.top <= 120) { aktif = bolumler[i]; }
   }
 
@@ -700,10 +702,11 @@ function sayfaBasiCiz(sayfa) {
   if (c.hidden) { return; }
 
   c.innerHTML =
-    '<p class="sayfa-no">Sayfa ' + (i + 1) + " / " + SAYFA_SIRASI.length + "</p>" +
-    "<h1>" + kacir(g.ad) + "</h1>" +
-    '<button class="dugme dugme-sade sayfa-paylas" data-sayfa-paylas="' + sayfa + '">Paylaş</button>' +
-    '<div class="sayfa-icerik">' +
+    '<div class="sayfa-bas-ust"><div class="sayfa-bas-yazi">' +
+      '<p class="sayfa-no">Sayfa ' + (i + 1) + " / " + SAYFA_SIRASI.length + "</p>" +
+      "<h1>" + kacir(g.ad) + "</h1></div>" +
+      '<button class="dugme dugme-sade sayfa-paylas" data-sayfa-paylas="' + sayfa + '"><span aria-hidden="true">↗</span> Paylaş</button></div>' +
+    '<div class="sayfa-icerik" role="navigation" aria-label="Bu sayfada">' +
       g.bolumler.map(function (b) {
         return '<button class="sayfa-icerik-oge" data-gez-git="' + b[0] + '">' +
                  kacir(b[1]) + kanonKilitIsareti(b[0]) + "</button>";
