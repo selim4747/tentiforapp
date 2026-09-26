@@ -3359,3 +3359,15 @@ html[data-hesap="acik"] .hesap-btn{padding:0;background:transparent;border-color
 /* ---------- performans: ekran dışındaki bölümler çizilene kadar yerleştirilmez ---------- */
 section.bolum{content-visibility:auto;contain-intrinsic-size:auto 900px}
 html.bolum-olc section.bolum{content-visibility:visible}
+
+/* ---------- seviyeler: arşivci seviyesi + Tömye basamağı ---------- */
+.seviye-cift{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.seviye-yarim{display:flex;flex-direction:column;gap:6px}
+.seviye-yarim .lider-cubuk{display:block}
+.basamak-sayi{font-family:var(--display);font-size:34px;line-height:1.1;color:var(--deniz);letter-spacing:.02em;overflow-wrap:anywhere}
+.basamak-yer{font-size:14.5px}
+.basamak-kucuk{margin-left:8px;font-family:var(--mono);font-size:12px;color:var(--deniz);border:1px solid var(--sig);border-radius:99px;padding:1px 8px}
+.xp-dokum{margin-top:10px;font-size:14px}
+.xp-dokum summary{cursor:pointer;color:var(--deniz)}
+.xp-dokum ul{list-style:none;margin:8px 0;display:flex;flex-direction:column;gap:4px}
+.xp-dokum li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--buz);padding:3px 0}

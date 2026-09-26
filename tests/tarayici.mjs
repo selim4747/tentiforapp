@@ -195,6 +195,19 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("hata sunucuya düşer", (await sahte.kokSorgu("select count(*)::int n from public.hata_kayitlari where mesaj like '%test hatası%'")).rows[0].n === 1);
 
     /* ---------- 6. yönetici paneli ---------- */
+    /* ---------- seviyeler ---------- */
+    ok("Tömye rakamları", await A.evaluate(function () { return [1, 6, 7, 13, 43].map(tomyeSayi).join(" "); }) === "Neo Ilat Neo·Neo Vot·Neo Neo·Neo·Neo");
+    await sahte.kokSorgu("update public.istatistikler set tamlik = 10 where id = (select id from auth.users where email = 'a@ornek.test')");
+    await A.evaluate(function () { location.hash = "#/hesap"; }); await bekle(A, 300);
+    const eckaOnce = await A.evaluate(function () { return cuzdan.kazanilan; });
+    await A.evaluate(function () { return toplulukHesapEk(); }); await bekle(A, 800);
+    ok("hesapta iki seviye sistemi", await A.locator("#hesapTopluluk .basamak-sayi").count() === 1 && await A.locator("#hesapTopluluk .seviye-rozet").count() === 1);
+    ok("XP dökümü görünür", /Arşiv tamlığı/.test(await A.textContent("#hesapTopluluk .xp-dokum")));
+    const eckaSonra = await A.evaluate(function () { return cuzdan.kazanilan; });
+    ok("seviye atlayınca eçka ödülü", eckaSonra > eckaOnce, [eckaOnce, eckaSonra]);
+    await A.evaluate(function () { return toplulukHesapEk(); }); await bekle(A, 800);
+    ok("ödül ikinci kez verilmez", await A.evaluate(function () { return cuzdan.kazanilan; }) === eckaSonra);
+
     console.log("panel");
     await A.evaluate(function () { location.hash = "#/sen"; }); await bekle(A, 600);
     const panel = async function (grup, sekme, ms) {

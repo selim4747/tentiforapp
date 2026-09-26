@@ -17,3 +17,17 @@ Yayına girmez (scripts/paketle.mjs bu dosyayı kopyalamaz). Biten madde silinir
 8. [ ] **Bölüm tepkileri ve kenar notları** — roman/hikâye bölümlerine tepki ve herkese açık kısa notlar (moderasyonlu).
 9. [ ] **Yeni bölüm bildirimi** — Web Push; Supabase Edge Function + VAPID anahtarı kurulumu gerekir.
 10. [ ] **Ortam sesi** — sayfaya göre tarayıcıda üretilen ses, varsayılan kapalı.
+
+## Topluluk
+11. [ ] **Kütüphane Defteri** — herkes günde tek cümle ekler, cümleler oylanır; haftanın en iyi zinciri bölüm olarak arşive girer.
+12. [ ] **Yazara sor** — okur soruları + oylama; panelden cevap; cevaplar Yazar Notları'na, soran rozet alır.
+13. [ ] **Kulüp duvarı** — her kişilik kulübüne kısa mesaj panosu ve haftalık kulüp hedefi.
+14. [ ] **Okur bulmacaları** — kullanıcılar Kyldo/isim bulmacası yazar; yazan, çözüldükçe XP kazanır.
+15. [ ] **Davet ve rehberlik** — kişisel davet bağlantısı; gelen ilk haftasını tamamlarsa "Rehber" ve "Çırak" rozetleri.
+
+## Kullanıcıyı geri getiren
+16. [ ] **Tömye Yılım** — Tömye yılı dönünce kişiye özel paylaşılabilir özet kartı.
+17. [ ] **Arşiv kartı koleksiyonu** — okuyarak/oynayarak kazanılan karakter kartları; set tamamlanınca unvan. Rastgele ödül ve satın alma yok.
+18. [ ] **Tömye takvimi etkinlikleri** — doğum günleri ve evren içi tarihler gelince özel görev, alıntı, geçici tema.
+19. [ ] **Yarış sonucu kartı** — skoru evren tarzında görsel olarak paylaş.
+20. [ ] **İlk hafta yolu** — yeni hesaba 7 günlük görev rotası ve başlangıç rozeti.

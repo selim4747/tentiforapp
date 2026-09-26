@@ -1237,22 +1237,47 @@ language sql stable security definer set search_path = '' as $$
     'hafta', (select bas from h));
 $$;
 
--- Arşivci seviyesi: bütün ilerlemeden sunucuda hesaplanan XP
+-- Arşivci seviyesi: bütün ilerlemeden sunucuda hesaplanan XP.
+-- Aynı XP iki sistemi besler:
+--   seviye  : arşivci seviyesi (unvanlar), gereken XP = 40·(seviye−1)²
+--   basamak : Tömye basamağı, gereken XP = 5·(basamak−1)·(basamak+4); Tömye rakamlarıyla yazılır (Neo, Vot, Rit, Rof, Yaf, Ilat)
+-- dokum: XP'nin kaynaklara göre dağılımı (herkese açık; ayrıntı içermez)
 create or replace view public.arsivci_seviyeleri as
-  with x as (
-    select p.id, p.kullanici_adi, p.gorunen_ad,
-      coalesce(s.tamlik, 0) * 20 + coalesce(s.gun, 0) * 5 + coalesce(s.madalya, 0) * 30 + coalesce(s.katman, 0) * 40
-      + 10 * (select count(*) from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli)
-      + 15 * (select count(*) from public.kesifler k where k.kullanici = p.id)
-      + 25 * (select count(*) from public.gk_tahminler g where g.kullanici = p.id and g.cozuldu)
-      + 50 * (select count(*) from public.teoriler t where t.kullanici = p.id and t.isaret = 'kanon')
-      + 20 * (select count(*) from public.teoriler t where t.kullanici = p.id and t.isaret = 'yakin') as xp,
+  with p as (
+    select p.id, p.kullanici_adi, p.gorunen_ad, s.tamlik, s.gun, s.madalya, s.katman
+    from public.profiller p left join public.istatistikler s on s.id = p.id
+    where p.kullanici_adi is not null and not coalesce(s.engelli or s.askida, false)),
+  x as (
+    select p.*,
+      coalesce(p.tamlik, 0) * 20 as x_tamlik,
+      coalesce(p.gun, 0) * 5 as x_gun,
+      coalesce(p.madalya, 0) * 30 as x_madalya,
+      coalesce(p.katman, 0) * 40 as x_katman,
+      10 * (select count(*) from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli) as x_yaris,
+      15 * (select count(*) from public.kesifler k where k.kullanici = p.id) as x_kesif,
+      25 * (select count(*) from public.kesifler k where k.kullanici = p.id
+              and not exists (select 1 from public.kesifler k2 where k2.anahtar = k.anahtar and k2.zaman < k.zaman)) as x_ilk_kasif,
+      25 * (select count(*) from public.gk_tahminler g where g.kullanici = p.id and g.cozuldu) as x_gk,
+      5 * (select count(*) from public.teoriler t where t.kullanici = p.id and not t.gizli) as x_teori,
+      3 * (select count(*) from public.teori_begenileri b join public.teoriler t on t.id = b.teori
+             where t.kullanici = p.id and not t.gizli and b.kullanici <> p.id) as x_begeni,
+      50 * (select count(*) from public.teoriler t where t.kullanici = p.id and t.isaret = 'kanon')
+      + 20 * (select count(*) from public.teoriler t where t.kullanici = p.id and t.isaret = 'yakin') as x_isaret,
+      5 * (select count(*) from public.yapim_oylari o where o.kullanici = p.id) as x_oy,
       10 * (select count(*) from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli and y.sezon / 100 = public.tomye_ay(now()) / 100)
       + 25 * (select count(*) from public.gk_tahminler g where g.kullanici = p.id and g.cozuldu and public.tomye_ay(g.gun::timestamptz) / 100 = public.tomye_ay(now()) / 100)
       + 15 * (select count(*) from public.kesifler k where k.kullanici = p.id and public.tomye_ay(k.zaman) / 100 = public.tomye_ay(now()) / 100) as yil_xp
-    from public.profiller p left join public.istatistikler s on s.id = p.id
-    where p.kullanici_adi is not null and not coalesce(s.engelli or s.askida, false))
-  select kullanici_adi, gorunen_ad, xp, yil_xp, (floor(sqrt(xp / 40.0)) + 1)::int as seviye from x;
+    from p),
+  t as (
+    select x.*, x_tamlik + x_gun + x_madalya + x_katman + x_yaris + x_kesif + x_ilk_kasif + x_gk + x_teori + x_begeni + x_isaret + x_oy as xp
+    from x)
+  select kullanici_adi, gorunen_ad, xp, yil_xp,
+    (floor(sqrt(xp / 40.0)) + 1)::int as seviye,
+    floor((-3 + sqrt(25 + 0.8 * xp)) / 2)::int as basamak,
+    jsonb_build_object('tamlik', x_tamlik, 'gun', x_gun, 'madalya', x_madalya, 'katman', x_katman, 'yaris', x_yaris,
+      'kesif', x_kesif, 'ilk_kasif', x_ilk_kasif, 'gk', x_gk, 'teori', x_teori, 'begeni', x_begeni,
+      'isaret', x_isaret, 'oy', x_oy) as dokum
+  from t;
 
 -- Yönetici istatistikleri
 create or replace function public.site_istatistik() returns jsonb
