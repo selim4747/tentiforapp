@@ -39,6 +39,7 @@ function koKarsilastir(tahmin, cevap) {
 function koListe(adlar, yasak) {
   const l = [];
   (adlar || []).forEach(function (a) {
+    if (/\s/.test(String(a == null ? "" : a).trim())) { return; }   /* "Ana Kıta" gibi iki kelimelik adlar birleşip anlamsızlaşmasın */
     const k = koNormal(a);
     const n = koHarf(k).length;
     if (n >= 4 && n <= 7 && koGecerli(k) && l.indexOf(k) === -1 && !(yasak && yasak.indexOf(k) !== -1)) { l.push(k); }

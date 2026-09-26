@@ -31,11 +31,8 @@ function evkKartHtml(e, kisa) {
   const adimlar = evkAdimlar(e);
   const biten = adimlar.filter(function (a) { return a.tamam; }).length;
   if (biten === adimlar.length || evkGizliler().indexOf(e.id) !== -1) { return ""; }
-  const haritaBos = !(((e.harita || {}).yerler) || []).length;
   const siradaki = adimlar.find(function (a) { return !a.tamam; });
-  const sablonlar = haritaBos ? '<div class="evk-sablon"><span class="oyun-not">Hazır haritayla başla:</span>' +
-      EVK_SABLONLAR.map(function (s) { return '<button class="evk-sablon-dugme" data-evk-sablon="' + s.id + '">' + evkSablonSvg(s) + "<span>" + kacir(s.ad) + "</span></button>"; }).join("") +
-      "</div>" : "";
+  const sablonlar = "";
   if (kisa) {
     return '<section class="evk-kart kisa" aria-label="İlk adımlar">' +
       '<div class="evk-ust"><div><span class="evs-rozet">İlk adımlar · ' + biten + " / " + adimlar.length + "</span>" +
@@ -92,13 +89,19 @@ function evkSablonSvg(s) {
     }).join("") + "</svg>";
 }
 
-function evkSablonUygula(id, sablonId) {
+function evkSablonHtml() {
+  return '<div class="evk-sablon"><span class="oyun-not">Hazır haritayla başla:</span>' +
+    EVK_SABLONLAR.map(function (s) { return '<button class="evk-sablon-dugme" data-evk-sablon="' + s.id + '">' + evkSablonSvg(s) + "<span>" + kacir(s.ad) + "</span></button>"; }).join("") +
+    "</div>";
+}
+
+/** Seçili gezegenin (boş) haritasına hazır haritayı koyar. */
+function evkSablonUygula(sablonId) {
   const s = EVK_SABLONLAR.find(function (x) { return x.id === sablonId; });
   if (!s) { return; }
-  evrenBenimDegistir(id, function (e) {
-    if (!e.harita || typeof e.harita !== "object") { e.harita = { yerler: [] }; }
-    if ((e.harita.yerler || []).length) { return; }   /* dolu haritanın üstüne yazılmaz */
-    e.harita.yerler = s.yerler.map(function (y, i) {
+  evrenHaritaDegistir(function (h) {
+    if ((h.yerler || []).length) { return; }   /* dolu haritanın üstüne yazılmaz */
+    h.yerler = s.yerler.map(function (y, i) {
       const t = { id: "y" + Date.now().toString(36) + i, ad: y.ad, tur: y.tur, not: "", x: y.x, y: y.y };
       if (y.sekil) { t.sekil = y.sekil.map(function (n) { return [n[0], n[1]]; }); }
       return t;
@@ -198,7 +201,7 @@ document.addEventListener("click", function (ev) {
     return;
   }
   if (h.dataset.evkSablon) {
-    evkSablonUygula(EVS.id, h.dataset.evkSablon);
+    evkSablonUygula(h.dataset.evkSablon);
     EVS.sekme = "harita"; EVS.mod = "sec";
     evrenSayfaCiz();
     if (typeof eckaBildir === "function") { eckaBildir("Harita hazır: bir yere dokun, adını değiştir"); }
@@ -213,3 +216,110 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(function () { eckaBildir("Çıkış yapıldı. İlerlemen hesaba yazılamadığı için bu cihazda bırakıldı."); }, 1500);
   }
 });
+
+/* ==================== bir evrende birden fazla gezegen ====================
+   Ana harita e.harita'da kalır (adı e.anaGezegen); başka gezegenler e.gezegenler: [{ id, ad, harita }].
+   Harita sekmesinde üstte gezegen şeridi: seç, ekle, adını değiştir, sil. */
+
+const EVG_SINIR = 12;
+
+if (typeof evrenEkTemizle === "function") {
+  const eskiEk = evrenEkTemizle;
+  window.evrenEkTemizle = function (ham, e) {
+    eskiEk.apply(this, arguments);
+    const ana = fanMetin(ham.anaGezegen, 60).trim();
+    if (ana) { e.anaGezegen = ana; }
+    if (Array.isArray(ham.gezegenler)) {
+      const l = ham.gezegenler.slice(0, EVG_SINIR).map(function (g, i) {
+        if (!g || typeof g !== "object") { return null; }
+        return { id: fanMetin(g.id, 40).replace(/[^\w-]/g, "") || ("g" + i), ad: fanMetin(g.ad, 60).trim() || ("Gezegen " + (i + 2)),
+          harita: fanHaritaTemizle(g.harita) };
+      }).filter(Boolean);
+      if (l.length) { e.gezegenler = l; }
+    }
+  };
+}
+
+function evgAnaAd(e) { return e.anaGezegen || ((e.gezegenler || []).length ? "Ana gezegen" : (e.ad || "Ana gezegen")); }
+
+/** Harita sekmesinin üstündeki gezegen şeridi (kendi evreninde her zaman; başkasınınkinde birden fazla gezegen varsa). */
+function evrenGezegenSeridi(v) {
+  if (!EVS || EVS.kaynak === "site" || EVS.kaynak === "e99") { return ""; }
+  const e = v.eser;
+  const l = e.gezegenler || [];
+  const sahip = EVS.kaynak === "benim";
+  if (!sahip && !l.length) { return ""; }
+  const secili = EVS.gezegen || "";
+  const cip = function (id, ad) {
+    return '<button class="evg-cip' + (secili === id ? " secili" : "") + '" role="tab" aria-selected="' + (secili === id) + '" data-evg-sec="' + kacir(id) + '">' +
+      '<span class="evg-nokta" aria-hidden="true"></span>' + kacir(ad) + "</button>";
+  };
+  const sg = l.find(function (g) { return g.id === secili; });
+  const bos = !((evrenGezegenHaritasi(e).yerler) || []).length;
+  return '<div class="evg-serit" role="tablist" aria-label="Gezegenler"><span class="evs-rozet">Gezegenler</span>' +
+      cip("", evgAnaAd(e)) + l.map(function (g) { return cip(g.id, g.ad); }).join("") +
+      (sahip && l.length < EVG_SINIR ? '<button class="evg-cip ekle" data-evg-ekle>+ Gezegen</button>' : "") + "</div>" +
+    (sahip && (l.length || secili) ? '<div class="evg-ayar"><input class="kod-giris arac-giris" maxlength="60" data-evg-ad="' + kacir(secili) + '" aria-label="Gezegenin adı" ' +
+        'value="' + kacir(sg ? sg.ad : (e.anaGezegen || "")) + '" placeholder="' + kacir(sg ? "Gezegenin adı" : "Ana gezegenin adı") + '">' +
+        (sg ? '<button class="dugme dugme-sade y-sil" data-evg-sil="' + kacir(sg.id) + '">' + (evgSilOnay === sg.id ? "Emin misin? Sil" : "Gezegeni sil") + "</button>" : "") + "</div>" : "") +
+    (sahip && bos ? evkSablonHtml() : "");
+}
+
+let evgSilOnay = null;
+
+document.addEventListener("click", function (ev) {
+  const h = ev.target.closest("[data-evg-sec], [data-evg-ekle], [data-evg-sil]");
+  if (!h || !EVS) { return; }
+  const d = h.dataset;
+  if (d.evgSec !== undefined) { EVS.gezegen = d.evgSec || null; EVS.secili = null; EVS.mod = "sec"; EVS.cizim = []; evgSilOnay = null; evrenSayfaCiz(); return; }
+  if (EVS.kaynak !== "benim") { return; }
+  if (h.hasAttribute("data-evg-ekle")) {
+    const id = "g" + Date.now().toString(36);
+    evrenBenimDegistir(EVS.id, function (e) {
+      if (!Array.isArray(e.gezegenler)) { e.gezegenler = []; }
+      if (e.gezegenler.length >= EVG_SINIR) { return; }
+      e.gezegenler.push({ id: id, ad: "Gezegen " + (e.gezegenler.length + 2), harita: { yerler: [] } });
+    });
+    EVS.gezegen = id; EVS.secili = null; EVS.mod = "sec";
+    evrenSayfaCiz();
+    const g = document.querySelector("#evrenSayfa [data-evg-ad]");
+    if (g) { g.focus(); g.select(); }
+    return;
+  }
+  if (d.evgSil) {
+    if (evgSilOnay !== d.evgSil) { evgSilOnay = d.evgSil; evrenSayfaCiz(); return; }
+    evgSilOnay = null;
+    evrenBenimDegistir(EVS.id, function (e) {
+      e.gezegenler = (e.gezegenler || []).filter(function (g) { return g.id !== d.evgSil; });
+      if (!e.gezegenler.length) { delete e.gezegenler; }
+    });
+    EVS.gezegen = null; EVS.secili = null;
+    evrenSayfaCiz();
+  }
+});
+
+document.addEventListener("change", function (ev) {
+  const t = ev.target;
+  if (!t || !t.closest || !t.closest("#evrenSayfa") || t.dataset.evgAd === undefined || !EVS || EVS.kaynak !== "benim") { return; }
+  const ad = t.value.trim().slice(0, 60);
+  const gid = t.dataset.evgAd;
+  evrenBenimDegistir(EVS.id, function (e) {
+    if (!gid) { if (ad) { e.anaGezegen = ad; } else { delete e.anaGezegen; } return; }
+    const g = (e.gezegenler || []).find(function (x) { return x.id === gid; });
+    if (g && ad) { g.ad = ad; }
+  });
+  evrenSayfaCiz();
+});
+
+/* okuma görünümü ve dosya: öbür gezegenlerin haritaları da */
+if (typeof fanEserGovde === "function") {
+  const eskiGovde = fanEserGovde;
+  window.fanEserGovde = function (e) {
+    const h = eskiGovde.apply(this, arguments);
+    if (!e || e.tur !== "evren" || !(e.gezegenler || []).length || typeof evrenHaritaSvg !== "function") { return h; }
+    return h + "<h2>Öbür gezegenler</h2>" + e.gezegenler.map(function (g) {
+      const y = ((g.harita || {}).yerler) || [];
+      return "<h3>" + kacir(g.ad) + "</h3>" + (y.length ? evrenHaritaSvg(g.harita, { alfabe: e.alfabe }) : '<p class="bilgi">Haritası henüz boş.</p>');
+    }).join("");
+  };
+}

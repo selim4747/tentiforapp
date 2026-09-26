@@ -2708,6 +2708,11 @@ function yoneticiEvrenAyarKutusu(h) {
       Object.keys(HARITA_EVREN_TURLERI).map(function (t) {
         return '<option value="' + t + '"' + (m.tur === t ? " selected" : "") + ">" + HARITA_EVREN_TURLERI[t] + "</option>";
       }).join("") + "</select></label>" +
+    '<label class="hf-alan"><span>Hangi evrende</span><select class="kod-giris arac-giris" id="yEvUst">' +
+      '<option value="">Kendi başına bir evren</option>' +
+      (veri.haritalar || []).filter(function (x) { return x.id !== h.id && !x.ustEvren; }).map(function (x) {
+        return '<option value="' + kacir(x.id) + '"' + (h.ustEvren === x.id ? " selected" : "") + ">" + kacir((x.evrenAdi || x.ad)) + " evreninde bir gezegen</option>";
+      }).join("") + "</select></label>" +
     '<label class="hf-onay"><input type="checkbox" id="yEvDonen"' + (m.donen ? " checked" : "") + "> Yatayda dönsün (dünya haritası gibi; kapalıysa düz harita)</label>" +
     '<label class="hf-onay"><input type="checkbox" id="yEvTakvim"' + (e.takvim === "tomye" ? " checked" : "") + "> Tömye takvimini kullan (gün ve yıl uzunluğu takvimden gelir)</label>" +
     '<div class="hf-cift">' +
@@ -2749,6 +2754,8 @@ function yoneticiEvrenAyarKaydet() {
   });
   if (al("yEvSis").checked) { e.sis = true; }
   h.evren = e;
+  const ust = al("yEvUst") ? al("yEvUst").value : "";
+  if (ust && ust !== h.id && !(veri.haritalar || []).some(function (x) { return x.ustEvren === h.id; })) { h.ustEvren = ust; } else { delete h.ustEvren; }
   const g = al("yEvGizli").value;
   if (g) { h.gizli = g; } else { delete h.gizli; }
   yoneticiDurum("Evren ayarları kaydedildi", true);

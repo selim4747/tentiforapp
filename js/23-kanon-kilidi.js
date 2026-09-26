@@ -77,7 +77,14 @@ function bolumErisimi(id) {
 /* Kanon dışı evrenler herkese açıktır (Claude tarafından yapılan evren). */
 const KANON_DISI_EVRENLER = ["claude"];
 
+/** Bir evrenin gezegeni olan harita (ör. Ax-24 → Tentiforverse/Tömye): erişim üst evrenden gelir. */
+function kanonUstEvren(id) {
+  const h = (typeof veri !== "undefined" && veri && veri.haritalar || []).find(function (x) { return x.id === id; });
+  return h && h.ustEvren && h.ustEvren !== id ? h.ustEvren : id;
+}
+
 function kanonEvrenErisimi(id) {
+  id = kanonUstEvren(id);
   if (KANON_DISI_EVRENLER.indexOf(id) !== -1) { return true; }
   const e = kanonErisim();
   return e.hepsi || e.tumEvren || e.evrenler.has(id);
@@ -363,8 +370,10 @@ function yoneticiKisiler() {
   }).join("");
 
   const evrenler = (veri.haritalar || []).length
-    ? '<div class="y-alan-izgara">' + veri.haritalar.map(function (h) {
-        return cek(h.id, !!t.evrenler[h.id], h.ad, "data-y-kisi-evren");
+    ? '<div class="y-alan-izgara">' + veri.haritalar.filter(function (h) { return !h.ustEvren; }).map(function (h) {
+        /* gezegenler (ör. Ax-24) üst evrenle birlikte açılır */
+        const gezegen = veri.haritalar.filter(function (x) { return x.ustEvren === h.id; }).map(function (x) { return x.ad; });
+        return cek(h.id, !!t.evrenler[h.id], gezegen.length ? (h.evrenAdi || h.ad) + " (" + [h.ad].concat(gezegen).join(", ") + ")" : h.ad, "data-y-kisi-evren");
       }).join("") + "</div>"
     : '<p class="oyun-not">Henüz evren yok.</p>';
 

@@ -3985,3 +3985,20 @@ html.evren-acik{overflow:hidden}
   .evk-sablon-svg{width:100%}
   .evk-sablon .oyun-not{width:100%}
 }
+
+/* ================= aynı evrende birden fazla gezegen ================= */
+.harita-grup{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px;padding:3px 6px 3px 10px;border:1px solid var(--buz);border-radius:999px;background:var(--beyaz)}
+.harita-grup-ad{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--deniz)}
+.es-oge.es-alt{margin-left:18px;width:calc(100% - 18px);padding-top:6px;padding-bottom:6px}
+.es-oge.es-alt .es-ad{font-size:15px}
+.evg-serit{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;align-items:center;margin:0 0 10px;padding-bottom:2px}
+.evg-serit::-webkit-scrollbar{display:none}
+.evg-serit .evs-rozet{flex:0 0 auto;margin-right:2px}
+.evg-cip{flex:0 0 auto;min-height:36px;padding:4px 14px;border-radius:999px;border:1px solid var(--sig);background:var(--beyaz);color:var(--murekkep);
+  font:inherit;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.evg-cip:hover{border-color:var(--deniz)}
+.evg-cip.secili{background:var(--deniz);border-color:var(--deniz);color:var(--beyaz)}
+.evg-cip.ekle{border-style:dashed;color:var(--deniz)}
+.evg-nokta{width:10px;height:10px;border-radius:50%;background:currentColor;opacity:.55}
+.evg-ayar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+.evg-ayar input{flex:1 1 200px;min-width:0}

@@ -304,13 +304,21 @@ function evoHaritaYerleri(e) {
   return (((e.harita || {}).yerler) || []).filter(function (y) { return evoDolu(y.ad); });
 }
 
+/** Bütün gezegenlerin adlandırılmış yerleri (kelime ve sınav için; harita bulmacası yalnızca ana haritada). */
+function evoTumYerler(e) {
+  let l = evoHaritaYerleri(e);
+  (e.gezegenler || []).forEach(function (g) { l = l.concat((((g.harita || {}).yerler) || []).filter(function (y) { return evoDolu(y.ad); })); });
+  return l;
+}
+
 function evoKelimeler(e) {
   const adlar = [];
   (e.kisiler || []).forEach(function (x) { if (!x.kutu) { adlar.push(x.ad); } });
   (e.yerler || []).forEach(function (x) { adlar.push(x.ad); });
   (e.sozluk || []).forEach(function (x) { adlar.push(x.terim); });
   (e.kurallar || []).forEach(function (x) { adlar.push(x.ad); });
-  evoHaritaYerleri(e).forEach(function (y) { adlar.push(y.ad); });
+  evoTumYerler(e).forEach(function (y) { adlar.push(y.ad); });
+  (e.gezegenler || []).forEach(function (g) { adlar.push(g.ad); });
   ((e.oyunlar || {}).kelimeler || []).forEach(function (k) { adlar.push(k); });
   return koListe(adlar);
 }
@@ -338,7 +346,7 @@ function evoSoruHavuzu(e) {
   grup((e.kisiler || []).filter(function (x) { return !x.kutu; }), function (x) { return x.rol || x.aciklama; }, function (x) { return x.ad; },
     function (s) { return "“" + s + "” — bu kim?"; });
   grup(e.yerler, function (x) { return x.aciklama; }, function (x) { return x.ad; }, function (s) { return "“" + s + "” — burası neresi?"; });
-  grup(evoHaritaYerleri(e), function (x) { return x.not; }, function (x) { return x.ad; }, function (s) { return "Haritada: “" + s + "” — neresi?"; });
+  grup(evoTumYerler(e), function (x) { return x.not; }, function (x) { return x.ad; }, function (s) { return "Haritada: “" + s + "” — neresi?"; });
   grup(e.sozluk, function (x) { return x.tanim; }, function (x) { return x.terim; }, function (s) { return "“" + s + "” — hangi terim?"; });
   grup(e.tarih, function (x) { return x.olay; }, function (x) { return x.zaman; }, function (s) { return "“" + s + "” — ne zaman oldu?"; });
   grup(e.kurallar, function (x) { return x.aciklama; }, function (x) { return x.ad; }, function (s) { return "“" + s + "” — hangi kural?"; });
@@ -423,7 +431,7 @@ function evoKelimeBilgi(e, k) {
   const esit = function (a) { return koNormal(a) === k; };
   const kisi = (e.kisiler || []).find(function (x) { return esit(x.ad); });
   if (kisi) { return koBilgiKutu("Kişi" + (kisi.rol ? " · " + kisi.rol : ""), kisi.ad, kisi.aciklama, "", ""); }
-  const yer = (e.yerler || []).find(function (x) { return esit(x.ad); }) || evoHaritaYerleri(e).find(function (x) { return esit(x.ad); });
+  const yer = (e.yerler || []).find(function (x) { return esit(x.ad); }) || evoTumYerler(e).find(function (x) { return esit(x.ad); });
   if (yer) { return koBilgiKutu("Yer" + (yer.tur ? " · " + yer.tur : ""), yer.ad, yer.aciklama || yer.not, "", ""); }
   const s = (e.sozluk || []).find(function (x) { return esit(x.terim); });
   if (s) { return koBilgiKutu("Sözlük", s.terim, s.tanim, "", ""); }
