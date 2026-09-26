@@ -403,6 +403,7 @@ function fanPencere(e, kaynak) {
       '<div class="fan-oku">' + fanEserGovde(e, false) + "</div>" +
       '<div class="oyun-sira fan-pencere-eylem">' +
         '<button class="dugme" data-fan-p="indir">İndir</button>' +
+        '<button class="dugme dugme-sade" data-fan-p="kapak">Kapak kartı</button>' +
         '<button class="dugme dugme-sade" data-fan-p="paylas">Paylaş</button>' +
         (kaynak === "site" ? '<button class="dugme dugme-sade" data-fan-p="baglanti">Bağlantıyı kopyala</button>' : "") +
         (kaynak !== "benim" ? '<button class="dugme dugme-sade" data-fan-p="kopyala">Taslaklarıma ekle</button>' : "") +
@@ -410,8 +411,11 @@ function fanPencere(e, kaynak) {
         (yonetici && kaynak === "site" ? '<button class="dugme dugme-sade y-sil" data-fan-p="kaldir">Siteden kaldır</button>' : "") +
       "</div>" +
       '<p class="pencere-durum" id="fanPDurum" role="status"></p>' +
+      (kaynak === "site" && sitede ? '<div class="tepki-alan" data-hedef="fan:' + kacir(e.id) + '"></div>' : "") +
     "</div>";
   perde.hidden = false;
+  /* sitedeki fanmade esere okurlar tepki ve kenar notu bırakabilir (bölüm tepkileriyle aynı altyapı) */
+  if (kaynak === "site" && typeof tepkiAlanlariKur === "function") { tepkiAlanlariKur(perde); }
 }
 
 function fanPDurum(m, iyi) {
@@ -438,6 +442,54 @@ function fanSitedenKaldir(e) {
   const k = e.tur === "hikaye" ? "hikayeler" : "evrenler";
   veri.fanEserleri[k] = (veri.fanEserleri[k] || []).filter(function (x) { return x.id !== e.id; });
   fanBolumleriCiz();
+}
+
+/* ==================== kapak kartı ==================== */
+
+/** Instagram/WhatsApp için 1080×1350 kapak: başlık Kyldo yazısıyla ve Latin harfleriyle, ilk satırlar, yazar. */
+async function fanKapakUret(e) {
+  if (typeof kartFontlariHazir !== "function") { return null; }
+  await kartFontlariHazir();
+  const t = document.createElement("canvas");
+  t.width = KART_EN; t.height = KART_BOY;
+  const c = t.getContext && t.getContext("2d");
+  if (!c) { return null; }
+  kartZemin(c, KART_EN, KART_BOY);
+  const sol = 110, sag = KART_EN - 110, gen = sag - sol;
+  c.fillStyle = KART_RENK.deniz;
+  c.fillRect(sol, 118, 6, 64);
+  kartEtiket(c, e.tur === "hikaye" ? "Fan hikâyesi · kanon dışı" : "Fan evreni · kanon dışı", sol + 26, 162, KART_RENK.murekkep2, 24);
+
+  /* başlığın ilk kelimesi Kyldo yazısıyla (Türkçe harfler dışında kalanlar çizilmez) */
+  const ilk = String(fanAd(e)).split(/\s+/)[0].toLocaleLowerCase("tr").replace(/[^a-zçğıöşü]/g, "");
+  let y = 250;
+  if (ilk && typeof kyldoSatirCiz === "function" && veri.alfabe) {
+    try { y = kyldoSatirCiz(c, ilk, KART_EN / 2, 230, gen, 120) + 30; } catch (_) { y = 250; }
+  }
+
+  c.fillStyle = KART_RENK.murekkep;
+  let px = 92;
+  c.font = KART_FONT.baslik(px);
+  let satirlar = kartSar(c, fanAd(e), gen);
+  while (satirlar.length > 3 && px > 52) { px -= 6; c.font = KART_FONT.baslik(px); satirlar = kartSar(c, fanAd(e), gen); }
+  y += px;
+  satirlar.slice(0, 3).forEach(function (s) { c.fillText(s, sol, y); y += px * 1.08; });
+
+  c.font = KART_FONT.yazi(32, true);
+  c.fillStyle = KART_RENK.deniz;
+  const bilgi = [e.yazar, e.tur === "hikaye" ? e.evren : ((e.kurallar || []).length + " kural")].filter(Boolean).join(" · ");
+  if (bilgi) { c.fillText(bilgi.slice(0, 60), sol, y + 10); y += 70; }
+
+  const govde = e.tur === "hikaye" ? (e.ozet || e.metin) : (e.ozet || ((e.kurallar || [])[0] || {}).aciklama);
+  c.font = KART_FONT.yazi(34);
+  c.fillStyle = KART_RENK.murekkep2;
+  kartSar(c, String(govde || "").replace(/\s+/g, " ").slice(0, 400), gen).slice(0, 6).forEach(function (s, i, l) {
+    if (y > KART_BOY * 0.72 - 40) { return; }
+    c.fillText(i === l.length - 1 && String(govde).length > 400 ? s + "…" : s, sol, y + 20); y += 46;
+  });
+
+  kartEtiket(c, "TentiforApp · " + KART_ADRES + " · Fan", sol, KART_BOY - 70, KART_RENK.yarik, 20);
+  return t;
 }
 
 /* ==================== indirme, paylaşma, gönderme ==================== */
@@ -609,6 +661,12 @@ document.addEventListener("click", async function (ev) {
   if (d.fanP && fanAcik) {
     const e = fanAcik.eser;
     if (d.fanP === "indir") { fanIndir(e); fanPDurum("İndirildi: " + fanDosyaAdi(e), true); }
+    else if (d.fanP === "kapak") {
+      const t = await fanKapakUret(e);
+      if (!t) { fanPDurum("Tarayıcı görsel üretmeyi desteklemiyor", false); return; }
+      const s = await kartPaylas(t, fanSlug(fanAd(e)) + "-kapak.png", fanAd(e) + " — " + (e.tur === "hikaye" ? "fan hikâyesi" : "fan evreni"));
+      if (s) { fanPDurum(s, true); }
+    }
     else if (d.fanP === "paylas") { const s = await fanPaylas(e); if (s) { fanPDurum(s, true); } }
     else if (d.fanP === "baglanti") {
       const adres = location.href.split("#")[0] + "#/fan/" + e.tur + "/" + encodeURIComponent(e.id);

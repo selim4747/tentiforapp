@@ -99,6 +99,27 @@ function aramaDizini() {
     d.push({ tur: "İsim", ad: s.isim, alt: s.anlam, metin: s.koken + " " + s.anlam, git: "#isim" });
   });
 
+  /* Claude'un evreni (kanon dışı, herkese açık) */
+  const ce = veri.claudeEvreni || {};
+  (ce.maddeler || []).forEach(function (m) {
+    d.push({ tur: "Claude'un evreni", ad: m.baslik, alt: m.ozet || "", metin: (m.ozet || "") + " " + (m.metin || ""), git: "#/claudeEvren" });
+  });
+  (ce.kisiler || []).forEach(function (k) {
+    d.push({ tur: "Şomdo kişisi", ad: k.ad, alt: k.unvan || "", metin: (k.ozet || "") + " " + (k.detay || ""), git: "#/claudeEvren" });
+  });
+  (ce.hikayeler || []).forEach(function (h) {
+    d.push({ tur: "Şomdo hikâyesi", ad: h.baslik, alt: "", metin: h.metin || "", git: "#/claudeEvren" });
+  });
+
+  /* Fanmade eserler: kendi bağlantılarıyla açılır */
+  const fe = veri.fanEserleri || {};
+  (fe.hikayeler || []).forEach(function (f) {
+    d.push({ tur: "Fan hikâyesi", ad: f.baslik, alt: [f.yazar, f.evren].filter(Boolean).join(" · "), metin: (f.ozet || "") + " " + (f.metin || "").slice(0, 4000), git: "#/fan/hikaye/" + f.id });
+  });
+  (fe.evrenler || []).forEach(function (f) {
+    d.push({ tur: "Fan evreni", ad: f.ad, alt: f.yazar || "", metin: (f.ozet || "") + " " + (f.kurallar || []).map(function (k) { return k.ad + " " + k.aciklama; }).join(" "), git: "#/fan/evren/" + f.id });
+  });
+
   /* Bölüm adları da aranabilsin: "harita" yazınca harita bölümü çıksın. */
   if (typeof GEZINME !== "undefined") {
     GEZINME.forEach(function (g) {

@@ -1,5 +1,5 @@
 {
-  "surum": "1.4.0",
+  "surum": "1.5.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -6741,6 +6741,19 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "1.5.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Telefonda altta sabit menü: Arşiv, Oku, Oyna, Fan ve bütün sayfaları, aramayı, gece modunu, ortam sesini tek yerde toplayan Menü",
+        "Telefona uygulama olarak yüklenebilir; paylaşılan .tentifor.html dosyası doğrudan uygulamada açılır",
+        "Yeni bölüm bildirimi: Roman bölümünden \"Yeni bölümde haber ver\"",
+        "Fan eserlerine kapak kartı; sitedeki fanmade eserlere tepki ve kenar notu; aramada fan eserleri ve Claude'un evreni",
+        "Gece modunda üst başlık da koyulaşıyor; iPhone'da yazarken sayfa artık yakınlaşmıyor; çevrimdışı uyarısı",
+        "Kurulmamış özelliklerde anlaşılır mesaj"
+      ],
+      "yeniler": []
+    },
     {
       "surum": "1.4.0",
       "tarih": "2026-09-26",

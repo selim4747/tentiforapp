@@ -38,7 +38,8 @@ body{
   display:flex;align-items:center;gap:20px;
   padding:0 22px;
   background:rgba(244,249,253,.90);
-  backdrop-filter:blur(12px);
+  background:color-mix(in srgb,var(--kar) 90%,transparent);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   border-bottom:1px solid var(--buz);
 }
 
@@ -3553,3 +3554,135 @@ textarea#fanA_metin{min-height:320px}
 .bildirim-kutu .oyun-not{flex:1 1 240px;margin:0}
 .bildirim-kutu .pencere-durum:empty{display:none}
 .y-bildirim-anahtar input{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:12px}
+
+/* ================= MOBİL VE DOKUNMA =================
+   ≤760px: altta sabit menü, üst başlık sadeleşir (tema, ses, rastgele, arama menüye taşınır).
+   Dokunmatik: girdiler 16px (iPhone odaklanınca yakınlaştırmasın), dokunma hedefleri ≥40px,
+   çentikli ekranlarda güvenli alan boşlukları. */
+:root{--alt-h:0px}
+button,a,input,select,textarea,label{touch-action:manipulation}
+button,a{-webkit-tap-highlight-color:rgba(28,92,150,.12)}
+.alt-menu{display:none}
+.mobil-menu-katman{display:none}
+
+@media (max-width:760px){
+  :root{--alt-h:58px}
+  .alt-menu{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    display:grid;grid-template-columns:repeat(5,1fr);
+    height:calc(var(--alt-h) + env(safe-area-inset-bottom,0px));padding:0 env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+    background:color-mix(in srgb,var(--kar) 95%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-top:1px solid var(--buz);
+  }
+  .alt-oge{
+    position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    min-height:44px;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;color:var(--murekkep-2);
+    text-decoration:none;background:none;border:0;cursor:pointer;padding:0;
+  }
+  .alt-ikon{font-size:19px;line-height:1}
+  .alt-oge.bu{color:var(--deniz)}
+  .alt-oge.bu::before{content:"";position:absolute;top:0;left:28%;right:28%;height:2px;background:var(--deniz);border-radius:0 0 2px 2px}
+  .alt-yeni{position:absolute;top:8px;right:calc(50% - 16px);width:7px;height:7px;border-radius:50%;background:var(--deniz)}
+  body{padding-bottom:calc(var(--alt-h) + env(safe-area-inset-bottom,0px))}
+  .yukari-btn{bottom:calc(var(--alt-h) + 12px + env(safe-area-inset-bottom,0px))}
+  .ecka-bildirim{bottom:calc(var(--alt-h) + 14px + env(safe-area-inset-bottom,0px))}
+  .duzenle-cubuk{bottom:calc(var(--alt-h) + 10px + env(safe-area-inset-bottom,0px))}
+
+  /* üst başlık: marka, cüzdan, Kod, hesap */
+  .gezinme,.komut-tetik,#temaAnahtar,#rastgeleBtn,#ortamSes{display:none !important}
+  .ust,html[data-hesap] .ust{gap:8px;padding:0 max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px))}
+  .marka-ad{font-size:19px}
+  .cuzdan-etiket{display:none}
+  .cuzdan-rozet{min-height:40px;justify-content:center}
+  .kod-btn{min-height:38px;padding:8px 11px}
+  .aktif-serit{top:var(--ust-h);padding:3px 14px;background:color-mix(in srgb,var(--kar) 92%,transparent);border-bottom:1px solid var(--buz)}
+  .aktif-serit:has(#aktifBolum:empty){display:none}
+
+  /* menü sayfası (alttan açılır) */
+  .mobil-menu-katman{
+    display:flex;position:fixed;inset:0;z-index:58;align-items:flex-end;
+    background:rgba(13,53,96,.28);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  }
+  html[data-ayar-tema="gece"] .mobil-menu-katman{background:rgba(0,0,0,.55)}
+  .mobil-menu{
+    width:100%;max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain;
+    background:var(--beyaz);border-top:1px solid var(--sig);border-radius:14px 14px 0 0;
+    padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));
+    animation:mm-ac .2s ease-out;
+  }
+  @keyframes mm-ac{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+  .mm-ust{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .mm-ust b{font-family:var(--display);font-weight:400;font-size:24px}
+  .mm-ust .pencere-kapat{position:static}
+  .mm-ara{
+    width:100%;min-height:46px;text-align:left;cursor:pointer;font:inherit;font-size:16px;color:var(--murekkep-2);
+    background:var(--kar);border:1px solid var(--sig);border-radius:6px;padding:10px 14px;margin-bottom:14px;
+  }
+  .mm-sayfalar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .mm-sayfa{
+    position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    min-height:72px;padding:8px 4px;text-align:center;text-decoration:none;color:var(--murekkep);
+    background:var(--kar);border:1px solid var(--buz);border-radius:6px;
+  }
+  .mm-sayfa.bu{border-color:var(--deniz);color:var(--deniz)}
+  .mm-ikon{font-size:20px;line-height:1;color:var(--deniz)}
+  .mm-ad{font-size:13px;line-height:1.2}
+  .mm-sayfa .alt-yeni{top:8px;right:10px}
+  .mm-eylemler{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+  .mm-eylem{
+    display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 12px;cursor:pointer;text-align:left;
+    font:inherit;font-size:14px;color:var(--murekkep);background:var(--beyaz);border:1px solid var(--sig);border-radius:6px;
+  }
+  .mm-eylem span{font-size:18px;width:20px;text-align:center;color:var(--deniz)}
+  .mm-eylem[aria-pressed="true"]{border-color:var(--deniz);color:var(--deniz)}
+  .mm-yukle{width:100%;margin-top:10px;justify-content:center;background:var(--deniz);color:var(--beyaz);border-color:var(--deniz)}
+  .mm-yukle span{color:var(--beyaz)}
+  .mm-ipucu{margin-top:12px;font-size:13.5px;line-height:1.5;color:var(--murekkep-2);background:var(--kar);border-radius:6px;padding:10px 12px}
+
+  /* dokunma hedefleri */
+  .sayfa-icerik-oge{min-height:40px;padding-top:8px;padding-bottom:8px}
+  .sayfa-paylas{min-height:38px}
+  .ust-ikon{min-width:40px;min-height:40px}
+  .fan-sekmeler .dugme,.ilk-hafta-adimlar .dugme{min-height:40px}
+  .ic-satir{min-height:44px}
+  .ic-bag{min-height:32px;display:inline-flex;align-items:center}
+  .sesli-dugme{min-height:36px}
+
+  /* iPhone odaklanınca yakınlaştırmasın */
+  .kod-giris,input:not([class]):not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),select,textarea{font-size:16px}
+
+  /* pencereler: dinamik görünüm yüksekliği ve güvenli alan */
+  .pencere{max-height:calc(100dvh - 40px - env(safe-area-inset-bottom,0px))}
+  .perde{padding:max(12px,env(safe-area-inset-top,0px)) 12px max(12px,env(safe-area-inset-bottom,0px))}
+}
+@media (max-width:360px){
+  .marka-ad{font-size:17px}
+  .kod-btn{padding:8px 9px}
+}
+html.menu-acik{overflow:hidden}
+@media (prefers-reduced-motion:reduce){.mobil-menu{animation:none}}
+/* uygulama olarak açıkken tarayıcı çubuğu yok: başlık çentiğin altında kalsın */
+@media (display-mode:standalone){
+  .ust{padding-top:env(safe-area-inset-top,0px);height:calc(var(--ust-h) + env(safe-area-inset-top,0px))}
+}
+
+/* ---------- Kurulum yardımcısı ---------- */
+.kurulum-liste{list-style:none;padding:0;margin:6px 0 10px;display:grid;gap:4px}
+.kurulum-liste li{display:flex;gap:8px;align-items:baseline;font-size:14px}
+.kurulum-liste li span{font-family:var(--mono);width:14px}
+.kurulum-liste li.tamam span{color:var(--deniz)}
+.kurulum-liste li.eksik{color:#A33}
+.kurulum-adimlar{margin:6px 0 12px;padding-left:20px;font-size:14px;line-height:1.55}
+.kurulum-parcalar{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:10px}
+.kurulum-parcalar .dugme{min-height:44px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.kurulum-parcalar .dugme span{font-size:10px;opacity:.75}
+.kurulum-yedek{font-size:12px !important;font-family:var(--mono);width:100%;margin-top:10px}
+.cevrimdisi{
+  position:fixed;left:50%;transform:translateX(-50%);top:calc(var(--ust-h) + 8px);z-index:46;
+  max-width:min(92vw,520px);font-family:var(--mono);font-size:11.5px;line-height:1.45;text-align:center;
+  background:var(--yarik);color:var(--kar);padding:8px 14px;border-radius:4px;box-shadow:0 6px 18px rgba(13,53,96,.2);
+}
+.surum-notu{border:1px solid var(--deniz);border-radius:4px;background:var(--beyaz);padding:12px 16px;margin:12px 0}
+.surum-ust{display:flex;justify-content:space-between;align-items:center}
+.surum-ust .pencere-kapat{position:static}
+.surum-notu ul{margin:6px 0 10px;padding-left:20px;font-size:14.5px;line-height:1.55}

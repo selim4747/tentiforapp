@@ -527,8 +527,8 @@ const ILK_HAFTA_ADIMLARI = [
   { id: "isim", ad: "İsim sistemiyle adını Tentifor'a çevir", git: "isim" },
   { id: "kart", ad: "İlk karakter kartını kazan (testi çöz ya da bir kayıt aç)", git: "test" },
   { id: "kartpostal", ad: "Birine şifreli kartpostal hazırla", git: "kartpostal" },
-  { id: "yaris", ad: "Hesabınla bir yarışı bitir", git: "yarislar" },
-  { id: "defter", ad: "Kütüphane Defteri'ne bir cümle yaz", git: "ortakDefter" }
+  { id: "yaris", ad: "Bir yarışı ya da haftalık meydan okumayı bitir", git: "yarislar" },
+  { id: "defter", ad: "Kütüphane Defteri'ne bir cümle yaz ya da bir fan hikâyesi başlat", git: "ortakDefter" }
 ];
 const ILK_HAFTA_ADIM_ODUL = 15, ILK_HAFTA_SON_ODUL = 70;
 
@@ -653,6 +653,8 @@ function yilKancalariKur() {
     const g = document.querySelector("#isimGiris");
     if (g && g.value.trim()) { ilkHaftaIsaretle("isim"); }
   });
+  sar("meydanBitir", function () { ilkHaftaIsaretle("yaris"); });
+  sar("fanYeni", function (r, tur) { if (tur === "hikaye") { ilkHaftaIsaretle("defter"); } });
   sar("kartpostalOlustur", function () {
     if (document.querySelector("#kpAdres")) { ilkHaftaIsaretle("kartpostal"); }
   });

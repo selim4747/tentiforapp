@@ -21,6 +21,11 @@ for (const ad of KOPYALA) {
   cpSync(join(KOK, ad), join(HEDEF, ad), { recursive: true });
 }
 
+/* Panelin kurulum yardımcısı (js/43-kurulum.js) telefondan kopyalayabilsin diye; gizli bilgi içermezler. */
+mkdirSync(join(HEDEF, "kurulum"), { recursive: true });
+cpSync(join(KOK, "supabase/kurulum.sql"), join(HEDEF, "kurulum/kurulum.sql"));
+cpSync(join(KOK, "supabase/functions/bildirim-gonder/index.ts"), join(HEDEF, "kurulum/bildirim-gonder.ts"));
+
 const ozet = createHash("sha256");
 let once = 0, sonra = 0;
 
