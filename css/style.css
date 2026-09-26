@@ -4088,3 +4088,30 @@ html.evren-acik{overflow:hidden}
 .gz-alanlar input,.gz-ust select,.sh-cift input{text-align:left;text-transform:none;letter-spacing:0;font-family:var(--govde);font-size:15px}
 .gz-alanlar input{flex:1 1 140px;min-width:0;min-height:36px;padding:4px 8px;margin:0}
 .gz-arac{display:flex;gap:2px}
+.gz-ekle{margin-top:10px;border-top:1px solid var(--buz);padding-top:10px}
+.gz-yerler{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.gz-yer{min-height:36px}
+.gz-grup{flex-basis:100%;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--deniz);margin-top:4px}
+.gz-secenek{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px}
+.gz-ayni{display:flex;gap:6px;align-items:center;font-size:14px;min-height:36px}
+.gz-oynatici{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:12px;padding:10px;border-radius:10px;background:var(--kar)}
+.gz-kaydir{flex:1 1 160px;min-width:120px;accent-color:#C0392B}
+.gz-gun-yaz{flex-basis:100%;font-size:15px}
+.gz-gun{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:#fff;background:#8A6A3E;border-radius:4px;padding:1px 6px;margin-right:4px;white-space:nowrap}
+.gz-gun.ayni{background:transparent;color:#8A6A3E;border:1px solid #8A6A3E}
+.gz-liste li.simdi{background:rgba(192,57,43,.08);border-radius:8px}
+.gz-liste li.simdi .gz-no{box-shadow:0 0 0 3px rgba(192,57,43,.3)}
+.gz-liste li.gelecek{opacity:.5}
+.gz-alanlar .gz-gun-giris{flex:0 0 72px}
+.gz-nokta.simdi .gz-halka{animation:gz-nabiz 1.4s ease-out infinite;transform-origin:center;transform-box:fill-box}
+@keyframes gz-nabiz{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(1.6)}}
+@media (prefers-reduced-motion:reduce){.gz-nokta.simdi .gz-halka{animation:none}}
+.gzk-satir{margin-top:10px}
+.gzk-ac{white-space:normal;text-align:left}
+.gzk-kaydet{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
+.gzk-ad{display:flex;gap:8px;align-items:center;flex-basis:100%}
+.gzk-ad input{flex:1;margin:0}
+.gzk-harita{margin-bottom:6px}
+.gzk-gecenler{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.gzk-gecenler .oyun-etiket{flex-basis:100%}
+.gzk-panel .hp-alt{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
