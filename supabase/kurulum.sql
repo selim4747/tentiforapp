@@ -1350,6 +1350,317 @@ begin
 end;
 $$;
 
+-- ======================================================================
+-- ====== TOPLULUK II: DEFTER, YAZARA SOR, KULÜP, OKUR BULMACASI, DAVET ======
+-- ======================================================================
+
+create or replace function public.tomye_hafta(t timestamptz default now()) returns text
+language sql stable set search_path = '' as $$
+  select to_char(t at time zone 'Europe/Istanbul', 'IYYY-"H"IW')
+$$;
+
+-- ---------- Kütüphane Defteri: herkes günde bir cümle, haftalık bölüm ----------
+create table if not exists public.defter_cumleleri (
+  id bigserial primary key,
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  hafta text not null,
+  metin text not null check (char_length(metin) between 10 and 220),
+  zaman timestamptz not null default now(),
+  gizli boolean not null default false
+);
+alter table public.defter_cumleleri enable row level security;
+create index if not exists defter_hafta on public.defter_cumleleri (hafta, zaman);
+create table if not exists public.defter_oylari (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  cumle bigint not null references public.defter_cumleleri(id) on delete cascade,
+  primary key (kullanici, cumle)
+);
+alter table public.defter_oylari enable row level security;
+create table if not exists public.defter_bildirimleri (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  cumle bigint not null references public.defter_cumleleri(id) on delete cascade,
+  primary key (kullanici, cumle)
+);
+alter table public.defter_bildirimleri enable row level security;
+
+create or replace function public.defter_yaz(p_metin text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); m text := trim(coalesce(p_metin, ''));
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if exists (select 1 from public.istatistikler where id = uid and engelli) then return jsonb_build_object('durum', 'engelli'); end if;
+  if char_length(m) < 10 then return jsonb_build_object('durum', 'kisa'); end if;
+  if exists (select 1 from public.defter_cumleleri where kullanici = uid
+             and (zaman at time zone 'Europe/Istanbul')::date = (now() at time zone 'Europe/Istanbul')::date) then
+    return jsonb_build_object('durum', 'bugun');
+  end if;
+  insert into public.defter_cumleleri (kullanici, hafta, metin) values (uid, public.tomye_hafta(), left(m, 220));
+  return jsonb_build_object('durum', 'tamam');
+end;
+$$;
+
+create or replace function public.defter_oyla(p_cumle bigint) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception 'giriş gerekli'; end if;
+  if exists (select 1 from public.defter_oylari where kullanici = uid and cumle = p_cumle) then
+    delete from public.defter_oylari where kullanici = uid and cumle = p_cumle; return false;
+  end if;
+  insert into public.defter_oylari (kullanici, cumle) select uid, p_cumle
+    where exists (select 1 from public.defter_cumleleri where id = p_cumle and kullanici <> uid);
+  return found;
+end;
+$$;
+
+create or replace function public.defter_bildir(p_cumle bigint) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then return; end if;
+  insert into public.defter_bildirimleri (kullanici, cumle) select auth.uid(), p_cumle
+    where exists (select 1 from public.defter_cumleleri where id = p_cumle and kullanici <> auth.uid()) on conflict do nothing;
+  if (select count(*) from public.defter_bildirimleri where cumle = p_cumle) >= 3 then
+    update public.defter_cumleleri set gizli = true where id = p_cumle;
+  end if;
+end;
+$$;
+
+create or replace function public.defter_sil(p_cumle bigint) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  delete from public.defter_cumleleri where id = p_cumle and (kullanici = auth.uid() or public.yonetici_mi());
+end;
+$$;
+
+-- ---------- Yazara sor ----------
+create table if not exists public.yazar_sorulari (
+  id bigserial primary key,
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  metin text not null check (char_length(metin) between 10 and 300),
+  zaman timestamptz not null default now(),
+  cevap text check (char_length(cevap) <= 2000),
+  cevap_zaman timestamptz,
+  gizli boolean not null default false
+);
+alter table public.yazar_sorulari enable row level security;
+create table if not exists public.yazar_soru_oylari (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  soru bigint not null references public.yazar_sorulari(id) on delete cascade,
+  primary key (kullanici, soru)
+);
+alter table public.yazar_soru_oylari enable row level security;
+
+create or replace function public.yazara_sor(p_metin text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); m text := trim(coalesce(p_metin, ''));
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if exists (select 1 from public.istatistikler where id = uid and engelli) then return jsonb_build_object('durum', 'engelli'); end if;
+  if char_length(m) < 10 then return jsonb_build_object('durum', 'kisa'); end if;
+  if (select count(*) from public.yazar_sorulari where kullanici = uid and zaman > now() - interval '1 day') >= 3 then
+    return jsonb_build_object('durum', 'sinir');
+  end if;
+  insert into public.yazar_sorulari (kullanici, metin) values (uid, left(m, 300));
+  return jsonb_build_object('durum', 'tamam');
+end;
+$$;
+
+create or replace function public.yazar_soru_oyla(p_soru bigint) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception 'giriş gerekli'; end if;
+  if exists (select 1 from public.yazar_soru_oylari where kullanici = uid and soru = p_soru) then
+    delete from public.yazar_soru_oylari where kullanici = uid and soru = p_soru; return false;
+  end if;
+  insert into public.yazar_soru_oylari (kullanici, soru) select uid, p_soru
+    where exists (select 1 from public.yazar_sorulari where id = p_soru and kullanici <> uid and not gizli);
+  return found;
+end;
+$$;
+
+create or replace function public.yazar_cevapla(p_soru bigint, p_cevap text, p_gizle boolean default false) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.yonetici_mi() then raise exception 'yetki yok'; end if;
+  update public.yazar_sorulari
+    set cevap = nullif(trim(coalesce(p_cevap, '')), ''), cevap_zaman = case when nullif(trim(coalesce(p_cevap, '')), '') is null then null else now() end,
+        gizli = p_gizle
+    where id = p_soru;
+end;
+$$;
+
+create or replace function public.yazar_soru_sil(p_soru bigint) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  delete from public.yazar_sorulari where id = p_soru and ((kullanici = auth.uid() and cevap is null) or public.yonetici_mi());
+end;
+$$;
+
+-- ---------- Kulüp duvarı ve haftalık kulüp hedefi ----------
+create table if not exists public.kulup_mesajlari (
+  id bigserial primary key,
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  kisilik text not null,
+  metin text not null check (char_length(metin) between 2 and 200),
+  zaman timestamptz not null default now(),
+  gizli boolean not null default false
+);
+alter table public.kulup_mesajlari enable row level security;
+create index if not exists kulup_mesajlari_kulup on public.kulup_mesajlari (kisilik, zaman);
+create table if not exists public.kulup_bildirimleri (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  mesaj bigint not null references public.kulup_mesajlari(id) on delete cascade,
+  primary key (kullanici, mesaj)
+);
+alter table public.kulup_bildirimleri enable row level security;
+
+create or replace function public.kulup_yaz(p_metin text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); k text; m text := trim(coalesce(p_metin, ''));
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  select kisilik into k from public.istatistikler where id = uid and not engelli;
+  if k is null then return jsonb_build_object('durum', 'kulupsuz'); end if;
+  if char_length(m) < 2 then return jsonb_build_object('durum', 'kisa'); end if;
+  if (select count(*) from public.kulup_mesajlari where kullanici = uid and zaman > now() - interval '1 day') >= 20 then
+    return jsonb_build_object('durum', 'sinir');
+  end if;
+  insert into public.kulup_mesajlari (kullanici, kisilik, metin) values (uid, k, left(m, 200));
+  return jsonb_build_object('durum', 'tamam', 'kulup', k);
+end;
+$$;
+
+create or replace function public.kulup_bildir(p_mesaj bigint) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then return; end if;
+  insert into public.kulup_bildirimleri (kullanici, mesaj) select auth.uid(), p_mesaj
+    where exists (select 1 from public.kulup_mesajlari where id = p_mesaj and kullanici <> auth.uid()) on conflict do nothing;
+  if (select count(*) from public.kulup_bildirimleri where mesaj = p_mesaj) >= 3 then
+    update public.kulup_mesajlari set gizli = true where id = p_mesaj;
+  end if;
+end;
+$$;
+
+create or replace function public.kulup_sil(p_mesaj bigint) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  delete from public.kulup_mesajlari where id = p_mesaj and (kullanici = auth.uid() or public.yonetici_mi());
+end;
+$$;
+
+-- ---------- Okur bulmacaları ----------
+create table if not exists public.okur_bulmacalari (
+  id bigserial primary key,
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  tur text not null check (tur in ('kyldo', 'isim')),
+  soru text not null check (char_length(soru) between 2 and 40),
+  ipucu text check (char_length(ipucu) <= 120),
+  cevap_ozet text not null,
+  zaman timestamptz not null default now(),
+  gizli boolean not null default false
+);
+alter table public.okur_bulmacalari enable row level security;
+create table if not exists public.okur_bulmaca_cozumleri (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  bulmaca bigint not null references public.okur_bulmacalari(id) on delete cascade,
+  zaman timestamptz not null default now(),
+  primary key (kullanici, bulmaca)
+);
+alter table public.okur_bulmaca_cozumleri enable row level security;
+create table if not exists public.okur_bulmaca_denemeleri (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  zaman timestamptz not null default now()
+);
+alter table public.okur_bulmaca_denemeleri enable row level security;
+
+/* isim sisteminin harf çevirisi (js/04 SES_CIFTI ile aynı) */
+create or replace function public.isim_cevir(t text) returns text
+language sql immutable set search_path = '' as $$
+  select translate(lower(coalesce(t, '')), 'bpcçdtgkvfzsjşrlnmaeıioöuü', 'pbçctdkgfvszşjlrmneaiıuoüö')
+$$;
+
+create or replace function public.okur_bulmaca_yaz(p_tur text, p_cevap text, p_ipucu text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); c text := lower(trim(coalesce(p_cevap, ''))); soru text; yeni bigint;
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if exists (select 1 from public.istatistikler where id = uid and engelli) then return jsonb_build_object('durum', 'engelli'); end if;
+  if c !~ '^[a-zçğıöşü]{2,20}$' then return jsonb_build_object('durum', 'kelime'); end if;
+  if (select count(*) from public.okur_bulmacalari where kullanici = uid and zaman > now() - interval '1 day') >= 5 then
+    return jsonb_build_object('durum', 'sinir');
+  end if;
+  soru := case when p_tur = 'isim' then public.isim_cevir(c) else c end;
+  soru := upper(left(soru, 1)) || substr(soru, 2);
+  insert into public.okur_bulmacalari (kullanici, tur, soru, ipucu, cevap_ozet)
+    values (uid, p_tur, soru, nullif(left(trim(coalesce(p_ipucu, '')), 120), ''), 'gecici') returning id into yeni;
+  update public.okur_bulmacalari set cevap_ozet = encode(sha256(convert_to(public.av_normal(c) || '#ob' || yeni, 'UTF8')), 'hex') where id = yeni;
+  return jsonb_build_object('durum', 'tamam', 'id', yeni);
+end;
+$$;
+
+create or replace function public.okur_bulmaca_coz(p_bulmaca bigint, p_cevap text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); b record;
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  select * into b from public.okur_bulmacalari where id = p_bulmaca and not gizli;
+  if b is null then return jsonb_build_object('durum', 'yok'); end if;
+  if b.kullanici = uid then return jsonb_build_object('durum', 'kendi'); end if;
+  if exists (select 1 from public.okur_bulmaca_cozumleri where kullanici = uid and bulmaca = p_bulmaca) then return jsonb_build_object('durum', 'zaten'); end if;
+  if (select count(*) from public.okur_bulmaca_denemeleri where kullanici = uid and zaman > now() - interval '1 hour') >= 60 then
+    return jsonb_build_object('durum', 'sinir');
+  end if;
+  insert into public.okur_bulmaca_denemeleri (kullanici) values (uid);
+  if encode(sha256(convert_to(public.av_normal(p_cevap) || '#ob' || p_bulmaca, 'UTF8')), 'hex') <> b.cevap_ozet then
+    return jsonb_build_object('durum', 'yanlis');
+  end if;
+  insert into public.okur_bulmaca_cozumleri (kullanici, bulmaca) values (uid, p_bulmaca);
+  return jsonb_build_object('durum', 'tamam');
+end;
+$$;
+
+create or replace function public.okur_bulmaca_sil(p_bulmaca bigint) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  delete from public.okur_bulmacalari where id = p_bulmaca and (kullanici = auth.uid() or public.yonetici_mi());
+end;
+$$;
+
+-- ---------- Davet ve rehberlik ----------
+create table if not exists public.davetler (
+  davetli uuid primary key references auth.users(id) on delete cascade,
+  davet_eden uuid not null references auth.users(id) on delete cascade,
+  zaman timestamptz not null default now()
+);
+alter table public.davetler enable row level security;
+
+create or replace function public.davet_kaydet(p_ad text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); eden uuid;
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if exists (select 1 from public.davetler where davetli = uid) then return jsonb_build_object('durum', 'zaten'); end if;
+  if (select created_at from auth.users where id = uid) < now() - interval '7 days' then return jsonb_build_object('durum', 'eski'); end if;
+  select id into eden from public.profiller where kullanici_adi = lower(trim(coalesce(p_ad, '')));
+  if eden is null or eden = uid then return jsonb_build_object('durum', 'yok'); end if;
+  insert into public.davetler (davetli, davet_eden) values (uid, eden);
+  return jsonb_build_object('durum', 'tamam');
+end;
+$$;
+
+/* ilk hafta tamam: davetli en az 3 farklı gün gelmiş (istatistikler.gun) */
+create or replace function public.davet_durumum() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object(
+    'davet_ettigim', (select count(*) from public.davetler where davet_eden = auth.uid()),
+    'tamamlayan', (select count(*) from public.davetler d join public.istatistikler s on s.id = d.davetli
+                    where d.davet_eden = auth.uid() and coalesce(s.gun, 0) >= 3),
+    'davet_eden', (select p.kullanici_adi from public.davetler d join public.profiller p on p.id = d.davet_eden where d.davetli = auth.uid()),
+    'benim_haftam', coalesce((select s.gun >= 3 from public.davetler d join public.istatistikler s on s.id = d.davetli where d.davetli = auth.uid()), false))
+$$;
+
 -- Arşivci seviyesi: bütün ilerlemeden sunucuda hesaplanan XP.
 -- Aynı XP iki sistemi besler:
 --   seviye  : arşivci seviyesi (unvanlar), gereken XP = 40·(seviye−1)²
@@ -1379,19 +1690,27 @@ create or replace view public.arsivci_seviyeleri as
       5 * (select count(*) from public.yapim_oylari o where o.kullanici = p.id) as x_oy,
       20 * (select count(*) from public.hickirik_taniklari h where h.kullanici = p.id) as x_hickirik,
       100 * (select count(*) from public.av_cozumleri a where a.kullanici = p.id) as x_av,
+      10 * (select count(*) from public.defter_cumleleri c where c.kullanici = p.id and not c.gizli)
+      + 2 * (select count(*) from public.defter_oylari o join public.defter_cumleleri c on c.id = o.cumle where c.kullanici = p.id and not c.gizli) as x_defter,
+      15 * (select count(*) from public.yazar_sorulari q where q.kullanici = p.id and q.cevap is not null) as x_soru,
+      5 * (select count(*) from public.okur_bulmaca_cozumleri z where z.kullanici = p.id)
+      + least(100, 2 * (select count(*) from public.okur_bulmaca_cozumleri z join public.okur_bulmacalari b on b.id = z.bulmaca where b.kullanici = p.id)) as x_okur_bulmaca,
+      least(500, 50 * (select count(*) from public.davetler d join public.istatistikler s2 on s2.id = d.davetli where d.davet_eden = p.id and coalesce(s2.gun, 0) >= 3))
+      + 30 * (select count(*) from public.davetler d join public.istatistikler s2 on s2.id = d.davetli where d.davetli = p.id and coalesce(s2.gun, 0) >= 3) as x_davet,
       10 * (select count(*) from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli and y.sezon / 100 = public.tomye_ay(now()) / 100)
       + 25 * (select count(*) from public.gk_tahminler g where g.kullanici = p.id and g.cozuldu and public.tomye_ay(g.gun::timestamptz) / 100 = public.tomye_ay(now()) / 100)
       + 15 * (select count(*) from public.kesifler k where k.kullanici = p.id and public.tomye_ay(k.zaman) / 100 = public.tomye_ay(now()) / 100) as yil_xp
     from p),
   t as (
-    select x.*, x_tamlik + x_gun + x_madalya + x_katman + x_yaris + x_kesif + x_ilk_kasif + x_gk + x_teori + x_begeni + x_isaret + x_oy + x_hickirik + x_av as xp
+    select x.*, x_tamlik + x_gun + x_madalya + x_katman + x_yaris + x_kesif + x_ilk_kasif + x_gk + x_teori + x_begeni + x_isaret + x_oy + x_hickirik + x_av + x_defter + x_soru + x_okur_bulmaca + x_davet as xp
     from x)
   select kullanici_adi, gorunen_ad, xp, yil_xp,
     (floor(sqrt(xp / 40.0)) + 1)::int as seviye,
     floor((-3 + sqrt(25 + 0.8 * xp)) / 2)::int as basamak,
     jsonb_build_object('tamlik', x_tamlik, 'gun', x_gun, 'madalya', x_madalya, 'katman', x_katman, 'yaris', x_yaris,
       'kesif', x_kesif, 'ilk_kasif', x_ilk_kasif, 'gk', x_gk, 'teori', x_teori, 'begeni', x_begeni,
-      'isaret', x_isaret, 'oy', x_oy, 'hickirik', x_hickirik, 'av', x_av) as dokum
+      'isaret', x_isaret, 'oy', x_oy, 'hickirik', x_hickirik, 'av', x_av,
+      'defter', x_defter, 'soru', x_soru, 'okur_bulmaca', x_okur_bulmaca, 'davet', x_davet) as dokum
   from t;
 
 -- Yönetici istatistikleri
@@ -1618,6 +1937,67 @@ revoke execute on function public.tepki_ver(text, text), public.tepkilerim(text)
   public.kenar_not_bildir(bigint), public.kenar_not_sil(bigint) from public, anon;
 grant execute on function public.tepki_ver(text, text), public.tepkilerim(text), public.kenar_not_yaz(text, text),
   public.kenar_not_bildir(bigint), public.kenar_not_sil(bigint) to authenticated;
+
+-- Topluluk II: herkese açık görünümler
+create or replace view public.defter_listesi as
+  select c.id, c.hafta, c.metin, c.zaman, g.kullanici_adi, g.gorunen_ad,
+    (select count(*) from public.defter_oylari o where o.cumle = c.id) as oy,
+    exists (select 1 from public.defter_oylari o where o.cumle = c.id and o.kullanici = auth.uid()) as ben_oyladim,
+    (c.kullanici = auth.uid()) as benim
+  from public.defter_cumleleri c join public.gorunur_kullanicilar g on g.id = c.kullanici
+  where not c.gizli;
+
+create or replace view public.yazara_sorular as
+  select q.id, q.metin, q.zaman, q.cevap, q.cevap_zaman, g.kullanici_adi, g.gorunen_ad,
+    (select count(*) from public.yazar_soru_oylari o where o.soru = q.id) as oy,
+    exists (select 1 from public.yazar_soru_oylari o where o.soru = q.id and o.kullanici = auth.uid()) as ben_oyladim,
+    (q.kullanici = auth.uid()) as benim
+  from public.yazar_sorulari q join public.gorunur_kullanicilar g on g.id = q.kullanici
+  where not q.gizli;
+
+create or replace view public.kulup_duvari as
+  select m.id, m.kisilik, m.metin, m.zaman, g.kullanici_adi, g.gorunen_ad, (m.kullanici = auth.uid()) as benim
+  from public.kulup_mesajlari m join public.gorunur_kullanicilar g on g.id = m.kullanici
+  where not m.gizli;
+
+/* haftalık kulüp hedefi: kulüp üyelerinin bu haftaki geçerli yarış oyunları */
+create or replace view public.kulup_haftasi as
+  select s.kisilik, count(y.*) as yaris, 60 as hedef
+  from public.istatistikler s
+  left join public.yaris_skorlari y on y.kullanici = s.id and not y.supheli
+    and public.tomye_hafta(y.zaman) = public.tomye_hafta()
+  where s.kisilik is not null and not coalesce(s.engelli, false)
+  group by s.kisilik;
+
+create or replace view public.okur_bulmaca_listesi as
+  select b.id, b.tur, b.soru, b.ipucu, b.zaman, g.kullanici_adi, g.gorunen_ad,
+    (select count(*) from public.okur_bulmaca_cozumleri z where z.bulmaca = b.id) as cozen,
+    exists (select 1 from public.okur_bulmaca_cozumleri z where z.bulmaca = b.id and z.kullanici = auth.uid()) as cozdum,
+    (b.kullanici = auth.uid()) as benim
+  from public.okur_bulmacalari b join public.gorunur_kullanicilar g on g.id = b.kullanici
+  where not b.gizli;
+
+create or replace view public.rehber_sayilari as
+  select g.kullanici_adi, count(*) as rehber
+  from public.davetler d join public.istatistikler s on s.id = d.davetli and coalesce(s.gun, 0) >= 3
+  join public.gorunur_kullanicilar g on g.id = d.davet_eden
+  group by g.kullanici_adi;
+
+grant select on public.defter_listesi, public.yazara_sorular, public.kulup_duvari, public.kulup_haftasi,
+  public.okur_bulmaca_listesi, public.rehber_sayilari to anon, authenticated;
+revoke all on public.defter_cumleleri, public.defter_oylari, public.defter_bildirimleri, public.yazar_sorulari,
+  public.yazar_soru_oylari, public.kulup_mesajlari, public.kulup_bildirimleri, public.okur_bulmacalari,
+  public.okur_bulmaca_cozumleri, public.okur_bulmaca_denemeleri, public.davetler from anon, authenticated;
+revoke execute on function public.defter_yaz(text), public.defter_oyla(bigint), public.defter_bildir(bigint), public.defter_sil(bigint),
+  public.yazara_sor(text), public.yazar_soru_oyla(bigint), public.yazar_cevapla(bigint, text, boolean), public.yazar_soru_sil(bigint),
+  public.kulup_yaz(text), public.kulup_bildir(bigint), public.kulup_sil(bigint),
+  public.okur_bulmaca_yaz(text, text, text), public.okur_bulmaca_coz(bigint, text), public.okur_bulmaca_sil(bigint),
+  public.davet_kaydet(text), public.davet_durumum() from public, anon;
+grant execute on function public.defter_yaz(text), public.defter_oyla(bigint), public.defter_bildir(bigint), public.defter_sil(bigint),
+  public.yazara_sor(text), public.yazar_soru_oyla(bigint), public.yazar_cevapla(bigint, text, boolean), public.yazar_soru_sil(bigint),
+  public.kulup_yaz(text), public.kulup_bildir(bigint), public.kulup_sil(bigint),
+  public.okur_bulmaca_yaz(text, text, text), public.okur_bulmaca_coz(bigint, text), public.okur_bulmaca_sil(bigint),
+  public.davet_kaydet(text), public.davet_durumum() to authenticated;
 
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';

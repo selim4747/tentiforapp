@@ -66,7 +66,9 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("betik ve stil adresleri sürümlü", zIstek.filter(function (u) { return /\/(js|css)\/[^?]+$/.test(u) && !/vendor/.test(u); }).length === 0,
       zIstek.filter(function (u) { return /\/(js|css)\/[^?]+$/.test(u); }));
     await Z.evaluate(function () { location.hash = "#/bilinmeyenler"; }); await bekle(Z, 800);
-    await Z.evaluate(function () { location.hash = "#/yapimlar"; }); await bekle(Z, 800);
+    await Z.evaluate(function () { location.hash = "#/mektuplar"; }); await bekle(Z, 800);
+    await Z.evaluate(function () { location.hash = "#/harita"; }); await bekle(Z, 800);
+    /* Proje/Oyunlar sayfalarındaki topluluk alanları görününce kütüphaneyi ister; bunun dışında inmemeli */
     ok("hesap kütüphanesi ziyaretçiye inmez (kilitli bölümler dahil)", !zIstek.some(function (u) { return /supabase-2/.test(u); }));
     ok("bölümler ekran dışındayken çizilmez", await Z.evaluate(function () {
       return getComputedStyle(document.querySelector("section.bolum")).contentVisibility === "auto";
@@ -270,6 +272,48 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("bölümden çıkınca Tömye sesine geçer", await B.evaluate(function () { return ortamSesi.mod === "tomye"; }));
     await B.evaluate(function () { document.querySelector("#ortamSes").click(); }); await bekle(B, 200);
     ok("ortam sesi kapanır", await B.evaluate(function () { return ortamSesi === null; }));
+
+    /* ---------- Topluluk II ---------- */
+    await B.evaluate(function () { location.hash = "#/ortakDefter"; }); await bekle(B, 1200);
+    await B.fill("[data-defter-form] textarea", "Kapının arkasında biri Kyldo dilinde fısıldıyordu.");
+    await B.click("[data-defter-form] button"); await bekle(B, 900);
+    ok("defter cümlesi sayfada", /fısıldıyordu/.test(await B.textContent("#ortakDefterAlan")));
+    await B.evaluate(function () { location.hash = "#/yazaraSor"; }); await bekle(B, 1200);
+    await B.fill("[data-soru-form] textarea", "Gırılar neden kitapları yaktı?");
+    await B.click("[data-soru-form] button"); await bekle(B, 900);
+    await A.evaluate(function () { location.hash = "#/yazaraSor"; }); await bekle(A, 1500);
+    await A.evaluate(function () { document.querySelector(".yazar-cevapla").open = true; });
+    await A.fill(".yazar-cevapla textarea", "Çünkü geçmişlerini kimsenin okumasını istemediler.");
+    await A.click("[data-soru-cevapla]"); await bekle(A, 900);
+    await B.evaluate(function () { return yazaraSorCiz(); }); await bekle(B, 700);
+    ok("yazar cevabı soranda görünür", /kimsenin okumasını/.test(await B.textContent("#yazaraSorAlan")));
+    /* kulüp, eşitlemenin yazdığı arşivci kişiliğidir: cihazdaki hesabın kişiliğini sunucuya gönder */
+    const bKulup = await B.evaluate(function () { return liderlikGonder(true).then(function () { return arsivciKisilik().ad; }); });
+    await bekle(B, 600);
+    ok("kulüp eşitlemeyle sunucuya yazılır", (await sahte.kokSorgu("select kisilik from public.istatistikler s join auth.users u on u.id = s.id where u.email = 'b@ornek.test'")).rows[0].kisilik === bKulup, bKulup);
+    await B.evaluate(function () { location.hash = "#/kulup"; }); await bekle(B, 1200);
+    await B.fill("[data-kulup-form] input", "Karanlık Ruhlar, bu hafta arşivi bitiriyoruz.");
+    await B.click("[data-kulup-form] button"); await bekle(B, 900);
+    ok("kulüp duvarına yazılır", /arşivi bitiriyoruz/.test(await B.textContent("#kulupAlan")));
+    await A.evaluate(function () { location.hash = "#/okurBulmaca"; }); await bekle(A, 1200);
+    await A.evaluate(function () { document.querySelector("#okurBulmacaAlan details").open = true; });
+    await A.fill("#obCevap", "buz"); await A.click("[data-ob-form] button"); await bekle(A, 900);
+    await B.evaluate(function () { location.hash = "#/okurBulmaca"; }); await bekle(B, 1200);
+    ok("okur bulmacası Kyldo yazısıyla görünür", await B.locator(".ob-kart .yz-hece").count() > 0);
+    await B.fill("[data-ob-coz] input", "BUZ"); await B.click("[data-ob-coz] button"); await bekle(B, 900);
+    ok("okur bulmacası çözülür", /Çözdün/.test(await B.textContent("#okurBulmacaAlan")));
+
+    /* davet: yeni gelen, davet bağlantısıyla hesap açar */
+    const D = await cihaz("davetli");
+    await D.goto(adres + "/?davet=ayse#/arsiv"); await bekle(D, 1000);
+    ok("davet adresten alınıp saklanır", await D.evaluate(function () { return localStorage.getItem("tentiforapp_davet") === "ayse" && location.search === ""; }));
+    await D.click("#hesapBtn"); await D.click('#perde [data-hesap-pencere="kayit"]');
+    await D.fill("#hKayitAd", "Davetli"); await D.fill("#hKayitKullanici", "davetli"); await D.fill("#hKayitEposta", "d@ornek.test"); await D.fill("#hKayitSifre", "tomye-2026");
+    await D.click('[data-hesap-form="kayit"] button[type=submit]'); await bekle(D, 800);
+    await D.goto(adres + "/?code=" + encodeURIComponent("d@ornek.test") + "&hesap=onay#/hesap"); await bekle(D, 3000);
+    ok("davet sunucuda kaydedilir", (await sahte.kokSorgu("select count(*)::int n from public.davetler d join public.profiller p on p.id = d.davet_eden where p.kullanici_adi = 'ayse'")).rows[0].n === 1);
+    ok("hesapta davet kutusu", await D.locator(".davet-kutu").count() === 1);
+    await D.close();
 
     /* ---------- 5. hata bildirimi ---------- */
     await B.evaluate(function () { window.__hataYereldeGonder = true; window.hataGonder({ baslik: "Hata", mesaj: "test hatası", yigin: "a.js:1" }); });

@@ -20,14 +20,14 @@ const GEZINME = [
 
   { id: "okuma", ad: "Okuma", ikon: "▧", bolumler: [
     ["sira", "Nereden başlamalı"], ["roman", "Roman"], ["olaylar", "Olaylar"],
-    ["hikaye", "Gece Vardiyası"], ["kisaHikayeler", "Kısa Hikâyeler"] ] },
+    ["hikaye", "Gece Vardiyası"], ["kisaHikayeler", "Kısa Hikâyeler"], ["ortakDefter", "Kütüphane Defteri"] ] },
 
   { id: "belgeler", ad: "Belgeler", ikon: "▨", bolumler: [
     ["mektuplar", "Mektuplar"], ["alintilar", "Alıntılar"], ["notlar", "Yazar notları"],
     ["sohbet", "Karakter sohbeti"] ] },
 
   { id: "oyunlar", ad: "Oyunlar", ikon: "▩", bolumler: [
-    ["oyunlar", "Yedi oyun"], ["yarislar", "Yarışlar"], ["av", "Arşiv avı"], ["liderlik", "Liderlik"], ["galeri", "Galeri"], ["bag", "Oyuna taşı"] ] },
+    ["oyunlar", "Yedi oyun"], ["yarislar", "Yarışlar"], ["av", "Arşiv avı"], ["kulup", "Kulübün"], ["okurBulmaca", "Okur bulmacaları"], ["liderlik", "Liderlik"], ["galeri", "Galeri"], ["bag", "Oyuna taşı"] ] },
 
   { id: "testler", ad: "Testler", ikon: "▪", bolumler: [
     ["test", "Hangi karaktersin?"], ["kimlik", "Kimlik Sınavı"] ] },
@@ -38,7 +38,7 @@ const GEZINME = [
 
   { id: "proje", ad: "Proje", ikon: "▬", bolumler: [
     ["delilik", "Delilik"], ["yapimlar", "Yapımlar"], ["basin", "Basın kiti"],
-    ["moodboard", "Moodboard"], ["degisiklik", "Değişiklik günlüğü"] ] },
+    ["moodboard", "Moodboard"], ["yazaraSor", "Yazara sor"], ["degisiklik", "Değişiklik günlüğü"] ] },
 
   { id: "sen", ad: "Sen", ikon: "▭", bolumler: [
     ["hesap", "Hesabın"], ["arsivci", "Arşivci kartın"], ["defter", "Defterin"], ["basarim", "Başarımlar"],
@@ -316,7 +316,7 @@ const GEC_CIZILENLER = {
   olaylar: "olaylarCiz", kisaHikayeler: "kisaHikayelerCiz", dosyalar: "dosyalarCiz",
   hikaye: "hikayeCiz", defter: "defterCiz", arsivci: "arsivciCiz",
   bag: "bagCiz", sira: "siraCiz", basarim: "basarimCiz",
-  degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz", yarislar: "yarislarCiz", claudeEvren: "claudeEvrenCiz", av: "avCiz", kartpostal: "kartpostalCiz",
+  degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz", yarislar: "yarislarCiz", claudeEvren: "claudeEvrenCiz", av: "avCiz", kartpostal: "kartpostalCiz", ortakDefter: "ortakDefterCiz", yazaraSor: "yazaraSorCiz", kulup: "kulupCiz", okurBulmaca: "okurBulmacaCiz",
 };
 
 const cizildi = {};

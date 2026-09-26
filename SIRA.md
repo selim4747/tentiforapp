@@ -19,11 +19,11 @@ Yayına girmez (scripts/paketle.mjs bu dosyayı kopyalamaz). Biten madde silinir
 10. [x] **Ortam sesi** — sayfaya göre tarayıcıda üretilen ses, varsayılan kapalı.
 
 ## Topluluk
-11. [ ] **Kütüphane Defteri** — herkes günde tek cümle ekler, cümleler oylanır; haftanın en iyi zinciri bölüm olarak arşive girer.
-12. [ ] **Yazara sor** — okur soruları + oylama; panelden cevap; cevaplar Yazar Notları'na, soran rozet alır.
-13. [ ] **Kulüp duvarı** — her kişilik kulübüne kısa mesaj panosu ve haftalık kulüp hedefi.
-14. [ ] **Okur bulmacaları** — kullanıcılar Kyldo/isim bulmacası yazar; yazan, çözüldükçe XP kazanır.
-15. [ ] **Davet ve rehberlik** — kişisel davet bağlantısı; gelen ilk haftasını tamamlarsa "Rehber" ve "Çırak" rozetleri.
+11. [x] **Kütüphane Defteri** — herkes günde tek cümle ekler, cümleler oylanır; haftanın en iyi zinciri bölüm olarak arşive girer.
+12. [x] **Yazara sor** — okur soruları + oylama; panelden cevap; cevaplar Yazar Notları'na, soran rozet alır.
+13. [x] **Kulüp duvarı** — her kişilik kulübüne kısa mesaj panosu ve haftalık kulüp hedefi.
+14. [x] **Okur bulmacaları** — kullanıcılar Kyldo/isim bulmacası yazar; yazan, çözüldükçe XP kazanır.
+15. [x] **Davet ve rehberlik** — kişisel davet bağlantısı; gelen ilk haftasını tamamlarsa "Rehber" ve "Çırak" rozetleri.
 
 ## Kullanıcıyı geri getiren
 16. [ ] **Tömye Yılım** — Tömye yılı dönünce kişiye özel paylaşılabilir özet kartı.
