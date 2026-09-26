@@ -15,7 +15,8 @@ function b64urlBaytUzunluk(s) { return Buffer.from(String(s).replace(/-/g, "+").
 
 export async function tarayiciTestleri({ adres, veritabani, dizin }) {
   const sahte = yeniSahte(veritabani);
-  const hesapKod = readFileSync(dizin + "/js/28-hesap.js", "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL);
+  /* yayın paketi tek dosya (js/uygulama.js): hesabın Supabase adresi test sunucusuna çevrilir */
+  const hesapKod = readFileSync(dizin + "/js/uygulama.js", "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL);
   const hatalar = [];
   let gecen = 0;
   const ok = function (ad, kosul, ek) {
@@ -34,7 +35,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     if (ad !== "yenilikler") {
       await ctx.addInitScript(function () { try { localStorage.setItem("tentiforapp_hesap_hatirlat", JSON.stringify({ kapat: true })); } catch (e) { /* yok */ } });
     }
-    await ctx.route(/\/js\/28-hesap\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: hesapKod }); });
+    await ctx.route(/\/js\/uygulama\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: hesapKod }); });
     await ctx.route(TEST_URL + "/**", function (r) { return sahte.isle(r); });
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, function (r) { return r.abort(); });
     const p = await ctx.newPage();
@@ -1082,8 +1083,9 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await N.evaluate(function () { HT.panel = true; haritaPanelCiz(); });
     ok("katman panelinde Yolculuklar", /Gırçık · 6 gün/.test(await N.textContent("#htPanel .gzk-panel")) && /Hıbır · 7 gün/.test(await N.textContent("#htPanel .gzk-panel")));
     await N.evaluate(function () { HT.panel = false; haritaTamKapat(); });
-    ok("Tömye haritasında bu bölüm yok (kanon karakterlerin kendi yol aracı var)", await N.evaluate(function () {
-      const t = veri.haritalar.find(function (h) { return h.id === "tomye"; }); return gzkKisiListesi(t) === null;
+    ok("Tömye ve gezegenleri aynı çizelgeyi kullanır (karakterler panelden eklenir)", await N.evaluate(function () {
+      const t = veri.haritalar.find(function (h) { return h.id === "tomye"; }); const k = gzkKaynak(t);
+      return !!k && k.kisiler === veri.karakterler && !k.karakterEkle && k.haritalar.some(function (h) { return h.id === "ax24"; });
     }));
 
     /* yönetici: karakter ekler, adını yazar, şehir şehir yol çizer */
@@ -1105,6 +1107,115 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("yeni karakter Kişiler sekmesinde, yolculuk düğmesiyle", /Deneme Yolcu/.test(await N.textContent("#claudeEvrenAlan .ce-govde")) && await N.locator("[data-ce-gezi]").count() === 3);
     await N.evaluate(function () { veri.claudeEvreni.kisiler.pop(); window.yoneticiAcik = window.__yonCE; location.hash = "#/arsiv"; }); await bekle(N, 300);
 
+    /* ---------- 1.15: etiketler, çizgi ve ölçek, şehir, ağ, çizelge, canlı yolculuk, kart, Tömye, denetim ---------- */
+    ok("yakın yerlerin adları üst üste binmez (sığmayanın adı dokununca)", await N.evaluate(function () {
+      const svg = evrenHaritaSvg({ yerler: [{ id: "a", ad: "Uzun Adlı Birinci Şehir", tur: "Şehir", x: 50, y: 50 }, { id: "b", ad: "Uzun Adlı İkinci Şehir", tur: "Şehir", x: 51, y: 50.5 },
+        { id: "c", ad: "Üçüncü Uzun Adlı Yer", x: 50.5, y: 51 }] }, {});
+      const d = document.createElement("div"); d.innerHTML = svg;
+      const yazilar = Array.prototype.map.call(d.querySelectorAll("text"), function (t) { return [Number(t.getAttribute("x")), Number(t.getAttribute("y")), t.getAttribute("text-anchor")].join(","); });
+      return yazilar.length >= 2 && new Set(yazilar).size === yazilar.length && d.querySelectorAll("text").length + d.querySelectorAll("g > title").length === 3;
+    }));
+    await N.evaluate(function () { location.hash = "#/claude"; }); await bekle(N, 700);
+    await N.evaluate(function () { haritaTamAc({ evren: "claude" }); }); await bekle(N, 900);
+    ok("Claude haritasında Şafak Yolu ve Tanık Ayna zinciri çizgileri, ölçek (ışık günü)", await N.evaluate(function () {
+      return document.querySelectorAll("#htSvg .hm-cizgi").length === 2 && /1,3 ışık günü/.test(document.querySelector("#htSvg .hm-olcek").textContent);
+    }));
+    await N.evaluate(function () { HT.panel = false; haritaPanelCiz(); haritaSecili = "cl_sebir"; haritaBilgiCiz(); }); await bekle(N, 150);
+    await N.click("[data-sh-kanon]"); await bekle(N, 200);
+    ok("Sebir'in şehir planı: Aynacılar Loncası, ilk ayna, Sırep'in Sahnesi (okur salt okunur)", await N.evaluate(function () {
+      const b = SH.sehir.binalar.map(function (x) { return x.ad; }).join("|");
+      return SH.salt && /Aynacılar Loncası/.test(b) && /Tanık Ayna/.test(b) && /Sırep'in Sahnesi/.test(b) && SH.sehir.sokaklar.length >= 3;
+    }));
+    await N.keyboard.press("Escape"); await bekle(N, 100);
+    await N.evaluate(function () { window.__yonCE2 = window.yoneticiAcik; window.yoneticiAcik = function () { return true; }; haritaSecili = null; haritaDuzenAc(true); }); await bekle(N, 150);
+    await N.click('#htDuzen [data-he="arac"]'); await bekle(N, 100);
+    await N.click('#htDuzen [data-he-tur="nehir"]'); await bekle(N, 100);
+    await N.mouse.click(150, 520); await N.mouse.click(220, 600); await bekle(N, 150);
+    await N.click('#htDuzen [data-he="bitir"]'); await bekle(N, 150);
+    await N.fill("#htDuzen [data-he-ad]", "Deneme Nehri"); await bekle(N, 100);
+    ok("yönetici sitenin haritasına nehir çizer, adlandırır", await N.evaluate(function () {
+      const c = aktifHarita().cizgiler; const s = c[c.length - 1]; return c.length === 3 && s.tur === "nehir" && s.ad === "Deneme Nehri" && s.noktalar.length === 2 && HT.kirli > 0;
+    }));
+    await N.click('#htDuzen [data-he="sil"]'); await bekle(N, 100);
+    ok("çizgi silinir", await N.evaluate(function () { return aktifHarita().cizgiler.length === 2; }));
+    await N.evaluate(function () { haritaDuzenAc(false); HT.kirli = 0; window.yoneticiAcik = window.__yonCE2; haritaTamKapat(); }); await bekle(N, 200);
+
+    await N.evaluate(function () { ceSekme = "kisiler"; claudeEvrenCiz(); }); await bekle(N, 200);
+    await N.click('.ce-ag [data-ia-dugum="cl_umut"]'); await bekle(N, 150);
+    ok("Claude'un evreni: ilişki ağı, kişiye dokununca bağları", /Tövbe — yıllarca taşıdı/.test(await N.textContent(".ce-ag .ia-yazi")) && await N.locator(".ce-ag .ia-bag.on").count() >= 3);
+    await N.evaluate(function () { ceSekme = "tarih"; claudeEvrenCiz(); }); await bekle(N, 200);
+    ok("Claude'un evreni: kronolojiden zaman çizelgesi (notu ayrı)", await N.locator("#claudeEvrenAlan .zc-olay").count() === 10 &&
+      /Aynacılar bu tarihin/.test(await N.textContent("#claudeEvrenAlan .zc")) && /Bugün/.test(await N.textContent("#claudeEvrenAlan .zc-olay:last-child")));
+    await N.evaluate(function () { ceSekme = "gezi"; claudeEvrenCiz(); }); await bekle(N, 200);
+    await N.selectOption("#ceGezi [data-gz-kisi]", { label: "Hıbır (8)" }); await bekle(N, 200);
+    const hibirGun = await N.evaluate(function () { const b = gzBaglam(); return gzCanliGun(b.kisiler.find(function (x) { return x.i === b.secili; }).yol, { tur: "dongu" }, b.simdiGun()).gun; });
+    ok("canlı yolculuk: Hıbır döngüde, “Şu an” evren saatiyle", new RegExp("Şu an: " + hibirGun + "\\. gün").test(await N.textContent("#ceGezi .gz-canli")));
+    await N.click("#ceGezi [data-gz-simdi]"); await bekle(N, 150);
+    ok("“Şu ana git” o güne gider", await N.evaluate(function (g) { return GZ.gun === g; }, hibirGun));
+    const [kartInd] = await Promise.all([N.waitForEvent("download"), N.click("#ceGezi [data-gz-kart]")]);
+    ok("yolculuk kartı (1080×1920) iner", /-yolculuk\.png$/.test(kartInd.suggestedFilename()));
+    ok("canlı hesap: döngü, başlangıç, henüz başlamadı, bitti", await N.evaluate(function () {
+      const y = [{ yer: "a", gun: 1 }, { yer: "b", gun: 2 }, { yer: "c", gun: 3 }];
+      return gzCanliGun(y, { tur: "dongu" }, 4).gun === 2 && gzCanliGun(y, { tur: "baslangic", gun: 10 }, 11).gun === 2 &&
+        gzCanliGun(y, { tur: "baslangic", gun: 10 }, 8).once === 2 && gzCanliGun(y, { tur: "baslangic", gun: 10 }, 20).bitti === true;
+    }));
+
+    /* kendi evreni: ağ, çizelge, canlı, saat, dosya */
+    const agEv = await N.evaluate(function () {
+      const id = evrenYeniKur();
+      evrenBenimDegistir(id, function (e) {
+        e.ad = "Ağ Evreni"; e.kisiler = [{ ad: "Ari" }, { ad: "Bela" }, { ad: "Cem" }];
+        e.tarih = [{ zaman: "Yıl 1", olay: "Kuruluş" }, { zaman: "Yıl 40", olay: "Savaş" }];
+        e.harita = { yerler: [{ id: "a", ad: "Ada", x: 20, y: 20 }, { id: "b", ad: "Bora", x: 60, y: 40 }] };
+      });
+      location.hash = "#/ev/benim/" + id; return id;
+    }); await bekle(N, 700);
+    await N.click('#evrenSayfa [data-evs-sekme="ag"]'); await bekle(N, 200);
+    await N.selectOption("#iaA", "Ari"); await N.selectOption("#iaB", "Cem"); await N.fill("#iaEtiket", "kardeş"); await N.click("#evrenSayfa [data-ia-ekle]"); await bekle(N, 200);
+    ok("kendi evreninde ilişki kurulur, ağda ve dosyada; çizelge Tarih'ten", await N.evaluate(function (id) {
+      const e = evrenBenimBul(id); const x = fanMetindenEser(fanDosyaHtml(e));
+      return e.baglar.length === 1 && x.baglar[0].etiket === "kardeş" && document.querySelectorAll("#evrenSayfa .ia-bag").length === 1 && document.querySelectorAll("#evrenSayfa .zc-olay").length === 2;
+    }, agEv));
+    await N.click('#evrenSayfa [data-ia-sil="0"]'); await bekle(N, 150);
+    ok("bağ silinir", await N.evaluate(function (id) { return !evrenBenimBul(id).baglar; }, agEv));
+    await N.evaluate(function (id) { evrenBenimDegistir(id, function (e) { e.kisiler[0].yol = [{ g: "", yer: "a", gun: 1 }, { g: "", yer: "b", gun: 2 }]; }); EVS.sekme = "harita"; evrenSayfaCiz(); }, agEv); await bekle(N, 200);
+    await N.selectOption("#evrenSayfa [data-gz-canli]", "dongu"); await bekle(N, 150);
+    await N.fill("#evrenSayfa [data-gz-saat]", "12"); await N.dispatchEvent("#evrenSayfa [data-gz-saat]", "change"); await bekle(N, 150);
+    ok("kendi evreninde canlı yolculuk ve evren saati; dosyada kalır", await N.evaluate(function (id) {
+      const e = evrenBenimBul(id); const x = fanMetindenEser(fanDosyaHtml(e));
+      return e.kisiler[0].canli.tur === "dongu" && e.saat.gunSaat === 12 && x.kisiler[0].canli.tur === "dongu" && x.saat.gunSaat === 12 && !!document.querySelector("#evrenSayfa .gz-canli");
+    }, agEv));
+    await N.evaluate(function () { evrenSayfaKapat(); location.hash = "#/arsiv"; }); await bekle(N, 200);
+
+    /* Tömye: karakterlerin gün gün yolu (yıl korunur) */
+    await N.evaluate(function () {
+      window.__yonT = window.yoneticiAcik; window.yoneticiAcik = function () { return true; };
+      const k = veri.karakterler[0]; window.__tYol = k.yol; k.yol = [{ harita: "tomye", yer: veri.haritalar[0].yerler[1].id, yil: 7 }];
+      location.hash = "#/harita";
+    }); await bekle(N, 800);
+    await N.evaluate(function () { haritaSeciliId = "tomye"; haritaCiz(); }); await bekle(N, 300);
+    await N.click(".gzk-satir [data-gzk-ac]"); await bekle(N, 300);
+    const tYer = await N.evaluate(function () { return veri.haritalar[0].yerler.filter(function (y) { return y.tur !== "Kıta"; })[2].id; });
+    await N.evaluate(function () { GZK.secili = 0; gzkCiz(); });
+    await N.click('#geziSayfa [data-gz-yer="' + tYer + '"]'); await bekle(N, 150);
+    ok("Tömye karakterine gün gün adım; eski adımın yılı korunur, “+ Karakter” yok", await N.evaluate(function (y) {
+      const l = veri.karakterler[0].yol;
+      return l.length === 2 && l[0].yil === 7 && l[0].gun === 1 && l[1].harita === "tomye" && l[1].yer === y && l[1].gun === 2 && !document.querySelector("#geziSayfa [data-gzk-yeni]");
+    }, tYer));
+    await N.keyboard.press("Escape"); await bekle(N, 100);
+    await N.evaluate(function () { const k = veri.karakterler[0]; if (window.__tYol) { k.yol = window.__tYol; } else { delete k.yol; } window.yoneticiAcik = window.__yonT; location.hash = "#/arsiv"; }); await bekle(N, 200);
+
+    ok("Kaydet öncesi denetim: kırık yol, geçit, çizgi, bağ bulunur ve düzeltilir; yayındaki veri temiz", await N.evaluate(function () {
+      if (veriDenetle().sorunlar.length) { return false; }
+      const v = JSON.parse(JSON.stringify(veri));
+      v.karakterler[0].yol = [{ harita: "tomye", yer: "yokyer" }];
+      v.haritalar[0].yerler[1].gecit = { harita: "olmayan" };
+      v.haritalar.find(function (h) { return h.id === "claude"; }).cizgiler.push({ id: "x", tur: "<b>", noktalar: [[1, 1]] });
+      v.claudeEvreni.baglar.push({ a: "cl_yok", b: "cl_umut", etiket: "x" });
+      const r = veriDenetle(v); r.sorunlar.forEach(function (s) { if (s.duzelt) { s.duzelt(); } });
+      return r.sorunlar.length === 4 && veriDenetle(v).sorunlar.length === 0 && !v.karakterler[0].yol;
+    }));
+
     ok("konuk haritası: kişinin gittiği yerler", await N.evaluate(function () {
       const l = fanEserlerim();
       l.push({ bicim: FAN_BICIM, surum: 1, tur: "hikaye", id: "hk1", baslik: "Orlan kıyıda", metin: "…", konuklar: [{ bicim: FAN_BICIM, tur: "kisi", id: "vitrin1", ad: "Orlan Gezgin", kisilik: [] }] });
@@ -1122,7 +1233,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     const kisa = await (await fetch(adres + "/dunya/")).text();
     ok("/dunya/ kendi başlığıyla ayrı sayfa", /<title>Dünya — TentiforApp<\/title>/.test(kisa) && /og:title" content="Dünya — TentiforApp"/.test(kisa) &&
       /rel="canonical" href="[^"]*\/dunya\/"/.test(kisa));
-    ok("/dunya/ yönlendirmez, uygulamanın kendisi", !/location\.replace|http-equiv="refresh"/.test(kisa) && /<base href="\/">/.test(kisa) && /js\/00-rota\.js/.test(kisa));
+    ok("/dunya/ yönlendirmez, uygulamanın kendisi", !/location\.replace|http-equiv="refresh"/.test(kisa) && /<base href="\/">/.test(kisa) && /js\/uygulama\.js/.test(kisa) && !/js\/00-rota\.js/.test(kisa));
     const man = await (await fetch(adres + "/manifest.webmanifest")).json();
     ok("manifest simgeleri", man.icons.length >= 2 && (await fetch(adres + "/" + man.icons[0].src)).ok);
 

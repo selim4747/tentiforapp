@@ -294,15 +294,44 @@ function evrenHaritaSvg(h, o) {
       '" height="4.6" fill="#fff" opacity="0.7" rx="0.6"></rect><line x1="0" y1="0" x2="10" y2="0" stroke="' + yazi + '" stroke-width="0.35"></line>' +
       '<line x1="0" y1="-0.8" x2="0" y2="0.8" stroke="' + yazi + '" stroke-width="0.3"></line><line x1="10" y1="-0.8" x2="10" y2="0.8" stroke="' + yazi + '" stroke-width="0.3"></line>' +
       '<text x="11" y="0.7" font-size="2" font-family="' + yaziTipi + '" fill="' + yazi + '">' + esc(String(ol.deger).replace(".", ",") + " " + (ol.birim || "km")) + "</text></g>" : "";
+  /* etiketler çakışmasın: önce seçili, sonra şehirler, sonra diğerleri; üst, alt, sağ, sol denenir; sığmayanın adı
+     yalnızca dokununca (title) görünür */
+  const etiketYeri = {};
+  if (!o.etiketsiz) {
+    const tum = yerler.concat(ekli);
+    const engel = tum.filter(function (y) { return !y.sekil; }).map(function (y) { return [y.x - 1.3, y.y * k - 1.3, y.x + 1.3, y.y * k + 1.3]; });
+    const oncelik = function (y) { return o.secili === y.id ? 0 : (y.sekil ? 1 : (y.tur === "Şehir" ? 2 : 3)); };
+    const sira = tum.slice().sort(function (a, b) { return oncelik(a) - oncelik(b); });
+    const cakisir = function (r) { return engel.some(function (e) { return r[0] < e[2] && r[2] > e[0] && r[1] < e[3] && r[3] > e[1]; }); };
+    sira.forEach(function (y) {
+      const X = y.x, Y = y.y * k;
+      const w = Math.max(2, String(etiket(y.ad || "—")).length * 1.25);
+      const adaylar = [[0, -2.1, "middle"], [0, 3.9, "middle"], [2, 0.8, "start"], [-2, 0.8, "end"], [1.4, -1.8, "start"], [-1.4, -1.8, "end"], [1.4, 3.4, "start"], [-1.4, 3.4, "end"]];
+      const kutu = function (a) {
+        const x0 = a[2] === "middle" ? X - w / 2 : (a[2] === "start" ? X + a[0] : X + a[0] - w);
+        return [x0, Y + a[1] - 2, x0 + w, Y + a[1] + 0.5];
+      };
+      let secilen = null;
+      for (let i = 0; i < adaylar.length; i++) {
+        const r = kutu(adaylar[i]);
+        if (r[0] < -0.5 || r[2] > 100.5 || r[1] < -0.5 || r[3] > 70.5) { continue; }
+        if (!cakisir(r)) { secilen = adaylar[i]; break; }
+      }
+      if (!secilen && o.secili === y.id) { secilen = adaylar[0]; }
+      if (secilen) { engel.push(kutu(secilen)); etiketYeri[y.id] = secilen; } else { etiketYeri[y.id] = null; }
+    });
+  }
   const isaret = function (y, katki) {
     const sec = o.secili === y.id;
+    const ey = etiketYeri[y.id];
     return '<g class="evh-yer' + (sec ? " secili" : "") + (katki ? " katki" : "") + '" data-evh-yer="' + esc(y.id) + '"' + (katki ? ' data-evh-katki="1"' : "") +
       ' transform="translate(' + y.x + "," + (y.y * k).toFixed(2) + ')">' +
       '<circle r="' + (sec ? 1.6 : 1.1) + '" fill="' + (y.tur === "Şehir" ? "#1C5C96" : "#3D4A57") + '" stroke="#fff" stroke-width="0.35"' + (katki ? ' stroke-dasharray="0.6 0.4"' : "") + "></circle>" +
       '<circle r="3.2" fill="transparent"></circle>' +
       (y.gecit ? '<circle r="2.1" fill="none" stroke="#7A4FB5" stroke-width="0.35" stroke-dasharray="0.6 0.4"><title>Geçit</title></circle>' : "") +
       (y.sehir ? '<rect x="1.1" y="-2.7" width="1.7" height="1.7" rx="0.2" fill="#8A6A3E" stroke="#fff" stroke-width="0.2"><title>Şehir haritası var</title></rect>' : "") +
-      (o.etiketsiz ? "" : '<text y="-2.1" text-anchor="middle" font-size="2.3" font-family="' + yaziTipi + '" fill="' + yazi + '" stroke="' + hale + '" stroke-width="0.5" paint-order="stroke">' + esc(etiket(y.ad || "—")) + "</text>") + "</g>";
+      (o.etiketsiz ? "" : (ey ? '<text x="' + ey[0] + '" y="' + ey[1] + '" text-anchor="' + ey[2] + '" font-size="2.3" font-family="' + yaziTipi + '" fill="' + yazi + '" stroke="' + hale + '" stroke-width="0.5" paint-order="stroke">' + esc(etiket(y.ad || "—")) + "</text>"
+        : "<title>" + esc(y.ad || "—") + "</title>")) + "</g>";
   };
   const taslak = (o.cizim && o.cizim.length)
     ? '<polyline points="' + o.cizim.map(function (n) { return n[0] + "," + (n[1] * k).toFixed(2); }).join(" ") + '" fill="none" stroke="#A33" stroke-width="0.4" stroke-dasharray="1 0.5"></polyline>' +

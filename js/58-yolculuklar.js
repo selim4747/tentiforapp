@@ -1,45 +1,93 @@
-/* Sitenin kendi karakter listesi olan evrenlerinde karakterlerin gün gün yolculukları.
-   Şimdilik Claude'un evreni (kanon dışı, özellikleri örnekleyen evren): yol doğrudan karakterde durur,
-   claudeEvreni.kisiler[i].yol = [{ yer, gun, zaman, not }] (yer: evrenin haritasındaki yer).
-   Yönetici karakter ekler ve yolunu çizer (Kaydet ile yayına girer); herkes gün gün izler.
-   Pencere olarak açılır (#geziSayfa) ya da sayfaya gömülür (Claude'un evreni → Yolculuklar).
-   Tömye'nin kanon karakterleri kendi yol aracını kullanır (harita → Yol çiz). */
+/* Sitenin evrenlerinde karakterlerin gün gün yolculukları (kendi evren dosyalarındaki çizelgenin sitedeki eşi).
+   - Claude'un evreni (kanon dışı, özellikleri örnekleyen evren): claudeEvreni.kisiler[i].yol = [{ yer, gun, zaman, not }].
+     Yönetici buradan karakter de ekler.
+   - Tentiforverse (Tömye ve gezegenleri): veri.karakterler[i].yol = [{ harita, yer, yil, gun, zaman, not }] — haritadaki
+     "Yol çiz" aracıyla aynı veri; burada gün gün kurulur ve izlenir. Haritalar, kendi evrenlerdeki gezegenler gibi davranır.
+   Yönetici çizer (Kaydet ile yayına girer); herkes gün gün izler.
+   Pencere olarak açılır (#geziSayfa) ya da sayfaya gömülür (Claude'un evreni → Yolculuklar). */
 
-let GZK = null;   /* { harita: id, secili: karakter sırası, kap: gömülüyse kabın seçicisi, kirli, durum } */
+let GZK = null;   /* { harita: gösterilen harita, secili: karakter sırası, kap: gömülüyse kabın seçicisi, kirli, durum } */
 
 function gzkHarita(id) { return (veri.haritalar || []).find(function (x) { return x.id === id; }) || null; }
 
 function gzkYonetici() { return typeof haritaYonetici === "function" && haritaYonetici(); }
 
-/** Haritanın evrenine ait karakter listesi (yoksa null: o haritada yolculuk bölümü yok). */
-function gzkKisiListesi(h) {
+function gzkHaritaAcik(x) {
+  return gzkYonetici() || typeof kanonEvrenErisimi !== "function" || kanonEvrenErisimi(x.id);
+}
+
+/** Haritanın evreni: karakterler nerede, yolları hangi biçimde (yoksa null: bu haritada yolculuk bölümü yok). */
+function gzkKaynak(h) {
+  if (!h) { return null; }
   const ce = veri.claudeEvreni;
-  if (h && ce && ce.harita === h.id) { if (!Array.isArray(ce.kisiler)) { ce.kisiler = []; } return ce.kisiler; }
+  if (ce && ce.harita === h.id) {
+    if (!Array.isArray(ce.kisiler)) { ce.kisiler = []; }
+    return {
+      haritalar: [h], kisiler: ce.kisiler, karakterEkle: true,
+      gorunur: function () { return true; },
+      oku: function (k) { return (k.yol || []).map(function (a) { return Object.assign({}, a, { g: h.id }); }); },
+      yaz: function (k, yol) {
+        const l = yol.map(function (a) { const o = { yer: a.yer }; if (a.gun >= 1) { o.gun = a.gun; } o.zaman = a.zaman || ""; o.not = a.not || ""; return o; });
+        if (l.length) { k.yol = l; } else { delete k.yol; }
+      }
+    };
+  }
+  if ((h.ustEvren || h.id) === "tomye") {
+    return {
+      haritalar: (veri.haritalar || []).filter(function (x) { return (x.ustEvren || x.id) === "tomye"; }),
+      kisiler: veri.karakterler || [], karakterEkle: false,
+      gorunur: function (k) { return !k.gizli || gzkYonetici() || (typeof katmanAcik === "function" && katmanAcik(k.gizli)); },
+      oku: function (k) {
+        return (k.yol || []).map(function (a) { return { g: a.harita, yer: a.yer, gun: a.gun, zaman: a.zaman || "", not: a.not || "", yil: a.yil }; });
+      },
+      yaz: function (k, yol) {
+        const l = yol.map(function (a) {
+          const o = { harita: a.g || "tomye", yer: a.yer };
+          if (typeof a.yil === "number" && isFinite(a.yil)) { o.yil = a.yil; }
+          if (a.gun >= 1) { o.gun = a.gun; }
+          if (a.zaman) { o.zaman = a.zaman; }
+          if (a.not) { o.not = a.not; }
+          return o;
+        });
+        if (l.length) { k.yol = l; } else { delete k.yol; }
+      }
+    };
+  }
   return null;
 }
 
+function gzkKisiListesi(h) { const k = gzkKaynak(h); return k ? k.kisiler : null; }
+
 /** Okurun görebildiği yer mi (kilitli ya da sisli yerler okura gösterilmez). */
 function gzkYerGorunur(h, y) {
-  if (!y) { return false; }
+  if (!y || !h) { return false; }
   if (gzkYonetici()) { return true; }
+  if (!gzkHaritaAcik(h)) { return false; }
   return typeof haritaYerDurumu !== "function" || haritaYerDurumu(h, y, null) === "goster";
+}
+
+function gzkYerBul(kaynak, a) {
+  const h = kaynak.haritalar.find(function (x) { return x.id === a.g; });
+  const y = h && (h.yerler || []).find(function (x) { return x.id === a.yer; });
+  return gzkYerGorunur(h, y) ? y : null;
 }
 
 /** Çizelgedeki karakterler: okur yalnızca yolu olanları görür (gizli yerler atlanır), yönetici hepsini. */
 function gzkKarakterler(h) {
-  const l = gzkKisiListesi(h);
-  if (!l) { return []; }
+  const kaynak = gzkKaynak(h);
+  if (!kaynak) { return []; }
   const yon = gzkYonetici();
-  return l.map(function (k, i) {
-    const yol = (k.yol || []).filter(function (a) { return yon || gzkYerGorunur(h, (h.yerler || []).find(function (y) { return y.id === a.yer; })); });
-    return { i: i, ad: k.ad || "Adsız", yol: yol };
-  }).filter(function (x) { return yon || x.yol.length; });
+  return kaynak.kisiler.map(function (k, i) {
+    if (!k || !kaynak.gorunur(k)) { return null; }
+    const yol = kaynak.oku(k).filter(function (a) { return yon || gzkYerBul(kaynak, a); });
+    return { i: i, ad: k.ad || "Adsız", yol: yol, canli: k.canli || null };
+  }).filter(function (x) { return x && (yon || x.yol.length); });
 }
 
 function gzkBaglam() {
   const h = GZK && gzkHarita(GZK.harita);
-  const liste = gzkKisiListesi(h);
-  if (!h || !liste) { return null; }
+  const kaynak = gzkKaynak(h);
+  if (!h || !kaynak) { return null; }
   const yon = gzkYonetici();
   const l = gzkKarakterler(h);
   /* ilk açılışta yolu olan ilk karakter */
@@ -47,29 +95,46 @@ function gzkBaglam() {
     const yollu = l.find(function (x) { return x.yol.length; });
     GZK.secili = (yollu || l[0]).i;
   }
-  const k = liste[GZK.secili];
+  const k = kaynak.kisiler[GZK.secili];
+  const haritalar = kaynak.haritalar.filter(gzkHaritaAcik);
+  const yerler = [];
+  haritalar.forEach(function (x) {
+    (x.yerler || []).forEach(function (y) { if (y.tur !== "Kıta" && gzkYerGorunur(x, y)) { yerler.push({ id: y.id, ad: y.ad, g: x.id }); } });
+  });
   return {
     kisiler: l, secili: l.length ? GZK.secili : null, duzenle: yon,
-    yerler: (h.yerler || []).filter(function (y) { return y.tur !== "Kıta" && gzkYerGorunur(h, y); }).map(function (y) { return { id: y.id, ad: y.ad, g: "" }; }),
-    gruplar: [{ g: "", ad: h.ad }],
-    yerBul: function (a) { const y = (h.yerler || []).find(function (x) { return x.id === a.yer; }); return gzkYerGorunur(h, y) ? y : null; },
-    gAd: function () { return ""; },
+    evrenAd: (kaynak.haritalar[0] && (kaynak.haritalar[0].evrenAdi || kaynak.haritalar[0].ad)) || "",
+    yerler: yerler,
+    gruplar: haritalar.map(function (x) { return { g: x.id, ad: x.ad }; }),
+    yerBul: function (a) { return gzkYerBul(kaynak, a); },
+    gAd: function (g) { if (haritalar.length < 2) { return ""; } const x = gzkHarita(g); return x ? x.ad : ""; },
     sec: function (i) { GZK.secili = i; },
+    /* evren saati: sitenin takvimi (Tömye) ya da haritanın kendi gün uzunluğu (Şomdo'da 40 saat) */
+    simdiGun: function () {
+      const m = typeof evrenMeta === "function" ? evrenMeta(gzkHarita(GZK.harita)) : {};
+      return gzEvrenGunu(typeof haritaEpok === "function" ? haritaEpok() : Date.parse("2000-01-01"), m.gunSaat || (veri.takvim || {}).gunSaat || 24);
+    },
+    canliYaz: function (c) {
+      if (!yon) { return; }
+      const kk = kaynak.kisiler[GZK.secili];
+      if (!kk) { return; }
+      if (c) { kk.canli = c; } else { delete kk.canli; }
+      gzkKirli();
+    },
     degistir: function (fn) {
       if (!yon) { return; }
-      const kk = liste[GZK.secili];
+      const kk = kaynak.kisiler[GZK.secili];
       if (!kk) { return; }
-      if (!Array.isArray(kk.yol)) { kk.yol = []; }
-      fn(kk.yol);
-      kk.yol.forEach(function (a) { delete a.g; });
-      if (!kk.yol.length) { delete kk.yol; }
+      const yol = kaynak.oku(kk);
+      fn(yol);
+      kaynak.yaz(kk, yol);
       gzkKirli();
     },
     ciz: gzkCiz,
-    ustEk: yon ? '<button type="button" class="dugme dugme-sade" data-gzk-yeni>+ Karakter</button>' +
+    ustEk: yon && kaynak.karakterEkle ? '<button type="button" class="dugme dugme-sade" data-gzk-yeni>+ Karakter</button>' +
       (k ? '<div class="gzk-ad"><input class="kod-giris arac-giris" data-gzk-alan="ad" maxlength="60" value="' + kacir(k.ad || "") + '" aria-label="Karakterin adı" placeholder="Adı">' +
         '<input class="kod-giris arac-giris" data-gzk-alan="unvan" maxlength="80" value="' + kacir(k.unvan || "") + '" aria-label="Unvanı" placeholder="Unvanı (ör. Kervan önderi)"></div>' : "") : "",
-    bos: yon ? "Bu evrende henüz karakter yok. “+ Karakter” ile ekle; sonra şehirlere gün gün dokun." : ""
+    bos: yon ? (kaynak.karakterEkle ? "Bu evrende henüz karakter yok. “+ Karakter” ile ekle; sonra şehirlere gün gün dokun." : "Karakterleri paneldeki Karakterler bölümünden eklersin.") : ""
   };
 }
 
@@ -93,7 +158,7 @@ function gzkKaydet() {
 
 function gzkAc(haritaId, kisi, gun, kap) {
   const h = gzkHarita(haritaId);
-  if (!h || !gzkKisiListesi(h)) { return; }
+  if (!h || !gzkKaynak(h)) { return; }
   const eski = GZK;
   GZK = { harita: haritaId, secili: kisi === undefined || kisi === null ? -1 : kisi, kirli: eski && eski.harita === haritaId ? eski.kirli : 0, durum: "", kap: kap || null };
   GZ.bagla = gzkBaglam;
@@ -123,9 +188,18 @@ function gzkCiz() {
   if (!h) { gzkKapat(); return; }
   let s = GZK.kap ? document.querySelector(GZK.kap) : document.querySelector("#geziSayfa");
   if (GZK.kap && !s) { GZK = null; GZ.bagla = null; gzOynatDurdur(); return; }   /* gömülü olduğu sayfa kapandı */
-  const b = gzkBaglam();
+  let b = gzkBaglam();
   if (!b) { return; }
-  gzKimlik("kanon:" + GZK.harita + ":" + b.secili);
+  /* oynatıcı başka haritadaki güne gelince o harita gösterilir (Tömye → Ax-24) */
+  if (GZ.gun !== null) {
+    const kk = b.kisiler.find(function (x) { return x.i === b.secili; });
+    const j = kk ? gzSimdi(kk.yol) : -1;
+    if (j >= 0 && kk.yol[j].g && kk.yol[j].g !== GZK.harita && b.gruplar.some(function (g) { return g.g === kk.yol[j].g; })) {
+      GZK.harita = kk.yol[j].g;
+      b = gzkBaglam();
+    }
+  }
+  gzKimlik("kanon:" + (gzkKaynak(gzkHarita(GZK.harita)).haritalar[0].id) + ":" + b.secili);
   GZ.bagla = gzkBaglam;
   if (!s) {
     s = document.createElement("div");
@@ -137,17 +211,21 @@ function gzkCiz() {
     document.body.appendChild(s);
   }
   s.classList.add("gzk-kok");
-  const gorunen = (h.yerler || []).filter(function (y) { return gzkYerGorunur(h, y); });
-  window.__gzYol = gzNoktalar(b, "");
+  const h2 = gzkHarita(GZK.harita);
+  const gorunen = (h2.yerler || []).filter(function (y) { return gzkYerGorunur(h2, y); });
+  window.__gzYol = gzNoktalar(b, h2.id);
   let svg;
-  try { svg = evrenHaritaSvg({ yerler: gorunen, renk: h.renk }, {}); } finally { window.__gzYol = null; }
+  try { svg = evrenHaritaSvg({ yerler: gorunen, renk: h2.renk, cizgiler: h2.cizgiler, olcek: h2.olcek }, {}); } finally { window.__gzYol = null; }
   const kayar = s.scrollTop;
   s.innerHTML =
     (GZK.kap ? "" : '<div class="evs-ust"><button class="evs-ikon" data-gzk-kapat aria-label="Kapat" title="Kapat"><span aria-hidden="true">←</span></button>' +
-      '<div class="evs-baslik"><span class="evs-rozet">Yolculuklar' + (b.duzenle ? " · düzenliyorsun" : "") + "</span><h2>" + kacir(h.ad) + "</h2></div></div>") +
+      '<div class="evs-baslik"><span class="evs-rozet">Yolculuklar' + (b.duzenle ? " · düzenliyorsun" : "") + "</span><h2>" + kacir(h2.evrenAdi || h2.ad) + "</h2></div></div>") +
     '<div class="' + (GZK.kap ? "gzk-gomulu" : "sh-govde") + '">' +
       (b.duzenle ? '<div class="gzk-kaydet"><span class="oyun-not">' + (GZK.durum ? kacir(GZK.durum) : (GZK.kirli ? "Kaydedilmemiş değişiklik var." : "Değişiklikler bu cihazda; yayına almak için Kaydet.")) + "</span>" +
         '<button type="button" class="dugme" data-gzk-kaydet>Kaydet' + (GZK.kirli ? " (" + GZK.kirli + ")" : "") + "</button></div>" : "") +
+      (b.gruplar.length > 1 ? '<div class="gzk-haritalar" role="tablist">' + b.gruplar.map(function (g) {
+        return '<button type="button" class="evg-cip' + (g.g === GZK.harita ? " secili" : "") + '" data-gzk-harita="' + kacir(g.g) + '">' + kacir(g.ad) + "</button>";
+      }).join("") + "</div>" : "") +
       '<div class="evh-kutu gzk-harita">' + svg + "</div>" +
       (b.duzenle ? '<p class="oyun-not">İpucu: haritadaki yerlere de dokunabilirsin.</p>' : "") +
       '<section class="gz-kutu" aria-label="Yolculuk çizelgesi">' + gzGovde(b) + "</section>" +
@@ -158,7 +236,7 @@ function gzkCiz() {
 /* ---------- olaylar ---------- */
 
 document.addEventListener("click", function (ev) {
-  const h = ev.target.closest("[data-gzk-ac], [data-gzk-kapat], [data-gzk-yeni], [data-gzk-kaydet]");
+  const h = ev.target.closest("[data-gzk-ac], [data-gzk-kapat], [data-gzk-yeni], [data-gzk-kaydet], [data-gzk-harita]");
   if (!h) { return; }
   const d = h.dataset;
   if (d.gzkAc !== undefined) {
@@ -170,11 +248,13 @@ document.addEventListener("click", function (ev) {
   }
   if (!GZK) { return; }
   if (h.hasAttribute("data-gzk-kapat")) { gzkKapat(); return; }
+  if (d.gzkHarita) { gzOynatDurdur(); GZ.gun = null; GZK.harita = d.gzkHarita; gzkCiz(); return; }
   if (!gzkYonetici()) { return; }
   if (h.hasAttribute("data-gzk-kaydet")) { gzkKaydet(); return; }
   if (h.hasAttribute("data-gzk-yeni")) {
-    const liste = gzkKisiListesi(gzkHarita(GZK.harita));
-    if (!liste) { return; }
+    const kaynak = gzkKaynak(gzkHarita(GZK.harita));
+    if (!kaynak || !kaynak.karakterEkle) { return; }
+    const liste = kaynak.kisiler;
     liste.push({ id: "cl_" + Date.now().toString(36), ad: "Yeni karakter", unvan: "", ozet: "", detay: "", eklendi: new Date().toISOString().slice(0, 10) });
     GZK.secili = liste.length - 1;
     GZ.gun = null;
@@ -187,7 +267,8 @@ document.addEventListener("click", function (ev) {
 document.addEventListener("input", function (ev) {
   const t = ev.target;
   if (!t || !t.matches || !t.matches(".gzk-kok [data-gzk-alan]") || !GZK || !gzkYonetici()) { return; }
-  const k = (gzkKisiListesi(gzkHarita(GZK.harita)) || [])[GZK.secili];
+  const kaynak = gzkKaynak(gzkHarita(GZK.harita));
+  const k = kaynak && kaynak.karakterEkle ? kaynak.kisiler[GZK.secili] : null;
   if (!k) { return; }
   const alan = t.dataset.gzkAlan;
   k[alan] = String(t.value).slice(0, alan === "ad" ? 60 : 80);
@@ -209,8 +290,8 @@ document.addEventListener("click", function (ev) {
   const b = gzkBaglam();
   if (!b || !b.duzenle || b.secili === null) { return; }
   const id = g.getAttribute("data-evh-yer");
-  if (!b.yerler.some(function (y) { return y.id === id; })) { return; }
-  gzEkle(b, id, "");
+  if (!b.yerler.some(function (y) { return y.id === id && y.g === GZK.harita; })) { return; }
+  gzEkle(b, id, GZK.harita);
   gzkCiz();
 });
 
@@ -286,7 +367,7 @@ if (typeof haritaBilgiCiz === "function") {
         gzkKarakterler(h).forEach(function (x) {
           const gunler = gzGunler(x.yol);
           const bu = [];
-          x.yol.forEach(function (a, j) { if (a.yer === s.id && bu.indexOf(gunler[j]) === -1) { bu.push(gunler[j]); } });
+          x.yol.forEach(function (a, j) { if (a.yer === s.id && a.g === h.id && bu.indexOf(gunler[j]) === -1) { bu.push(gunler[j]); } });
           if (bu.length) { gecenler.push({ x: x, gunler: bu }); }
         });
         if (gecenler.length) {
