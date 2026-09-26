@@ -268,6 +268,7 @@ const Y_LISTELER = {
   "claudeEvreni.mektuplar": { ad: "Claude evreni · mektuplar", ornek: { id: "", kimden: "", kime: "", not: "", metin: "" } },
   "claudeEvreni.sozluk":    { ad: "Claude evreni · sözlük", ornek: { terim: "", tanim: "" } },
   "claudeEvreni.sorular":   { ad: "Claude evreni · sorular", ornek: { soru: "", not: "" } },
+  takvimEtkinlikleri: { ad: "Tömye takvimi etkinlikleri", ornek: { id: "", ad: "", ay: "Leg", gun: 1, sure: 1, tema: "", metin: "", alinti: "", gorev: { id: "yazi4", adet: 1, ad: "", odul: 30 } } },
   degisiklik:         { ad: "Değişiklik günlüğü",  ozel: true },
   site:               { ad: "Site ayarları",       ozel: true }
 };
@@ -290,7 +291,8 @@ const Y_LISTE_CIZICILER = {
   bilinmeyenler: "bilinmeyenCiz", yankilar: "yankiCiz", sozluk: "sozlukCiz",
   alintilar: "alintiCiz", zamanCizelgesi: "cizZaman", degisiklik: "degisiklikCiz", site: "gizlilikCiz",
   "claudeEvreni.maddeler": "claudeEvrenCiz", "claudeEvreni.kisiler": "claudeEvrenCiz", "claudeEvreni.hikayeler": "claudeEvrenCiz",
-  "claudeEvreni.mektuplar": "claudeEvrenCiz", "claudeEvreni.sozluk": "claudeEvrenCiz", "claudeEvreni.sorular": "claudeEvrenCiz"
+  "claudeEvreni.mektuplar": "claudeEvrenCiz", "claudeEvreni.sozluk": "claudeEvrenCiz", "claudeEvreni.sorular": "claudeEvrenCiz",
+  takvimEtkinlikleri: "takvimEtkinlikCiz"
 };
 
 let yListe = "bulmacalar";

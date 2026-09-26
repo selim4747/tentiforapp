@@ -535,6 +535,7 @@ function yarisSonucHtml() {
     (s.supheli ? '<p class="oyun-not kotu">Bu sonuç insan hızının üstünde göründüğü için tablolara yazılmadı.</p>' : "") +
     (liste ? '<details class="yaris-dokum"><summary>Cevaplar</summary><ol>' + liste + "</ol></details>" : "") +
     '<div class="oyun-sira"><button class="dugme" data-yaris-basla="' + Y2.yaris + '">Tekrar</button>' +
+      (s.supheli ? "" : '<button class="dugme dugme-sade" data-yaris-kart="1">Sonuç kartını paylaş</button>') +
       '<button class="dugme dugme-sade" data-yaris-kapat="1">Kapat</button></div></div>';
 }
 
