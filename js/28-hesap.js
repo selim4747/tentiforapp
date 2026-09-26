@@ -225,8 +225,10 @@ function hesapHataMetni(hata) {
     [/same password|should be different/i, "Yeni şifre eskisiyle aynı olamaz."],
     [/database error saving new user|duplicate key|profiller_kullanici_adi_key/i, "Bu kullanıcı adı alınmış. Başka bir ad seç."],
     [/failed to fetch|network/i, "Bağlantı kurulamadı. İnternetini kontrol et."],
-    [/schema cache|could not find the (table|column)|relation .* does not exist/i,
-      "Veritabanı kurulumu eksik: Supabase'de supabase/kurulum.sql dosyası çalıştırılmalı."]
+    [/schema cache|could not find the (table|column|function)|relation .* does not exist|function .* does not exist|PGRST20[25]/i,
+      (typeof panelAcik === "function" && panelAcik())
+        ? "Veritabanı kurulumu eksik: panelde Bakım → Kurulum'dan SQL'i çalıştır."
+        : "Bu özellik henüz açılmadı; çok yakında burada."]
   ];
   for (let i = 0; i < esle.length; i++) { if (esle[i][0].test(m)) { return esle[i][1]; } }
   return m || "Bir şeyler ters gitti.";

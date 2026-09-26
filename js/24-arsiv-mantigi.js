@@ -772,6 +772,7 @@ veriKaynak
       ["saat", saatiBaslat],
       ["brifing", function () { if (typeof brifingCiz === "function") { brifingCiz(); } }],
       ["günlük özet", function () { if (typeof gunlukOzetCiz === "function") { gunlukOzetCiz(); } }],
+      ["sürüm notu", function () { if (typeof surumNotuCiz === "function") { surumNotuCiz(); } }],
       ["bildirim", function () { if (typeof bildirimKutusuCiz === "function") { bildirimKutusuCiz(); } }],
       ["yıl ve koleksiyon", function () { if (typeof yilKoleksiyonBasla === "function") { yilKoleksiyonBasla(); } }],
       ["gezinme", function () { gezinmeCiz(); ilerlemeKur(); gecCizimKur(); }],

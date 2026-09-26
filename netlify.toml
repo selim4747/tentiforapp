@@ -11,3 +11,9 @@
   from = "/u/*"
   to = "/?profil=:splat"
   status = 302
+
+# Paylaşım hedefi: servis çalışanı yoksa (ilk açılış) sayfaya dön
+[[redirects]]
+  from = "/paylasim-al"
+  to = "/#/fanAc"
+  status = 303

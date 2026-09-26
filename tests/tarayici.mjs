@@ -97,7 +97,52 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
         return document.querySelectorAll("section.bolum:not([hidden])").length;
       });
       ok("#/" + s + " açılır (" + gorunen + " bölüm)", gorunen > 0);
+      const tasma = await Z.evaluate(function () { return document.documentElement.scrollWidth - window.innerWidth; });
+      ok("#/" + s + " telefonda yana taşmaz", tasma <= 0, tasma);
     }
+
+    /* ---------- mobil gezinme ---------- */
+    console.log("mobil");
+    ok("alt menü görünür", await Z.evaluate(function () { const m = document.querySelector("#altMenu"); return !!m && getComputedStyle(m).display !== "none" && m.querySelectorAll(".alt-oge").length === 5; }));
+    ok("üst başlık telefonda sığar", await Z.evaluate(function () { const u = document.querySelector(".ust"); return u.scrollWidth <= u.clientWidth + 1; }));
+    await Z.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(Z, 500);
+    await Z.click("[data-mobil-menu]"); await bekle(Z, 300);
+    ok("menü sayfası bütün sayfaları listeler", await Z.locator("#mobilMenu .mm-sayfa").count() === 12);
+    await Z.click('#mobilMenu .mm-sayfa[href="#/fan"]'); await bekle(Z, 600);
+    ok("menüden sayfaya gidilir, menü kapanır", await Z.evaluate(function () { return aktifSayfa === "fan" && !document.querySelector("#mobilMenu"); }));
+    ok("alt menüde Fan seçili", await Z.evaluate(function () { return !!document.querySelector('#altMenu .alt-oge.bu[href="#/fan"]'); }));
+    const acikBaslik = await Z.evaluate(function () { return getComputedStyle(document.querySelector(".ust")).backgroundColor; });
+    await Z.click("[data-mobil-menu]"); await bekle(Z, 300);
+    await Z.click('[data-mobil-eylem="tema"]'); await bekle(Z, 200);
+    const geceBaslik = await Z.evaluate(function () { return getComputedStyle(document.querySelector(".ust")).backgroundColor; });
+    ok("menüden gece modu; başlık da koyulaşır", await Z.evaluate(function () { return document.documentElement.getAttribute("data-ayar-tema") === "gece"; }) &&
+      geceBaslik !== acikBaslik, [acikBaslik, geceBaslik]);
+    await Z.click('[data-mobil-eylem="tema"]'); await Z.click("[data-mobil-kapat]"); await bekle(Z, 200);
+    ok("girdiler telefonda 16px (iPhone yakınlaştırmaz)", await Z.evaluate(function () {
+      location.hash = "#/isim";
+      const g = document.querySelector("#isimGiris");
+      return parseFloat(getComputedStyle(g).fontSize) >= 16;
+    }));
+
+    /* paylaşım hedefinden gelen dosya (servis çalışanının önbelleğe koyduğu) açılır */
+    await Z.evaluate(async function () {
+      const e = { bicim: "tentifor-eser", surum: 1, tur: "hikaye", id: "paylasimtest", baslik: "Paylaşılan hikâye", metin: "Gelen dosya." };
+      const c = await caches.open("tf-paylasim");
+      await c.put("/__paylasilan", new Response(fanDosyaHtml(e), { headers: { "Content-Type": "text/html" } }));
+      location.hash = "#/fan/paylasim";
+    });
+    await bekle(Z, 900);
+    ok("paylaşılan dosya Fan'da açılır", await Z.evaluate(function () {
+      const h = document.querySelector(".fan-pencere h1");
+      return !!h && h.textContent === "Paylaşılan hikâye" && location.hash === "#/fanAc";
+    }));
+    await Z.evaluate(function () { document.querySelector("#perde").hidden = true; });
+    const manifest = JSON.parse(readFileSync(dizin + "/manifest.webmanifest", "utf8"));
+    ok("manifest: paylaşım hedefi ve kısayollar", manifest.share_target && manifest.share_target.params.files[0].name === "dosya" && manifest.shortcuts.length >= 4);
+    ok("aramada Claude'un evreni ve bölümler", await Z.evaluate(function () {
+      const d = aramaDizini();
+      return d.some(function (k) { return k.tur === "Claude'un evreni"; }) && d.some(function (k) { return k.tur === "Şomdo kişisi"; });
+    }));
     await Z.evaluate(function () { location.hash = "#/gizlilik"; }); await bekle(Z, 600);
     ok("gizlilik sayfası yazılı", /KVKK/.test(await Z.textContent("#gizlilikAlan")));
 
@@ -129,7 +174,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await Z.setInputFiles("[data-fan-dosya]", hYol); await bekle(Z, 600);
     ok("yüklenen dosya açılır", await Z.evaluate(function (z) { const p = document.querySelector(".fan-pencere h1"); return !!p && p.textContent === z; }, zararli));
     ok("dosyadaki kod çalışmaz", await Z.evaluate(function () { return window.__xss === undefined && !document.querySelector(".fan-pencere img"); }));
-    ok("son açılanlarda", await Z.evaluate(function () { return fanAcilanlar().length === 1; }));
+    ok("son açılanlarda", await Z.evaluate(function (z) { return fanAcilanlar().some(function (x) { return x.baslik === z; }); }, zararli));
     ok("yanlış dosya reddedilir", await Z.evaluate(function () { try { fanMetindenEser("<html><body>merhaba</body></html>"); return false; } catch (e) { return /değil/.test(e.message); } }));
     ok("uydurma alanlar temizlenir", await Z.evaluate(function () {
       const e = fanTemizle({ bicim: "tentifor-eser", tur: "evren", id: "a b<>", ad: "X", kurallar: [{ ad: "k", tur: "renk", aciklama: "a", zarar: "<b>" }], gizli: 1 });
@@ -153,7 +198,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("evren önizlemesi", /Gökyüzünün rengi/.test(await Z.textContent(".fan-pencere")) && await Z.locator(".fan-pencere dt").count() === 2);
 
     /* yönetici: fanmade olarak ekler */
-    await Z.evaluate(function () { window.__panelAcik = window.panelAcik; window.panelAcik = function () { return true; }; fanPencere(fanAcilanlar()[0], "acilan"); }); await bekle(Z, 200);
+    await Z.evaluate(function () { window.__panelAcik = window.panelAcik; window.panelAcik = function () { return true; }; fanPencere(fanAcilanlar().filter(function (x) { return x.tur === "hikaye" && x.id !== "paylasimtest"; }).pop(), "acilan"); }); await bekle(Z, 200);
     await Z.evaluate(function () { document.querySelector('[data-fan-p="siteye"]').click(); }); await bekle(Z, 200);
     ok("yönetici siteye ekler", await Z.evaluate(function () { return veri.fanEserleri.hikayeler.length === 1; }));
     const fid = await Z.evaluate(function () { return veri.fanEserleri.hikayeler[0].id; });
@@ -164,6 +209,14 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await Z.evaluate(function () { veri.fanEposta = "fan@ornek.test"; document.querySelector("#perde").hidden = true; fanAcCiz(); });
     ok("gönderim adresi ve e-posta bağlantısı", await Z.evaluate(function () { const a = document.querySelector('#fanAcAlan a[href^="mailto:fan@ornek.test"]'); return !!a; }));
     await Z.evaluate(function () { window.panelAcik = window.__panelAcik; });
+    ok("fan kapak kartı üretilir", await Z.evaluate(async function () {
+      const t = await fanKapakUret({ bicim: "tentifor-eser", tur: "hikaye", id: "k1", baslik: "Buz altındaki kitap", yazar: "Okur", evren: "Tömye", metin: "Bir paragraf." });
+      return !!t && t.width === 1080 && t.height === 1350;
+    }));
+    await Z.evaluate(function () { localStorage.setItem("tentiforapp_gorulen_surum", "0.0.1"); location.hash = "#/kesif"; surumNotuCiz(); });
+    ok("güncellemeden sonra \"Neler yeni\" kartı", await Z.locator("#surumNotuAlan .surum-notu li").count() > 0);
+    await Z.evaluate(function () { document.querySelector("[data-surum-kapat]").click(); });
+    ok("kart kapatılınca bir daha çıkmaz", await Z.evaluate(function () { surumNotuCiz(); return !document.querySelector(".surum-notu") && localStorage.getItem("tentiforapp_gorulen_surum") === veri.surum; }));
     ok("sayfa paylaş düğmesi", await Z.locator("#sayfaBasi [data-sayfa-paylas]").count() === 1);
     await Z.evaluate(function () { location.hash = "#/mektuplar"; }); await bekle(Z, 800);
     ok("uzun metinlerde Dinle düğmesi", await Z.locator(".sesli-dugme").count() > 0);
@@ -464,6 +517,27 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await panel("bakim", "yedek", 400);
     const [indirme] = await Promise.all([A.waitForEvent("download"), A.click("[data-y-yedek-al]")]);
     ok("yedek iner", /tentifor-yedek-/.test(indirme.suggestedFilename()));
+
+    /* ---------- kurulum yardımcısı ---------- */
+    await panel("bakim", "kurulum", 2500);
+    ok("kurulum: bütün özellikler kurulu görünür", await A.evaluate(function () {
+      const l = document.querySelectorAll("#yKurulumDenetim li");
+      return l.length >= 12 && document.querySelectorAll("#yKurulumDenetim li.eksik").length === 0;
+    }), await A.textContent("#yKurulumDenetim"));
+    const parcalar = await A.evaluate(async function () {
+      await kurulumDosyalariYukle();
+      return { parcalar: kurulumParcala(kurulumMetin), tam: kurulumMetin, dugme: document.querySelectorAll("[data-y-kurulum-parca]").length };
+    });
+    ok("kurulum parçalara bölünür, hiçbir şey kaybolmaz", parcalar.parcalar.length >= 5 && parcalar.parcalar.join("\n") === parcalar.tam.replace(/\r\n/g, "\n") &&
+      parcalar.dugme === parcalar.parcalar.length, parcalar.parcalar.length);
+    ok("her parça telefonda kopyalanabilir boyutta", parcalar.parcalar.every(function (p) { return p.length < 25000; }), parcalar.parcalar.map(function (p) { return p.length; }));
+    for (let i = 0; i < parcalar.parcalar.length; i++) { await sahte.kokSorgu(parcalar.parcalar[i]); }
+    ok("parçalar sırayla çalıştırılınca kurulum tamamlanır", true);
+    await A.evaluate(function () { navigator.clipboard.writeText = async function (m) { window.__pano = m; }; document.querySelector('[data-y-kurulum-parca="0"]').click(); });
+    await bekle(A, 300);
+    ok("parça tek dokunuşla panoya", await A.evaluate(function () { return window.__pano === kurulumParcala(kurulumMetin)[0]; }));
+    ok("kopyalanan parça işaretlenir", /✓/.test(await A.textContent('[data-y-kurulum-parca="0"]')));
+    ok("fonksiyon kodu da kopyalanabilir", await A.locator("[data-y-kurulum-fonksiyon]").count() === 1);
 
     /* ---------- Web Push ---------- */
     await panel("bakim", "bildirim", 1200);

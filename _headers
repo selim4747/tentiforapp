@@ -19,3 +19,8 @@
 
 /css/*
   Cache-Control: public, max-age=31536000, immutable
+
+/kurulum/*
+  Cache-Control: no-cache
+  Content-Type: text/plain; charset=utf-8
+  X-Robots-Tag: noindex
