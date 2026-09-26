@@ -15,12 +15,18 @@ const GEZINME = [
     ["yankilar", "Yankılar"] ] },
 
   { id: "dunya", ad: "Dünya", ikon: "▦", bolumler: [
-    ["harita", "Harita"], ["zaman", "Zaman çizelgesi"], ["takvim", "Tömye takvimi"],
-    ["claudeEvren", "Claude'un evreni"] ] },
+    ["harita", "Harita"], ["zaman", "Zaman çizelgesi"], ["takvim", "Tömye takvimi"] ] },
+
+  /* her evrenin kendi sayfası: Claude'un evreni kanon dışı, herkese açık */
+  { id: "claude", ad: "Claude'un Evreni", ikon: "◐", bolumler: [
+    ["claudeEvren", "Şomdo"] ] },
 
   { id: "okuma", ad: "Okuma", ikon: "▧", bolumler: [
     ["sira", "Nereden başlamalı"], ["roman", "Roman"], ["olaylar", "Olaylar"],
     ["hikaye", "Gece Vardiyası"], ["kisaHikayeler", "Kısa Hikâyeler"], ["ortakDefter", "Kütüphane Defteri"] ] },
+
+  { id: "fan", ad: "Fan", ikon: "✎", bolumler: [
+    ["fanHikaye", "Fan hikâyeleri"], ["fanEvren", "Fan evrenleri"], ["fanAc", "Dosya aç"] ] },
 
   { id: "belgeler", ad: "Belgeler", ikon: "▨", bolumler: [
     ["mektuplar", "Mektuplar"], ["alintilar", "Alıntılar"], ["notlar", "Yazar notları"],
@@ -316,7 +322,7 @@ const GEC_CIZILENLER = {
   olaylar: "olaylarCiz", kisaHikayeler: "kisaHikayelerCiz", dosyalar: "dosyalarCiz",
   hikaye: "hikayeCiz", defter: "defterCiz", arsivci: "arsivciCiz",
   bag: "bagCiz", sira: "siraCiz", basarim: "basarimCiz",
-  degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz", yarislar: "yarislarCiz", claudeEvren: "claudeEvrenCiz", av: "avCiz", kartpostal: "kartpostalCiz", ortakDefter: "ortakDefterCiz", yazaraSor: "yazaraSorCiz", kulup: "kulupCiz", okurBulmaca: "okurBulmacaCiz", yilim: "yilimCiz", koleksiyon: "koleksiyonCiz",
+  degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz", yarislar: "yarislarCiz", claudeEvren: "claudeEvrenCiz", av: "avCiz", kartpostal: "kartpostalCiz", ortakDefter: "ortakDefterCiz", yazaraSor: "yazaraSorCiz", kulup: "kulupCiz", okurBulmaca: "okurBulmacaCiz", yilim: "yilimCiz", koleksiyon: "koleksiyonCiz", fanHikaye: "fanHikayeCiz", fanEvren: "fanEvrenCiz", fanAc: "fanAcCiz",
 };
 
 const cizildi = {};
@@ -491,6 +497,13 @@ function sayfaYonlendir() {
   if (bas === "kartpostal" && parca[1]) {
     if (aktifSayfa !== "araclar") { sayfaGoster("araclar", false); }
     if (typeof kartpostalAc === "function") { kartpostalAc(parca.slice(1).join("/")); }
+    return;
+  }
+
+  /* fan eseri: #/fan/hikaye/<id> ya da #/fan/evren/<id> — Fan sayfasının üstünde açılır */
+  if (bas === "fan" && parca[1] && parca[2]) {
+    if (aktifSayfa !== "fan") { sayfaGoster("fan", false); }
+    if (typeof fanSiteEserAc === "function") { fanSiteEserAc(parca[1], decodeURIComponent(parca[2])); }
     return;
   }
 
