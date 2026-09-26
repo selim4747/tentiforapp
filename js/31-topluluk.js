@@ -157,7 +157,7 @@ async function toplulukProfilEk(p) {
   if (!el || !toplulukHazir()) { return; }
   const ad = p.kullanici_adi;
   const [sv, ts, tr, liste] = await Promise.all([
-    hesapIstemci.from("arsivci_seviyeleri").select("xp, seviye").eq("kullanici_adi", ad).maybeSingle(),
+    hesapIstemci.from("arsivci_seviyeleri").select("xp, seviye, basamak").eq("kullanici_adi", ad).maybeSingle(),
     hesapIstemci.from("takip_sayilari").select("takipci, takip").eq("kullanici_adi", ad).maybeSingle(),
     hesapIstemci.from("teori_rozetleri").select("kanon, yakin").eq("kullanici_adi", ad).maybeSingle(),
     toplulukGirisli() ? hesapIstemci.rpc("takip_ettiklerim") : Promise.resolve({ data: [] })
@@ -170,7 +170,10 @@ async function toplulukProfilEk(p) {
 
   let html = '<div class="profil-topluluk">' +
     '<div class="profil-seviye"><span class="seviye-rozet">' + seviye + "</span><span><b>" + kacir(seviyeUnvani(seviye)) + "</b>" +
-      '<span class="oyun-not"> · ' + (sv.data ? Number(sv.data.xp) : 0) + " XP</span></span></div>" +
+      '<span class="oyun-not"> · ' + (sv.data ? Number(sv.data.xp) : 0) + " XP</span>" +
+      (sv.data && typeof tomyeSayi === "function"
+        ? '<span class="basamak-kucuk" title="Tömye basamağı ' + Number(sv.data.basamak) + '">' + kacir(tomyeSayi(sv.data.basamak)) + "</span>" : "") +
+      "</span></div>" +
     '<div class="profil-takip"><span><b>' + (ts.data ? Number(ts.data.takipci) : 0) + "</b> takipçi</span><span><b>" +
       (ts.data ? Number(ts.data.takip) : 0) + "</b> takip</span>" +
       (toplulukGirisli() && !ben ? '<button class="dugme' + (takipte ? " dugme-sade" : "") + '" data-takip="' + kacir(ad) + '">' +
@@ -207,8 +210,13 @@ function seviyeXp(s) { return 40 * (s - 1) * (s - 1); }
 async function toplulukHesapEk() {
   const el = document.querySelector("#hesapTopluluk");
   if (!el || !toplulukGirisli() || !hesapProfil || !hesapProfil.kullanici_adi) { return; }
-  const { data } = await hesapIstemci.from("arsivci_seviyeleri").select("xp, yil_xp, seviye").eq("kullanici_adi", hesapProfil.kullanici_adi).maybeSingle();
-  if (data) {
+  const { data } = await hesapIstemci.from("arsivci_seviyeleri").select("xp, yil_xp, seviye, basamak, dokum").eq("kullanici_adi", hesapProfil.kullanici_adi).maybeSingle();
+  if (data && typeof seviyeKartiHtml === "function") {
+    const d = (typeof dunyadanTomyeye === "function") ? dunyadanTomyeye(new Date()) : null;
+    el.innerHTML = '<div class="hesap-kutu seviye-kutu">' + seviyeKartiHtml(data, true) +
+      '<p class="oyun-not">' + (d ? d.yil + ". Tömye yılı" : "Bu Tömye yılı") + " sezonu: <b>" + Number(data.yil_xp) + " XP</b>.</p></div>";
+    seviyeOdulleri(data);
+  } else if (data) {
     const s = Number(data.seviye), xp = Number(data.xp);
     const alt = seviyeXp(s), ust = seviyeXp(s + 1);
     const oran = Math.max(0, Math.min(100, Math.round(100 * (xp - alt) / Math.max(1, ust - alt))));
