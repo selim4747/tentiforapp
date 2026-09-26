@@ -103,7 +103,7 @@ document.addEventListener("click", function (ev) {
   }
   if (h.dataset.krsGit === "yeni-evren") {
     karsilamaKapat();
-    if (typeof evrenYeniKur === "function") { const id = evrenYeniKur(); evrenSonrakiSekme = "bilgi"; location.hash = "#/ev/benim/" + id; }
+    if (typeof evrenYeniKur === "function") { const id = evrenYeniKur(); if (id) { evrenSonrakiSekme = "bilgi"; location.hash = "#/ev/benim/" + id; } }
     return;
   }
   if (h.dataset.krsGit) { karsilamaKapat(h.dataset.krsGit); return; }

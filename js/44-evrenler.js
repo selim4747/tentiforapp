@@ -165,8 +165,29 @@ function evrenBenimBul(id) {
   return fanEserlerim().find(function (e) { return e.id === id && e.tur === "evren"; }) || null;
 }
 
+/** Hiç dokunulmamış taslak: adı, anlatımı, içeriği, haritası yok. */
+function evrenBosMu(e) {
+  if (!e || e.tur !== "evren" || e.e99) { return false; }
+  if (String(e.ad || "").trim() || String(e.ozet || "").trim()) { return false; }
+  if (((e.harita || {}).yerler || []).length || (e.lorlar || []).length || (e.cizimler || []).length) { return false; }
+  if (e.roman && ((e.roman.bolumler || []).length || String(e.roman.baslik || "").trim())) { return false; }
+  return !FAN_EVREN_GRUPLARI.some(function (g) {
+    return (e[g.k] || []).some(function (x) { return Object.keys(x || {}).some(function (k) { return String(x[k] || "").trim(); }); });
+  });
+}
+
+/** Yeni evren: yarım bırakılmış boş bir taslak varsa onu açar (her dokunuşta yeni "Adsız evren" birikmesin).
+    Kaydedilemezse (depolama dolu/kapalı) söyler ve null döner. */
 function evrenYeniKur() {
+  const bos = fanEserlerim().find(evrenBosMu);
+  if (bos) { return bos.id; }
   const e = fanYeni("evren");
+  if (!evrenBenimBul(e.id)) {
+    if (typeof eckaBildir === "function") { eckaBildir("Evren kurulamadı: bu tarayıcının depolaması dolu ya da kapalı."); }
+    return null;
+  }
+  /* hesap varsa hemen buluta da yazılsın: başka cihazdan girince kaybolmasın */
+  if (typeof hesapEsitle === "function") { setTimeout(function () { hesapEsitle(); }, 1500); }
   return e.id;
 }
 
@@ -280,7 +301,9 @@ let evrenSonrakiSekme = null;   /* yeni evren kurulunca bilgi sekmesiyle açıls
 function evrenSayfaAc(kaynak, id) {
   if (kaynak === "e99") { e99Katki(); id = "e99"; }
   /* haritası olmayan kanon evren bilgi sekmesiyle açılır */
-  const haritasiz = kaynak === "site" && !(veri.haritalar || []).some(function (h) { return h.id === id && (h.yerler || []).length; });
+  const haritasiz = (kaynak === "site" && !(veri.haritalar || []).some(function (h) { return h.id === id && (h.yerler || []).length; })) ||
+    /* kendi evreninin adı yoksa önce bilgileri */
+    (kaynak === "benim" && !String((evrenBenimBul(id) || {}).ad || "").trim());
   EVS = { kaynak: kaynak, id: id, sekme: evrenSonrakiSekme || ((EVS && EVS.kaynak === kaynak && EVS.id === id) ? EVS.sekme : (haritasiz ? "bilgi" : "harita")), secili: null, mod: "sec", cizim: [] };
   evrenSonrakiSekme = null;
   evrenSayfaCiz();
@@ -349,7 +372,7 @@ function evrenSayfaCiz() {
   }
   const e = v.eser;
   const sekme = function (id, ad) {
-    return '<button class="dugme' + (EVS.sekme === id ? "" : " dugme-sade") + '" data-evs-sekme="' + id + '" aria-selected="' + (EVS.sekme === id) + '" role="tab">' + ad + "</button>";
+    return '<button class="evs-sekme' + (EVS.sekme === id ? " secili" : "") + '" data-evs-sekme="' + id + '" aria-selected="' + (EVS.sekme === id) + '" role="tab">' + ad + "</button>";
   };
   s.setAttribute("aria-label", e.ad || "Evren");
   document.title = evrenSayfaBasligi();
@@ -360,13 +383,13 @@ function evrenSayfaCiz() {
   s.setAttribute("style", typeof evrenSayfaStili === "function" ? evrenSayfaStili(e) : "");
   s.innerHTML =
     '<div class="evs-ust">' +
-      '<button class="dugme dugme-sade" data-evs-kapat>← Geri</button>' +
-      '<div class="evs-baslik"><span class="oyun-etiket">' + kacir(v.rozet) + "</span><h2>" + kacir(e.ad || "Adsız evren") + "</h2>" +
+      '<button class="evs-ikon" data-evs-kapat aria-label="Geri" title="Geri"><span aria-hidden="true">←</span></button>' +
+      '<div class="evs-baslik"><span class="evs-rozet">' + kacir(v.rozet) + "</span><h2>" + kacir(e.ad || "Adsız evren") + "</h2>" +
         (alfabeAd ? '<div class="evs-alfabe-ad" aria-hidden="true">' + kacir(alfabeAd) + "</div>" : "") + "</div>" +
-      '<button class="dugme dugme-sade" data-evren-sec>◎ Başka evren</button>' +
+      '<button class="evs-ikon evs-ikon-yazi" data-evren-sec aria-label="Başka evren" title="Başka evren"><span aria-hidden="true">◎</span><span class="evs-ikon-ad">Evrenler</span></button>' +
     "</div>" +
     (!v.kilitli && typeof evrenCuzdanCubugu === "function" ? evrenCuzdanCubugu(v) : "") +
-    '<div class="evs-sekmeler" role="tablist">' + sekme("harita", "Harita") + sekme("bilgi", EVS.kaynak === "e99" ? "Evren ve katkın" : (v.duzenle ? "Evreni düzenle" : "Evren")) +
+    '<div class="evs-sekmeler" role="tablist">' + sekme("harita", "Harita") + sekme("bilgi", EVS.kaynak === "e99" ? "Evren ve katkın" : (EVS.kaynak === "benim" ? "Bilgiler" : (v.duzenle ? "Düzenle" : "Evren"))) +
       ek.map(function (x) { return sekme(x[0], kacir(x[1])); }).join("") + "</div>" +
     '<div class="evs-govde">' + (v.kilitli
       ? '<div class="kutu-y"><p class="oyun-giris">Bu evren kanonun parçası; kodla açılır.</p><button class="dugme" data-evs-kod>Kod gir</button></div>' +
@@ -779,7 +802,7 @@ document.addEventListener("click", async function (ev) {
   if (h.id === "evrenSecBtn" || h.hasAttribute("data-evren-sec")) { evrenSeciciAc(); return; }
   if (d.evrenGit) { evrenGit(d.evrenGit); return; }
   if (h.hasAttribute("data-es-kapat")) { evrenSeciciKapat(); return; }
-  if (h.hasAttribute("data-es-yeni")) { const id = evrenYeniKur(); evrenSonrakiSekme = "bilgi"; evrenGit("#/ev/benim/" + id); return; }
+  if (h.hasAttribute("data-es-yeni")) { const id = evrenYeniKur(); if (!id) { return; } evrenSonrakiSekme = "bilgi"; evrenGit("#/ev/benim/" + id); return; }
   if (h.hasAttribute("data-evs-kapat")) { evrenSayfaKapat(); return; }
   if (h.hasAttribute("data-evs-kod")) { const b = document.querySelector("#btnKod"); if (b) { b.click(); } return; }
   if (d.evsSekme) { fanBekleyeniYaz(); EVS.sekme = d.evsSekme; EVS.mod = "sec"; EVS.cizim = []; evrenSayfaCiz(); return; }

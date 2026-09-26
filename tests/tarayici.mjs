@@ -742,6 +742,27 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       return t.indexOf("roman") !== -1 && t.indexOf("cizim") !== -1 && t.indexOf("defter") !== -1 && t.indexOf("stil") === -1;
     }));
 
+    /* ---------- evren kurma: boş taslak birikmez, ilk adımlar, hazır harita ---------- */
+    const bosEv = await N.evaluate(function () { evrenSayfaKapat(); return evrenYeniKur(); });
+    ok("yeni evren: dokunulmamış taslak tekrar kullanılır", await N.evaluate(function (id) { return evrenYeniKur() === id; }, bosEv));
+    await N.evaluate(function (id) { location.hash = "#/ev/benim/" + id; }, bosEv); await bekle(N, 700);
+    ok("adsız evren Bilgiler sekmesiyle ve ilk adımlarla açılır", await N.evaluate(function () {
+      return EVS.sekme === "bilgi" && /0 \/ 6/.test(document.querySelector("#evrenSayfa .evk-sayi").textContent);
+    }));
+    await N.fill('#evrenSayfa [data-fan-alan="ad"]', "Rehberli Evren"); await bekle(N, 1100);
+    ok("ad yazılınca ilk adımlar ve başlık güncellenir", /1 \/ 6/.test(await N.textContent("#evrenSayfa .evk-sayi")) &&
+      (await N.textContent("#evrenSayfa .evs-baslik h2")) === "Rehberli Evren");
+    await N.click('#evrenSayfa [data-evk-git="kisi"]'); await bekle(N, 300);
+    ok("adım ilgili alana götürür", await N.evaluate(function () { return document.activeElement && /^kisiler\.\d+\.ad$/.test(document.activeElement.dataset.fanAlan || ""); }));
+    await N.click('#evrenSayfa [data-evs-sekme="harita"]'); await bekle(N, 200);
+    await N.click('#evrenSayfa [data-evk-sablon="iki"]'); await bekle(N, 300);
+    ok("hazır harita konur", await N.evaluate(function () { return evrenBenimBul(EVS.id).harita.yerler.length === 5; }) &&
+      await N.locator('#evrenSayfa [data-evk-sablon]').count() === 0);
+    await N.click("#evrenSayfa [data-evk-gizle]"); await bekle(N, 200);
+    ok("ilk adımlar gizlenebilir", await N.locator("#evrenSayfa .evk-kart").count() === 0);
+    ok("sekme şeridi tek satır", await N.evaluate(function () { const s = document.querySelector("#evrenSayfa .evs-sekmeler"); return getComputedStyle(s).flexWrap === "nowrap"; }));
+    ok("dolu evrenden sonra yeni evren yeni taslak", await N.evaluate(function () { return evrenYeniKur() !== EVS.id; }));
+
     ok("konuk haritası: kişinin gittiği yerler", await N.evaluate(function () {
       const l = fanEserlerim();
       l.push({ bicim: FAN_BICIM, surum: 1, tur: "hikaye", id: "hk1", baslik: "Orlan kıyıda", metin: "…", konuklar: [{ bicim: FAN_BICIM, tur: "kisi", id: "vitrin1", ad: "Orlan Gezgin", kisilik: [] }] });
@@ -886,6 +907,39 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await B.click("#evrenSayfa [data-defter-yaz]"); await bekle(B, 1500);
     ok("defter notu onaya düşer", (await sahte.kokSorgu("select count(*)::int n from public.evren_defteri where evren = 'e99' and not onayli")).rows[0].n === 1);
     ok("yazan kendi notunu onay bekliyor diye görür", /onay bekliyor/.test(await B.textContent("#evrenSayfa .evren-defter")));
+
+    /* ---------- hesapsız kurulan evren, var olan hesaba girince kaybolmaz ---------- */
+    const M = await cihaz("misafir-evren");
+    await M.goto(adres + "/"); await bekle(M, 1200);
+    const mEv = await M.evaluate(function () { return evrenYeniKur(); });
+    await M.evaluate(function (id) { evrenSonrakiSekme = "bilgi"; location.hash = "#/ev/benim/" + id; }, mEv); await bekle(M, 600);
+    await M.fill('#evrenSayfa [data-fan-alan="ad"]', "Misafir Evreni"); await bekle(M, 900);
+    await M.evaluate(function () { evrenSayfaKapat(); location.hash = "#/sen"; }); await bekle(M, 1500);
+    await M.click("#hesapBtn"); await bekle(M, 300);
+    if (await M.locator("#hGirisEposta").count() === 0) { await M.click('#perde [data-hesap-pencere="giris"]'); await bekle(M, 300); }
+    await M.fill("#hGirisEposta", "b@ornek.test"); await M.fill("#hGirisSifre", "tomye-2026");
+    await M.click('[data-hesap-form="giris"] button[type=submit]'); await bekle(M, 4000);
+    ok("hesapsız kurulan evren hesaba girince cihazda kalır", await M.evaluate(function () {
+      return fanEserlerim().some(function (e) { return e.tur === "evren" && e.ad === "Misafir Evreni"; });
+    }));
+    await M.evaluate(function () { return hesapEsitle(); }); await bekle(M, 1200);
+    const bVeri = (await sahte.kokSorgu("select veri from public.ilerlemeler i join auth.users u on u.id = i.id where u.email = 'b@ornek.test'")).rows[0].veri;
+    ok("birleşen evren hesaba da yazılır", /Misafir Evreni/.test(bVeri.tentiforapp_fan_eserlerim || ""));
+    /* aynı cihazda iki hesap: çıkınca cihaz misafire döner, ikinci hesap birincinin ilerlemesini görmez */
+    await M.evaluate(function () { cuzdan.ecka += 123; cuzdanKaydet(); return hesapEsitle(true); }); await bekle(M, 800);
+    const mEcka = await M.evaluate(function () { return cuzdan.ecka; });
+    await M.evaluate(function () { hesapCikis(); }); await bekle(M, 3500);
+    ok("çıkınca cihaz misafire döner (evren ve eçka cihazda kalmaz)", await M.evaluate(function () {
+      return !hesapKullanici && !fanEserlerim().some(function (e) { return e.ad === "Misafir Evreni"; }) && cuzdan.ecka < 123;
+    }));
+    await kayitOl(M, "Cem", "cemal", "cem2@ornek.test");
+    ok("aynı cihazda açılan ikinci hesap ilkinin ilerlemesini görmez", await M.evaluate(function () {
+      return !!hesapKullanici && !fanEserlerim().some(function (e) { return e.ad === "Misafir Evreni"; }) && cuzdan.ecka < 123;
+    }));
+    const bVeri2 = (await sahte.kokSorgu("select veri from public.ilerlemeler i join auth.users u on u.id = i.id where u.email = 'b@ornek.test'")).rows[0].veri;
+    ok("ilk hesabın ilerlemesi hesabında durur", /Misafir Evreni/.test(bVeri2.tentiforapp_fan_eserlerim || "") &&
+      JSON.parse(bVeri2.tentiforapp_cuzdan || "{}").ecka === mEcka);
+    await M.close();
     await B.click("#evrenSayfa [data-evs-kapat]"); await bekle(B, 300);
 
     /* ---------- kartpostal ---------- */
