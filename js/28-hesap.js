@@ -238,7 +238,7 @@ function hesapDonusAdresi(tur) {
   return location.origin + location.pathname + "?hesap=" + tur;
 }
 
-/** Paylaşılan profil adresi: canlı sitede kısa /u/ad (_redirects / netlify.toml yönlendirir), yerelde #/u/ad. */
+/** Paylaşılan profil adresi: canlı sitede kısa /u/ad (_redirects yönlendirir), yerelde #/u/ad. */
 function hesapProfilAdresi(ad) {
   if (location.protocol === "https:") { return location.origin + "/u/" + encodeURIComponent(ad); }
   return location.origin + location.pathname + "#/u/" + encodeURIComponent(ad);

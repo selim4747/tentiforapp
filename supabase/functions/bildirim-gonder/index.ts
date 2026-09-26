@@ -4,7 +4,7 @@
 // Supabase panelinde: Edge Functions → Deploy a new function → Via editor → adı "bildirim-gonder",
 // bu dosyanın tamamını yapıştır → Deploy. Gizli değerler (Edge Functions → Secrets):
 //   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY  — sitenin panelinde Bakım → Bildirim → "Anahtar üret"
-//   VAPID_SUBJECT (isteğe bağlı)         — örn. https://tentifor.netlify.app
+//   VAPID_SUBJECT (isteğe bağlı)         — örn. https://tentiforapp.pages.dev
 // SUPABASE_URL, SUPABASE_ANON_KEY ve SUPABASE_SERVICE_ROLE_KEY Supabase tarafından kendiliğinden verilir.
 //
 // Yalnızca tam yönetici çağırabilir: istekteki oturumla public.tam_yonetici_mi() sorulur.
@@ -49,7 +49,7 @@ export async function bildirimIsle(istek, ortam, araclar) {
   if (!baslik) { return yanit({ durum: "bos" }, 400); }
   const yuk = JSON.stringify({ baslik: baslik, metin: metin, adres: guvenliAdres(g.adres) });
 
-  araclar.webpush.setVapidDetails(ortam.VAPID_SUBJECT || "https://tentifor.netlify.app", ortam.VAPID_PUBLIC_KEY, ortam.VAPID_PRIVATE_KEY);
+  araclar.webpush.setVapidDetails(ortam.VAPID_SUBJECT || "https://tentiforapp.pages.dev", ortam.VAPID_PUBLIC_KEY, ortam.VAPID_PRIVATE_KEY);
   const yonetim = araclar.createClient(url, servis, { auth: { persistSession: false } });
 
   let gonderilen = 0, hata = 0, bas = 0;
