@@ -1,5 +1,5 @@
 {
-  "surum": "1.9.1",
+  "surum": "1.10.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -6855,6 +6855,7 @@
     }
   ],
   "degisiklik": [
+    {"surum": "1.10.0", "tarih": "2026-09-26", "maddeler": ["Günün kelimesi: kolay mod (karakter ve yer adları, hesapsız), seri ve dağılım, bitince kelimenin kartı", "Instagram hikâye kartları: günün kelimesi sonucu ve arşiv kartların", "Evrenine oyun ekle: günün kelimesi, evren sınavı, harita bulmacası — kendi kelimelerin, soruların ve ödülünle", "Evrenine roman yaz, çizim yükle", "Haftanın Evrengezeri, evren ziyaretçi defteri, “Nerelere gitti?” konuk haritası", "Hesabın yoksa ilerlemeni korumak için küçük bir hatırlatma"], "yeniler": []},
     {
       "surum": "1.9.1",
       "tarih": "2026-09-26",

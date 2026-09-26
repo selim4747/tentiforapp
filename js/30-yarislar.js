@@ -570,7 +570,7 @@ function yarisMeydanBitti(skor) {
 let gkDurum = null;
 
 async function gunKelimesiYukle() {
-  const alan = document.querySelector("#gkAlan");
+  const alan = document.querySelector("#gkIc") || document.querySelector("#gkAlan");
   if (!alan || !yarisHazirMi()) { return; }
   if (!hesapKullanici) {
     alan.innerHTML = '<div class="gk"><span class="oyun-etiket">Günün kelimesi</span>' +
@@ -589,7 +589,7 @@ async function gunKelimesiYukle() {
 }
 
 function gunKelimesiCiz(uyari) {
-  const alan = document.querySelector("#gkAlan");
+  const alan = document.querySelector("#gkIc") || document.querySelector("#gkAlan");
   const d = gkDurum;
   if (!alan || !d) { return; }
   const satirlar = [];

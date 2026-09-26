@@ -1753,6 +1753,7 @@ begin
     'istatistikler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.istatistikler t),
     'yaris_skorlari', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.yaris_skorlari t),
     'gk_tahminler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.gk_tahminler t),
+    'evren_defteri', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.evren_defteri t),
     'kesifler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.kesifler t),
     'bulmaca_cozumleri', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.bulmaca_cozumleri t),
     'bildirimler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.bildirimler t),
@@ -2096,6 +2097,125 @@ revoke all on public.olay_sayaclari from anon, authenticated;
 revoke execute on function public.olay_say(text), public.olay_sayilari(integer) from public;
 grant execute on function public.olay_say(text) to anon, authenticated;
 grant execute on function public.olay_sayilari(integer) to authenticated;
+
+-- ======================================================================
+-- ========== GÜNÜN KELİMESİ İSTATİSTİĞİ, EVREN DEFTERİ, HAFTA ==========
+-- ======================================================================
+
+-- Günün Kelimesi: oynanan, bulunan, seri, en uzun seri, kaçıncı tahminde bulunduğu
+create or replace function public.gk_istatistik() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare
+  uid uuid := auth.uid();
+  r record; seri int := 0; en int := 0; onceki date; oyn int := 0; coz int := 0;
+  dag int[] := array[0, 0, 0, 0, 0, 0];
+begin
+  if uid is null then return null; end if;
+  for r in select gun, cozuldu, coalesce(array_length(tahminler, 1), 0) as n from public.gk_tahminler
+           where kullanici = uid and (cozuldu or coalesce(array_length(tahminler, 1), 0) >= 6) order by gun loop
+    oyn := oyn + 1;
+    if r.cozuldu then
+      coz := coz + 1;
+      if r.n between 1 and 6 then dag[r.n] := dag[r.n] + 1; end if;
+      if onceki is not null and r.gun = onceki + 1 then seri := seri + 1; else seri := 1; end if;
+      onceki := r.gun;
+      en := greatest(en, seri);
+    else
+      seri := 0; onceki := null;
+    end if;
+  end loop;
+  return jsonb_build_object('oynanan', oyn, 'cozulen', coz, 'seri', public.gk_seri(), 'en_uzun', en, 'dagilim', to_jsonb(dag));
+end;
+$$;
+
+-- Evren ziyaretçi defteri: sitedeki evrenlere kısa notlar; yönetici onaylayınca görünür
+create table if not exists public.evren_defteri (
+  id bigserial primary key,
+  evren text not null check (evren ~ '^[A-Za-z0-9_-]{1,60}$'),
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  metin text not null check (char_length(metin) between 2 and 280),
+  zaman timestamptz not null default now(),
+  onayli boolean not null default false
+);
+create index if not exists evren_defteri_evren_zaman on public.evren_defteri (evren, zaman desc);
+alter table public.evren_defteri enable row level security;
+
+create or replace function public.evren_defter_yaz(p_evren text, p_metin text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); m text := btrim(coalesce(p_metin, ''));
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if not exists (select 1 from public.gorunur_kullanicilar where id = uid) then return jsonb_build_object('durum', 'profil'); end if;
+  if coalesce(p_evren, '') !~ '^[A-Za-z0-9_-]{1,60}$' then return jsonb_build_object('durum', 'gecersiz'); end if;
+  if char_length(m) < 2 or char_length(m) > 280 then return jsonb_build_object('durum', 'uzunluk'); end if;
+  if (select count(*) from public.evren_defteri where kullanici = uid and zaman > now() - interval '1 day') >= 5 then
+    return jsonb_build_object('durum', 'sinir');
+  end if;
+  insert into public.evren_defteri (evren, kullanici, metin) values (p_evren, uid, m);
+  return jsonb_build_object('durum', 'tamam');
+end;
+$$;
+
+-- Onaylı notlar herkese; kişinin kendi bekleyen notları yalnızca kendisine
+create or replace function public.evren_defter_oku(p_evren text) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id', d.id, 'kullanici_adi', g.kullanici_adi, 'gorunen_ad', g.gorunen_ad,
+    'metin', d.metin, 'zaman', d.zaman, 'bekliyor', not d.onayli, 'benim', d.kullanici = auth.uid()) order by d.zaman desc), '[]'::jsonb)
+  from (select * from public.evren_defteri
+        where evren = p_evren and (onayli or kullanici = auth.uid()) order by zaman desc limit 60) d
+  join public.gorunur_kullanicilar g on g.id = d.kullanici;
+$$;
+
+create or replace function public.evren_defter_sil(p_id bigint) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  delete from public.evren_defteri where id = p_id and (kullanici = auth.uid() or public.yonetici_mi());
+end;
+$$;
+
+create or replace function public.evren_defter_bekleyenler() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.yonetici_mi() then raise exception 'yetki yok'; end if;
+  return (select coalesce(jsonb_agg(jsonb_build_object('id', d.id, 'evren', d.evren, 'kullanici_adi', p.kullanici_adi,
+      'metin', d.metin, 'zaman', d.zaman) order by d.zaman), '[]'::jsonb)
+    from public.evren_defteri d join public.profiller p on p.id = d.kullanici where not d.onayli);
+end;
+$$;
+
+create or replace function public.evren_defter_karar(p_id bigint, p_onay boolean) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.yonetici_mi() then raise exception 'yetki yok'; end if;
+  if p_onay then update public.evren_defteri set onayli = true where id = p_id;
+  else delete from public.evren_defteri where id = p_id; end if;
+end;
+$$;
+
+-- Panel: bu haftanın özeti (son 7 gün)
+create or replace function public.hafta_ozeti() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare bas date := (now() at time zone 'utc')::date - 6;
+begin
+  if not public.yonetici_mi() then raise exception 'yetki yok'; end if;
+  return jsonb_build_object(
+    'kayit', (select count(*) from auth.users where (created_at at time zone 'utc')::date >= bas),
+    'kayit_onceki', (select count(*) from auth.users where (created_at at time zone 'utc')::date between bas - 7 and bas - 1),
+    'gk_oynayan', (select count(*) from public.gk_tahminler where gun >= bas and coalesce(array_length(tahminler, 1), 0) > 0),
+    'gk_bulan', (select count(*) from public.gk_tahminler where gun >= bas and cozuldu),
+    'defter_bekleyen', (select count(*) from public.evren_defteri where not onayli),
+    'teori_bekleyen', (select count(*) from public.teoriler where gizli),
+    'soru_bekleyen', (select count(*) from public.yazar_sorulari where cevap is null and not gizli),
+    'yaris', (select count(*) from public.yaris_skorlari where (zaman at time zone 'utc')::date >= bas));
+end;
+$$;
+
+revoke all on public.evren_defteri from anon, authenticated;
+revoke execute on function public.gk_istatistik(), public.evren_defter_yaz(text, text), public.evren_defter_oku(text),
+  public.evren_defter_sil(bigint), public.evren_defter_bekleyenler(), public.evren_defter_karar(bigint, boolean), public.hafta_ozeti() from public, anon;
+grant execute on function public.evren_defter_oku(text) to anon, authenticated;
+grant execute on function public.gk_istatistik(), public.evren_defter_yaz(text, text), public.evren_defter_sil(bigint),
+  public.evren_defter_bekleyenler(), public.evren_defter_karar(bigint, boolean), public.hafta_ozeti() to authenticated;
 
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';

@@ -69,6 +69,7 @@ function karsilamaAc() {
         kart("#/ev/site/e25", "E25", "Evrengezerlerin evreni. Kendi Evrengezerini de ekleyebilirsin.") +
         kart("#/ev/e99", "E99", "Bomboş bir evren: kuralını, kişisini, haritasını sen yaz.") +
         kart("#/oyunlar", "Oyunlar", "Nöbet, Şafak Yürüyüşü, Tanık Ayna ve daha fazlası.") +
+        kart("#/yarislar", "Günün kelimesi", "Her gün bir Tentiforverse adı. Kolay modu hesapsız oynanır.") +
         kart("yeni-evren", "Kendi evrenini kur", "Haritasını çiz, alfabesini ve parasını belirle.") +
       "</div>" +
       '<div class="oyun-sira krs-alt">' +
@@ -120,7 +121,9 @@ window.addEventListener("load", function () { setTimeout(girisSay, 1500); });
 
 const OLAY_ADLARI = {
   basla_acildi: "Karşılama açıldı", basla_kod: "Karşılamadan kod girildi", baslangic_kodu: "Başlangıç kodu girildi",
-  "kaynak:instagram": "Instagram'dan gelen", "kaynak:facebook": "Facebook'tan gelen", "kaynak:whatsapp": "WhatsApp'tan gelen"
+  "kaynak:instagram": "Instagram'dan gelen", "kaynak:facebook": "Facebook'tan gelen", "kaynak:whatsapp": "WhatsApp'tan gelen",
+  hesap_hatirlat: "Hesap hatırlatması gösterildi", hesap_hatirlat_ac: "Hatırlatmadan hesap açmaya gidildi",
+  hikaye_kelime: "Günün kelimesi hikâyede paylaşıldı", hikaye_kart: "Arşiv kartı hikâyede paylaşıldı"
 };
 
 function olayAdi(ad) {

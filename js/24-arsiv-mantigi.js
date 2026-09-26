@@ -784,6 +784,7 @@ veriKaynak
       ["sürüm notu", function () { if (typeof surumNotuCiz === "function") { surumNotuCiz(); } }],
       ["bildirim", function () { if (typeof bildirimKutusuCiz === "function") { bildirimKutusuCiz(); } }],
       ["yıl ve koleksiyon", function () { if (typeof yilKoleksiyonBasla === "function") { yilKoleksiyonBasla(); } }],
+      ["e25 vitrini", function () { if (typeof e25VitrinCiz === "function") { e25VitrinCiz(); } }],
       ["gezinme", function () { gezinmeCiz(); ilerlemeKur(); gecCizimKur(); }],
       ["sayfalama", sayfaYonlendir],
       ["hesap", function () { if (typeof hesapBaslat === "function") { hesapBaslat(); } }],
