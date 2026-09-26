@@ -59,6 +59,7 @@ function fanTemizle(ham) {
       });
     });
     e.harita = fanHaritaTemizle(ham.harita);
+    if (typeof evrenEkTemizle === "function") { evrenEkTemizle(ham, e); }
     if (!e.ad.trim()) { return null; }
   }
   return e;
@@ -77,6 +78,8 @@ function fanHaritaTemizle(h) {
     return t;
   }) };
   if (h && /^#[0-9a-fA-F]{6}$/.test(h.renk || "")) { o.renk = h.renk; }
+  const stil = h && typeof evrenHaritaStilTemizle === "function" ? evrenHaritaStilTemizle(h.stil) : null;
+  if (stil) { o.stil = stil; }
   return o;
 }
 
@@ -131,7 +134,8 @@ function fanEserGovde(e, dosya) {
     '<div class="bilgi">' + bilgi("Kuran", e.yazar) + "</div>" +
     (e.ozet ? paragraf(e.ozet) : "") +
     (e.harita && e.harita.yerler && e.harita.yerler.length && typeof evrenHaritaSvg === "function"
-      ? "<h2>Harita</h2>" + evrenHaritaSvg(e.harita, {}) : "") +
+      ? "<h2>Harita</h2>" + evrenHaritaSvg(e.harita, { alfabe: e.alfabe }) : "") +
+    ((e.lorlar || []).length ? "<h2>Kilitli lore</h2><ul>" + e.lorlar.map(function (l) { return "<li>" + kacir(l.baslik) + " · kodla açılır</li>"; }).join("") + "</ul>" : "") +
     FAN_EVREN_GRUPLARI.map(function (g) {
       const liste = (e[g.k] || []).filter(function (x) { return Object.keys(x).some(function (k) { return String(x[k] || "").trim(); }); });
       if (!liste.length) { return ""; }

@@ -1,5 +1,5 @@
 {
-  "surum": "1.6.1",
+  "surum": "1.7.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -2508,13 +2508,14 @@
     "testOdul": 25,
     "birim": "eçka",
     "gunlukTavan": {
-      "cevirmen": 120,
-      "vardiya": 140,
-      "boyut": 120,
-      "yazi": 110,
-      "baloncuk": 100,
-      "supheli": 90
-    }
+      "cevirmen": 90,
+      "vardiya": 100,
+      "boyut": 90,
+      "yazi": 80,
+      "baloncuk": 80,
+      "supheli": 70
+    },
+    "genelTavan": 300
   },
   "zamanCizelgesi": [
     {
@@ -6742,6 +6743,18 @@
   ],
   "degisiklik": [
     {
+      "surum": "1.7.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Evrengezer: her evrenin kendi parası var; Evrengezer bürosunda evren paraları ortak para EG'ye çevrilir",
+        "Başka evrenleri gezmek o evrenin parasıyla ödüllendirir; kilitli lore ipuçları o parayla alınır",
+        "Kendi evreninde: kod sekmesi, kendi alfabe, harita stili ve sayfa stili",
+        "Kendi evrenine kodla açılan kilitli lore ekle; evrenine özel yönetici kodu kur",
+        "Tömye ekonomisi dengelendi: oyunların günlük toplam kazanç tavanı 300 eçka"
+      ],
+      "yeniler": []
+    },
+    {
       "surum": "1.6.1",
       "tarih": "2026-09-26",
       "maddeler": [
@@ -7850,5 +7863,21 @@
   },
   "bildirim": {
     "acikAnahtar": "BOZ4Cdy6Ed0C8dOiGlH8uPQ7Jvf2vTlb-HQe8UzIzcduLUXwfKzSNjYwuPC9a_WkhX8l4PhFS8yoNzpNNco20ro"
+  },
+  "evrenParalari": {
+    "tomye": {
+      "simge": "",
+      "kur": 0.1
+    },
+    "e26": {
+      "ad": "E26 jetonu",
+      "simge": "",
+      "kur": 0.1
+    },
+    "e99": {
+      "ad": "E99 jetonu",
+      "simge": "",
+      "kur": 0.05
+    }
   }
 }

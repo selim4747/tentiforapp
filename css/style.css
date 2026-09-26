@@ -3740,3 +3740,40 @@ html.evren-acik{overflow:hidden}
 .e99-mini{font:inherit;font-size:13px;background:none;border:0;padding:4px 6px;color:var(--deniz);text-decoration:underline;cursor:pointer;min-height:32px}
 .y-e99{margin:10px 0}
 @media (max-width:760px){ .evh-svg text{font-size:3.6px;stroke-width:.7px} }
+
+/* Evrengezer: evren cüzdanı, büro, stil, alfabe, kilitli lore, kod */
+.evs-sekmeler{flex-wrap:wrap}
+.evs-sekmeler .dugme{min-height:40px}
+.evs-alfabe-ad{font-size:18px;letter-spacing:.08em;color:var(--deniz);margin-top:2px;word-break:break-word}
+.evs-cuzdan{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;max-width:960px;margin:10px auto 0;font-size:14px}
+.evs-cuzdan .evs-eg{font-family:var(--mono);font-size:12px;color:var(--deniz)}
+.evs-cuzdan .dugme{min-height:36px;padding-top:4px;padding-bottom:4px}
+.evren-sayfa[style*="--evs-kose"] .kutu-y,.evren-sayfa[style*="--evs-kose"] .dugme,.evren-sayfa[style*="--evs-kose"] .evh-kutu{border-radius:var(--evs-kose)}
+.eg-buro .eg-toplam{font-size:22px;margin:6px 0 10px}
+.eg-satir{border-top:1px solid var(--sig);padding:10px 0;display:flex;flex-direction:column;gap:6px}
+.eg-para{display:flex;flex-direction:column;gap:2px}
+.eg-islem{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.eg-islem input{width:90px}
+.evst-izgara{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;align-items:end;margin:8px 0}
+.evst-izgara label{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.evst-izgara .arac-giris{width:100%;box-sizing:border-box}
+.evst-renk input{width:100%;height:36px;padding:0;border:1px solid var(--sig);background:none}
+.evst-kutu{flex-direction:row!important;align-items:center;gap:8px!important}
+.evst-onizleme{max-width:520px}
+.evst-alfabe{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;margin:8px 0}
+.evst-alfabe label{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:13px}
+.evst-alfabe label span{width:14px;text-align:center}
+.evst-alfabe input{width:100%;min-width:0;box-sizing:border-box;padding:6px;text-align:center}
+.evst-alfabe.okunur span{display:flex;flex-direction:column;align-items:center;font-family:var(--mono);font-size:11px;border:1px solid var(--sig);border-radius:4px;padding:4px}
+.evst-alfabe.okunur b{font-size:20px;font-weight:400}
+.evst-cikti{font-size:22px;letter-spacing:.06em;word-break:break-word;min-height:1.4em}
+.evl-oge{margin:10px 0}
+.evl-oge.acik{border-color:var(--deniz)}
+.evl-bas{display:flex;align-items:center;gap:6px}
+.evl-kurucu{margin-top:8px;align-items:center}
+.evl-kurucu code,.evl-oge code{font-family:var(--mono);background:var(--buz);padding:1px 5px;border-radius:3px;word-break:break-all}
+.evl-ekle label{display:block;margin-top:8px}
+.evl-ekle .arac-giris{width:100%;box-sizing:border-box}
+.evl-ekle summary{cursor:pointer;min-height:32px}
+.evl-kod .oyun-sira input{flex:1;min-width:160px}
+.evkod{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:13px;line-height:1.5;white-space:pre;overflow:auto}
