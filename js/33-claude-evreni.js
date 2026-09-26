@@ -78,6 +78,7 @@ function ceHikayeler() {
         '<summary><h3 class="olay-baslik">' + kacir(h.baslik) + yeniRozet(h) + "</h3>" +
           (kisiler ? '<div class="olay-kisiler">' + kisiler + "</div>" : "") + "</summary>" +
         '<div class="detay-metin">' + paragraf(h.metin) + "</div>" +
+        '<div class="tepki-alan" data-hedef="ce:' + kacir(String(h.id).replace(/[^A-Za-z0-9_-]/g, "")) + '"></div>' +
       "</details>";
   }).join("");
 }

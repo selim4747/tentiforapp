@@ -26,6 +26,21 @@ function adim(ad, fn) {
   }
 }
 
+/* Betikler aynı küresel alanı paylaşır: iki dosyada aynı üst düzey ad sessizce birbirini ezer
+   (fonksiyon) ya da ikinci dosyayı hiç çalıştırmaz (let/const). */
+adim("üst düzey ad çakışması", function () {
+  const ad = {}, cakisan = [];
+  const dosyalar = readFileSync(join(KOK, "index.html"), "utf8").match(/js\/[0-9][^"?]+\.js/g);
+  for (const f of dosyalar) {
+    const s = readFileSync(join(KOK, f), "utf8");
+    for (const m of s.matchAll(/^(?:let|const|var|function|async function|class)\s+([A-Za-z_$][\w$]*)/gm)) {
+      if (ad[m[1]] && ad[m[1]] !== f) { cakisan.push(m[1] + " (" + ad[m[1]] + " / " + f + ")"); } else { ad[m[1]] = f; }
+    }
+  }
+  if (cakisan.length) { throw new Error("Aynı ad iki dosyada: " + cakisan.join(", ")); }
+  console.log("  " + Object.keys(ad).length + " üst düzey ad, çakışma yok");
+});
+
 adim("veritabanı sıfırlanıyor", function () {
   psql("postgres", ["-c", "drop database if exists " + DB, "-c", "create database " + DB]);
   psql(DB, ["-c", "create extension if not exists pgcrypto"]);

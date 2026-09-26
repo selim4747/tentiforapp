@@ -143,6 +143,32 @@ select test.ok('av özeti okunamaz', test.patlar('select * from public.av_sezonl
 select test.ok('çözenler listesi', (select count(*) = 1 from public.av_cozenler where kullanici_adi = 'cem'));
 select test.ok('hıçkırık ve av XP verir', (select (dokum->>'hickirik')::int = 20 and (dokum->>'av')::int = 100 from public.arsivci_seviyeleri where kullanici_adi = 'cem'));
 
+-- ---------- tepkiler ve kenar notları ----------
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('tepki verilir', public.tepki_ver('roman:1', 'kalp'));
+select test.ok('tepki geri alınır', not public.tepki_ver('roman:1', 'kalp'));
+select public.tepki_ver('roman:1', 'buz');
+select test.ok('tepki sayısı görünür', (select sayi = 1 from public.tepki_sayilari where hedef = 'roman:1' and tepki = 'buz'));
+select test.ok('tanımsız tepki reddedilir', test.patlar($q$select public.tepki_ver('roman:1', 'kotu')$q$));
+select test.ok('bozuk hedef reddedilir', test.patlar($q$select public.tepki_ver('<script>', 'buz')$q$));
+select test.ok('kenar notu yazılır', public.kenar_not_yaz('roman:1', 'Bu bölümdeki sessizlik çok güzel.') ->> 'durum' = 'tamam');
+select id as not_no from public.kenar_notlari_listesi where benim limit 1 \gset
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select public.kenar_not_bildir(:not_no);
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select public.kenar_not_bildir(:not_no);
+select test.ok('iki bildirimle görünür kalır', (select count(*) = 1 from public.kenar_notlari_listesi where id = :not_no));
+reset role;
+insert into auth.users (id, email, raw_user_meta_data) values ('55555555-5555-5555-5555-555555555555', 'e@ornek.test', '{"kullanici_adi":"ece"}');
+set role authenticated;
+set request.jwt.claim.sub = '55555555-5555-5555-5555-555555555555';
+select public.kenar_not_bildir(:not_no);
+select test.ok('üç bildirimle not gizlenir', (select count(*) = 0 from public.kenar_notlari_listesi where id = :not_no));
+select public.kenar_not_sil(:not_no);
+reset role;
+select test.ok('başkasının notunu silemez', (select count(*) = 1 from public.kenar_notlari where id = :not_no));
+set role authenticated;
+
 -- ---------- hesap silme ----------
 set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
 select public.hesabimi_sil();

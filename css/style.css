@@ -3417,3 +3417,15 @@ html.bolum-olc section.bolum{content-visibility:visible}
 .av-ipucu form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .av-ipucu form input{flex:1;min-width:160px}
 .av-cozen{padding-left:20px;font-size:14.5px}
+
+/* ---------- tepkiler, kenar notları, ortam sesi ---------- */
+.tepki-alan{margin-top:18px;padding-top:12px;border-top:1px solid var(--buz)}
+.tepki-sira{display:flex;flex-wrap:wrap;gap:6px}
+.tepki{border:1px solid var(--buz);background:transparent;color:var(--murekkep-2);border-radius:99px;padding:3px 12px;cursor:pointer;font:inherit;font-size:14px}
+.tepki.acik{color:var(--deniz);border-color:var(--deniz);background:var(--kar)}
+.kenar-notlar{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.kenar-not{border-left:2px solid var(--sig);padding:2px 0 2px 10px}
+.kenar-not p{font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.kenar-form{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.kenar-form textarea{width:100%;font-family:var(--govde);font-size:15px;letter-spacing:normal;text-transform:none;text-align:left}
+#ortamSes.acik{color:var(--deniz);border-color:var(--deniz)}
