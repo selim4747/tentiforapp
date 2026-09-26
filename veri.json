@@ -1,5 +1,5 @@
 {
-  "surum": "1.8.1",
+  "surum": "1.8.2",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -6841,6 +6841,14 @@
   ],
   "degisiklik": [
     {
+      "surum": "1.8.2",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Başlangıç kodu yeniden TNTF-BASLA: yalnızca Arşiv ve Evren (Tömye) açılır"
+      ],
+      "yeniler": []
+    },
+    {
       "surum": "1.8.1",
       "tarih": "2026-09-26",
       "maddeler": [
@@ -7028,7 +7036,7 @@
   },
   "profiller": [
     {
-      "id": "p_baslangic",
+      "id": "p_samikooooos",
       "ad": "Samikoooooş",
       "selamlama": "Naber lan İbneeeeee!",
       "dogrulama": "8b4e40726588d5c9e614d4f1b4d2ca9788c248c413434dfafba209a6fc48a3fc",
@@ -7070,10 +7078,27 @@
         ]
       },
       "kodSifreli": "CZFWMzcZoCqM1rAcZQ=="
+    },
+    {
+      "id": "p_baslangic",
+      "ad": "Başlangıç",
+      "selamlama": "Hoş geldin! Evren ve Karakter Arşivi açıldı.",
+      "dogrulama": "425be75851b3f325d1c76deaa3adf8bedc0bc44f8d2a31432162df4d673dc747",
+      "anahtarlar": {},
+      "erisim": {
+        "bolumler": [
+          "evren",
+          "arsiv"
+        ],
+        "evrenler": [
+          "tomye"
+        ]
+      },
+      "kodSifreli": "CZFWMzcQzEz0oQ=="
     }
   ],
   "baslangicProfil": "p_baslangic",
-  "baslangicKodu": "TNTF-K-546JVV",
+  "baslangicKodu": "TNTF-BASLA",
   "claudeEvreni": {
     "ad": "Claude tarafından yapılan evren",
     "harita": "claude",
