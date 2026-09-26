@@ -10,7 +10,7 @@
 const FAN_ESERLER_ANAHTAR = "tentiforapp_fan_eserlerim";
 const FAN_ACILAN_ANAHTAR = "tentiforapp_fan_acilan";    /* hesapla eşitlenmez (28-hesap.js) */
 const FAN_BICIM = "tentifor-eser";
-const FAN_DOSYA_SINIR = 3 * 1024 * 1024;
+const FAN_DOSYA_SINIR = 16 * 1024 * 1024;   /* çizimli evren dosyaları büyük olabilir */
 const FAN_METIN_SINIR = 120000;
 
 const FAN_KURAL_TURLERI = ["fizik", "zaman", "ışık", "ölüm", "büyü", "dil", "toplum", "biyoloji", "gökyüzü", "enerji", "hafıza", "boyut"];
@@ -387,7 +387,7 @@ function fanAcCiz() {
 function fanDosyaOku(dosya) {
   return new Promise(function (coz, reddet) {
     if (!dosya) { reddet(new Error("Dosya seçilmedi")); return; }
-    if (dosya.size > FAN_DOSYA_SINIR) { reddet(new Error("Dosya çok büyük (en fazla 3 MB)")); return; }
+    if (dosya.size > FAN_DOSYA_SINIR) { reddet(new Error("Dosya çok büyük (en fazla " + Math.round(FAN_DOSYA_SINIR / 1048576) + " MB)")); return; }
     const r = new FileReader();
     r.onerror = function () { reddet(new Error("Dosya okunamadı")); };
     r.onload = function () {

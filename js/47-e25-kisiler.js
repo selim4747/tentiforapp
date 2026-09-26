@@ -219,7 +219,8 @@ function kisiKartHtml(x) {
       '<button class="dugme dugme-sade" data-kisi-kart="' + kacir(anahtar) + '">Kişi kartı (hikâye)</button>' +
       (kendi ? '<button class="dugme dugme-sade" data-kisi-duzenle="' + kacir(e.id) + '">Düzenle</button>' +
         '<button class="dugme dugme-sade" data-kisi-paylas="' + kacir(anahtar) + '">Dosya / yazara gönder</button>' : "") +
-    "</div>" + (kisiGoturulen === anahtar ? kisiGoturHtml(e, anahtar) : "") + "</div>";
+    "</div>" + (kisiGoturulen === anahtar ? kisiGoturHtml(e, anahtar) : "") +
+    (typeof konukHaritasiHtml === "function" ? konukHaritasiHtml(e, anahtar) : "") + "</div>";
 }
 
 /** E25 sayfasının altındaki bölüm: herkes kendi Evrengezerini ekler (evren kodla kilitli olsa da). */

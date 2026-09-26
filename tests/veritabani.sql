@@ -253,6 +253,54 @@ select test.ok('sayaç artar, geçersiz ad sayılmaz', (select count(*) = 1 and 
 reset role;
 set role authenticated;
 
+-- ---------- günün kelimesi istatistiği ----------
+reset role;
+insert into public.gk_tahminler (kullanici, gun, tahminler, cozuldu) values
+  ('33333333-3333-3333-3333-333333333333', (now() at time zone 'utc')::date - 3, '{aaaa,bbbb,cccc}', true),
+  ('33333333-3333-3333-3333-333333333333', (now() at time zone 'utc')::date - 2, '{aaaa,bbbb}', true),
+  ('33333333-3333-3333-3333-333333333333', (now() at time zone 'utc')::date - 1, '{a,b,c,d,e,f}', false),
+  ('33333333-3333-3333-3333-333333333333', (now() at time zone 'utc')::date, '{aaaa}', false);
+set role anon;
+select test.ok('anonim kelime istatistiğini çağıramaz', test.patlar('select public.gk_istatistik()'));
+reset role;
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('kelime istatistiği: oynanan, bulunan, en uzun seri, dağılım',
+  (select (i ->> 'oynanan')::int = 3 and (i ->> 'cozulen')::int = 2 and (i ->> 'en_uzun')::int = 2
+     and (i -> 'dagilim') = '[0,1,1,0,0,0]'::jsonb and (i ->> 'seri')::int = 0 from (select public.gk_istatistik() i) x));
+
+-- ---------- evren ziyaretçi defteri ----------
+select test.ok('deftere not yazılır', public.evren_defter_yaz('e25', 'Buraya ilk ben uğradım.') ->> 'durum' = 'tamam');
+select test.ok('geçersiz evren adı reddedilir', public.evren_defter_yaz('../x', 'merhaba') ->> 'durum' = 'gecersiz');
+select test.ok('çok uzun not reddedilir', public.evren_defter_yaz('e25', repeat('a', 281)) ->> 'durum' = 'uzunluk');
+select test.ok('yazan kendi bekleyen notunu görür', (select jsonb_array_length(d) = 1 and (d -> 0 ->> 'bekliyor')::boolean from (select public.evren_defter_oku('e25') d) x));
+select test.ok('tablo doğrudan okunamaz', test.patlar('select * from public.evren_defteri'));
+select test.ok('yönetici olmayan onaylayamaz', test.patlar('select public.evren_defter_karar(1, true)'));
+select test.ok('yönetici olmayan bekleyenleri göremez', test.patlar('select public.evren_defter_bekleyenler()'));
+select test.ok('yönetici olmayan hafta özetini göremez', test.patlar('select public.hafta_ozeti()'));
+select public.evren_defter_yaz('e25', 'iki'), public.evren_defter_yaz('e25', 'üç'), public.evren_defter_yaz('e25', 'dört'), public.evren_defter_yaz('e25', 'beş');
+select test.ok('günde beş nottan fazlası yazılamaz', public.evren_defter_yaz('e25', 'altı') ->> 'durum' = 'sinir');
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select test.ok('başkası onaysız notu görmez', jsonb_array_length(public.evren_defter_oku('e25')) = 0);
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select test.ok('yönetici bekleyenleri görür', jsonb_array_length(public.evren_defter_bekleyenler()) = 5);
+select test.ok('hafta özeti: kayıt ve bekleyen not', (select (h ->> 'kayit')::int >= 4 and (h ->> 'defter_bekleyen')::int = 5 from (select public.hafta_ozeti() h) x));
+select public.evren_defter_karar((select min((x ->> 'id')::bigint) from jsonb_array_elements(public.evren_defter_bekleyenler()) x), true);
+select public.evren_defter_karar((select max((x ->> 'id')::bigint) from jsonb_array_elements(public.evren_defter_bekleyenler()) x), false);
+reset role;
+set role anon;
+select test.ok('onaylanan not herkese görünür', (select jsonb_array_length(d) = 1 and d -> 0 ->> 'kullanici_adi' = 'cem' and not (d -> 0 ->> 'bekliyor')::boolean from (select public.evren_defter_oku('e25') d) x));
+select test.ok('anonim deftere yazamaz', test.patlar($q$select public.evren_defter_yaz('e25', 'merhaba')$q$));
+reset role;
+select test.ok('reddedilen not silinir', (select count(*) = 4 from public.evren_defteri));
+select min(id) as onayli_not from public.evren_defteri where onayli \gset
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select public.evren_defter_sil(:onayli_not);
+reset role;
+select test.ok('başkasının notu silinemez', (select count(*) = 1 from public.evren_defteri where onayli));
+set role authenticated;
+
 -- ---------- E99: sunucu aracı yok ----------
 select test.ok('E99 sunucu fonksiyonu yok', not exists (select 1 from pg_proc where proname like 'e99%'));
 

@@ -3835,3 +3835,88 @@ html.evren-acik{overflow:hidden}
 .eg-urun-var{font-family:var(--mono);font-size:12px;color:var(--deniz)}
 
 .kisi-kutu{border:1px solid var(--sig);border-radius:8px;padding:10px 14px;margin:8px 0;background:var(--beyaz)}
+
+/* ================= kelime oyunu: modlar, kelimenin kartı, istatistik, hesap hatırlatması ================= */
+.gk-modlar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.gk-modlar .dugme{font-size:13px}
+.ko-bilgi{border:1px solid var(--buz);border-left:4px solid var(--deniz);background:var(--kar);padding:10px 14px;margin:8px 0 12px;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.ko-bilgi .oyun-etiket{margin:0}
+.ko-bilgi b{font-family:var(--display);font-weight:400;font-size:22px}
+.ko-bilgi p{margin:0;font-size:15px;color:var(--murekkep-2)}
+.ko-istat{margin:10px 0}
+.ko-sayilar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-bottom:10px}
+.ko-sayi b{display:block;font-family:var(--display);font-weight:400;font-size:26px;line-height:1.1}
+.ko-sayi span{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;color:var(--murekkep-2)}
+.ko-dagilim{display:flex;flex-direction:column;gap:3px;max-width:360px;margin:0 auto}
+.ko-dag-satir{display:grid;grid-template-columns:16px 1fr 28px;gap:6px;align-items:center;font-family:var(--mono);font-size:12px}
+.ko-dag-cubuk{background:var(--buz);height:14px;display:block}
+.ko-dag-cubuk i{display:block;height:100%;background:var(--deniz)}
+.ko-paylas{justify-content:center;margin-top:6px}
+.kol-hikaye{margin:10px 0}
+.kol-hikaye select{max-width:240px}
+.hesap-hatirlat{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--alt-h) + 16px + env(safe-area-inset-bottom,0px));z-index:70;
+  width:min(520px,calc(100% - 24px));background:var(--beyaz);border:1px solid var(--sig);border-top:4px solid var(--deniz);
+  box-shadow:0 10px 30px rgba(10,15,20,.18);padding:12px 14px}
+.hesap-hatirlat p{margin:0 0 8px;font-size:15px}
+.hesap-hatirlat .oyun-sira{gap:6px;flex-wrap:wrap}
+
+/* ================= haftanın Evrengezeri, konuk haritası, ziyaretçi defteri, bu hafta ================= */
+.e25-vitrin{background:var(--beyaz);border:1px solid var(--buz);border-left:4px solid var(--deniz);padding:14px 16px;margin:14px 0}
+.e25-vitrin h3{font-family:var(--display);font-weight:400;font-size:26px;margin:2px 0 4px}
+.e25-vitrin p{margin:0 0 8px}
+.e25-vitrin.bos p{color:var(--murekkep-2)}
+.konuk-harita-kutu{border-top:1px solid var(--buz);margin-top:10px;padding-top:8px}
+.konuk-harita{width:100%;max-width:420px;height:auto;display:block;margin:6px auto}
+.kh-cizgi{stroke:var(--sig);stroke-width:1.5}
+.kh-merkez{fill:var(--deniz)}
+.kh-merkez-yazi{fill:var(--beyaz);font:500 11px var(--mono)}
+.kh-alt{fill:var(--murekkep-2);font:10px var(--mono);letter-spacing:.08em}
+.kh-evren{fill:var(--yarik)}
+.kh-hikaye{fill:var(--beyaz);stroke:var(--deniz);stroke-width:2}
+.kh-yazi{fill:var(--murekkep);font:12px var(--govde)}
+.konuk-yerler{margin:4px 0 8px 18px;font-size:14px}
+.evren-defter .kutu-y{margin-bottom:10px}
+.defter-notlar{list-style:none;display:flex;flex-direction:column;gap:8px}
+.defter-notlar li{background:var(--beyaz);border:1px solid var(--buz);padding:10px 12px}
+.defter-notlar li.bekliyor{border-style:dashed;opacity:.85}
+.defter-notlar p{margin:0 0 4px}
+.hafta-ozet{margin-bottom:18px}
+.y-defter{margin-top:10px}
+.y-defter-not{border-top:1px solid var(--buz);padding:8px 0}
+.y-defter-not p{margin:0 0 4px}
+
+/* ================= evren oyunları, roman, çizimler ================= */
+.evo-kart{margin:10px 0}
+.evo-oyun{background:var(--beyaz);border:1px solid var(--buz);padding:14px 16px;margin-bottom:12px}
+.evo-soru{font-size:17px;margin:8px 0 12px}
+.evo-skor{font-family:var(--display);font-size:54px;line-height:1;margin:10px 0}
+.evo-secenekler{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+@media(max-width:520px){ .evo-secenekler{grid-template-columns:1fr} }
+.evo-secenek{min-height:44px;padding:8px 12px;text-align:left;background:var(--kar);border:1px solid var(--sig);border-radius:3px;font:inherit;color:inherit;cursor:pointer}
+.evo-secenek:hover:not(:disabled){border-color:var(--deniz)}
+.evo-secenek.dogru{background:var(--deniz);border-color:var(--deniz);color:var(--beyaz)}
+.evo-secenek.yanlis{background:#C9D3DD;border-color:#C9D3DD;color:#3D4A57;text-decoration:line-through}
+.evo-harita{margin:6px 0 10px}
+.evo-harita .evh-svg{width:100%;height:auto;display:block;cursor:crosshair}
+.evo-harita.bitti .evh-svg{cursor:default}
+.evo-harita [data-evo-yer]{cursor:pointer}
+.evo-ayar{margin-top:16px}
+.evo-ayar-oyun{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;border-top:1px solid var(--buz);padding:8px 0}
+.evo-ayar-oyun input.kod-giris{grid-column:1 / -1}
+.evo-onay{display:flex;gap:8px;align-items:center}
+.evr-bolumler{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.evr-bolumler .dugme{font-size:13px}
+.evr-metin{min-height:320px}
+.evr-baslik{font-family:var(--display);font-weight:400;font-size:28px;margin:6px 0}
+.evr-bolum-baslik{font-family:var(--display);font-weight:400;font-size:22px;margin:16px 0 8px}
+.evr-icindekiler{margin:8px 0}
+.evr-icindekiler ol{margin:6px 0 0 20px}
+.evr-gez{margin-top:18px;justify-content:space-between}
+.evc-yukle{margin-bottom:6px}
+.evc-izgara{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:10px}
+.evc-kart{background:var(--beyaz);border:1px solid var(--buz);padding:8px;display:flex;flex-direction:column;gap:6px;margin:0}
+.evc-buyut{border:0;padding:0;background:var(--buz);cursor:zoom-in;display:block;aspect-ratio:1/1;overflow:hidden}
+.evc-resim{width:100%;height:100%;object-fit:cover;display:block}
+.evc-kart figcaption{font-size:14px;display:flex;flex-direction:column;gap:2px}
+.evc-kart figcaption span{color:var(--murekkep-2)}
+.evc-buyuk{max-width:100%;max-height:70vh;display:block;margin:0 auto 10px;height:auto}

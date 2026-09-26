@@ -251,7 +251,7 @@ function evrenHaritaSvg(h, o) {
       ' transform="translate(' + y.x + "," + (y.y * k).toFixed(2) + ')">' +
       '<circle r="' + (sec ? 1.6 : 1.1) + '" fill="' + (y.tur === "Şehir" ? "#1C5C96" : "#3D4A57") + '" stroke="#fff" stroke-width="0.35"' + (katki ? ' stroke-dasharray="0.6 0.4"' : "") + "></circle>" +
       '<circle r="3.2" fill="transparent"></circle>' +
-      '<text y="-2.1" text-anchor="middle" font-size="2.3" font-family="' + yaziTipi + '" fill="' + yazi + '" stroke="' + hale + '" stroke-width="0.5" paint-order="stroke">' + esc(etiket(y.ad || "—")) + "</text></g>";
+      (o.etiketsiz ? "" : '<text y="-2.1" text-anchor="middle" font-size="2.3" font-family="' + yaziTipi + '" fill="' + yazi + '" stroke="' + hale + '" stroke-width="0.5" paint-order="stroke">' + esc(etiket(y.ad || "—")) + "</text>") + "</g>";
   };
   const taslak = (o.cizim && o.cizim.length)
     ? '<polyline points="' + o.cizim.map(function (n) { return n[0] + "," + (n[1] * k).toFixed(2); }).join(" ") + '" fill="none" stroke="#A33" stroke-width="0.4" stroke-dasharray="1 0.5"></polyline>' +

@@ -77,7 +77,10 @@ const KURULUM_DENETIMLERI = [
   ["Kulüp duvarı", function (s) { return s.from("kulup_duvari").select("*").limit(1); }],
   ["Okur bulmacaları", function (s) { return s.from("okur_bulmaca_listesi").select("*").limit(1); }],
   ["Davet ve rehberlik", function (s) { return s.from("rehber_sayilari").select("*").limit(1); }],
-  ["Yeni bölüm bildirimi (tablo)", function (s) { return s.rpc("bildirim_abonelik_sil", { p_endpoint: "https://fcm.googleapis.com/denetim" }); }]
+  ["Yeni bölüm bildirimi (tablo)", function (s) { return s.rpc("bildirim_abonelik_sil", { p_endpoint: "https://fcm.googleapis.com/denetim" }); }],
+  ["Ziyaret sayacı", function (s) { return s.rpc("olay_sayilari", { p_gun: 1 }); }],
+  ["Günün kelimesi: seri ve dağılım", function (s) { return s.rpc("gk_istatistik"); }],
+  ["Evren ziyaretçi defteri ve “Bu hafta” özeti", function (s) { return s.rpc("evren_defter_oku", { p_evren: "denetim" }); }]
 ];
 
 function kurulumEksikMi(hata) {

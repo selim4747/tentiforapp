@@ -30,6 +30,10 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
   async function cihaz(ad, secenek) {
     const ctx = await tarayici.newContext(Object.assign({ viewport: { width: 420, height: 1000 }, serviceWorkers: "block", acceptDownloads: true }, secenek || {}));
     await ctx.addInitScript(function () { try { localStorage.setItem("tentiforapp_tur", "bitti"); } catch (e) { /* yok */ } });
+    /* hesap hatırlatması yalnızca kendi testinde: öbür testlerde alttaki düğmelerin üstüne binmesin */
+    if (ad !== "yenilikler") {
+      await ctx.addInitScript(function () { try { localStorage.setItem("tentiforapp_hesap_hatirlat", JSON.stringify({ kapat: true })); } catch (e) { /* yok */ } });
+    }
     await ctx.route(/\/js\/28-hesap\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: hesapKod }); });
     await ctx.route(TEST_URL + "/**", function (r) { return sahte.isle(r); });
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, function (r) { return r.abort(); });
@@ -597,6 +601,160 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await Z.evaluate(function () { location.hash = "#/mektuplar"; }); await bekle(Z, 800);
     ok("uzun metinlerde Dinle düğmesi", await Z.locator(".sesli-dugme").count() > 0);
 
+    /* ---------- günün kelimesi (kolay), hesap hatırlatması, evren oyunları, roman, çizimler ---------- */
+    console.log("kelime ve evren oyunları");
+    const N = await cihaz("yenilikler");
+    await N.goto(adres + "/"); await bekle(N, 1500);
+    ok("ana sayfada E25 vitrini (henüz kişi yoksa çağrı)", /Evrengezerini ekle/.test(await N.textContent("#e25VitrinAlan")));
+    await N.evaluate(function () {
+      veri.fanEserleri.kisiler = [{ bicim: FAN_BICIM, surum: 1, tur: "kisi", id: "vitrin1", evren: "e25", ad: "Orlan Gezgin", unvan: "haritacı", ozet: "Kıyıdan kıyıya.", yazar: "okur", kisilik: [] }];
+      e25VitrinCiz();
+    });
+    ok("haftanın Evrengezeri ana sayfada", /Orlan Gezgin/.test(await N.textContent("#e25VitrinAlan")) && await N.locator('#e25VitrinAlan [data-kisi-kart="site:vitrin1"]').count() === 1);
+    await N.evaluate(function () { location.hash = "#/yarislar"; }); await bekle(N, 1500);
+    ok("hesapsız okurda günün kelimesi kolay modda, girişsiz oynanır", await N.locator('#gkAlan [data-gk-mod="kolay"][aria-selected="true"]').count() === 1 &&
+      await N.locator("#gkIc [data-ko-form]").count() === 1);
+    const kolay = await N.evaluate(function () { const o = KO_OYUNLAR["tomye-kolay"]; return { c: koCevap(o, koKayit(o.anahtar)), l: o.kelimeler }; });
+    ok("kolay mod yalnızca karakter ve yer adları", kolay.l.length > 10 && kolay.l.indexOf("eçka") === -1 && kolay.l.indexOf("niraz") === -1 && kolay.l.indexOf(kolay.c) !== -1, kolay.l);
+    ok("tahmin karşılaştırması sunucudakiyle aynı", await N.evaluate(function () {
+      return koKarsilastir("aaba", "abca").join("") === "dyvd" && koKarsilastir("eçka", "eçka").join("") === "dddd" && koKarsilastir("kaka", "akka").join("") === "vvdd";
+    }));
+    const kolayEckaOnce = await N.evaluate(function () { return cuzdan.ecka; });
+    await N.fill("#gkIc [data-ko-giris]", "x".repeat(Array.from(kolay.c).length)); await N.press("#gkIc [data-ko-giris]", "Enter"); await bekle(N, 200);
+    await N.fill("#gkIc [data-ko-giris]", kolay.c); await N.press("#gkIc [data-ko-giris]", "Enter"); await bekle(N, 400);
+    ok("kolay kelime bulunur, eçka verilir", /Buldun! 2\/6/.test(await N.textContent("#gkIc .gk-son")) && await N.evaluate(function () { return cuzdan.ecka; }) === kolayEckaOnce + 5);
+    ok("bitince kelimenin kartı (kodsuz okura kilitli)", /başlangıç koduyla/.test(await N.textContent("#gkIc .ko-bilgi")) || /Haritada|Kaydı aç/.test(await N.textContent("#gkIc .ko-bilgi")));
+    ok("seri ve dağılım", /1\s*seri/.test(await N.textContent("#gkIc .ko-sayilar")) && await N.locator("#gkIc .ko-dag-satir").count() === 6);
+    ok("yeniden çizilince durum korunur", await N.evaluate(function () { gunKelimesiYukle(); return /Buldun/.test(document.querySelector("#gkIc").textContent); }));
+    ok("kelime hikâye kartı 1080×1920", await N.evaluate(async function () {
+      const t = await kelimeHikayeKartUret({ baslik: "Tentiforverse", gun: "2026-09-26", satirlar: [["y", "v", "d", "d"], ["d", "d", "d", "d"]], cozuldu: true, seri: 3 });
+      return !!t && t.width === 1080 && t.height === 1920;
+    }));
+    await bekle(N, 2800);
+    ok("hesapsız okura ilerlemesi için hesap hatırlatması", await N.locator("#hesapHatirlat [data-hh-ac]").count() === 1);
+    await N.click("#hesapHatirlat [data-hh-sonra]"); await bekle(N, 100);
+    ok("hatırlatma üç günde bir", await N.evaluate(function () { hesapHatirlat("kart"); return new Promise(function (c) { setTimeout(function () { c(!document.querySelector("#hesapHatirlat")); }, 2800); }); }));
+    ok("arşiv kartı hikâye kartı", await N.evaluate(async function () {
+      kartKazan("rolde", "test");
+      const t = await arsivKartHikayeUret("rolde");
+      location.hash = "#/koleksiyon";
+      koleksiyonCiz();
+      return !!t && t.height === 1920 && !!document.querySelector("[data-kol-hikaye]");
+    }));
+
+    const nEv = await N.evaluate(function () {
+      const id = evrenYeniKur();
+      evrenBenimDegistir(id, function (e) {
+        e.ad = "Kıyı Evreni";
+        e.kisiler = [{ ad: "Arvel", rol: "kaptan", aciklama: "" }, { ad: "Bosra", rol: "aşçı", aciklama: "" }, { ad: "Cimen", rol: "haritacı", aciklama: "" }, { ad: "Dolun", rol: "gözcü", aciklama: "" }];
+        e.sozluk = [{ terim: "Kavra", tanim: "Kıyı rüzgârı" }];
+        e.harita = { yerler: [{ id: "a", ad: "Norak", x: 10, y: 10 }, { id: "b", ad: "Pelin", x: 30, y: 30 }, { id: "c", ad: "Rusta", x: 60, y: 20 }, { id: "d", ad: "Tavir", x: 80, y: 50 }] };
+      });
+      return id;
+    });
+    await N.evaluate(function (id) { location.hash = "#/ev/benim/" + id; }, nEv); await bekle(N, 900);
+    ok("kendi evreninde Oyunlar, Roman, Çizimler sekmeleri", await N.evaluate(function () {
+      const t = Array.from(document.querySelectorAll("#evrenSayfa [data-evs-sekme]")).map(function (x) { return x.dataset.evsSekme; });
+      return ["oyunlar", "roman", "cizim"].every(function (s) { return t.indexOf(s) !== -1; });
+    }));
+    await N.click('#evrenSayfa [data-evs-sekme="oyunlar"]'); await bekle(N, 200);
+    ok("evrenin kendi kelimeleri, kendi evreninde ödülsüz", /ödül vermez/.test(await N.textContent("#evrenSayfa .evs-govde")) &&
+      await N.evaluate(function () { return KO_OYUNLAR[evoAnahtar()].kelimeler.join(","); }) === "arvel,bosra,cimen,dolun,kavra,norak,pelin,rusta,tavir");
+    await N.fill("#evoOdul", "20"); await N.dispatchEvent("#evoOdul", "change");
+    await N.fill("#evoSorular", "Kor kaç saat yanar? | Yirmi | On | Kırk"); await N.dispatchEvent("#evoSorular", "change");
+    await N.uncheck('[data-evo-ayar="acik"][data-evo-oyun="harita"]'); await bekle(N, 200);
+    ok("kurucu oyunu evrenine göre ayarlar", await N.evaluate(function (id) {
+      const o = evrenBenimBul(id).oyunlar;
+      return o.odul === 20 && o.sorular.length === 1 && o.sorular[0].yanlis.length === 2 && o.harita.acik === false;
+    }, nEv) && await N.locator('#evrenSayfa [data-evo-basla="harita"]').count() === 0);
+    await N.check('[data-evo-ayar="acik"][data-evo-oyun="harita"]'); await bekle(N, 200);
+    await N.click('#evrenSayfa [data-evo-basla="sinav"]'); await bekle(N, 100);
+    ok("sınav soruları evrenden ve kurucudan", await N.evaluate(function () { return EVO.sorular.length === 5 && EVO.sorular.every(function (q) { return q.secenekler.indexOf(q.dogru) !== -1; }); }));
+    for (let i = 0; i < 5; i++) {
+      await N.evaluate(function () { const q = EVO.sorular[EVO.i]; document.querySelector('#evrenSayfa [data-evo-sec="' + q.secenekler.indexOf(q.dogru) + '"]').click(); });
+      await N.click("#evrenSayfa [data-evo-sonraki]");
+    }
+    ok("sınav biter, kendi evreninde ödül yok", /5 \/ 5/.test(await N.textContent("#evrenSayfa .evo-oyun")) && /ödül vermez/.test(await N.textContent("#evrenSayfa .evo-oyun")));
+    await N.click("#evrenSayfa [data-evo-kapat]");
+    await N.click('#evrenSayfa [data-evo-basla="harita"]'); await bekle(N, 100);
+    ok("harita bulmacası etiketsiz", await N.locator("#evrenSayfa .evo-harita text").count() === 0 && await N.locator("#evrenSayfa .evo-harita [data-evo-yer]").count() === 4);
+    await N.evaluate(function () { document.querySelector('#evrenSayfa [data-evo-yer="' + EVO.hedefler[0] + '"]').dispatchEvent(new MouseEvent("click", { bubbles: true })); });
+    ok("doğru yere dokununca sayılır", await N.evaluate(function () { return EVO.dogru === 1 && EVO.cevap === "d"; }));
+    await N.click("#evrenSayfa [data-evo-kapat]");
+
+    await N.click('#evrenSayfa [data-evs-sekme="roman"]');
+    await N.click("#evrenSayfa [data-evr-ekle]");
+    await N.fill("#evrBolumBaslik", "Kıyıda"); await N.fill("#evrBolumMetin", "Norak kıyısında bir gemi vardı.");
+    await N.click('#evrenSayfa [data-evs-sekme="harita"]'); await bekle(N, 100);
+    ok("roman bölümü hemen kaydedilir (sekme değişse de)", await N.evaluate(function (id) { const r = evrenBenimBul(id).roman; return r.bolumler.length === 1 && r.bolumler[0].baslik === "Kıyıda" && /gemi/.test(r.bolumler[0].metin); }, nEv));
+    await N.click('#evrenSayfa [data-evs-sekme="roman"]'); await N.click('#evrenSayfa [data-evr-onizle="1"]');
+    ok("okur görünümü", /1\. Kıyıda/.test(await N.textContent("#evrenSayfa .evr-oku")));
+
+    await N.click('#evrenSayfa [data-evs-sekme="cizim"]');
+    const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg==", "base64");
+    await N.setInputFiles("#evrenSayfa [data-evc-yukle]", { name: "kiyi-cizimi.png", mimeType: "image/png", buffer: png }); await bekle(N, 1200);
+    ok("çizim yüklenir, küçültülür, görünür", await N.evaluate(function (id) {
+      const c = evrenBenimBul(id).cizimler;
+      const img = document.querySelector("#evrenSayfa img[data-evc-resim]");
+      return c.length === 1 && c[0].baslik === "kiyi-cizimi" && !c[0].v && img && /^data:image\/jpeg/.test(img.getAttribute("src"));
+    }, nEv));
+    ok("görsel yerel listeye değil ayrı depoya yazılır", await N.evaluate(function () { return localStorage.getItem("tentiforapp_fan_eserlerim").indexOf("data:image") === -1; }));
+    const nDosya = await N.evaluate(async function (id) { const e = evrenBenimBul(id); await cizimleriIsit(e); return fanDosyaHtml(e); }, nEv);
+    ok("dosyada roman ve çizim gömülü", /data:image\/jpeg/.test(nDosya) && /Norak kıyısında/.test(nDosya));
+    ok("dosyadan geri açılır", await N.evaluate(function (h) {
+      const e = fanMetindenEser(h);
+      return e.cizimler.length === 1 && !!e.cizimler[0].v && e.roman.bolumler.length === 1 && e.oyunlar.odul === 20;
+    }, nDosya));
+    ok("zararlı görsel adresi temizlenir", await N.evaluate(function () {
+      const e = fanTemizle({ bicim: FAN_BICIM, tur: "evren", ad: "x", cizimler: [{ id: "a", v: "javascript:alert(1)", yol: "../gizli.jpg" }, { id: "b", yol: "ikon/fan/x-b.jpg" }] });
+      return !e.cizimler[0].v && !e.cizimler[0].yol && e.cizimler[1].yol === "ikon/fan/x-b.jpg";
+    }));
+
+    /* başkasının (sitedeki fanmade) evreninde oyun o evrenin parasını verir, günde bir kez */
+    const fanOdul = await N.evaluate(function (id) {
+      const e = JSON.parse(JSON.stringify(evrenBenimBul(id)));
+      e.id = "fsitedeki1"; e.ad = "Sitedeki Kıyı"; e.para = { ad: "kavuk", simge: "", kur: 0.5 };
+      veri.fanEserleri.evrenler = [e];
+      return true;
+    }, nEv);
+    await N.evaluate(function () { location.hash = "#/ev/fan/fsitedeki1"; }); await bekle(N, 900);
+    await N.click('#evrenSayfa [data-evs-sekme="oyunlar"]');
+    const bakiye0 = await N.evaluate(function () { return egBakiye("ev:fsitedeki1"); });
+    const sinavOyna = async function () {
+      await N.click('#evrenSayfa [data-evo-basla="sinav"]');
+      for (let i = 0; i < 5; i++) {
+        await N.evaluate(function () { const q = EVO.sorular[EVO.i]; document.querySelector('#evrenSayfa [data-evo-sec="' + q.secenekler.indexOf(q.dogru) + '"]').click(); });
+        await N.click("#evrenSayfa [data-evo-sonraki]");
+      }
+    };
+    await sinavOyna();
+    ok("fanmade evrende kazanınca o evrenin parası (kurucunun ödülü, tavanla)", fanOdul && await N.evaluate(function () { return egBakiye("ev:fsitedeki1"); }) === bakiye0 + 6 &&
+      /kavuk/.test(await N.textContent("#evrenSayfa .evo-oyun")));
+    await N.click('#evrenSayfa [data-evo-basla="sinav"]');
+    for (let i = 0; i < 5; i++) {
+      await N.evaluate(function () { const q = EVO.sorular[EVO.i]; document.querySelector('#evrenSayfa [data-evo-sec="' + q.secenekler.indexOf(q.dogru) + '"]').click(); });
+      await N.click("#evrenSayfa [data-evo-sonraki]");
+    }
+    ok("aynı oyun günde bir kez ödül verir", await N.evaluate(function () { return egBakiye("ev:fsitedeki1"); }) === bakiye0 + 6 && /bugünkü ödülünü aldın/.test(await N.textContent("#evrenSayfa .evo-oyun")));
+    await N.click("#evrenSayfa [data-evo-kapat]");
+    ok("okur romanı ve çizimleri okur", await N.evaluate(function () {
+      const t = Array.from(document.querySelectorAll("#evrenSayfa [data-evs-sekme]")).map(function (x) { return x.dataset.evsSekme; });
+      return t.indexOf("roman") !== -1 && t.indexOf("cizim") !== -1 && t.indexOf("defter") !== -1 && t.indexOf("stil") === -1;
+    }));
+
+    ok("konuk haritası: kişinin gittiği yerler", await N.evaluate(function () {
+      const l = fanEserlerim();
+      l.push({ bicim: FAN_BICIM, surum: 1, tur: "hikaye", id: "hk1", baslik: "Orlan kıyıda", metin: "…", konuklar: [{ bicim: FAN_BICIM, tur: "kisi", id: "vitrin1", ad: "Orlan Gezgin", kisilik: [] }] });
+      fanEserlerimYaz(l);
+      const y = konukYerleri("vitrin1");
+      const svg = konukHaritasiSvg({ ad: "Orlan Gezgin" }, y);
+      return y.length === 1 && y[0].ad === "Orlan kıyıda" && (svg.match(/<circle/g) || []).length === 2;
+    }));
+    await N.evaluate(function () { location.hash = "#/ev/site/e25"; }); await bekle(N, 900);
+    await N.click('#evrenSayfa [data-konuk-harita="site:vitrin1"]'); await bekle(N, 200);
+    ok("E25'te “Nerelere gitti?” haritası", await N.locator("#evrenSayfa .konuk-harita").count() === 1 && /Orlan kıyıda/.test(await N.textContent("#evrenSayfa .konuk-harita-kutu")));
+    await N.close();
+
     /* ---------- 2. paylaşım adresi ve PWA ---------- */
     const kisa = await (await fetch(adres + "/dunya/")).text();
     ok("/dunya/ kendi başlığıyla ayrı sayfa", /<title>Dünya — TentiforApp<\/title>/.test(kisa) && /og:title" content="Dünya — TentiforApp"/.test(kisa) &&
@@ -708,6 +866,27 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await B.evaluate(function () { location.hash = "#/u/yonetici"; }); await bekle(B, 1800);
     await B.click('[data-takip="yonetici"]'); await bekle(B, 900);
     ok("takip kaydedilir", (await sahte.kokSorgu("select count(*)::int n from public.takipler")).rows[0].n === 1);
+
+    /* ---------- günün kelimesi (zor): sunucudaki kelime, kelimenin kartı, istatistik ---------- */
+    await B.evaluate(function () { location.hash = "#/yarislar"; }); await bekle(B, 1500);
+    ok("hesaplı okurda günün kelimesi zor modla açılır", await B.evaluate(function () { return gkModu(); }) === "zor" &&
+      await B.locator('#gkAlan [data-gk-mod="zor"][aria-selected="true"]').count() === 1);
+    const gkCevap = (await sahte.kokSorgu("select public.gk_cevap((now() at time zone 'utc')::date) c")).rows[0].c;
+    await B.fill("#gkGiris", gkCevap); await B.press("#gkGiris", "Enter"); await bekle(B, 1500);
+    ok("zor mod bitince kelimenin kartı ve hikâye düğmesi", await B.locator("#gkIc .ko-bilgi").count() === 1 && await B.locator("#gkIc [data-gk-hikaye]").count() === 1,
+      await B.textContent("#gkIc"));
+    ok("sunucudaki seri ve dağılım", /1\s*oynanan/.test(await B.textContent("#gkIc [data-gk-istat]")), await B.textContent("#gkIc"));
+    await B.click('#gkAlan [data-gk-mod="kolay"]'); await bekle(B, 300);
+    ok("kolay moda geçilir ve hatırlanır", await B.locator("#gkIc [data-ko-form], #gkIc .gk-son").count() === 1 && await B.evaluate(function () { return gkModu(); }) === "kolay");
+
+    /* ---------- evren ziyaretçi defteri ---------- */
+    await B.evaluate(function () { location.hash = "#/ev/e99"; }); await bekle(B, 800);
+    await B.click('#evrenSayfa [data-evs-sekme="defter"]'); await bekle(B, 1200);
+    await B.fill("#defterNot", "Buraya uğradım, en çok boş haritası aklımda kaldı.");
+    await B.click("#evrenSayfa [data-defter-yaz]"); await bekle(B, 1500);
+    ok("defter notu onaya düşer", (await sahte.kokSorgu("select count(*)::int n from public.evren_defteri where evren = 'e99' and not onayli")).rows[0].n === 1);
+    ok("yazan kendi notunu onay bekliyor diye görür", /onay bekliyor/.test(await B.textContent("#evrenSayfa .evren-defter")));
+    await B.click("#evrenSayfa [data-evs-kapat]"); await bekle(B, 300);
 
     /* ---------- kartpostal ---------- */
     await B.evaluate(function () { location.hash = "#/kartpostal"; }); await bekle(B, 600);
@@ -886,7 +1065,12 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       await bekle(A, ms || 1200);
     };
     await panel("bakim", "istatistik", 1800);
-    ok("istatistik kutuları", await A.locator(".ist-kutu").count() === 5);
+    ok("istatistik kutuları", await A.evaluate(function () { return document.querySelectorAll("#yIstAlan > .ist-kutular .ist-kutu").length; }) === 5);
+    ok("bu hafta özeti: ziyaret, kayıt, günün kelimesi, bekleyen", /Bu hafta/.test(await A.textContent("#yHaftaAlan")) &&
+      await A.locator("#yHaftaAlan .ist-kutu").count() === 5);
+    ok("onay bekleyen defter notu panelde", /Buraya uğradım/.test(await A.textContent("#yHaftaAlan")));
+    await A.click('#yHaftaAlan [data-y-defter$=":1"]'); await bekle(A, 1200);
+    ok("yönetici notu onaylar", (await sahte.kokSorgu("select count(*)::int n from public.evren_defteri where onayli")).rows[0].n === 1);
     ok("üç günlük grafik", await A.locator(".ist-coklu svg").count() === 3);
     ok("tablo görünümü", await A.locator(".ist-tablo tbody tr").count() === 14);
     ok("günün kelimesi yalnızca lore adları (kısaltma ve sıradan kelime yok)", await A.evaluate(function () {
