@@ -212,7 +212,11 @@ if (typeof fanAcilanEkle === "function") {
 }
 if (typeof fanDosyaHtml === "function") {
   const eskiDosyaHtml = fanDosyaHtml;
-  window.fanDosyaHtml = function (e) { return eskiDosyaHtml.call(this, cizimGomulu(e)); };
+  window.fanDosyaHtml = function (e) {
+    /* adsız evrenin dosyası da yeniden açılabilsin (ad zorunlu alan) */
+    if (e && e.tur === "evren" && !String(e.ad || "").trim()) { e = Object.assign({}, e, { ad: "Adsız evren" }); }
+    return eskiDosyaHtml.call(this, cizimGomulu(e));
+  };
 }
 if (typeof fanIndir === "function") {
   const eskiIndir = fanIndir;
@@ -232,7 +236,12 @@ if (typeof fanSiteyeEkle === "function") {
   const eskiSiteyeEkle = fanSiteyeEkle;
   window.fanSiteyeEkle = function (e) {
     const ok = eskiSiteyeEkle.apply(this, arguments);
-    if (ok && e.tur === "evren" && (e.cizimler || []).length) { cizimleriSiteyeYukle(e.id); }
+    if (ok && e.tur === "evren") {
+      /* önce çizimler (yolları yazılsın), sonra evrenin tamamı ayrı dosya olarak (54-evren-dosyalari.js) */
+      Promise.resolve((e.cizimler || []).length ? cizimleriSiteyeYukle(e.id) : null).then(function () {
+        if (typeof evdSiteyeYukle === "function") { return evdSiteyeYukle(e.id); }
+      });
+    }
     return ok;
   };
 }

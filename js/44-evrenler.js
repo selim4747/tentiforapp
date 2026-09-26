@@ -218,7 +218,7 @@ function e99Katki() {
 function e99KatkiBosMu(e) {
   return !FAN_EVREN_GRUPLARI.some(function (g) {
     return (e[g.k] || []).some(function (x) { return Object.keys(x).some(function (k) { return String(x[k] || "").trim(); }); });
-  }) && !((e.harita || {}).yerler || []).length && !String(e.ozet || "").trim();
+  }) && !((e.harita || {}).yerler || []).length && !((e.harita || {}).cizgiler || []).length && !String(e.ozet || "").trim();
 }
 
 function e99Gonderilenler() {
@@ -276,12 +276,31 @@ function evrenHaritaSvg(h, o) {
       ' stroke="' + cizgi + '" stroke-width="0.25"' + (katki ? ' stroke-dasharray="1 0.6"' : "") + (o.secili === y.id ? ' class="evh-secili"' : "") +
       ' data-evh-yer="' + esc(y.id) + '"' + (katki ? ' data-evh-katki="1"' : "") + "></polygon>";
   };
+  /* nehir, yol ve sınır çizgileri; düzenlerken dokunulabilir */
+  const cizgiRenk = { nehir: "#3B7BB8", yol: "#8A6A3E", sinir: "#6B2A2A" };
+  const cizgiler = ((h && h.cizgiler) || []).map(function (c) {
+    const nok = (c.noktalar || []).map(function (n) { return n[0] + "," + (n[1] * k).toFixed(2); }).join(" ");
+    const sec = o.seciliCizgi === c.id;
+    return '<g class="evh-cizgi' + (sec ? " secili" : "") + '"' + (o.duzenle ? ' data-evh-cizgi="' + esc(c.id) + '"' : "") + ">" +
+      (c.ad ? "<title>" + esc(c.ad) + "</title>" : "") +
+      '<polyline points="' + nok + '" fill="none" stroke="' + (cizgiRenk[c.tur] || cizgiRenk.yol) + '" stroke-width="' + (c.tur === "nehir" ? 0.7 : 0.45) + '"' +
+        (c.tur === "yol" ? ' stroke-dasharray="1.2 0.6"' : (c.tur === "sinir" ? ' stroke-dasharray="0.4 0.5"' : "")) + ' stroke-linecap="round" stroke-linejoin="round"></polyline>' +
+      (o.duzenle ? '<polyline points="' + nok + '" fill="none" stroke="transparent" stroke-width="3"></polyline>' : "") +
+      (sec ? '<polyline points="' + nok + '" fill="none" stroke="#A33" stroke-width="0.25"></polyline>' : "") + "</g>";
+  }).join("");
+  /* ölçek çubuğu: 10 birim */
+  const ol = h && h.olcek && Number(h.olcek.deger) > 0 ? h.olcek : null;
+  const olcek = ol ? '<g class="evh-olcek" transform="translate(4,65)"><rect x="-1" y="-3.2" width="' + (12 + String(ol.deger).length * 1.3 + String(ol.birim || "km").length * 1.2) +
+      '" height="4.6" fill="#fff" opacity="0.7" rx="0.6"></rect><line x1="0" y1="0" x2="10" y2="0" stroke="' + yazi + '" stroke-width="0.35"></line>' +
+      '<line x1="0" y1="-0.8" x2="0" y2="0.8" stroke="' + yazi + '" stroke-width="0.3"></line><line x1="10" y1="-0.8" x2="10" y2="0.8" stroke="' + yazi + '" stroke-width="0.3"></line>' +
+      '<text x="11" y="0.7" font-size="2" font-family="' + yaziTipi + '" fill="' + yazi + '">' + esc(String(ol.deger).replace(".", ",") + " " + (ol.birim || "km")) + "</text></g>" : "";
   const isaret = function (y, katki) {
     const sec = o.secili === y.id;
     return '<g class="evh-yer' + (sec ? " secili" : "") + (katki ? " katki" : "") + '" data-evh-yer="' + esc(y.id) + '"' + (katki ? ' data-evh-katki="1"' : "") +
       ' transform="translate(' + y.x + "," + (y.y * k).toFixed(2) + ')">' +
       '<circle r="' + (sec ? 1.6 : 1.1) + '" fill="' + (y.tur === "Şehir" ? "#1C5C96" : "#3D4A57") + '" stroke="#fff" stroke-width="0.35"' + (katki ? ' stroke-dasharray="0.6 0.4"' : "") + "></circle>" +
       '<circle r="3.2" fill="transparent"></circle>' +
+      (y.gecit ? '<circle r="2.1" fill="none" stroke="#7A4FB5" stroke-width="0.35" stroke-dasharray="0.6 0.4"><title>Geçit</title></circle>' : "") +
       (o.etiketsiz ? "" : '<text y="-2.1" text-anchor="middle" font-size="2.3" font-family="' + yaziTipi + '" fill="' + yazi + '" stroke="' + hale + '" stroke-width="0.5" paint-order="stroke">' + esc(etiket(y.ad || "—")) + "</text>") + "</g>";
   };
   const taslak = (o.cizim && o.cizim.length)
@@ -295,12 +314,12 @@ function evrenHaritaSvg(h, o) {
       const x = (i * 37.3 + 11) % 100, y = (i * 23.9 + 7) % 70, r = 0.12 + (i % 4) * 0.07;
       return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(2) + '" opacity="' + (0.35 + (i % 3) * 0.2).toFixed(2) + '"></circle>';
     }).join("") + "</g>" : "") +
-    yerler.map(function (y) { return alan(y, false); }).join("") + ekli.map(function (y) { return alan(y, true); }).join("") +
+    yerler.map(function (y) { return alan(y, false); }).join("") + ekli.map(function (y) { return alan(y, true); }).join("") + cizgiler +
     yerler.filter(function (y) { return !y.sekil; }).map(function (y) { return isaret(y, false); }).join("") +
     ekli.filter(function (y) { return !y.sekil; }).map(function (y) { return isaret(y, true); }).join("") +
     yerler.filter(function (y) { return y.sekil; }).map(function (y) { return isaret(y, false); }).join("") +
     ekli.filter(function (y) { return y.sekil; }).map(function (y) { return isaret(y, true); }).join("") +
-    taslak + "</svg>";
+    taslak + olcek + "</svg>";
 }
 
 /* ==================== evren sayfası ==================== */
@@ -433,26 +452,52 @@ function evrenHaritaBolumu(v) {
   const hv = evrenHaritaVerisi(v);
   const e99 = EVS.kaynak === "e99";
   const gorunen = e99 ? hv.yayin : (hv.duzen || hv.yayin);
-  const svg = evrenHaritaSvg({ yerler: gorunen.yerler, renk: (hv.duzen || gorunen).renk || gorunen.renk, stil: (hv.duzen || gorunen).stil || gorunen.stil },
-    { duzenle: !!hv.duzen, secili: EVS.secili, cizim: EVS.cizim, ekli: e99 ? hv.duzen.yerler : [], alfabe: v.eser.alfabe });
+  /* çizgiler: yayındakiler + düzenlenenler (E99'da katkın); ölçek düzenlenenin, yoksa yayındakinin */
+  const svg = evrenHaritaSvg({ yerler: gorunen.yerler, renk: (hv.duzen || gorunen).renk || gorunen.renk, stil: (hv.duzen || gorunen).stil || gorunen.stil,
+      cizgiler: ((hv.yayin || {}).cizgiler || []).concat(((hv.duzen || {}).cizgiler) || []), olcek: (hv.duzen && hv.duzen.olcek) || (hv.yayin || {}).olcek },
+    { duzenle: !!hv.duzen, secili: EVS.secili, seciliCizgi: EVS.seciliCizgi, cizim: EVS.cizim, ekli: e99 ? hv.duzen.yerler : [], alfabe: v.eser.alfabe });
   const yerSay = gorunen.yerler.length + (e99 ? hv.duzen.yerler.length : 0);
   let arac = "";
   if (hv.duzen) {
     const mod = function (id, ad) { return '<button class="dugme' + (EVS.mod === id ? "" : " dugme-sade") + '" data-evh-mod="' + id + '">' + ad + "</button>"; };
-    arac = '<div class="evh-arac">' + mod("sec", "Seç / taşı") + mod("yer", "+ Yer ekle") + mod("cizim", "Alan çiz") +
+    const ct = EVS.cizgiTur || "nehir";
+    arac = '<div class="evh-arac">' + mod("sec", "Seç / taşı") + mod("yer", "+ Yer ekle") + mod("cizim", "Alan çiz") + mod("cizgi", "Nehir / yol") +
       (EVS.mod === "cizim" ? '<button class="dugme" data-evh-bitir' + (EVS.cizim.length < 3 ? " disabled" : "") + ">Alanı bitir (" + EVS.cizim.length + " nokta)</button>" +
+        '<button class="dugme dugme-sade" data-evh-iptal>Vazgeç</button>' : "") +
+      (EVS.mod === "cizgi" ? '<span class="evh-cizgi-tur">' + [["nehir", "Nehir"], ["yol", "Yol"], ["sinir", "Sınır"]].map(function (t) {
+          return '<button class="evg-cip' + (ct === t[0] ? " secili" : "") + '" data-evh-cizgi-tur="' + t[0] + '">' + t[1] + "</button>";
+        }).join("") + "</span>" +
+        '<button class="dugme" data-evh-cizgi-bitir' + (EVS.cizim.length < 2 ? " disabled" : "") + ">Çizgiyi bitir (" + EVS.cizim.length + " nokta)</button>" +
         '<button class="dugme dugme-sade" data-evh-iptal>Vazgeç</button>' : "") +
       '<label class="evh-renk">Deniz <input type="color" data-evh-renk value="' + kacir(hv.duzen.renk || (typeof EVH_DESENLER !== "undefined" && EVH_DESENLER[(hv.duzen.stil || {}).desen] || {}).deniz || "#BFD8EC") + '"></label>' +
       "</div>" +
       '<p class="oyun-not">' + ({ sec: "Bir yere dokun: seçip bilgilerini düzenle; basılı tutup sürükle: taşı.",
         yer: "Haritada boş bir yere dokun: oraya yeni bir yer eklenir.",
-        cizim: "Kıta, göl ya da bölge sınırı için köşelere sırayla dokun; en az 3 nokta, sonra \"Alanı bitir\"." })[EVS.mod] +
+        cizim: "Kıta, göl ya da bölge sınırı için köşelere sırayla dokun; en az 3 nokta, sonra \"Alanı bitir\".",
+        cizgi: "Nehrin, yolun ya da sınırın geçtiği yerlere sırayla dokun; en az 2 nokta, sonra \"Çizgiyi bitir\"." })[EVS.mod] +
       (e99 ? " Kesik çizgili olanlar senin katkın: yalnızca sende görünür." : "") + "</p>";
   }
+  const olc = (hv.duzen || gorunen).olcek || {};
+  const alt = hv.duzen
+    ? '<div class="evh-alt"><label class="evh-olcek-giris">Ölçek: 10 birim =<input class="kod-giris" type="number" min="0" step="any" data-evh-olcek="deger" value="' + kacir(olc.deger || "") + '" placeholder="?">' +
+        '<input class="kod-giris" maxlength="12" data-evh-olcek="birim" value="' + kacir(olc.birim || "km") + '" aria-label="Birim"></label>' +
+        '<button class="dugme dugme-sade" data-evh-png>Haritayı PNG indir</button></div>'
+    : ((gorunen.yerler || []).length ? '<div class="evh-alt"><button class="dugme dugme-sade" data-evh-png>Haritayı PNG indir</button></div>' : "");
   return (typeof evrenGezegenSeridi === "function" ? evrenGezegenSeridi(v) : "") +
-    arac + '<div class="evh-kutu" data-evh-kutu>' + svg + "</div>" +
+    arac + '<div class="evh-kutu" data-evh-kutu>' + svg + "</div>" + alt +
     (yerSay ? "" : '<p class="oyun-not">' + (hv.duzen ? "Harita boş: bir yer ekleyerek başla." : "Bu evrenin haritası yok.") + "</p>") +
-    evrenSeciliFormu(v, hv);
+    evrenSeciliFormu(v, hv) + evrenCizgiFormu(hv);
+}
+
+/** Seçili çizginin (nehir, yol, sınır) formu. */
+function evrenCizgiFormu(hv) {
+  if (!EVS.seciliCizgi || !hv.duzen) { return ""; }
+  const c = (hv.duzen.cizgiler || []).find(function (x) { return x.id === EVS.seciliCizgi; });
+  if (!c) { return ""; }
+  return '<div class="kutu-y evh-bilgi" data-evh-cizgi-form="' + kacir(c.id) + '">' +
+    '<label for="evhCizgiAd">Adı (' + ({ nehir: "nehir", yol: "yol", sinir: "sınır" })[c.tur] + ')</label>' +
+    '<input class="kod-giris arac-giris" id="evhCizgiAd" data-evh-cizgi-alan="ad" value="' + kacir(c.ad || "") + '" maxlength="80" placeholder="Adsız">' +
+    '<button class="dugme dugme-sade y-sil" data-evh-cizgi-sil>Bu çizgiyi sil</button></div>';
 }
 
 function evrenYerBul(hv, id) {
@@ -521,7 +566,10 @@ document.addEventListener("pointerdown", function (ev) {
   /* yer eklerken bir alanın (kıta, göl) içine dokunmak da yeni yer ekler */
   if (hedef && EVS.mod === "yer" && hedef.tagName.toLowerCase() === "polygon") { hedef = null; }
   const n = evrenNokta(svg, ev);
-  if (EVS.mod === "cizim") { EVS.cizim.push(n); evrenSayfaCiz(); return; }
+  if (EVS.mod === "cizim" || EVS.mod === "cizgi") { EVS.cizim.push(n); evrenSayfaCiz(); return; }
+  const cz = ev.target.closest("[data-evh-cizgi]");
+  if (cz && EVS.mod === "sec" && !hedef) { EVS.seciliCizgi = cz.getAttribute("data-evh-cizgi"); EVS.secili = null; evrenSayfaCiz(); return; }
+  EVS.seciliCizgi = null;
   if (hedef) {
     const v = evrenSayfaVerisi();
     const hv = evrenHaritaVerisi(v);
@@ -763,6 +811,11 @@ function e99Birlestir(t) {
     k.id = "e99_" + t.id + "_" + y.id;
     e.harita.yerler.push(k);
   });
+  ((t.harita || {}).cizgiler || []).forEach(function (c) {
+    const k = JSON.parse(JSON.stringify(c));
+    k.id = "e99_" + t.id + "_" + c.id;
+    e.harita.cizgiler = (e.harita.cizgiler || []).concat([k]);
+  });
   e.oneriler.push(t.id);
   return true;
 }
@@ -846,7 +899,7 @@ document.addEventListener("click", async function (ev) {
     location.hash = "#/ev/benim/" + kopya.id;
     return;
   }
-  if (d.evhMod) { EVS.mod = d.evhMod; EVS.cizim = []; if (d.evhMod !== "sec") { EVS.secili = null; } evrenSayfaCiz(); return; }
+  if (d.evhMod) { EVS.mod = d.evhMod; EVS.cizim = []; EVS.seciliCizgi = null; if (d.evhMod !== "sec") { EVS.secili = null; } evrenSayfaCiz(); return; }
   if (h.hasAttribute("data-evh-iptal")) { EVS.mod = "sec"; EVS.cizim = []; evrenSayfaCiz(); return; }
   if (h.hasAttribute("data-evh-bitir")) {
     if (EVS.cizim.length < 3) { return; }

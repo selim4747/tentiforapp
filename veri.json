@@ -1,5 +1,5 @@
 {
-  "surum": "1.11.0",
+  "surum": "1.12.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -6857,6 +6857,7 @@
     }
   ],
   "degisiklik": [
+    {"surum": "1.12.0", "tarih": "2026-09-26", "maddeler": ["Sitedeki fan evrenleri ayrı dosyada: açılınca iner, “Telefona indir” ile internetsiz de açılır", "Günün kelimesi için her gün hatırlatma (Chrome'da uygulama olarak yüklüyken)", "Fan evrenlerini takip et: yeni bölüm eklenince haber", "Harita: nehir, yol ve sınır çizgileri, ölçek, PNG indirme; yerler başka evrenlere geçit olabilir", "Türle başla: fantastik, bilimkurgu, su dünyası, buz çağı, karanlık masal", "Örnek evrenler: Sis Denizi ve Kül Ormanı; örnek Evrengezer: Orlan Ivo", "Panel: Yayınla'dan sonra sitenin yayına çıktığını gösterir"], "yeniler": []},
     {"surum": "1.11.0", "tarih": "2026-09-26", "maddeler": ["Ax-24 artık Tentiforverse'ün (24. Evren) bir gezegeni: Tömye ile aynı evrende", "Kendi evrenine birden fazla gezegen ekle: her birinin ayrı haritası", "Evren kurma yenilendi: ilk adımlar rehberi, hazır haritalar, sade evren sayfası", "Düzeltmeler: hesaba girince evren kaybolmaz, çıkınca cihaz misafire döner"], "yeniler": []},
     {"surum": "1.10.0", "tarih": "2026-09-26", "maddeler": ["Günün kelimesi: kolay mod (karakter ve yer adları, hesapsız), seri ve dağılım, bitince kelimenin kartı", "Instagram hikâye kartları: günün kelimesi sonucu ve arşiv kartların", "Evrenine oyun ekle: günün kelimesi, evren sınavı, harita bulmacası — kendi kelimelerin, soruların ve ödülünle", "Evrenine roman yaz, çizim yükle", "Haftanın Evrengezeri, evren ziyaretçi defteri, “Nerelere gitti?” konuk haritası", "Hesabın yoksa ilerlemeni korumak için küçük bir hatırlatma"], "yeniler": []},
     {
@@ -7992,7 +7993,106 @@
   ],
   "fanEserleri": {
     "hikayeler": [],
-    "evrenler": []
+    "evrenler": [
+      {
+        "bicim": "tentifor-eser",
+        "surum": 1,
+        "tur": "evren",
+        "id": "fornek-sis",
+        "ad": "Sis Denizi",
+        "yazar": "TentiforApp örneği",
+        "ozet": "Kıtasız bir okyanus dünyası. Güneş hiç batmaz ama sis her akşam denizden yükselir; şehirler sisin üstünde yüzer, sisin altına inen gemiler başka bir zamana varır.\n\nBu bir örnek evrendir: kendi evrenini kurarken neler yapabileceğini göstermek için hazırlandı.",
+        "dosya": "evrenler/fornek-sis.json",
+        "boyut": 4756,
+        "sayilar": {
+          "kural": 3,
+          "kisi": 4,
+          "yer": 5,
+          "gezegen": 1,
+          "bolum": 2,
+          "cizim": 0
+        },
+        "eklenme": "2026-09-26",
+        "olusturma": "2026-09-26T12:00:00.000Z",
+        "guncelleme": "2026-09-26T12:00:00.000Z",
+        "para": {
+          "ad": "damla",
+          "simge": "◌",
+          "kur": 0.1
+        },
+        "stil": {
+          "ana": "#1D6FA5",
+          "zemin": "#EEF5FB",
+          "font": "serif"
+        }
+      },
+      {
+        "bicim": "tentifor-eser",
+        "surum": 1,
+        "tur": "evren",
+        "id": "fornek-kul",
+        "ad": "Kül Ormanı",
+        "yazar": "TentiforApp örneği",
+        "ozet": "Hiç yeşermeyen, küllü bir orman ve kenarındaki köy. Ormandaki varlıklar her dileği yerine getirir; karşılığında bir şey isterler ama asla altın istemezler.\n\nBu bir örnek evrendir. Haritasında Sis Denizi'ne açılan bir geçit var.",
+        "dosya": "evrenler/fornek-kul.json",
+        "boyut": 2434,
+        "sayilar": {
+          "kural": 2,
+          "kisi": 3,
+          "yer": 3,
+          "gezegen": 0,
+          "bolum": 1,
+          "cizim": 0
+        },
+        "eklenme": "2026-09-26",
+        "olusturma": "2026-09-26T12:00:00.000Z",
+        "guncelleme": "2026-09-26T12:00:00.000Z",
+        "para": {
+          "ad": "düğme",
+          "simge": "",
+          "kur": 0.1
+        },
+        "stil": {
+          "ana": "#5A3A2E",
+          "zemin": "#F7F2EE",
+          "font": "serif"
+        }
+      }
+    ],
+    "kisiler": [
+      {
+        "bicim": "tentifor-eser",
+        "surum": 1,
+        "tur": "kisi",
+        "id": "fornek-kisi",
+        "evren": "e25",
+        "ad": "Orlan Ivo",
+        "unvan": "Haritasız gezgin",
+        "ozet": "Hiçbir haritaya güvenmez; gittiği her evrende önce yolları yürüyerek öğrenir. Cebinde yarım kalmış bir defter taşır. Bu bir örnek kişidir: kendi Evrengezerini E25'e ekleyebilirsin.",
+        "yazar": "TentiforApp örneği",
+        "olusturma": "2026-09-26T12:00:00.000Z",
+        "guncelleme": "2026-09-26T12:00:00.000Z",
+        "eklenme": "2026-09-26",
+        "kisilik": [
+          {
+            "ad": "Meraklı",
+            "aciklama": "Bir yerin adını değil, oraya nasıl gidildiğini sorar."
+          },
+          {
+            "ad": "Sabırlı",
+            "aciklama": "Bir kapının açılmasını günlerce bekleyebilir."
+          },
+          {
+            "ad": "Sessiz",
+            "aciklama": "Kalabalıkta konuşmaz; akşam defterine yazar."
+          }
+        ],
+        "imza": {
+          "a": "BK1ZqwrmW6xEt8wSGmDjMpCP802z1EbliIv0+4f+r7jQSznJirxpjQRRjHX9FBtw/yxnuW0xLhXhpdmL7ThrjFM=",
+          "s": "4iZuU/Cqspf/BXhdqS9TZ7fs57W+9EBwRRT/TmjhK1pl8bHkuHR8/IOty2Jt6fSKrEbW3NBrcLRKjjG68nctdg=="
+        }
+      }
+    ]
   },
   "e99": {
     "bicim": "tentifor-eser",

@@ -4023,3 +4023,32 @@ html.evren-acik{overflow:hidden}
 .fan-tam-sayfa span:first-child{display:flex;flex-direction:column;gap:2px}
 .fan-tam-sayfa small{font-size:13px;color:var(--murekkep-2)}
 .fan-tam-sayfa > span:last-child{color:var(--deniz);font-size:20px}
+
+/* ================= sitedeki evren dosyaları, çevrimdışı ================= */
+.evd-not{font-family:var(--mono);font-size:12.5px;color:var(--deniz);background:var(--beyaz);border:1px dashed var(--sig);border-radius:8px;padding:8px 12px;margin:0 0 12px}
+.evd-not.kotu{color:#A33;border-color:#E4B4B4}
+.evd-indir{margin-top:16px}
+.fan-kart-kapak{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px;margin-bottom:6px;display:block;background:var(--buz)}
+
+/* ================= hatırlatma ve takip ================= */
+.htr-satir{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-4px 0 12px}
+.htr-dugme{min-height:36px;font-size:13px;border-radius:999px}
+.htr-mesaj{flex-basis:100%}
+.tkp-kutu{margin-top:12px}
+.tkp-yeni{background:var(--beyaz);border:1px solid var(--buz);border-left:4px solid var(--deniz);border-radius:10px;padding:12px 14px;margin:14px 0;display:flex;flex-direction:column;gap:6px}
+.tkp-oge{display:flex;justify-content:space-between;gap:10px;text-decoration:none;color:inherit;padding:6px 0;border-top:1px solid var(--buz)}
+.tkp-oge span{color:var(--deniz);font-family:var(--mono);font-size:12.5px}
+
+/* ================= harita araçları, geçit, tür şablonları ================= */
+.evh-cizgi-tur{display:inline-flex;gap:4px}
+.evh-cizgi-tur .evg-cip{min-height:34px;font-size:13px}
+.evh-alt{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:-2px 0 10px}
+.evh-olcek-giris{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;color:var(--murekkep-2)}
+.evh-olcek-giris input{width:82px;min-height:36px;padding:4px 8px}
+.evh-gecit-git{margin-top:10px;background:#7A4FB5;border-color:#7A4FB5}
+.evh-svg .evh-cizgi{cursor:pointer}
+.evt-turler{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin-top:12px}
+.evt-turler .oyun-not{grid-column:1 / -1}
+.evt-tur{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--kar);border:1px solid var(--buz);border-radius:8px;padding:8px 10px;font:inherit;color:inherit;cursor:pointer}
+.evt-tur:hover{border-color:var(--deniz)}
+.evt-tur small{font-size:12px;color:var(--murekkep-2)}

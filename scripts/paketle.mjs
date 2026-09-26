@@ -13,7 +13,7 @@ const KOK = new URL("..", import.meta.url).pathname;
 const HEDEF = join(KOK, "dist");
 /* Sitenin kalıcı adresi: Cloudflare Pages'teki SITE_URL ortam değişkeni. */
 const SITE = (process.env.SITE_URL || "https://tentiforapp.pages.dev").replace(/\/$/, "");
-const KOPYALA = ["index.html", "veri.json", "sw.js", "manifest.webmanifest", "paylasim.png", "robots.txt", "_headers", "css", "js", "ikon"];
+const KOPYALA = ["index.html", "veri.json", "sw.js", "manifest.webmanifest", "paylasim.png", "robots.txt", "_headers", "css", "js", "ikon", "evrenler"];   /* evrenler/: sitedeki fan evrenlerinin ayrı dosyaları (js/54-evren-dosyalari.js) */
 
 rmSync(HEDEF, { recursive: true, force: true });
 mkdirSync(HEDEF, { recursive: true });
