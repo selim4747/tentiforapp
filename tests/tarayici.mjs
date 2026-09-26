@@ -487,7 +487,11 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await Z.evaluate(function (acik) {
       veri.bildirim = { acikAnahtar: acik };
       window.__abone = null;
-      Notification.requestPermission = async function () { return "granted"; };
+      /* izin durumu tarayıcıya göre değişir (CI'daki Chromium'da "denied"): testte sabitlenir */
+      window.__izin = "default";
+      if (!("PushManager" in window)) { window.PushManager = function () {}; }
+      Object.defineProperty(Notification, "permission", { configurable: true, get: function () { return window.__izin; } });
+      Notification.requestPermission = async function () { window.__izin = "granted"; return "granted"; };
       window.bildirimKaydi = async function () {
         return { pushManager: {
           getSubscription: async function () { return window.__abone; },
@@ -502,7 +506,9 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       location.hash = "#/roman";
     }, anahtar.acik);
     await bekle(Z, 700);
-    await Z.evaluate(function () { bildirimKutusuCiz(); document.querySelector('[data-bildirim="ac"]').click(); }); await bekle(Z, 1500);
+    await Z.evaluate(function () { bildirimKutusuCiz(); }); await bekle(Z, 100);
+    ok("bildirim düğmesi görünür", await Z.locator('[data-bildirim="ac"]').count() === 1, await Z.textContent("#bildirimAlan"));
+    await Z.evaluate(function () { document.querySelector('[data-bildirim="ac"]').click(); }); await bekle(Z, 1500);
     ok("ziyaretçi bildirime abone olur", (await sahte.kokSorgu("select count(*)::int n from public.bildirim_abonelikleri where endpoint like '%test-cihaz'")).rows[0].n === 1,
       await Z.textContent("#bildirimAlan"));
     ok("abone olunca kapatma düğmesi", await Z.locator('[data-bildirim="kapat"]').count() === 1);
