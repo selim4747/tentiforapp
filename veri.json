@@ -1,5 +1,5 @@
 {
-  "surum": "1.12.0",
+  "surum": "1.13.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -6857,6 +6857,7 @@
     }
   ],
   "degisiklik": [
+    {"surum": "1.13.0", "tarih": "2026-09-26", "maddeler": ["Şehir haritaları: haritadaki bir yere tıkla, “Şehir haritası çiz” — binalar (ev, tapınak, pazar, han, kule…), caddeler, park, su, meydan ve surlar", "Gezi çizelgesi: kişinin yerden yere yolunu haritada çiz, her adıma zaman ve not yaz; gezegenler arası da olur", "Tömye ve kanon haritalarında da şehir planları", "Örnek: Sis Denizi'nde Arvel'in yolculuğu ve Liman şehrinin planı"], "yeniler": []},
     {"surum": "1.12.0", "tarih": "2026-09-26", "maddeler": ["Sitedeki fan evrenleri ayrı dosyada: açılınca iner, “Telefona indir” ile internetsiz de açılır", "Günün kelimesi için her gün hatırlatma (Chrome'da uygulama olarak yüklüyken)", "Fan evrenlerini takip et: yeni bölüm eklenince haber", "Harita: nehir, yol ve sınır çizgileri, ölçek, PNG indirme; yerler başka evrenlere geçit olabilir", "Türle başla: fantastik, bilimkurgu, su dünyası, buz çağı, karanlık masal", "Örnek evrenler: Sis Denizi ve Kül Ormanı; örnek Evrengezer: Orlan Ivo", "Panel: Yayınla'dan sonra sitenin yayına çıktığını gösterir"], "yeniler": []},
     {"surum": "1.11.0", "tarih": "2026-09-26", "maddeler": ["Ax-24 artık Tentiforverse'ün (24. Evren) bir gezegeni: Tömye ile aynı evrende", "Kendi evrenine birden fazla gezegen ekle: her birinin ayrı haritası", "Evren kurma yenilendi: ilk adımlar rehberi, hazır haritalar, sade evren sayfası", "Düzeltmeler: hesaba girince evren kaybolmaz, çıkınca cihaz misafire döner"], "yeniler": []},
     {"surum": "1.10.0", "tarih": "2026-09-26", "maddeler": ["Günün kelimesi: kolay mod (karakter ve yer adları, hesapsız), seri ve dağılım, bitince kelimenin kartı", "Instagram hikâye kartları: günün kelimesi sonucu ve arşiv kartların", "Evrenine oyun ekle: günün kelimesi, evren sınavı, harita bulmacası — kendi kelimelerin, soruların ve ödülünle", "Evrenine roman yaz, çizim yükle", "Haftanın Evrengezeri, evren ziyaretçi defteri, “Nerelere gitti?” konuk haritası", "Hesabın yoksa ilerlemeni korumak için küçük bir hatırlatma"], "yeniler": []},

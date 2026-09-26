@@ -1,1 +1,540 @@
-{"bicim":"tentifor-eser","surum":1,"tur":"evren","id":"fornek-sis","ad":"Sis Denizi","yazar":"TentiforApp örneği","olusturma":"2026-09-26T12:00:00.000Z","guncelleme":"2026-09-26T12:00:00.000Z","eklenme":"2026-09-26","ozet":"Kıtasız bir okyanus dünyası. Güneş hiç batmaz ama sis her akşam denizden yükselir; şehirler sisin üstünde yüzer, sisin altına inen gemiler başka bir zamana varır.\n\nBu bir örnek evrendir: kendi evrenini kurarken neler yapabileceğini göstermek için hazırlandı.","kurallar":[{"ad":"Güneş batmaz","tur":"gökyüzü","aciklama":"Gündüz hiç bitmez. Günleri sis sayar: sis yükselince gün biter, sis çekilince yenisi başlar."},{"ad":"Sisin altı","tur":"zaman","aciklama":"Sisin altına inen bir gemi, indiği yerden birkaç gün önceye ya da sonraya çıkar. Kimse hangisine çıkacağını bilemez."},{"ad":"Işık birikir","tur":"ışık","aciklama":"Deniz suyu ışığı içinde tutar. Şişelere doldurulan su, karanlık kamaralarda lamba gibi yanar."}],"kisiler":[{"ad":"Arvel","rol":"Sisin altına üç kez inip dönen kaptan","aciklama":"Her dönüşünde bir yaş daha genç görünür; kendisi bunun sebebini söylemez."},{"ad":"Bosra","rol":"Işık şişeleyen usta","aciklama":"Yüzen şehirlerin gece lambalarını o doldurur. Hiç sise inmemiştir."},{"ad":"Cimen","rol":"Akıntıları çizen haritacı","aciklama":"Haritaları her yıl yeniden çizilir; çünkü şehirler yer değiştirir."},{"ad":"Dolun","rol":"Liman gözcüsü","aciklama":"Sisin içinden gelen gemileri ilk o görür ve hangi günden geldiklerini sorar."}],"yerler":[{"ad":"Ilgar","aciklama":"En büyük yüzen şehir. Yüz yıldır aynı akıntıda döner."},{"ad":"Derin","aciklama":"Işığın hiç ulaşmadığı su. Oraya inen gemiler geri dönmez."}],"tarih":[{"zaman":"Birinci akıntı","olay":"İlk şehir Ilgar, üç büyük geminin birbirine bağlanmasıyla kuruldu."},{"zaman":"Kırkıncı akıntı","olay":"Arvel sisin altına ilk kez indi ve dokuz gün önceye çıktı."}],"sozluk":[{"terim":"Akıntı","tanim":"Bir yıl. Büyük akıntı şehirleri bir kez dünyanın çevresinde dolaştırır."},{"terim":"Sisçi","tanim":"Sisin altına inmeyi göze alan denizci."},{"terim":"Şişe","tanim":"İçine ışıklı deniz suyu doldurulmuş lamba."}],"ozelAlanlar":[{"ad":"Hava","deger":"Her akşam sis yükselir; sisin olmadığı gün uğursuz sayılır."}],"para":{"ad":"damla","simge":"◌","kur":0.1},"stil":{"ana":"#1D6FA5","zemin":"#EEF5FB","font":"serif"},"harita":{"renk":"#9CC7E6","olcek":{"deger":400,"birim":"km"},"yerler":[{"id":"ilgar","ad":"Ilgar","tur":"Ada","not":"En büyük yüzen şehir.","x":32,"y":32,"sekil":[[20,30],[30,22],[44,26],[48,40],[40,52],[26,50],[18,42]]},{"id":"liman","ad":"Liman","tur":"Şehir","not":"Dolun'un gözcü kulesi buradadır.","x":40,"y":46},{"id":"tuzada","ad":"Tuz Adası","tur":"Ada","not":"Işık şişeleri burada doldurulur.","x":70,"y":30,"sekil":[[62,24],[74,18],[82,26],[78,38],[66,38]]},{"id":"derin","ad":"Derin","tur":"Su","not":"Işığın ulaşmadığı su.","x":62,"y":74},{"id":"sisgecidi","ad":"Sis Geçidi","tur":"Uzak","not":"Sisin en koyu olduğu yer. Burada inen gemilerin bazıları bambaşka bir evrene çıkar.","x":84,"y":62,"gecit":"#/ev/fan/fornek-kul"}],"cizgiler":[{"id":"akinti","tur":"nehir","ad":"Büyük Akıntı","noktalar":[[10,70],[30,64],[52,58],[74,50],[92,40]]},{"id":"rota","tur":"yol","ad":"Işık rotası","noktalar":[[40,46],[56,40],[70,30]]}]},"gezegenler":[{"id":"g-ay","ad":"Solgun Ay","harita":{"yerler":[{"id":"krater","ad":"Sessiz Krater","tur":"Dağ","not":"Arvel'in sisten çıkıp bir kez vardığı yer; kimse ona inanmadı.","x":50,"y":50}]}}],"anaGezegen":"Deniz","roman":{"baslik":"Sisçi","ozet":"Arvel'in dördüncü inişi.","bolumler":[{"id":"b1","baslik":"Dördüncü iniş","metin":"Arvel gemisini sisin kıyısına sürdüğünde Dolun kuleden bağırdı: \"Bu kez hangi güne?\"\n\nArvel cevap vermedi. Üç iniş, üç ayrı gün. Birinde dokuz gün önceye çıkmış, kendini limanda beklerken görmüştü. Ötekinde bir hafta sonrasına; mürettebatından biri yoktu, kimse nereye gittiğini hatırlamıyordu.\n\nGemi sise girdi. Ses kesildi."},{"id":"b2","baslik":"Işığın altında","metin":"Sisin altında deniz karanlık değildi. Su, yıllardır biriktirdiği ışıkla yanıyordu.\n\nBosra'nın şişelerinde gördüğü ışık buydu, diye düşündü Arvel; ama burada hiç kimse onu şişelememişti. Işık dalgalarla birlikte yükselip alçalıyordu, sanki nefes alıyordu.\n\nGeminin altından bir gölge geçti. Çok büyüktü ve acelesi yoktu."}]},"oyunlar":{"sorular":[{"soru":"Sis Denizi'nde günleri ne sayar?","dogru":"Sis","yanlis":["Güneş","Akıntı","Çan"]}]}}
+{
+  "bicim": "tentifor-eser",
+  "surum": 1,
+  "tur": "evren",
+  "id": "fornek-sis",
+  "ad": "Sis Denizi",
+  "yazar": "TentiforApp örneği",
+  "olusturma": "2026-09-26T12:00:00.000Z",
+  "guncelleme": "2026-09-26T12:00:00.000Z",
+  "eklenme": "2026-09-26",
+  "ozet": "Kıtasız bir okyanus dünyası. Güneş hiç batmaz ama sis her akşam denizden yükselir; şehirler sisin üstünde yüzer, sisin altına inen gemiler başka bir zamana varır.\n\nBu bir örnek evrendir: kendi evrenini kurarken neler yapabileceğini göstermek için hazırlandı.",
+  "kurallar": [
+    {
+      "ad": "Güneş batmaz",
+      "tur": "gökyüzü",
+      "aciklama": "Gündüz hiç bitmez. Günleri sis sayar: sis yükselince gün biter, sis çekilince yenisi başlar."
+    },
+    {
+      "ad": "Sisin altı",
+      "tur": "zaman",
+      "aciklama": "Sisin altına inen bir gemi, indiği yerden birkaç gün önceye ya da sonraya çıkar. Kimse hangisine çıkacağını bilemez."
+    },
+    {
+      "ad": "Işık birikir",
+      "tur": "ışık",
+      "aciklama": "Deniz suyu ışığı içinde tutar. Şişelere doldurulan su, karanlık kamaralarda lamba gibi yanar."
+    }
+  ],
+  "kisiler": [
+    {
+      "ad": "Arvel",
+      "rol": "Sisin altına üç kez inip dönen kaptan",
+      "aciklama": "Her dönüşünde bir yaş daha genç görünür; kendisi bunun sebebini söylemez.",
+      "yol": [
+        {
+          "g": "",
+          "yer": "ilgar",
+          "zaman": "Birinci sis ayı",
+          "not": "Yola çıkar."
+        },
+        {
+          "g": "",
+          "yer": "liman",
+          "zaman": "Üç gün sonra",
+          "not": "Bir gemi kiralar."
+        },
+        {
+          "g": "",
+          "yer": "tuzada",
+          "zaman": "Aynı ayın sonu",
+          "not": "Tuz tüccarlarından haber alır."
+        },
+        {
+          "g": "",
+          "yer": "sisgecidi",
+          "zaman": "Kış başı",
+          "not": "Geçide ulaşır."
+        },
+        {
+          "g": "g-ay",
+          "yer": "krater",
+          "zaman": "?",
+          "not": "Geçidin öbür yanı."
+        }
+      ]
+    },
+    {
+      "ad": "Bosra",
+      "rol": "Işık şişeleyen usta",
+      "aciklama": "Yüzen şehirlerin gece lambalarını o doldurur. Hiç sise inmemiştir."
+    },
+    {
+      "ad": "Cimen",
+      "rol": "Akıntıları çizen haritacı",
+      "aciklama": "Haritaları her yıl yeniden çizilir; çünkü şehirler yer değiştirir."
+    },
+    {
+      "ad": "Dolun",
+      "rol": "Liman gözcüsü",
+      "aciklama": "Sisin içinden gelen gemileri ilk o görür ve hangi günden geldiklerini sorar."
+    }
+  ],
+  "yerler": [
+    {
+      "ad": "Ilgar",
+      "aciklama": "En büyük yüzen şehir. Yüz yıldır aynı akıntıda döner."
+    },
+    {
+      "ad": "Derin",
+      "aciklama": "Işığın hiç ulaşmadığı su. Oraya inen gemiler geri dönmez."
+    }
+  ],
+  "tarih": [
+    {
+      "zaman": "Birinci akıntı",
+      "olay": "İlk şehir Ilgar, üç büyük geminin birbirine bağlanmasıyla kuruldu."
+    },
+    {
+      "zaman": "Kırkıncı akıntı",
+      "olay": "Arvel sisin altına ilk kez indi ve dokuz gün önceye çıktı."
+    }
+  ],
+  "sozluk": [
+    {
+      "terim": "Akıntı",
+      "tanim": "Bir yıl. Büyük akıntı şehirleri bir kez dünyanın çevresinde dolaştırır."
+    },
+    {
+      "terim": "Sisçi",
+      "tanim": "Sisin altına inmeyi göze alan denizci."
+    },
+    {
+      "terim": "Şişe",
+      "tanim": "İçine ışıklı deniz suyu doldurulmuş lamba."
+    }
+  ],
+  "ozelAlanlar": [
+    {
+      "ad": "Hava",
+      "deger": "Her akşam sis yükselir; sisin olmadığı gün uğursuz sayılır."
+    }
+  ],
+  "para": {
+    "ad": "damla",
+    "simge": "◌",
+    "kur": 0.1
+  },
+  "stil": {
+    "ana": "#1D6FA5",
+    "zemin": "#EEF5FB",
+    "font": "serif"
+  },
+  "harita": {
+    "renk": "#9CC7E6",
+    "olcek": {
+      "deger": 400,
+      "birim": "km"
+    },
+    "yerler": [
+      {
+        "id": "ilgar",
+        "ad": "Ilgar",
+        "tur": "Ada",
+        "not": "En büyük yüzen şehir.",
+        "x": 32,
+        "y": 32,
+        "sekil": [
+          [
+            20,
+            30
+          ],
+          [
+            30,
+            22
+          ],
+          [
+            44,
+            26
+          ],
+          [
+            48,
+            40
+          ],
+          [
+            40,
+            52
+          ],
+          [
+            26,
+            50
+          ],
+          [
+            18,
+            42
+          ]
+        ]
+      },
+      {
+        "id": "liman",
+        "ad": "Liman",
+        "tur": "Şehir",
+        "not": "Dolun'un gözcü kulesi buradadır.",
+        "x": 40,
+        "y": 46,
+        "sehir": {
+          "binalar": [
+            {
+              "id": "b1",
+              "ad": "Fener",
+              "tur": "kule",
+              "x": 88,
+              "y": 14,
+              "en": 4,
+              "boy": 4,
+              "not": "Sisli gecelerde yanan tek ışık."
+            },
+            {
+              "id": "b2",
+              "ad": "Tuz Hanı",
+              "tur": "han",
+              "x": 40,
+              "y": 30,
+              "en": 8,
+              "boy": 5,
+              "not": ""
+            },
+            {
+              "id": "b3",
+              "ad": "Balık Pazarı",
+              "tur": "pazar",
+              "x": 62,
+              "y": 36,
+              "en": 9,
+              "boy": 6,
+              "not": ""
+            },
+            {
+              "id": "b4",
+              "ad": "Rüzgâr Tapınağı",
+              "tur": "tapinak",
+              "x": 26,
+              "y": 50,
+              "en": 7,
+              "boy": 7,
+              "not": ""
+            },
+            {
+              "id": "b5",
+              "ad": "İskele",
+              "tur": "liman",
+              "x": 78,
+              "y": 26,
+              "en": 10,
+              "boy": 4,
+              "not": ""
+            },
+            {
+              "id": "b6",
+              "ad": "",
+              "tur": "ev",
+              "x": 44,
+              "y": 44,
+              "en": 4,
+              "boy": 3,
+              "not": ""
+            },
+            {
+              "id": "b7",
+              "ad": "",
+              "tur": "ev",
+              "x": 52,
+              "y": 47,
+              "en": 4,
+              "boy": 3,
+              "not": ""
+            },
+            {
+              "id": "b8",
+              "ad": "",
+              "tur": "ev",
+              "x": 36,
+              "y": 40,
+              "en": 4,
+              "boy": 3,
+              "not": ""
+            },
+            {
+              "id": "b9",
+              "ad": "",
+              "tur": "ev",
+              "x": 20,
+              "y": 30,
+              "en": 4,
+              "boy": 3,
+              "not": ""
+            }
+          ],
+          "sokaklar": [
+            {
+              "id": "s1",
+              "ad": "Tuz Yolu",
+              "tur": "cadde",
+              "noktalar": [
+                [
+                  5,
+                  36
+                ],
+                [
+                  30,
+                  36
+                ],
+                [
+                  55,
+                  40
+                ],
+                [
+                  75,
+                  32
+                ]
+              ]
+            },
+            {
+              "id": "s2",
+              "ad": "",
+              "tur": "sokak",
+              "noktalar": [
+                [
+                  30,
+                  36
+                ],
+                [
+                  32,
+                  58
+                ]
+              ]
+            }
+          ],
+          "alanlar": [
+            {
+              "id": "a1",
+              "ad": "Liman Koyu",
+              "tur": "su",
+              "sekil": [
+                [
+                  70,
+                  0
+                ],
+                [
+                  100,
+                  0
+                ],
+                [
+                  100,
+                  40
+                ],
+                [
+                  86,
+                  34
+                ],
+                [
+                  72,
+                  20
+                ]
+              ]
+            },
+            {
+              "id": "a2",
+              "ad": "Meydan",
+              "tur": "meydan",
+              "sekil": [
+                [
+                  46,
+                  26
+                ],
+                [
+                  56,
+                  26
+                ],
+                [
+                  56,
+                  32
+                ],
+                [
+                  46,
+                  32
+                ]
+              ]
+            },
+            {
+              "id": "a3",
+              "ad": "",
+              "tur": "sur",
+              "sekil": [
+                [
+                  8,
+                  20
+                ],
+                [
+                  70,
+                  18
+                ],
+                [
+                  72,
+                  62
+                ],
+                [
+                  10,
+                  64
+                ]
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "tuzada",
+        "ad": "Tuz Adası",
+        "tur": "Ada",
+        "not": "Işık şişeleri burada doldurulur.",
+        "x": 70,
+        "y": 30,
+        "sekil": [
+          [
+            62,
+            24
+          ],
+          [
+            74,
+            18
+          ],
+          [
+            82,
+            26
+          ],
+          [
+            78,
+            38
+          ],
+          [
+            66,
+            38
+          ]
+        ]
+      },
+      {
+        "id": "derin",
+        "ad": "Derin",
+        "tur": "Su",
+        "not": "Işığın ulaşmadığı su.",
+        "x": 62,
+        "y": 74
+      },
+      {
+        "id": "sisgecidi",
+        "ad": "Sis Geçidi",
+        "tur": "Uzak",
+        "not": "Sisin en koyu olduğu yer. Burada inen gemilerin bazıları bambaşka bir evrene çıkar.",
+        "x": 84,
+        "y": 62,
+        "gecit": "#/ev/fan/fornek-kul"
+      }
+    ],
+    "cizgiler": [
+      {
+        "id": "akinti",
+        "tur": "nehir",
+        "ad": "Büyük Akıntı",
+        "noktalar": [
+          [
+            10,
+            70
+          ],
+          [
+            30,
+            64
+          ],
+          [
+            52,
+            58
+          ],
+          [
+            74,
+            50
+          ],
+          [
+            92,
+            40
+          ]
+        ]
+      },
+      {
+        "id": "rota",
+        "tur": "yol",
+        "ad": "Işık rotası",
+        "noktalar": [
+          [
+            40,
+            46
+          ],
+          [
+            56,
+            40
+          ],
+          [
+            70,
+            30
+          ]
+        ]
+      }
+    ]
+  },
+  "gezegenler": [
+    {
+      "id": "g-ay",
+      "ad": "Solgun Ay",
+      "harita": {
+        "yerler": [
+          {
+            "id": "krater",
+            "ad": "Sessiz Krater",
+            "tur": "Dağ",
+            "not": "Arvel'in sisten çıkıp bir kez vardığı yer; kimse ona inanmadı.",
+            "x": 50,
+            "y": 50
+          }
+        ]
+      }
+    }
+  ],
+  "anaGezegen": "Deniz",
+  "roman": {
+    "baslik": "Sisçi",
+    "ozet": "Arvel'in dördüncü inişi.",
+    "bolumler": [
+      {
+        "id": "b1",
+        "baslik": "Dördüncü iniş",
+        "metin": "Arvel gemisini sisin kıyısına sürdüğünde Dolun kuleden bağırdı: \"Bu kez hangi güne?\"\n\nArvel cevap vermedi. Üç iniş, üç ayrı gün. Birinde dokuz gün önceye çıkmış, kendini limanda beklerken görmüştü. Ötekinde bir hafta sonrasına; mürettebatından biri yoktu, kimse nereye gittiğini hatırlamıyordu.\n\nGemi sise girdi. Ses kesildi."
+      },
+      {
+        "id": "b2",
+        "baslik": "Işığın altında",
+        "metin": "Sisin altında deniz karanlık değildi. Su, yıllardır biriktirdiği ışıkla yanıyordu.\n\nBosra'nın şişelerinde gördüğü ışık buydu, diye düşündü Arvel; ama burada hiç kimse onu şişelememişti. Işık dalgalarla birlikte yükselip alçalıyordu, sanki nefes alıyordu.\n\nGeminin altından bir gölge geçti. Çok büyüktü ve acelesi yoktu."
+      }
+    ]
+  },
+  "oyunlar": {
+    "sorular": [
+      {
+        "soru": "Sis Denizi'nde günleri ne sayar?",
+        "dogru": "Sis",
+        "yanlis": [
+          "Güneş",
+          "Akıntı",
+          "Çan"
+        ]
+      }
+    ]
+  }
+}
