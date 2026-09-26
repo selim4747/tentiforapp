@@ -301,6 +301,7 @@ document.addEventListener("submit", async function (e) {
     const { data, error } = await hesapIstemci.rpc("defter_yaz", { p_metin: deger });
     if (error) { t2Durum(alan, hesapHataMetni(error)); return; }
     if (data.durum !== "tamam") { t2Durum(alan, mesaj(data, { bugun: "Bugünkü cümleni yazdın; yarın yine gel.", kisa: "En az 10 karakter.", engelli: "Hesabın kısıtlı." })); return; }
+    if (typeof ilkHaftaIsaretle === "function") { ilkHaftaIsaretle("defter"); }
     ortakDefterCiz();
   } else if (f.matches("[data-soru-form]")) {
     const { data, error } = await hesapIstemci.rpc("yazara_sor", { p_metin: deger });

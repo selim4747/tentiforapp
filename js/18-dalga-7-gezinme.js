@@ -41,7 +41,7 @@ const GEZINME = [
     ["moodboard", "Moodboard"], ["yazaraSor", "Yazara sor"], ["degisiklik", "Değişiklik günlüğü"] ] },
 
   { id: "sen", ad: "Sen", ikon: "▭", bolumler: [
-    ["hesap", "Hesabın"], ["arsivci", "Arşivci kartın"], ["defter", "Defterin"], ["basarim", "Başarımlar"],
+    ["hesap", "Hesabın"], ["arsivci", "Arşivci kartın"], ["yilim", "Tömye Yılım"], ["koleksiyon", "Kart koleksiyonu"], ["defter", "Defterin"], ["basarim", "Başarımlar"],
     ["gizlilik", "Gizlilik"] ] },
 ];
 
@@ -316,7 +316,7 @@ const GEC_CIZILENLER = {
   olaylar: "olaylarCiz", kisaHikayeler: "kisaHikayelerCiz", dosyalar: "dosyalarCiz",
   hikaye: "hikayeCiz", defter: "defterCiz", arsivci: "arsivciCiz",
   bag: "bagCiz", sira: "siraCiz", basarim: "basarimCiz",
-  degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz", yarislar: "yarislarCiz", claudeEvren: "claudeEvrenCiz", av: "avCiz", kartpostal: "kartpostalCiz", ortakDefter: "ortakDefterCiz", yazaraSor: "yazaraSorCiz", kulup: "kulupCiz", okurBulmaca: "okurBulmacaCiz",
+  degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz", yarislar: "yarislarCiz", claudeEvren: "claudeEvrenCiz", av: "avCiz", kartpostal: "kartpostalCiz", ortakDefter: "ortakDefterCiz", yazaraSor: "yazaraSorCiz", kulup: "kulupCiz", okurBulmaca: "okurBulmacaCiz", yilim: "yilimCiz", koleksiyon: "koleksiyonCiz",
 };
 
 const cizildi = {};

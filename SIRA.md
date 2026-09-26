@@ -26,8 +26,8 @@ Yayına girmez (scripts/paketle.mjs bu dosyayı kopyalamaz). Biten madde silinir
 15. [x] **Davet ve rehberlik** — kişisel davet bağlantısı; gelen ilk haftasını tamamlarsa "Rehber" ve "Çırak" rozetleri.
 
 ## Kullanıcıyı geri getiren
-16. [ ] **Tömye Yılım** — Tömye yılı dönünce kişiye özel paylaşılabilir özet kartı.
-17. [ ] **Arşiv kartı koleksiyonu** — okuyarak/oynayarak kazanılan karakter kartları; set tamamlanınca unvan. Rastgele ödül ve satın alma yok.
-18. [ ] **Tömye takvimi etkinlikleri** — doğum günleri ve evren içi tarihler gelince özel görev, alıntı, geçici tema.
-19. [ ] **Yarış sonucu kartı** — skoru evren tarzında görsel olarak paylaş.
-20. [ ] **İlk hafta yolu** — yeni hesaba 7 günlük görev rotası ve başlangıç rozeti.
+16. [x] **Tömye Yılım** — Tömye yılı dönünce kişiye özel paylaşılabilir özet kartı.
+17. [x] **Arşiv kartı koleksiyonu** — okuyarak/oynayarak kazanılan karakter kartları; set tamamlanınca unvan. Rastgele ödül ve satın alma yok.
+18. [x] **Tömye takvimi etkinlikleri** — doğum günleri ve evren içi tarihler gelince özel görev, alıntı, geçici tema.
+19. [x] **Yarış sonucu kartı** — skoru evren tarzında görsel olarak paylaş.
+20. [x] **İlk hafta yolu** — yeni hesaba 7 günlük görev rotası ve başlangıç rozeti.

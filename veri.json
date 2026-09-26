@@ -1,5 +1,5 @@
 {
-  "surum": "1.2.0",
+  "surum": "1.3.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -3334,6 +3334,26 @@
       "id": "cirak",
       "ad": "Çırak",
       "not": "Davetle geldin ve ilk haftanı tamamladın."
+    },
+    {
+      "id": "ilkHafta",
+      "ad": "Yol Arkadaşı",
+      "not": "İlk hafta yolunun yedi adımını tamamla."
+    },
+    {
+      "id": "setTamam",
+      "ad": "Set Sahibi",
+      "not": "Kart koleksiyonunda bir seti tamamla."
+    },
+    {
+      "id": "tamKoleksiyon",
+      "ad": "Tam Koleksiyon",
+      "not": "Bütün karakter kartlarını topla."
+    },
+    {
+      "id": "takvimTanigi",
+      "ad": "Takvim Tanığı",
+      "not": "Bir Tömye takvimi etkinliğinin görevini tamamla."
     }
   ],
   "yaziTipleri": [
@@ -6722,6 +6742,20 @@
   ],
   "degisiklik": [
     {
+      "surum": "1.3.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Tömye basamağı: Tömye rakamlarıyla (Neo, Vot, Rit… Net) ikinci seviye sistemi; bütün XP buraya akar",
+        "Şomdo oyunları: Şafak Yürüyüşü, Yeveş Avı, Tanık Ayna, İsim Kayması",
+        "Kor'un Hıçkırığı, şifreli kartpostal ve mevsimlik arşiv avı",
+        "Bölüm tepkileri, kenar notları ve sayfaya göre ortam sesi",
+        "Kütüphane Defteri, Yazara sor, Kulüp duvarı, Okur bulmacaları, davet ve rehberlik",
+        "Tömye Yılım özeti, karakter kartı koleksiyonu, Tömye takvimi etkinlikleri, yarış sonucu kartı, İlk hafta yolu",
+        "Hız: bölümler ekrana gelince çiziliyor, dosyalar önbellekte kalıyor"
+      ],
+      "yeniler": []
+    },
+    {
       "surum": "1.2.0",
       "tarih": "2026-09-26",
       "maddeler": [
@@ -7623,5 +7657,90 @@
       }
     ],
     "son": "Beş cevabın ilk harflerini sırayla yaz. Arşivin en küçük birimi çıkacak."
-  }
+  },
+  "koleksiyon": {
+    "parlakGun": 3,
+    "setler": [
+      {
+        "grup": "Kütüphane",
+        "unvan": "Kütüphane Müdavimi"
+      },
+      {
+        "grup": "Luyot",
+        "unvan": "Luyot Tanığı"
+      },
+      {
+        "grup": "Dışarısı",
+        "unvan": "Dışarının Haritacısı"
+      },
+      {
+        "grup": "Blero",
+        "unvan": "Blero Sakini"
+      },
+      {
+        "grup": "Türler",
+        "unvan": "Türlerin Kâtibi"
+      },
+      {
+        "grup": "E26",
+        "unvan": "Yirmi Altının Yolcusu"
+      }
+    ]
+  },
+  "takvimEtkinlikleri": [
+    {
+      "id": "kurtulus",
+      "ad": "Kurtuluş Günü",
+      "ay": "Leg",
+      "gun": 1,
+      "sure": 3,
+      "tema": "kurtulus",
+      "metin": "Tömye'nin yıl sayımı Kyldoların Gırı egemenliğinden kurtulduğu andan başlar. Yeni yıl bugün açılır.",
+      "gorev": {
+        "id": "yazi4",
+        "adet": 2,
+        "ad": "Kyldo yazısında iki kelime oku",
+        "odul": 40
+      }
+    },
+    {
+      "id": "gerdec29",
+      "ad": "Gerdec'in yirmi dokuzuncu günü",
+      "ay": "Gerdec",
+      "gun": 29,
+      "sure": 1,
+      "tema": "",
+      "metin": "Aylar 28 gün çeker; Gerdec bir gün fazla çeker. Bu fazladan günün nereden geldiği arşivde yazmıyor.",
+      "gorev": {
+        "id": "rastgele2",
+        "adet": 2,
+        "ad": "Rastgele keşifle iki kayıt aç",
+        "odul": 30
+      }
+    },
+    {
+      "id": "giji29",
+      "ad": "Giji'nin yirmi dokuzuncu günü",
+      "ay": "Giji",
+      "gun": 29,
+      "sure": 1,
+      "tema": "",
+      "metin": "Yılın ikinci fazladan günü. Kimse saymasa da takvim sayıyor."
+    },
+    {
+      "id": "dezeh",
+      "ad": "Dezeh Şenliği",
+      "ay": "Dezeh",
+      "gun": 1,
+      "sure": 21,
+      "tema": "dezeh",
+      "metin": "Hasat ayının adı Dezeh. Kütüphane bu üç hafta boyunca ücretsizdir — kurucu böyle istemiş.",
+      "gorev": {
+        "id": "vardiya8",
+        "adet": 8,
+        "ad": "Gündüz Vardiyası'nda sekiz müşteri memnun et",
+        "odul": 40
+      }
+    }
+  ]
 }

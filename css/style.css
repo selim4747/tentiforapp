@@ -3457,3 +3457,59 @@ html[data-ayar-tema="gece"] .defter-sayfa{background:#1e1b16;border-color:#3a332
 .ob-coz{flex-direction:row;flex-wrap:wrap}
 .ob-coz input{flex:1;min-width:120px}
 .davet-kutu{margin-top:12px}
+
+/* ---------- Tömye Yılım ---------- */
+.yilim-yillar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.yilim-baslik h3{font-family:var(--display);font-size:clamp(48px,10vw,84px);font-weight:400;line-height:1;margin:6px 0}
+.yilim-tomye{font-family:var(--govde);font-size:.3em;color:var(--deniz);letter-spacing:.04em}
+.yilim-izgara{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--sig);border:1px solid var(--sig);margin:16px 0}
+.yilim-olcu{background:var(--beyaz);padding:14px 12px;display:flex;flex-direction:column;gap:4px}
+.yilim-olcu b{font-family:var(--display);font-weight:400;font-size:34px;line-height:1;color:var(--murekkep)}
+.yilim-olcu span{font-family:var(--mono);font-size:11px;color:var(--murekkep-2);text-transform:uppercase;letter-spacing:.08em}
+.yilim-not{margin:4px 0;color:var(--murekkep-2)}
+
+/* ---------- Kart koleksiyonu ---------- */
+.kol-unvanlar{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
+.kol-unvan{font-family:var(--mono);font-size:11px;background:var(--deniz);color:var(--beyaz);padding:4px 8px;border-radius:2px}
+.kol-set{margin:18px 0}
+.kol-set-ust{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.kol-izgara{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.kol-kart{position:relative;display:flex;flex-direction:column;gap:4px;min-height:150px;padding:12px;border:1px solid var(--sig);background:var(--beyaz);color:var(--murekkep);text-align:left;font:inherit;border-radius:3px;overflow:hidden}
+button.kol-kart{cursor:pointer}
+button.kol-kart:hover,button.kol-kart:focus-visible{border-color:var(--deniz)}
+.kol-kart.kapali{background:repeating-linear-gradient(135deg,var(--kar) 0 6px,var(--buz) 6px 7px);color:var(--murekkep-2);align-items:center;justify-content:center;text-align:center}
+.kol-kart.parlak{border-color:var(--deniz);box-shadow:inset 0 0 0 1px var(--deniz)}
+.kol-kart.parlak::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.55) 45%,transparent 60%);pointer-events:none}
+.kol-no{font-family:var(--mono);font-size:10px;color:var(--deniz);letter-spacing:.08em;text-transform:uppercase}
+.kol-soru{font-family:var(--display);font-size:44px;line-height:1}
+.kol-ad{font-family:var(--display);font-size:22px;line-height:1.1}
+.kol-unvan-k{font-size:13px;color:var(--murekkep-2)}
+.kol-ipucu{margin-top:auto;font-family:var(--mono);font-size:10px;color:var(--murekkep-2)}
+
+/* ---------- Tömye takvimi etkinlikleri ---------- */
+.etkinlik-kart{border:1px solid var(--sig);border-left:4px solid var(--deniz);background:var(--beyaz);padding:14px 16px;margin:12px 0}
+.etkinlik-kart h3{font-family:var(--display);font-weight:400;font-size:26px;margin:4px 0 6px}
+.etkinlik-kart .dugme{margin-top:8px}
+.etkinlik-alinti{margin:8px 0;padding-left:12px;border-left:2px solid var(--sig);font-style:italic;color:var(--murekkep-2)}
+.etkinlik-gorev{font-family:var(--mono);font-size:12px;margin:6px 0}
+.etkinlik-gorev.bitti{color:var(--deniz)}
+.et-kurtulus{border-left-color:#B8732E}
+.et-dezeh{border-left-color:#7A8B2E}
+.et-dogum{border-left-color:#9A4C7A}
+.takvim-etkinlik{margin-top:22px}
+.etkinlik-liste{list-style:none;padding:0;margin:8px 0}
+.etkinlik-liste li{padding:8px 0;border-bottom:1px solid var(--buz)}
+html[data-etkinlik="kurtulus"] .hero{box-shadow:inset 0 -6px 0 #B8732E}
+html[data-etkinlik="dezeh"] .hero{box-shadow:inset 0 -6px 0 #7A8B2E}
+html[data-etkinlik="dogum"] .hero{box-shadow:inset 0 -6px 0 #9A4C7A}
+
+/* ---------- İlk hafta yolu ---------- */
+.ilk-hafta{border:1px solid var(--sig);background:var(--beyaz);padding:14px 16px;margin:12px 0}
+.ilk-hafta-ust{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.ilk-hafta-adimlar{list-style:none;padding:0;margin:10px 0 0;display:flex;flex-direction:column;gap:6px}
+.ilk-hafta-adimlar li{display:flex;align-items:center;gap:10px;min-height:36px}
+.ilk-hafta-adimlar li.kilitli{color:var(--murekkep-2);opacity:.7}
+.ilk-hafta-adimlar li.bitti span:nth-child(2){text-decoration:line-through;text-decoration-color:var(--sig)}
+.ilk-hafta-adimlar .dugme{margin-left:auto;padding:4px 10px}
+.ih-gun{font-family:var(--mono);font-size:11px;min-width:40px;color:var(--deniz)}
+.ih-tik{margin-left:auto;color:var(--deniz)}

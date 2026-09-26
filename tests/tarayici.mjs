@@ -335,6 +335,52 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await A.evaluate(function () { return toplulukHesapEk(); }); await bekle(A, 800);
     ok("ödül ikinci kez verilmez", await A.evaluate(function () { return cuzdan.kazanilan; }) === eckaSonra);
 
+    /* ---------- yıl, kart, takvim, ilk hafta ---------- */
+    console.log("yıl ve koleksiyon");
+    ok("ilk hafta yolu yeni ziyaretçide başlar", await A.evaluate(function () { return !!ilkHaftaOku().bas; }));
+    ok("yolun yedi adımı", await A.locator("#ilkHaftaAlan li").count() === 7);
+    const ih = await A.evaluate(function () { ilkHaftaIsaretle("yazi"); ilkHaftaIsaretle("oyun"); return ilkHaftaOku(); });
+    ok("açık adım ödüllenir, yarının adımı beklenir", ih.odul.join() === "yazi" && ih.yapilan.indexOf("oyun") !== -1, ih);
+
+    await A.evaluate(function () { testBaslat(); while (!T.sonuc) { testSec(0); } });
+    const testKart = await A.evaluate(function () { return T.sonuc; });
+    ok("test sonucu kart verir", await A.evaluate(function (id) { return kartSahip(id); }, testKart));
+    ok("kart ilk hafta adımını işaretler", await A.evaluate(function () { return ilkHaftaOku().yapilan.indexOf("kart") !== -1; }));
+    await A.evaluate(function () { ["rolde", "giri", "kyldo"].forEach(function (id) { kartKazan(id, "test"); }); });
+    ok("set tamamlanınca madalya", await A.evaluate(function () { return madalyaVar("setTamam"); }));
+    await A.evaluate(function () { location.hash = "#/koleksiyon"; }); await bekle(A, 500);
+    await A.evaluate(function () { koleksiyonCiz(); });
+    ok("koleksiyon çizilir", await A.locator("#koleksiyonAlan .kol-kart").count() === await A.evaluate(function () { return veri.karakterler.length; }));
+    ok("kodsuz ziyaretçi kart unvanı ve set adını görmez", await A.locator("#koleksiyonAlan .kol-unvan-k").count() === 0 &&
+      !/Luyot/.test(await A.textContent("#koleksiyonAlan")));
+
+    ok("Tömye tarihi ayrıştırılır", await A.evaluate(function () { const t = tomyeTarihAyir("Leg, 21"); return t.ayNo === 1 && t.gun === 21; }));
+    ok("yaklaşan etkinlikler", await A.evaluate(function () { const l = yaklasanEtkinlikler(3); return l.length === 3 && l.every(function (e) { return e.kalan > 0; }); }));
+    await A.evaluate(function () {
+      const d = tomyeBugun();
+      veri.takvimEtkinlikleri.push({ id: "testgunu", ad: "Test günü", ay: d.ay, gun: d.gun, sure: 1, tema: "kurtulus", metin: "deneme", gorev: { id: "yazi4", adet: 1, ad: "bir kelime", odul: 5 } });
+      location.hash = "#/"; etkinlikSeritCiz();
+    });
+    ok("bugünkü etkinlik ana sayfada", /Test günü/.test(await A.textContent("#etkinlikAlan")));
+    ok("geçici tema", await A.evaluate(function () { return document.documentElement.getAttribute("data-etkinlik"); }) === "kurtulus");
+    await A.evaluate(function () { gorevIlerle("yazi4"); });
+    ok("etkinlik görevi ödüllenir", await A.evaluate(function () { return kilitAcik(etkinlikOdulAnahtari({ id: "testgunu" })) && madalyaVar("takvimTanigi"); }));
+
+    await A.evaluate(function () { location.hash = "#/yilim"; }); await bekle(A, 600);
+    await A.evaluate(function () { yilimCiz(); }); await bekle(A, 300);
+    ok("Tömye Yılım ölçüleri", await A.locator("#yilimAlan .yilim-olcu").count() === 8);
+    const yil = await A.evaluate(function () { return yilimVerisi(tomyeBugun().yil); });
+    ok("yıl kaydı eçkayı, madalyayı ve kartları sayar", yil.ecka > 0 && yil.madalya >= 2 && yil.kart >= 4 && yil.gun >= 1, yil);
+    ok("Yılım kartı üretilir", await A.evaluate(async function () { const t = await yilimKartUret(tomyeBugun().yil); return t.width === 1080 && t.height === 1350; }));
+
+    ok("yarış sonucu kartı", await A.evaluate(async function () {
+      Y2 = { yaris: "alinti", sonuc: { durum: "tamam", puan: 42, dogru: 5, sure_ms: 30000, sonuclar: [] } };
+      const t = await yarisKartUret();
+      const html = yarisSonucHtml();
+      Y2 = null;
+      return !!t && t.width === 1080 && /data-yaris-kart/.test(html);
+    }));
+
     console.log("panel");
     await A.evaluate(function () { location.hash = "#/sen"; }); await bekle(A, 600);
     const panel = async function (grup, sekme, ms) {
