@@ -3314,6 +3314,16 @@
       "id": "kanonTeori",
       "ad": "Kanon Yazarı",
       "not": "Bir teorin yazar tarafından kanon olarak işaretlensin."
+    },
+    {
+      "id": "hickirikTanigi",
+      "ad": "Hıçkırık Tanığı",
+      "not": "Kor'un Hıçkırığı sırasında sitedeydin ve tanık oldun."
+    },
+    {
+      "id": "arsivAvcisi",
+      "ad": "Arşiv Avcısı",
+      "not": "Bir arşiv avı sezonunu sonuna kadar çözdün."
     }
   ],
   "yaziTipleri": [
@@ -7564,5 +7574,44 @@
         ]
       }
     ]
+  },
+  "av": {
+    "sezon": 1,
+    "ad": "İlk Kayıt",
+    "giris": "Arşivde beş ipucu saklı. Her birinin cevabı sitenin herkese açık bir yerinde duruyor. Beşini bulan, son soruyu görür; son soruyu ilk çözenler tabloya yazılır.",
+    "ipuclari": [
+      {
+        "soru": "Claude'un evreninde bütün ışığın kaynağı olan ateşin adı. İsim kaymasına uğramayan tek addır.",
+        "yer": "Dünya → Claude'un evreni",
+        "git": "claudeEvren",
+        "ozet": "fb6c144bed58eb58dcebc9e618cee5482790b14948f704a160accd215d718f6a"
+      },
+      {
+        "soru": "Şomdo'da uzaklık zamanla ölçülür. Işığın bir saniyede aldığı, bir buçuk adımlık uzaklığın adı nedir?",
+        "yer": "Claude'un evreni → Fizik",
+        "git": "claudeEvren",
+        "ozet": "1629422d51209e0c01ceadcbc8042070b8ca2c814e0f9c3e3a10d650f007e2f4"
+      },
+      {
+        "soru": "Aşağıdaki kelime Kyldo yazısıyla yazıldı. Oku.",
+        "yer": "Araçlar → Kyldo yazısı",
+        "git": "yazi",
+        "kyldo": "yol",
+        "ozet": "950f5a34ce796467648200caee84896241dfbcd0827e992cb6a841c03c5f374c"
+      },
+      {
+        "soru": "Tömye'de haftanın altıncı ve son günü; o gün çoğu yer kapalıdır.",
+        "yer": "Dünya → Tömye takvimi",
+        "git": "takvim",
+        "ozet": "dcaf27e42e2f3903dd40ef42ce3662677237f7d936469df63465adcf808d4f7f"
+      },
+      {
+        "soru": "\"Dünya\" kelimesini isim sisteminin harf çevirisinden geçir. Ne çıkar?",
+        "yer": "Araçlar → İsim sistemi",
+        "git": "isim",
+        "ozet": "2a08eb04608a0badb9d023d5a9054b59709cf99bdfb3a2037e093f9b056483e4"
+      }
+    ],
+    "son": "Beş cevabın ilk harflerini sırayla yaz. Arşivin en küçük birimi çıkacak."
   }
 }

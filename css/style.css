@@ -3391,3 +3391,29 @@ html.bolum-olc section.bolum{content-visibility:visible}
 .kayma-sonuc{font-size:18px;min-height:28px}
 .kayma-yeni{font-family:var(--display);font-size:32px;font-weight:400;color:var(--deniz)}
 @media(min-width:640px){ .ayna-izgara{grid-template-columns:repeat(4,minmax(0,1fr))} }
+
+/* ---------- Kor'un Hıçkırığı ---------- */
+.hickirik{position:fixed;inset:0;z-index:90;pointer-events:none}
+.hickirik-halka{position:absolute;left:50%;top:-40vmax;width:0;height:0;border-radius:50%;
+  box-shadow:0 0 0 6vmax rgba(8,10,18,.82),0 0 8vmax 10vmax rgba(8,10,18,.35);transform:translate(-50%,0);
+  animation:hickirik-yuru 14s linear forwards}
+@keyframes hickirik-yuru{from{width:0;height:0;top:-40vmax}to{width:320vmax;height:320vmax;top:-160vmax}}
+.hickirik-kart{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);width:min(420px,calc(100% - 32px));
+  pointer-events:auto;background:var(--murekkep);color:var(--kar);border-radius:6px;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.hickirik-kart h3{font-family:var(--display);font-weight:400;font-size:26px;margin:4px 0}
+.hickirik-kart .oyun-etiket{color:#f2b872}
+.hickirik-kart .dugme-sade{color:var(--kar);border-color:rgba(255,255,255,.4)}
+@media (prefers-reduced-motion: reduce){ .hickirik-halka{animation-duration:1ms} }
+
+/* ---------- kartpostal ve arşiv avı ---------- */
+.kp-form{display:flex;flex-direction:column;gap:10px}
+.kp-form label{display:flex;flex-direction:column;gap:4px;font-size:14px}
+.kp-kilit{border:1px solid var(--buz);border-radius:3px;padding:8px 12px;display:flex;flex-direction:column;gap:4px}
+.kp-kilit label{flex-direction:row;align-items:center;gap:6px}
+.kp-kyldo{display:flex;flex-wrap:wrap;gap:10px;padding:12px;background:var(--buz);border-radius:3px;margin:8px 0}
+.kp-metin{margin-top:10px}
+.pencere.kartpostal{background:linear-gradient(180deg,var(--beyaz),var(--kar))}
+.av-yol{padding-left:18px;font-size:14px;color:var(--murekkep-2);margin-bottom:8px}
+.av-ipucu form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.av-ipucu form input{flex:1;min-width:160px}
+.av-cozen{padding-left:20px;font-size:14.5px}

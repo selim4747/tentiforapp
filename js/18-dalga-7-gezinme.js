@@ -27,13 +27,13 @@ const GEZINME = [
     ["sohbet", "Karakter sohbeti"] ] },
 
   { id: "oyunlar", ad: "Oyunlar", ikon: "▩", bolumler: [
-    ["oyunlar", "Yedi oyun"], ["yarislar", "Yarışlar"], ["liderlik", "Liderlik"], ["galeri", "Galeri"], ["bag", "Oyuna taşı"] ] },
+    ["oyunlar", "Yedi oyun"], ["yarislar", "Yarışlar"], ["av", "Arşiv avı"], ["liderlik", "Liderlik"], ["galeri", "Galeri"], ["bag", "Oyuna taşı"] ] },
 
   { id: "testler", ad: "Testler", ikon: "▪", bolumler: [
     ["test", "Hangi karaktersin?"], ["kimlik", "Kimlik Sınavı"] ] },
 
   { id: "araclar", ad: "Araçlar", ikon: "▫", bolumler: [
-    ["isim", "İsim sistemi"], ["yazi", "Kyldo yazısı"], ["sozluk", "Sözlük"],
+    ["isim", "İsim sistemi"], ["yazi", "Kyldo yazısı"], ["kartpostal", "Kartpostal"], ["sozluk", "Sözlük"],
     ["dosyalar", "Dosyalar"] ] },
 
   { id: "proje", ad: "Proje", ikon: "▬", bolumler: [
@@ -316,7 +316,7 @@ const GEC_CIZILENLER = {
   olaylar: "olaylarCiz", kisaHikayeler: "kisaHikayelerCiz", dosyalar: "dosyalarCiz",
   hikaye: "hikayeCiz", defter: "defterCiz", arsivci: "arsivciCiz",
   bag: "bagCiz", sira: "siraCiz", basarim: "basarimCiz",
-  degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz", yarislar: "yarislarCiz", claudeEvren: "claudeEvrenCiz",
+  degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz", yarislar: "yarislarCiz", claudeEvren: "claudeEvrenCiz", av: "avCiz", kartpostal: "kartpostalCiz",
 };
 
 const cizildi = {};
@@ -484,6 +484,13 @@ function sayfaYonlendir() {
   if (bas === "u") {
     if (!aktifSayfa) { sayfaGoster("arsiv", false); }
     if (typeof hesapProfilAc === "function") { hesapProfilAc(parca[1] || ""); }
+    return;
+  }
+
+  /* kartpostal: #/kartpostal/<bağlantıdaki veri> — Araçlar sayfasının üstünde açılır */
+  if (bas === "kartpostal" && parca[1]) {
+    if (aktifSayfa !== "araclar") { sayfaGoster("araclar", false); }
+    if (typeof kartpostalAc === "function") { kartpostalAc(parca.slice(1).join("/")); }
     return;
   }
 

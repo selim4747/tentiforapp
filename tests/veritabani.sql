@@ -119,6 +119,30 @@ select test.ok('geçersiz düzey reddedilir', test.patlar($q$update public.yonet
 update public.yoneticiler set duzey = 'tam' where id = '11111111-1111-1111-1111-111111111111';
 set role authenticated;
 
+-- ---------- Kor'un Hıçkırığı ve arşiv avı ----------
+reset role;
+delete from public.hickirik_olaylari;
+insert into public.hickirik_olaylari (gun, bas) values ((now() at time zone 'Europe/Istanbul')::date, now() - interval '1 minute');
+set role anon;
+select test.ok('hıçkırık zamanı okunamaz', test.patlar('select * from public.hickirik_olaylari'));
+select test.ok('hıçkırık açık görünür', (public.hickirik_durum() ->> 'aktif')::boolean);
+select test.ok('anonim tanık olamaz', test.patlar('select public.hickirik_tanik()'));
+reset role; set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('tanıklık kaydedilir', public.hickirik_tanik() ->> 'durum' = 'tamam');
+select test.ok('tanıklık günde bir', (public.hickirik_tanik() ->> 'toplam')::int = 1);
+reset role;
+update public.hickirik_olaylari set bas = now() - interval '10 minutes';
+set role authenticated;
+select test.ok('geç kalan tanık olamaz', public.hickirik_tanik() ->> 'durum' = 'gec');
+select test.ok('pencere kapanır', not (public.hickirik_durum() ->> 'aktif')::boolean);
+select test.ok('av: yanlış cevap', public.av_coz(1, 'yanlis') ->> 'durum' = 'yanlis');
+select test.ok('av: doğru cevap (Türkçe harf ve boşluk farkı önemsiz)', public.av_coz(1, ' Kayıt ') ->> 'durum' = 'tamam');
+select test.ok('av: ikinci kez sayılmaz', public.av_coz(1, 'kayit') ->> 'durum' = 'zaten');
+select test.ok('av özeti okunamaz', test.patlar('select * from public.av_sezonlari'));
+select test.ok('çözenler listesi', (select count(*) = 1 from public.av_cozenler where kullanici_adi = 'cem'));
+select test.ok('hıçkırık ve av XP verir', (select (dokum->>'hickirik')::int = 20 and (dokum->>'av')::int = 100 from public.arsivci_seviyeleri where kullanici_adi = 'cem'));
+
 -- ---------- hesap silme ----------
 set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
 select public.hesabimi_sil();
