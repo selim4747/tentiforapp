@@ -452,13 +452,20 @@ function hesapYerelIlerlemeyiTemizle() {
 async function hesapCikis() {
   await hesapEsitle(true);             /* çıkmadan son hâli hesaba kaydet */
   const kaydedildi = hesapEsitDurum === "kaydedildi";
+  const eskiId = hesapKullanici && hesapKullanici.id;
   hesapKullanici = null;               /* bundan sonra boş hâli hesaba yazmasın */
   hesapProfil = null;
   clearInterval(hesapEsitZamanlayici);
   try { await hesapIstemci.auth.signOut(); } catch (_) { /* yoksay */ }
   /* hesaba yazılamadıysa (çevrimdışı) bu cihazdaki ilerleme silinmez: evrenler, eçka kaybolmasın */
   if (kaydedildi) { hesapYerelIlerlemeyiTemizle(); }
-  else { try { window.sessionStorage.setItem("tentiforapp_cikis_uyari", "1"); } catch (_) { /* yoksay */ } }
+  else {
+    try {
+      window.sessionStorage.setItem("tentiforapp_cikis_uyari", "1");
+      /* cihazda kalan ilerleme bu hesabın: aynı cihazda başka hesap açılırsa ona karışmaz */
+      if (eskiId) { window.localStorage.setItem(HESAP_SAHIP_ANAHTAR, eskiId); }
+    } catch (_) { /* yoksay */ }
+  }
   location.reload();                   /* bellek (cüzdan, kodlar, UI) misafire dönsün */
 }
 
@@ -578,6 +585,7 @@ function hesapUzagiUygula(veriUzak) {
 let hesapCatismaUzak = null;
 
 const HESAP_SIFIR_ANAHTAR = "sb-tentiforapp-sifirlandi";
+const HESAP_SAHIP_ANAHTAR = "sb-tentiforapp-sahip";   /* çıkışta hesaba yazılamayan ilerlemenin sahibi */
 
 /** Defter'deki tam sıfırlama çağırır: hesaptaki ilerleme de sıfırlansın diye işaret bırakır. */
 function hesapSifirlandi() {
@@ -592,6 +600,13 @@ function hesapSifirlandi() {
 
 /** Girişte ya da açılışta: bulut ile bu cihazı buluşturur. */
 async function hesapIlkEsitleme() {
+  /* çıkışta hesaba yazılamayıp cihazda kalan ilerleme başka bir hesabınsa bu hesaba karışmasın */
+  let sahip = null;
+  try { sahip = window.localStorage.getItem(HESAP_SAHIP_ANAHTAR); } catch (_) { sahip = null; }
+  if (sahip) {
+    try { window.localStorage.removeItem(HESAP_SAHIP_ANAHTAR); } catch (_) { /* yoksay */ }
+    if (sahip !== hesapKullanici.id) { hesapYerelIlerlemeyiTemizle(); }
+  }
   let sifir = null;
   try { sifir = window.localStorage.getItem(HESAP_SIFIR_ANAHTAR); } catch (_) { sifir = null; }
   if (sifir && sifir === hesapKullanici.id) {

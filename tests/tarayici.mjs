@@ -925,6 +925,20 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await M.evaluate(function () { return hesapEsitle(); }); await bekle(M, 1200);
     const bVeri = (await sahte.kokSorgu("select veri from public.ilerlemeler i join auth.users u on u.id = i.id where u.email = 'b@ornek.test'")).rows[0].veri;
     ok("birleşen evren hesaba da yazılır", /Misafir Evreni/.test(bVeri.tentiforapp_fan_eserlerim || ""));
+    /* aynı cihazda iki hesap: çıkınca cihaz misafire döner, ikinci hesap birincinin ilerlemesini görmez */
+    await M.evaluate(function () { cuzdan.ecka += 123; cuzdanKaydet(); return hesapEsitle(true); }); await bekle(M, 800);
+    const mEcka = await M.evaluate(function () { return cuzdan.ecka; });
+    await M.evaluate(function () { hesapCikis(); }); await bekle(M, 3500);
+    ok("çıkınca cihaz misafire döner (evren ve eçka cihazda kalmaz)", await M.evaluate(function () {
+      return !hesapKullanici && !fanEserlerim().some(function (e) { return e.ad === "Misafir Evreni"; }) && cuzdan.ecka < 123;
+    }));
+    await kayitOl(M, "Cem", "cemal", "cem2@ornek.test");
+    ok("aynı cihazda açılan ikinci hesap ilkinin ilerlemesini görmez", await M.evaluate(function () {
+      return !!hesapKullanici && !fanEserlerim().some(function (e) { return e.ad === "Misafir Evreni"; }) && cuzdan.ecka < 123;
+    }));
+    const bVeri2 = (await sahte.kokSorgu("select veri from public.ilerlemeler i join auth.users u on u.id = i.id where u.email = 'b@ornek.test'")).rows[0].veri;
+    ok("ilk hesabın ilerlemesi hesabında durur", /Misafir Evreni/.test(bVeri2.tentiforapp_fan_eserlerim || "") &&
+      JSON.parse(bVeri2.tentiforapp_cuzdan || "{}").ecka === mEcka);
     await M.close();
     await B.click("#evrenSayfa [data-evs-kapat]"); await bekle(B, 300);
 
