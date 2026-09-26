@@ -11,6 +11,8 @@ const { yeniSahte } = require("./supabase-taklidi.cjs");
 
 const TEST_URL = "https://test.supabase.co";
 
+function b64urlBaytUzunluk(s) { return Buffer.from(String(s).replace(/-/g, "+").replace(/_/g, "/"), "base64").length; }
+
 export async function tarayiciTestleri({ adres, veritabani, dizin }) {
   const sahte = yeniSahte(veritabani);
   const hesapKod = readFileSync(dizin + "/js/28-hesap.js", "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL);
@@ -462,6 +464,56 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await panel("bakim", "yedek", 400);
     const [indirme] = await Promise.all([A.waitForEvent("download"), A.click("[data-y-yedek-al]")]);
     ok("yedek iner", /tentifor-yedek-/.test(indirme.suggestedFilename()));
+
+    /* ---------- Web Push ---------- */
+    await panel("bakim", "bildirim", 1200);
+    await A.evaluate(function () { document.querySelector("[data-y-bildirim-uret]").click(); }); await bekle(A, 600);
+    const anahtar = await A.evaluate(function () { return { acik: veri.bildirim.acikAnahtar, gizli: document.querySelector("#yBildirimGizli").value }; });
+    ok("VAPID anahtarı: açık 65, gizli 32 bayt", b64urlBaytUzunluk(anahtar.acik) === 65 && b64urlBaytUzunluk(anahtar.gizli) === 32, anahtar.acik.length);
+    ok("açık anahtar P-256 noktası (0x04 ile başlar)", await A.evaluate(function (a) { return b64urlBayt(a)[0] === 4; }, anahtar.acik));
+    ok("gizli anahtar veriye yazılmaz", await A.evaluate(function (g) { return JSON.stringify(veri).indexOf(g) === -1; }, anahtar.gizli));
+    ok("abone sayısı görünür", /^\d+$/.test((await A.textContent("#yBildirimSayi")).trim()), await A.textContent("#yBildirimSayi"));
+    let gonderilenGovde = null;
+    await A.route(TEST_URL + "/functions/v1/bildirim-gonder", function (r) {
+      gonderilenGovde = r.request().postDataJSON();
+      return r.fulfill({ status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ durum: "tamam", gonderilen: 3, silinen: 1, hata: 0 }) });
+    });
+    await A.fill("#yBildirimBaslik", "Yeni bölüm: Kitap");
+    await A.evaluate(function () { document.querySelector("[data-y-bildirim-gonder]").click(); }); await bekle(A, 1200);
+    ok("bildirim gönderilir", /3 cihaza gönderildi/.test(await A.textContent("#yBildirimSonuc")), await A.textContent("#yBildirimSonuc"));
+    ok("gönderim gövdesi", gonderilenGovde && gonderilenGovde.baslik === "Yeni bölüm: Kitap" && gonderilenGovde.adres === "/#/roman", gonderilenGovde);
+
+    /* ziyaretçi abone olur ve çıkar (tarayıcının itme servisi taklit) */
+    await Z.evaluate(function (acik) {
+      veri.bildirim = { acikAnahtar: acik };
+      window.__abone = null;
+      /* izin durumu tarayıcıya göre değişir (CI'daki Chromium'da "denied"): testte sabitlenir */
+      window.__izin = "default";
+      if (!("PushManager" in window)) { window.PushManager = function () {}; }
+      Object.defineProperty(Notification, "permission", { configurable: true, get: function () { return window.__izin; } });
+      Notification.requestPermission = async function () { window.__izin = "granted"; return "granted"; };
+      window.bildirimKaydi = async function () {
+        return { pushManager: {
+          getSubscription: async function () { return window.__abone; },
+          subscribe: async function (o) {
+            if (!(o.applicationServerKey instanceof Uint8Array) || o.applicationServerKey.length !== 65) { throw new Error("anahtar bozuk"); }
+            window.__abone = { endpoint: "https://fcm.googleapis.com/fcm/send/test-cihaz",
+              toJSON: function () { return { endpoint: this.endpoint, keys: { p256dh: "B".repeat(87), auth: "a".repeat(22) } }; },
+              unsubscribe: async function () { window.__abone = null; return true; } };
+            return window.__abone;
+          } } };
+      };
+      location.hash = "#/roman";
+    }, anahtar.acik);
+    await bekle(Z, 700);
+    await Z.evaluate(function () { bildirimKutusuCiz(); }); await bekle(Z, 100);
+    ok("bildirim düğmesi görünür", await Z.locator('[data-bildirim="ac"]').count() === 1, await Z.textContent("#bildirimAlan"));
+    await Z.evaluate(function () { document.querySelector('[data-bildirim="ac"]').click(); }); await bekle(Z, 1500);
+    ok("ziyaretçi bildirime abone olur", (await sahte.kokSorgu("select count(*)::int n from public.bildirim_abonelikleri where endpoint like '%test-cihaz'")).rows[0].n === 1,
+      await Z.textContent("#bildirimAlan"));
+    ok("abone olunca kapatma düğmesi", await Z.locator('[data-bildirim="kapat"]').count() === 1);
+    await Z.evaluate(function () { document.querySelector('[data-bildirim="kapat"]').click(); }); await bekle(Z, 1200);
+    ok("bildirim kapatılınca abonelik silinir", (await sahte.kokSorgu("select count(*)::int n from public.bildirim_abonelikleri")).rows[0].n === 0);
 
     await panel("icerik", "listeler", 400);
     await A.click('[data-y-liste="sozluk"]'); await bekle(A, 300);

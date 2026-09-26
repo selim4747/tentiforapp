@@ -1999,5 +1999,59 @@ grant execute on function public.defter_yaz(text), public.defter_oyla(bigint), p
   public.okur_bulmaca_yaz(text, text, text), public.okur_bulmaca_coz(bigint, text), public.okur_bulmaca_sil(bigint),
   public.davet_kaydet(text), public.davet_durumum() to authenticated;
 
+-- ---------- Web Push: yeni bölüm bildirimi ----------
+-- Abonelikleri yalnızca sunucu tarafı (Edge Function, service role) okur. Ziyaretçi yalnızca kendi
+-- aboneliğini ekler/siler. Uç adresi bilinen tarayıcı itme servisleriyle sınırlı: fonksiyon başka bir
+-- adrese istek atmaya zorlanamaz.
+create table if not exists public.bildirim_abonelikleri (
+  endpoint text primary key,
+  p256dh text not null,
+  auth text not null,
+  kullanici uuid references auth.users(id) on delete set null,
+  olusturma timestamptz not null default now()
+);
+alter table public.bildirim_abonelikleri enable row level security;
+do $$ begin
+  alter table public.bildirim_abonelikleri add constraint bildirim_uc check (
+    length(endpoint) <= 1000 and endpoint ~ '^https://(fcm\.googleapis\.com|updates\.push\.services\.mozilla\.com|web\.push\.apple\.com|[a-z0-9.-]+\.notify\.windows\.com|[a-z0-9.-]+\.push\.apple\.com)/');
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.bildirim_abonelikleri add constraint bildirim_anahtar check (
+    p256dh ~ '^[A-Za-z0-9_=-]{40,200}$' and auth ~ '^[A-Za-z0-9_=-]{8,100}$');
+exception when duplicate_object then null; end $$;
+
+create or replace function public.bildirim_abone_ol(p_endpoint text, p_p256dh text, p_auth text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+begin
+  if (select count(*) from public.bildirim_abonelikleri) >= 200000 then return jsonb_build_object('durum', 'dolu'); end if;
+  begin
+    insert into public.bildirim_abonelikleri (endpoint, p256dh, auth, kullanici)
+      values (p_endpoint, p_p256dh, p_auth, auth.uid())
+      on conflict (endpoint) do update set p256dh = excluded.p256dh, auth = excluded.auth,
+        kullanici = coalesce(auth.uid(), public.bildirim_abonelikleri.kullanici);
+  exception when check_violation then
+    return jsonb_build_object('durum', 'gecersiz');
+  end;
+  return jsonb_build_object('durum', 'tamam');
+end $$;
+
+create or replace function public.bildirim_abonelik_sil(p_endpoint text) returns jsonb
+language sql security definer set search_path = '' as $$
+  with s as (delete from public.bildirim_abonelikleri where endpoint = p_endpoint returning 1)
+  select jsonb_build_object('durum', 'tamam', 'silinen', (select count(*) from s));
+$$;
+
+create or replace function public.bildirim_sayisi() returns int
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  return (select count(*) from public.bildirim_abonelikleri);
+end $$;
+
+revoke all on public.bildirim_abonelikleri from anon, authenticated;
+revoke execute on function public.bildirim_abone_ol(text, text, text), public.bildirim_abonelik_sil(text), public.bildirim_sayisi() from public;
+grant execute on function public.bildirim_abone_ol(text, text, text), public.bildirim_abonelik_sil(text) to anon, authenticated;
+grant execute on function public.bildirim_sayisi() to authenticated;
+
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';

@@ -214,6 +214,28 @@ set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
 select test.ok('rehber: tamamlayan davetli sayılır', (public.davet_durumum() ->> 'tamamlayan')::int = 1);
 select test.ok('rehber XP', (select (dokum->>'davet')::int = 50 from public.arsivci_seviyeleri where kullanici_adi = 'deniz'));
 
+-- ---------- bildirim abonelikleri ----------
+reset role;
+set role anon;
+select test.ok('anonim abone olur', public.bildirim_abone_ol('https://fcm.googleapis.com/fcm/send/abc123', repeat('B', 87), repeat('a', 22)) ->> 'durum' = 'tamam');
+select test.ok('aynı abonelik tekrar yazılabilir', public.bildirim_abone_ol('https://fcm.googleapis.com/fcm/send/abc123', repeat('C', 87), repeat('a', 22)) ->> 'durum' = 'tamam');
+select test.ok('bilinmeyen sunucuya abonelik reddedilir', public.bildirim_abone_ol('https://kotu.ornek/fcm', repeat('B', 87), repeat('a', 22)) ->> 'durum' = 'gecersiz');
+select test.ok('iç ağ adresi reddedilir', public.bildirim_abone_ol('https://fcm.googleapis.com.kotu.ornek/x', repeat('B', 87), repeat('a', 22)) ->> 'durum' = 'gecersiz');
+select test.ok('bozuk anahtar reddedilir', public.bildirim_abone_ol('https://fcm.googleapis.com/fcm/send/x', 'kisa<', 'a') ->> 'durum' = 'gecersiz');
+select test.ok('anonim abonelikleri okuyamaz', test.patlar('select * from public.bildirim_abonelikleri'));
+select test.ok('anonim abone sayısını göremez', test.patlar('select public.bildirim_sayisi()'));
+reset role;
+select test.ok('abonelik tek satır, anahtar güncel', (select count(*) = 1 and min(p256dh) = repeat('C', 87) from public.bildirim_abonelikleri));
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('yönetici olmayan sayıyı göremez', test.patlar('select public.bildirim_sayisi()'));
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select test.ok('yönetici abone sayısını görür', public.bildirim_sayisi() = 1);
+set role anon;
+select test.ok('abonelik silinir', (public.bildirim_abonelik_sil('https://fcm.googleapis.com/fcm/send/abc123') ->> 'silinen')::int = 1);
+reset role;
+set role authenticated;
+
 -- ---------- hesap silme ----------
 set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
 select public.hesabimi_sil();

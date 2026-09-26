@@ -3547,3 +3547,9 @@ textarea#fanA_metin{min-height:320px}
 .fan-oku dt{font-weight:600;margin-top:14px}
 .fan-oku dd{margin:2px 0 0}
 .fan-pencere-eylem{margin-top:22px;padding-top:14px;border-top:1px solid var(--sig)}
+
+/* ---------- Yeni bölüm bildirimi ---------- */
+.bildirim-kutu{border:1px solid var(--sig);background:var(--beyaz);padding:12px 16px;margin:0 0 18px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+.bildirim-kutu .oyun-not{flex:1 1 240px;margin:0}
+.bildirim-kutu .pencere-durum:empty{display:none}
+.y-bildirim-anahtar input{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:12px}

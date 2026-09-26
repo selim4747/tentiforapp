@@ -26,6 +26,14 @@ function gizlilikCiz() {
       "Yarış skorların, liderlik sayıların, teorilerin, oyların ve takip ettiklerin — liderlikten çıkmayı seçmediysen herkese açıktır.",
       "Güvenlik için: yarış süreleri ve şüpheli sonuç işaretleri (hile önleme)."
     ]) +
+    bolum("Yeni bölüm bildirimi (açarsan)", [
+      "Tarayıcının sana verdiği bildirim adresi ve iki şifreleme anahtarı sunucuda saklanır; hesabın açıksa hangi hesaba ait olduğu da.",
+      "Yalnızca yeni bölüm ve duyuru göndermek için kullanılır. Roman bölümündeki <b>Bildirimleri kapat</b> ile ya da tarayıcı ayarından izni kaldırarak silinir."
+    ]) +
+    bolum("Fan hikâyeleri ve evrenleri", [
+      "Yazdıkların cihazında (hesabın varsa onunla eşitlenerek) durur; açtığın dosyalar sunucuya gönderilmez, yalnızca tarayıcında okunur.",
+      "Bir dosyayı yazara e-postayla gönderirsen, sitede yayımlanması yazarın onayıyla olur."
+    ]) +
     bolum("Hata bildirimleri", [
       "Sitede bir hata olursa hata metni, hatanın olduğu dosya, sayfa adresi (sorgu kısmı atılarak), tarayıcı bilgisi ve site sürümü kaydedilir.",
       "Amaç yalnızca hatayı düzeltmektir. Aynı hata gün içinde tek kayıt olarak sayılır; kayıtlar yönetici tarafından temizlenir."
