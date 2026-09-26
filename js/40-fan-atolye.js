@@ -85,6 +85,9 @@ function fanHaritaTemizle(h) {
     }
     /* geçit: başka bir evrene kapı (yalnızca sitenin kendi evren adresleri) */
     if (y && typeof y.gecit === "string" && FAN_GECIT.test(y.gecit)) { t.gecit = y.gecit; }
+    /* şehir haritası: binalar, caddeler, alanlar (js/57-sehir-yol.js) */
+    const sehir = y && y.sehir && typeof sehirTemizle === "function" ? sehirTemizle(y.sehir) : null;
+    if (sehir) { t.sehir = sehir; }
     return t;
   }) };
   /* nehir, yol, sınır çizgileri */

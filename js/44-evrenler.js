@@ -301,6 +301,7 @@ function evrenHaritaSvg(h, o) {
       '<circle r="' + (sec ? 1.6 : 1.1) + '" fill="' + (y.tur === "Şehir" ? "#1C5C96" : "#3D4A57") + '" stroke="#fff" stroke-width="0.35"' + (katki ? ' stroke-dasharray="0.6 0.4"' : "") + "></circle>" +
       '<circle r="3.2" fill="transparent"></circle>' +
       (y.gecit ? '<circle r="2.1" fill="none" stroke="#7A4FB5" stroke-width="0.35" stroke-dasharray="0.6 0.4"><title>Geçit</title></circle>' : "") +
+      (y.sehir ? '<rect x="1.1" y="-2.7" width="1.7" height="1.7" rx="0.2" fill="#8A6A3E" stroke="#fff" stroke-width="0.2"><title>Şehir haritası var</title></rect>' : "") +
       (o.etiketsiz ? "" : '<text y="-2.1" text-anchor="middle" font-size="2.3" font-family="' + yaziTipi + '" fill="' + yazi + '" stroke="' + hale + '" stroke-width="0.5" paint-order="stroke">' + esc(etiket(y.ad || "—")) + "</text>") + "</g>";
   };
   const taslak = (o.cizim && o.cizim.length)

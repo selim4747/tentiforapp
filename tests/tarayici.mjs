@@ -904,6 +904,109 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     const [pngInd] = await Promise.all([N.waitForEvent("download"), N.click("#evrenSayfa [data-evh-png]")]);
     ok("harita PNG olarak iner", /-harita\.png$/.test(pngInd.suggestedFilename()));
 
+    /* ---------- şehir haritası ve gezi çizelgesi ---------- */
+    await N.evaluate(function (id) { EVS.secili = evrenBenimBul(id).harita.yerler[0].id; evrenSayfaCiz(); }, turEv);
+    ok("seçili yerde “Şehir haritası çiz”", /Şehir haritası çiz/.test(await N.textContent("#evrenSayfa [data-sh-evren]")));
+    await N.click("#evrenSayfa [data-sh-evren]"); await bekle(N, 200);
+    ok("şehir penceresi boşken bina ekleme kipinde açılır", await N.evaluate(function () { return !!document.querySelector("#sehirSayfa .sh-svg.duzenle") && SH.mod === "bina" && !SH.salt; }));
+    await N.click('#sehirSayfa [data-sh-bina-tur="tapinak"]'); await bekle(N, 100);
+    let sk = await N.locator("#sehirSayfa .sh-svg").boundingBox();
+    await N.mouse.click(sk.x + sk.width * 0.3, sk.y + sk.height * 0.3); await bekle(N, 100);
+    await N.fill("#shAd", "Ay Tapınağı"); await bekle(N, 100);
+    await N.click('#sehirSayfa [data-sh-mod="sokak"]'); await bekle(N, 100);
+    await N.click('#sehirSayfa [data-sh-sokak-tur="cadde"]'); await bekle(N, 100);
+    sk = await N.locator("#sehirSayfa .sh-svg").boundingBox();
+    await N.mouse.click(sk.x + sk.width * 0.1, sk.y + sk.height * 0.6); await N.mouse.click(sk.x + sk.width * 0.9, sk.y + sk.height * 0.6);
+    await N.click("#sehirSayfa [data-sh-bitir]"); await bekle(N, 100);
+    await N.fill("#shAd", "Tuz Caddesi"); await bekle(N, 100);
+    await N.click('#sehirSayfa [data-sh-mod="alan"]'); await bekle(N, 100);
+    await N.click('#sehirSayfa [data-sh-alan-tur="su"]'); await bekle(N, 100);
+    sk = await N.locator("#sehirSayfa .sh-svg").boundingBox();
+    for (const n of [[0.7, 0.1], [0.95, 0.1], [0.95, 0.4]]) { await N.mouse.click(sk.x + sk.width * n[0], sk.y + sk.height * n[1]); }
+    await N.click("#sehirSayfa [data-sh-bitir]"); await bekle(N, 100);
+    ok("bina, cadde ve alan çizilip adlanır; evrene kaydolur", await N.evaluate(function (id) {
+      const s = evrenBenimBul(id).harita.yerler[0].sehir;
+      return !!s && s.binalar.length === 1 && s.binalar[0].tur === "tapinak" && s.binalar[0].ad === "Ay Tapınağı" &&
+        s.sokaklar.length === 1 && s.sokaklar[0].tur === "cadde" && s.sokaklar[0].ad === "Tuz Caddesi" && s.alanlar.length === 1 && s.alanlar[0].tur === "su";
+    }, turEv));
+    await N.click('#sehirSayfa [data-sh-mod="sec"]'); await bekle(N, 100);
+    const bk = await N.locator('#sehirSayfa [data-sh-bina] rect').nth(1).boundingBox();
+    const eskiX = await N.evaluate(function (id) { return evrenBenimBul(id).harita.yerler[0].sehir.binalar[0].x; }, turEv);
+    await N.mouse.move(bk.x + bk.width / 2, bk.y + bk.height / 2); await N.mouse.down();
+    await N.mouse.move(bk.x + bk.width / 2 + 60, bk.y + bk.height / 2, { steps: 5 }); await N.mouse.up(); await bekle(N, 150);
+    ok("bina sürüklenerek taşınır", await N.evaluate(function (id) { return evrenBenimBul(id).harita.yerler[0].sehir.binalar[0].x; }, turEv) > eskiX + 5);
+    const [shPng] = await Promise.all([N.waitForEvent("download"), N.click("#sehirSayfa [data-sh-png]")]);
+    ok("şehir haritası PNG olarak iner", /-sehir\.png$/.test(shPng.suggestedFilename()));
+    await N.keyboard.press("Escape"); await bekle(N, 200);
+    ok("Esc şehir penceresini kapatır, evren sayfası açık kalır; haritada şehir işareti", await N.evaluate(function () {
+      return !document.querySelector("#sehirSayfa") && !!document.querySelector("#evrenSayfa") && /Şehir haritasını düzenle/.test(document.querySelector("#evrenSayfa [data-sh-evren]").textContent) &&
+        document.querySelector("#evrenSayfa .evh-svg").innerHTML.indexOf("#8A6A3E") !== -1;
+    }));
+    ok("şehir haritası ve gezi dosyada kalır; bozuk şehir verisi temizlenir", await N.evaluate(function (id) {
+      const e = evrenBenimBul(id); const x = fanMetindenEser(fanDosyaHtml(e));
+      const t = fanTemizle({ bicim: FAN_BICIM, tur: "evren", ad: "x", kisiler: [{ ad: "K", yol: [{ yer: "<b>", zaman: 5 }, { yer: "a1", g: "g-1", zaman: "dün" }] }],
+        harita: { yerler: [{ id: "a1", ad: "a", sehir: { binalar: [{ tur: "<script>", x: 500, y: -3, ad: "B" }], sokaklar: [{ noktalar: [[1, 1]] }], alanlar: "x" } }] } });
+      const b = t.harita.yerler[0].sehir.binalar[0];
+      return x.harita.yerler[0].sehir.binalar[0].ad === "Ay Tapınağı" && b.tur === "diger" && b.x === 100 && b.y === 0 && b.en === 4 &&
+        t.harita.yerler[0].sehir.sokaklar.length === 0 && t.kisiler[0].yol.length === 2 && t.kisiler[0].yol[0].yer === "b" && t.kisiler[0].yol[1].g === "g-1" &&
+        fanTemizle({ bicim: FAN_BICIM, tur: "evren", ad: "x", harita: { yerler: [{ ad: "a", sehir: { binalar: [] } }] } }).harita.yerler[0].sehir === undefined;
+    }, turEv));
+
+    await N.evaluate(function (id) { evrenBenimDegistir(id, function (e) { e.kisiler = [{ ad: "Arin" }, { ad: "Mera" }]; }); EVS.secili = null; evrenSayfaCiz(); }, turEv);
+    ok("gezi çizelgesi kişileri listeler", /Arin/.test(await N.textContent("#evrenSayfa .gz-kutu")) && await N.locator("#evrenSayfa [data-gz-kisi] option").count() === 2);
+    await N.click("#evrenSayfa [data-gz-ciz]"); await bekle(N, 150);
+    const gzYerler = await N.evaluate(function (id) { return evrenBenimBul(id).harita.yerler.map(function (y) { return y.id; }); }, turEv);
+    for (const y of [gzYerler[0], gzYerler[1], gzYerler[1], gzYerler[2]]) {
+      await N.locator('#evrenSayfa .evh-svg [data-evh-yer="' + y + '"]').first().dispatchEvent("pointerdown"); await bekle(N, 120);
+    }
+    ok("yol çizerken yerlere dokunmak adım ekler (art arda aynı yer bir kez)", await N.evaluate(function (id) {
+      const k = evrenBenimBul(id).kisiler[0]; return k.yol.length === 3 && !evrenBenimBul(id).kisiler[1].yol;
+    }, turEv) && await N.locator("#evrenSayfa .gz-nokta").count() === 3);
+    await N.fill('#evrenSayfa [data-gz-alan="zaman"][data-gz-i="0"]', "Bahar 312"); await N.dispatchEvent('#evrenSayfa [data-gz-alan="zaman"][data-gz-i="0"]', "change"); await bekle(N, 100);
+    await N.click('#evrenSayfa [data-gz-tasi="0:1"]'); await bekle(N, 150);
+    await N.click('#evrenSayfa [data-gz-sil="2"]'); await bekle(N, 150);
+    ok("adıma zaman yazılır, sırası değişir, silinir", await N.evaluate(function (a) {
+      const y = evrenBenimBul(a.id).kisiler[0].yol; return y.length === 2 && y[0].yer === a.l[1] && y[1].yer === a.l[0] && y[1].zaman === "Bahar 312";
+    }, { id: turEv, l: gzYerler }));
+    await N.selectOption("#evrenSayfa [data-gz-kisi]", "1"); await bekle(N, 150);
+    ok("başka kişi seçilince onun (boş) yolu", /Mera henüz hiçbir yere gitmedi/.test(await N.textContent("#evrenSayfa .gz-kutu")) && await N.locator("#evrenSayfa .gz-nokta").count() === 0);
+    await N.click("#evrenSayfa [data-gz-ciz]"); await bekle(N, 100);
+
+    await N.evaluate(function () { location.hash = "#/ev/fan/fornek-sis"; }); await bekle(N, 900);
+    ok("okur örnek evrende kişinin yolunu ve çizelgesini görür (öbür gezegendeki adım dahil)", await N.evaluate(function () {
+      const k = document.querySelector("#evrenSayfa .gz-kutu");
+      return !!k && /Arvel/.test(k.textContent) && /Bir gemi kiralar/.test(k.textContent) && k.querySelectorAll(".gz-liste li").length === 5 &&
+        document.querySelectorAll("#evrenSayfa .gz-nokta").length === 4 && !k.querySelector("input, [data-gz-ciz]");
+    }));
+    await N.evaluate(function () { EVS.secili = "liman"; evrenSayfaCiz(); }); await bekle(N, 150);
+    await N.click("#evrenSayfa [data-sh-evren]"); await bekle(N, 200);
+    await N.locator('#sehirSayfa [data-sh-bina="b1"] rect').nth(1).dispatchEvent("pointerdown"); await bekle(N, 150);
+    ok("okur şehir haritasını salt okunur açar, binanın anlatımını okur", await N.evaluate(function () {
+      return SH.salt && !document.querySelector("#sehirSayfa [data-sh-mod], #sehirSayfa .sh-svg.duzenle") && /Sisli gecelerde/.test(document.querySelector("#sehirSayfa .sh-bilgi").textContent);
+    }));
+    await N.click("#sehirSayfa [data-sh-kapat]"); await bekle(N, 150);
+
+    await N.evaluate(function () { evrenSayfaKapat(); location.hash = "#/harita"; }); await bekle(N, 900);
+    await N.evaluate(function () { haritaTamAc(); }); await bekle(N, 800);
+    ok("Tömye haritası: okur şehri olmayan yerde düğme görmez", await N.evaluate(function () {
+      haritaSecili = aktifHarita().yerler[0].id; haritaBilgiCiz(); return document.querySelectorAll("[data-sh-kanon]").length === 0;
+    }));
+    await N.evaluate(function () { HT.duzen = true; haritaBilgiCiz(); });
+    await N.click("[data-sh-kanon]"); await bekle(N, 200);
+    const kk = await N.locator("#sehirSayfa .sh-svg").boundingBox();
+    await N.mouse.click(kk.x + kk.width * 0.5, kk.y + kk.height * 0.5); await bekle(N, 150);
+    ok("yönetici Tömye haritasında şehir çizer (tam ekran haritanın üstünde)", await N.evaluate(function () {
+      const s = haritaSeciliYer().sehir; return !!s && s.binalar.length === 1 && !SH.salt;
+    }));
+    await N.keyboard.press("Escape"); await bekle(N, 150);
+    ok("Esc yalnızca şehir penceresini kapatır; okur artık “Şehir haritasını aç” görür", await N.evaluate(function () {
+      const acik = !document.querySelector("#sehirSayfa") && HT.acik;
+      HT.duzen = false; haritaBilgiCiz();
+      const d = document.querySelector("[data-sh-kanon]"); const r = acik && !!d && /Şehir haritasını aç/.test(d.textContent);
+      delete haritaSeciliYer().sehir; haritaTamKapat(); return r;
+    }));
+    await N.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(N, 300);
+
     ok("konuk haritası: kişinin gittiği yerler", await N.evaluate(function () {
       const l = fanEserlerim();
       l.push({ bicim: FAN_BICIM, surum: 1, tur: "hikaye", id: "hk1", baslik: "Orlan kıyıda", metin: "…", konuklar: [{ bicim: FAN_BICIM, tur: "kisi", id: "vitrin1", ad: "Orlan Gezgin", kisilik: [] }] });
