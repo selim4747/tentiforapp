@@ -628,6 +628,24 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("Yayınla düğmesi Cloudflare'e istek atar", yayinIstegi === "POST", yayinIstegi);
     ok("yayın bağlantısı hesapla eşitlenmez", await A.evaluate(function () { return ESITLEME_DISI.indexOf("tentiforapp_yayin_kancasi") !== -1; }));
 
+    /* ---------- E26: kanon evren sayfası ---------- */
+    await Z.evaluate(function () { location.hash = "#/ev/site/e26"; }); await bekle(Z, 500);
+    ok("E26 sayfası kodsuz ziyaretçiye kilitli", await Z.evaluate(function () { return !!document.querySelector("#evrenSayfa [data-evs-kod]") && !/Gearem/.test(document.querySelector("#evrenSayfa").textContent); }));
+    await Z.evaluate(function () { evrenSayfaKapat(); });
+    await A.evaluate(function () { location.hash = "#/ev/site/e26"; }); await bekle(A, 500);
+    await A.evaluate(function () { document.querySelector('[data-evs-sekme="bilgi"]').click(); }); await bekle(A, 200);
+    ok("E26 sayfası bilgileri toplar", await A.evaluate(function () {
+      const t = document.querySelector("#evrenSayfa").textContent; return /Gearem/.test(t) && /konuşma topu/i.test(t) && /Kanon evren/.test(t);
+    }));
+    await A.evaluate(function () { document.querySelector('[data-evs-sekme="harita"]').click(); }); await bekle(A, 200);
+    await A.evaluate(function () { document.querySelector('[data-evh-mod="yer"]').click(); }); await bekle(A, 100);
+    const e26k = await A.locator("#evrenSayfa .evh-svg").boundingBox();
+    await A.mouse.click(e26k.x + e26k.width * 0.5, e26k.y + e26k.height * 0.5); await bekle(A, 200);
+    ok("yönetici E26 haritasına yer ekler (sitenin haritasına)", await A.evaluate(function () {
+      return veri.haritalar.find(function (h) { return h.id === "e26"; }).yerler.length === 1;
+    }));
+    await A.evaluate(function () { evrenSayfaKapat(); location.hash = "#/sen"; }); await bekle(A, 600);
+
     /* ---------- Web Push ---------- */
     await panel("bakim", "bildirim", 1200);
     await A.evaluate(function () { document.querySelector("[data-y-bildirim-uret]").click(); }); await bekle(A, 600);

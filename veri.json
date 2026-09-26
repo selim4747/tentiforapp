@@ -7800,5 +7800,44 @@
       "yerler": []
     },
     "oneriler": []
+  },
+  "kanonEvrenleri": {
+    "e26": {
+      "bicim": "tentifor-eser",
+      "surum": 1,
+      "tur": "evren",
+      "id": "e26",
+      "ad": "E26",
+      "yazar": "",
+      "ozet": "Herkesin saçına bağlı birkaç konuşma topu vardır; sesler bu toplardan yayılır. Biriyle konuşmak için top ona dokunur; karşıdaki sesi bu dokunuşla algılar.",
+      "kurallar": [
+        {
+          "ad": "Konuşma topları",
+          "tur": "ses",
+          "aciklama": "Herkesin saçına bağlı birkaç konuşma topu vardır ve sesler bu toplardan yayılır."
+        },
+        {
+          "ad": "Dokunarak duymak",
+          "tur": "ses",
+          "aciklama": "Biriyle konuşmak için top ona dokunur; karşıdaki sesi bu dokunuşla algılar."
+        }
+      ],
+      "kisiler": [
+        {
+          "ad": "Gearem",
+          "rol": "Topunu önüne alıp kendi kendine konuşan, asosyal biri.",
+          "aciklama": "E26'da yaşar. Asosyaldır; konuşma topunu önüne alıp kendi kendine konuşur.\n\nRastgele birini kaçırır ve konuşma toplarının işleyişini değiştirmek için üzerinde deneyler yapar. Sonunda onun zihnini kontrol eder; kendi konuşma topunun uzayabildiği kısmı artırır ve konuşma topu sayısını çoğaltır."
+        }
+      ],
+      "yerler": [],
+      "tarih": [],
+      "sozluk": [],
+      "ozelAlanlar": [
+        {
+          "ad": "Yabancı öğesi",
+          "deger": "Saça bağlı bir konuşma topu."
+        }
+      ]
+    }
   }
 }

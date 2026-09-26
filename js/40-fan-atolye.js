@@ -126,7 +126,7 @@ function fanEserGovde(e, dosya) {
       (e.ozet ? "<p><i>" + kacir(e.ozet) + "</i></p>" : "") +
       '<div class="' + (dosya ? "" : "okuma-metin fan-metin") + '">' + paragraf(e.metin) + "</div>";
   }
-  return '<p class="ust">Fan evreni · kanon dışı</p>' +
+  return '<p class="ust">' + kacir(e.etiket || "Fan evreni · kanon dışı") + "</p>" +
     "<h1>" + kacir(e.ad || "Adsız evren") + "</h1>" +
     '<div class="bilgi">' + bilgi("Kuran", e.yazar) + "</div>" +
     (e.ozet ? paragraf(e.ozet) : "") +

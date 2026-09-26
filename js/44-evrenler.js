@@ -20,7 +20,8 @@ function evrenSeciciListesi() {
   const site = [];
   (veri.haritalar || []).forEach(function (h) {
     const kilitli = typeof kanonEvrenErisimi === "function" && !kanonEvrenErisimi(h.id);
-    const git = h.id === "claude" ? "#/claude" : (h.id === (veri.haritalar[0] || {}).id ? "#/arsiv" : "harita:" + h.id);
+    const git = h.id === "claude" ? "#/claude" : (h.id === (veri.haritalar[0] || {}).id ? "#/arsiv"
+      : ((veri.kanonEvrenleri || {})[h.id] ? "#/ev/site/" + h.id : "harita:" + h.id));
     site.push({ ad: h.id === (veri.haritalar[0] || {}).id ? h.ad + " · 24. Evren" : h.ad, git: git, kilitli: kilitli,
       not: h.id === "claude" ? "kanon dışı" : "" });
   });
@@ -221,6 +222,17 @@ function evrenSayfaVerisi() {
   if (EVS.kaynak === "e99") {
     return { eser: veri.e99 || {}, duzenle: true, hedef: E99_KATKI_ID, katki: e99Katki(), rozet: "Herkesin evreni · yazdıkların önce yalnızca sende durur" };
   }
+  if (EVS.kaynak === "site") {
+    /* sitenin kanon evreni: bilgiler veri.kanonEvrenleri'nden, harita sitenin haritasından (veri.haritalar) */
+    const k = (veri.kanonEvrenleri || {})[EVS.id];
+    const h = (veri.haritalar || []).find(function (x) { return x.id === EVS.id; });
+    if (!k) { return null; }
+    const acik = (typeof kanonEvrenErisimi !== "function" || kanonEvrenErisimi(EVS.id)) || (typeof panelAcik === "function" && panelAcik());
+    const yon = typeof yoneticiAcik === "function" && yoneticiAcik();
+    const eser = Object.assign({}, k, { etiket: "Kanon evren", harita: { yerler: (h && h.yerler) || [], renk: h && h.renk } });
+    return { eser: eser, duzenle: yon, site: h, kilitli: !acik,
+      rozet: yon ? "Kanon · haritayı yönetici olarak düzenliyorsun" : "Kanon evren" };
+  }
   return null;
 }
 
@@ -249,13 +261,20 @@ function evrenSayfaCiz() {
       '<button class="dugme dugme-sade" data-evren-sec>◎ Başka evren</button>' +
     "</div>" +
     '<div class="evs-sekmeler" role="tablist">' + sekme("harita", "Harita") + sekme("bilgi", EVS.kaynak === "e99" ? "Evren ve katkın" : (v.duzenle ? "Evreni düzenle" : "Evren")) + "</div>" +
-    '<div class="evs-govde">' + (EVS.sekme === "harita" ? evrenHaritaBolumu(v) : evrenBilgiBolumu(v)) + "</div>";
+    '<div class="evs-govde">' + (v.kilitli
+      ? '<div class="kutu-y"><p class="oyun-giris">Bu evren kanonun parçası; kodla açılır.</p><button class="dugme" data-evs-kod>Kod gir</button></div>'
+      : (EVS.sekme === "harita" ? evrenHaritaBolumu(v) : evrenBilgiBolumu(v))) + "</div>";
 }
 
 /* ---------- harita sekmesi ---------- */
 
 function evrenHaritaVerisi(v) {
   if (EVS.kaynak === "e99") { return { yayin: (veri.e99 && veri.e99.harita) || { yerler: [] }, duzen: v.katki.harita }; }
+  if (EVS.kaynak === "site") {
+    const h = v.site || { yerler: [] };
+    if (!Array.isArray(h.yerler)) { h.yerler = []; }
+    return v.duzenle ? { yayin: { yerler: [] }, duzen: h } : { yayin: h, duzen: null };
+  }
   return { yayin: v.duzenle ? { yerler: [] } : (v.eser.harita || { yerler: [] }), duzen: v.duzenle ? (v.eser.harita || { yerler: [] }) : null };
 }
 
@@ -311,6 +330,14 @@ function evrenSeciliFormu(v, hv) {
 function evrenHaritaDegistir(fn) {
   const v = evrenSayfaVerisi();
   if (!v || !v.duzenle) { return; }
+  if (EVS.kaynak === "site") {
+    /* yönetici sitenin haritasını düzenler: yayına girmesi için Kaydet (ve Yayınla) */
+    if (!v.site) { return; }
+    if (!Array.isArray(v.site.yerler)) { v.site.yerler = []; }
+    fn(v.site);
+    if (typeof yoneticiDurum === "function") { yoneticiDurum("Harita değişti — yayına almak için panelde Kaydet", true); }
+    return;
+  }
   const l = fanEserlerim();
   const e = l.find(function (x) { return x.id === v.hedef; });
   if (!e) { return; }
@@ -426,6 +453,10 @@ function evrenBilgiBolumu(v) {
         '<button class="dugme dugme-sade" data-fan-paylas="evren">Paylaş</button>' +
         '<button class="dugme dugme-sade" data-fan-gonder="evren">Yazara gönder</button>' +
       "</div><div data-fan-gonder-alan=\"evren\"></div>";
+  }
+  if (EVS.kaynak === "site") {
+    return '<div class="fan-oku">' + fanEserGovde(e, false) + "</div>" +
+      (v.duzenle ? '<p class="oyun-not">Bu bilgileri düzenlemek için: Sen → Yönetici → İçerik → Listeler → ' + kacir(e.ad) + ". Sonra Kaydet.</p>" : "");
   }
   if (EVS.kaynak === "fan" || EVS.kaynak === "acilan") {
     return '<div class="fan-oku">' + fanEserGovde(e, false) + "</div>" +
@@ -616,7 +647,7 @@ window.addEventListener("hashchange", function () { evrenSeciciKapat(); evrenAdr
 
 document.addEventListener("click", async function (ev) {
   const h = ev.target.closest("[data-evren-sec], #evrenSecBtn, [data-evren-git], [data-es-kapat], [data-es-yeni], .es-katman, " +
-    "[data-evs-kapat], [data-evs-sekme], [data-evs-kopyala], [data-evh-mod], [data-evh-bitir], [data-evh-iptal], [data-evh-sil], " +
+    "[data-evs-kapat], [data-evs-kod], [data-evs-sekme], [data-evs-kopyala], [data-evh-mod], [data-evh-bitir], [data-evh-iptal], [data-evh-sil], " +
     "[data-e99-gonder], [data-y-e99-onay], [data-y-e99-red], [data-y-yayinla], [data-y-yayin-kaydet]");
   if (!h) { return; }
   const d = h.dataset;
@@ -626,6 +657,7 @@ document.addEventListener("click", async function (ev) {
   if (h.hasAttribute("data-es-kapat")) { evrenSeciciKapat(); return; }
   if (h.hasAttribute("data-es-yeni")) { const id = evrenYeniKur(); evrenSonrakiSekme = "bilgi"; evrenGit("#/ev/benim/" + id); return; }
   if (h.hasAttribute("data-evs-kapat")) { evrenSayfaKapat(); return; }
+  if (h.hasAttribute("data-evs-kod")) { const b = document.querySelector("#btnKod"); if (b) { b.click(); } return; }
   if (d.evsSekme) { fanBekleyeniYaz(); EVS.sekme = d.evsSekme; EVS.mod = "sec"; EVS.cizim = []; evrenSayfaCiz(); return; }
   if (h.hasAttribute("data-evs-kopyala")) {
     const v = evrenSayfaVerisi();
