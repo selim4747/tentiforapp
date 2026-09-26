@@ -3718,10 +3718,6 @@ html[data-ayar-tema="gece"] .es-katman{background:rgba(0,0,0,.55)}
 .evren-sayfa{position:fixed;inset:0;z-index:57;overflow-y:auto;overscroll-behavior:contain;background:var(--kar);
   padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(24px + var(--alt-h) + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 html.evren-acik{overflow:hidden}
-.evs-ust{display:flex;align-items:center;gap:12px;flex-wrap:wrap;max-width:960px;margin:0 auto}
-.evs-baslik{flex:1;min-width:180px}
-.evs-baslik h2{font-family:var(--display);font-weight:400;font-size:clamp(26px,5vw,38px);margin:2px 0 0;line-height:1.1}
-.evs-sekmeler{display:flex;gap:8px;max-width:960px;margin:14px auto}
 .evs-govde{max-width:960px;margin:0 auto}
 .evh-arac{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
 .evh-arac .dugme{min-height:40px}
@@ -3742,12 +3738,7 @@ html.evren-acik{overflow:hidden}
 @media (max-width:760px){ .evh-svg text{font-size:3.6px;stroke-width:.7px} }
 
 /* Evrengezer: evren cüzdanı, büro, stil, alfabe, kilitli lore, kod */
-.evs-sekmeler{flex-wrap:wrap}
-.evs-sekmeler .dugme{min-height:40px}
 .evs-alfabe-ad{font-size:18px;letter-spacing:.08em;color:var(--deniz);margin-top:2px;word-break:break-word}
-.evs-cuzdan{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;max-width:960px;margin:10px auto 0;font-size:14px}
-.evs-cuzdan .evs-eg{font-family:var(--mono);font-size:12px;color:var(--deniz)}
-.evs-cuzdan .dugme{min-height:36px;padding-top:4px;padding-bottom:4px}
 .evren-sayfa[style*="--evs-kose"] .kutu-y,.evren-sayfa[style*="--evs-kose"] .dugme,.evren-sayfa[style*="--evs-kose"] .evh-kutu{border-radius:var(--evs-kose)}
 .eg-buro .eg-toplam{font-size:22px;margin:6px 0 10px}
 .eg-satir{border-top:1px solid var(--sig);padding:10px 0;display:flex;flex-direction:column;gap:6px}
@@ -3920,3 +3911,77 @@ html.evren-acik{overflow:hidden}
 .evc-kart figcaption{font-size:14px;display:flex;flex-direction:column;gap:2px}
 .evc-kart figcaption span{color:var(--murekkep-2)}
 .evc-buyuk{max-width:100%;max-height:70vh;display:block;margin:0 auto 10px;height:auto}
+
+/* ================= evren sayfası: başlık, cüzdan, sekme şeridi, ilk adımlar ================= */
+.evs-ust{display:flex;align-items:center;gap:10px;max-width:960px;margin:0 auto}
+.evs-ikon{flex:0 0 auto;min-width:44px;height:44px;padding:0 12px;border-radius:999px;border:1px solid var(--sig);background:var(--beyaz);
+  color:var(--deniz);font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
+.evs-ikon:hover{border-color:var(--deniz)}
+.evs-ikon:focus-visible,.evs-sekme:focus-visible,.evk-adimlar button:focus-visible{outline:2px solid var(--deniz);outline-offset:2px}
+.evs-ikon-ad{font-family:var(--mono);font-size:12px;letter-spacing:.04em}
+.evs-baslik{flex:1;min-width:0}
+.evs-rozet{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--deniz);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evs-baslik h2{font-family:var(--display);font-weight:400;font-size:clamp(24px,5vw,38px);margin:1px 0 0;line-height:1.12;overflow-wrap:anywhere}
+.evs-cuzdan{display:flex;flex-wrap:wrap;gap:6px;align-items:center;max-width:960px;margin:12px auto 0;font-size:13.5px}
+.evs-cuzdan > span{background:var(--beyaz);border:1px solid var(--buz);border-radius:999px;padding:5px 12px}
+.evs-cuzdan .evs-eg{font-family:var(--mono);font-size:12px;color:var(--deniz)}
+.evs-cuzdan .dugme{min-height:34px;padding:4px 12px;margin-left:auto;font-size:13px}
+.evs-sekmeler{display:flex;gap:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  max-width:960px;margin:12px auto 16px;border-bottom:1px solid var(--sig);position:sticky;top:-12px;z-index:3;background:var(--kar);padding-top:4px}
+.evs-sekmeler::-webkit-scrollbar{display:none}
+.evs-sekme{flex:0 0 auto;background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-1px;padding:10px 12px 9px;min-height:44px;
+  font-family:var(--mono);font-size:13px;letter-spacing:.03em;color:var(--murekkep-2);cursor:pointer;white-space:nowrap}
+.evs-sekme:hover{color:var(--deniz)}
+.evs-sekme.secili{color:var(--deniz);border-bottom-color:var(--deniz);font-weight:500}
+@media (max-width:520px){
+  .evs-ikon-ad{display:none}
+  .evs-cuzdan .dugme{margin-left:0}
+}
+
+.evk-kart{background:var(--beyaz);border:1px solid var(--buz);border-radius:10px;padding:14px 16px;margin:0 0 16px;box-shadow:0 1px 0 rgba(10,15,20,.03)}
+.evk-ust{display:flex;align-items:center;gap:12px}
+.evk-ust > div{flex:1;min-width:0}
+.evk-ust b{font-family:var(--display);font-weight:400;font-size:22px;display:block;line-height:1.2}
+.evk-sayi{font-family:var(--mono);font-size:13px;color:var(--deniz)}
+.evk-gizle{background:none;border:0;color:var(--murekkep-2);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;min-height:40px;padding:0 4px}
+.evk-cubuk{height:6px;background:var(--buz);border-radius:999px;overflow:hidden;margin:10px 0 8px}
+.evk-cubuk i{display:block;height:100%;background:var(--deniz);border-radius:999px;transition:width .3s}
+.evk-adimlar{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px}
+.evk-adimlar button{width:100%;display:flex;align-items:center;gap:10px;text-align:left;background:var(--kar);border:1px solid var(--buz);border-radius:8px;
+  padding:8px 10px;min-height:52px;font:inherit;color:inherit;cursor:pointer}
+.evk-adimlar button:hover{border-color:var(--deniz)}
+.evk-isaret{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:2px solid var(--sig);display:inline-flex;align-items:center;justify-content:center;
+  font-size:13px;color:var(--beyaz)}
+.evk-adimlar li.tamam .evk-isaret{background:var(--deniz);border-color:var(--deniz)}
+.evk-adimlar li.tamam .evk-yazi b{color:var(--murekkep-2);text-decoration:line-through;text-decoration-color:var(--sig)}
+.evk-yazi{flex:1;min-width:0;display:flex;flex-direction:column}
+.evk-yazi b{font-weight:500;font-size:15px}
+.evk-yazi small{font-size:12.5px;color:var(--murekkep-2)}
+.evk-ok{color:var(--deniz)}
+.evk-sablon{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.evk-sablon-dugme{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--kar);border:1px solid var(--buz);border-radius:8px;
+  padding:6px;font:inherit;font-size:12.5px;color:inherit;cursor:pointer;width:104px}
+.evk-sablon-dugme:hover{border-color:var(--deniz)}
+.evk-sablon-svg{width:92px;height:auto;border-radius:4px;display:block}
+
+/* kendi evreninin form grupları: kart gibi */
+.evren-sayfa .fan-grup{background:var(--beyaz);border:1px solid var(--buz);border-radius:10px;padding:12px 16px 16px}
+.evren-sayfa .fan-grup legend{background:var(--kar);border:1px solid var(--buz);border-radius:999px;padding:2px 10px}
+.evren-sayfa .fan-oge{border-left-color:var(--sig)}
+.evren-sayfa .evh-kutu{border-radius:10px}
+.evk-kart.kisa{padding:10px 14px}
+.evk-kart.kisa .evk-ust{flex-wrap:wrap;gap:6px 8px}
+.evk-kart.kisa .evk-ust > div{flex:1 1 100%}
+.evk-kart.kisa .evk-sonraki{flex:1 1 auto;text-align:left}
+.evk-kart.kisa .evk-cubuk{margin:6px 0 0}
+.evk-sonraki{min-height:38px;font-size:13px}
+@media (max-width:520px){
+  .evk-yazi small{display:none}
+  .evk-adimlar{grid-template-columns:1fr 1fr}
+  .evk-adimlar button{min-height:48px;padding:8px}
+  .evk-ok{display:none}
+  .evk-sablon-dugme{width:calc(33.3% - 6px);min-width:88px}
+  .evk-sablon-svg{width:100%}
+  .evk-sablon .oyun-not{width:100%}
+}

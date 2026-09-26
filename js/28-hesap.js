@@ -451,11 +451,14 @@ function hesapYerelIlerlemeyiTemizle() {
 
 async function hesapCikis() {
   await hesapEsitle(true);             /* çıkmadan son hâli hesaba kaydet */
+  const kaydedildi = hesapEsitDurum === "kaydedildi";
   hesapKullanici = null;               /* bundan sonra boş hâli hesaba yazmasın */
   hesapProfil = null;
   clearInterval(hesapEsitZamanlayici);
   try { await hesapIstemci.auth.signOut(); } catch (_) { /* yoksay */ }
-  hesapYerelIlerlemeyiTemizle();
+  /* hesaba yazılamadıysa (çevrimdışı) bu cihazdaki ilerleme silinmez: evrenler, eçka kaybolmasın */
+  if (kaydedildi) { hesapYerelIlerlemeyiTemizle(); }
+  else { try { window.sessionStorage.setItem("tentiforapp_cikis_uyari", "1"); } catch (_) { /* yoksay */ } }
   location.reload();                   /* bellek (cüzdan, kodlar, UI) misafire dönsün */
 }
 
@@ -538,16 +541,37 @@ async function hesapEsitle(zorla) {
   }
 }
 
+/** Hesaptaki görüntüye bu cihazda kurulup hesapta olmayan evrenleri, hikâyeleri ve kişileri ekler:
+    hesapsız kurulan bir evren, var olan bir hesaba girince kaybolmasın. Eklenen varsa true döner. */
+function hesapFanBirlestir(g) {
+  const k = "tentiforapp_fan_eserlerim";
+  let yerel = [], uzak = [];
+  try { yerel = JSON.parse(window.localStorage.getItem(k) || "[]"); } catch (_) { yerel = []; }
+  try { uzak = JSON.parse(g[k] || "[]"); } catch (_) { uzak = []; }
+  if (!Array.isArray(yerel) || !yerel.length) { return false; }
+  if (!Array.isArray(uzak)) { uzak = []; }
+  const var_ = {};
+  uzak.forEach(function (x) { if (x && x.id) { var_[x.id] = true; } });
+  const ek = yerel.filter(function (x) {
+    return x && x.id && !var_[x.id] && !(typeof evrenBosMu === "function" && evrenBosMu(x));
+  });
+  if (!ek.length) { return false; }
+  g[k] = JSON.stringify(uzak.concat(ek));
+  return true;
+}
+
 /** Buluttaki görüntüyü bu cihaza yazar ve sayfayı yeniler. */
 function hesapUzagiUygula(veriUzak) {
-  const g = veriUzak || {};
+  const g = Object.assign({}, veriUzak || {});
+  const birlesti = hesapFanBirlestir(g);
   try {
     Object.keys(hesapAnlikGoruntu()).forEach(function (k) { if (!(k in g)) { window.localStorage.removeItem(k); } });
     Object.keys(g).forEach(function (k) {
       if (k.indexOf("tentiforapp_") === 0 && ESITLEME_DISI.indexOf(k) === -1) { window.localStorage.setItem(k, g[k]); }
     });
   } catch (_) { hesapBildir("Bu tarayıcı kayıt yapmaya izin vermiyor"); return; }
-  hesapEsitKaydiYaz(hesapGoruntuIzi(hesapAnlikGoruntu()));
+  /* birleştirildiyse cihaz hesaptan ileride: bir sonraki eşitleme birleşik hâli hesaba yazsın */
+  hesapEsitKaydiYaz(birlesti ? "birlesik" : hesapGoruntuIzi(hesapAnlikGoruntu()));
   location.reload();
 }
 
