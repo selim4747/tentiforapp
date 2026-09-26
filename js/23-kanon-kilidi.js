@@ -333,6 +333,7 @@ function yoneticiKisiler() {
         const kod = acik ? kisiKodunuCoz(p) : null;
         return '<div class="y-kisi-satir">' +
           '<div class="y-kisi-ust"><span class="y-blok-baslik">' + kacir(p.ad) + "</span>" +
+            (veri.baslangicProfil === p.id ? '<span class="kart-kilit">Başlangıç profili · kodu sitede herkese gösterilir; arkadaşına özel kod için yeni kişi ekle</span>' : "") +
             '<span class="oyun-not">' + kacir(kisiErisimOzeti(p)) + "</span></div>" +
           '<div class="y-kisi-dugmeler">' +
             (p.kodSifreli ? '<button class="dugme dugme-sade" data-y-kisi-goster="' + kacir(p.id) + '">' + (acik ? "kodu gizle" : "kodu göster") + "</button>" : "") +

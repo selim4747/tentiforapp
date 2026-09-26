@@ -213,6 +213,13 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
         yoldanRota("/evren/fabc12/") === "#/ev/fan/fabc12" && yoldanRota(rotadanYol("#/ev/benim/fx1")) === "#/ev/benim/fx1" &&
         yoldanRota(rotadanYol("#/fan/hikaye/f1%20a")) === "#/fan/hikaye/f1%20a" && rotaAdresi("#/kartpostal/abc").indexOf("/#/kartpostal/abc") !== -1;
     }));
+    ok("başlangıç kodu TNTF-BASLA yalnızca Arşiv ve Evren'i açar", await R.evaluate(function () {
+      const gosterilen = veri.baslangicKodu;
+      kodPenceresi(); kodDene("TNTF-BASLA");
+      kanonSifirla();
+      return gosterilen === "TNTF-BASLA" && bolumErisimi("arsiv") && bolumErisimi("evren") && !bolumErisimi("roman") && !bolumErisimi("mektuplar") &&
+        !kanonEvrenErisimi("e26") && baslangicProfili().ad === "Başlangıç";
+    }));
     const siteHaritasi = readFileSync(dizin + "/sitemap.xml", "utf8");
     ok("site haritası bütün sayfaları ayrı listeler", ["/arsiv/", "/dunya/", "/oyunlar/", "/sen/", "/evren/e25/", "/evren/e26/", "/evren/e99/"].every(function (y) { return siteHaritasi.indexOf(y + "</loc>") !== -1; }));
 
