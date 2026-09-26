@@ -108,13 +108,27 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("izinsiz sekmeye zorla gidilemez", await Y.evaluate(function () { return yoneticiSekme !== "yedek"; }));
     await Y.close();
 
-    /* ---------- 3c. Claude tarafından yapılan evren ---------- */
-    const evr = await Z.evaluate(function () {
-      return { harita: (veri.haritalar || []).some(function (h) { return h.id === "claude" && h.ad === "Claude tarafından yapılan evren"; }),
-               madde: (veri.evren || []).filter(function (e) { return e.bolum === "Claude tarafından yapılan evren"; }).length,
-               kisi: (veri.karakterler || []).filter(function (k) { return k.grup === "Claude tarafından yapılan evren"; }).length };
-    });
-    ok("yeni evren verisi yüklü", evr.harita && evr.madde >= 10 && evr.kisi >= 6, evr);
+    /* ---------- 3c. Claude tarafından yapılan evren: kanon dışı, kodsuz ziyaretçiye açık ---------- */
+    await Z.evaluate(function () { location.hash = "#/claudeEvren"; }); await bekle(Z, 900);
+    ok("evren bölümü kodsuz ziyaretçiye açık", await Z.evaluate(function () {
+      const b = document.querySelector("#claudeEvren");
+      return !b.hidden && !b.classList.contains("kanon-kilitli") && getComputedStyle(b).display !== "none";
+    }));
+    ok("canon listelerine karışmıyor", await Z.evaluate(function () {
+      return !(veri.karakterler || []).some(function (k) { return /^cl_/.test(k.id); }) &&
+             !(veri.evren || []).some(function (e) { return /^cl/.test(e.id); });
+    }));
+    const ceSay = await Z.evaluate(function () { return veri.claudeEvreni.maddeler.filter(function (m) { return m.tur === "fizik"; }).length; });
+    ok("fizik kuralları genelde listelenir", await Z.locator("#claudeEvrenAlan .ce-kurallar li").count() === ceSay && ceSay >= 10, ceSay);
+    for (const sekme of ["fizik", "dunya", "toplum", "tarih", "kisiler", "hikayeler", "belgeler", "sozluk", "sorular"]) {
+      await Z.click('[data-ce-sekme="' + sekme + '"]'); await bekle(Z, 150);
+      const dolu = await Z.evaluate(function () { return document.querySelector("#claudeEvrenAlan .ce-govde").textContent.trim().length; });
+      ok("sekme dolu: " + sekme, dolu > 100, dolu);
+    }
+    await Z.click('[data-ce-sekme="genel"]'); await bekle(Z, 150);
+    await Z.click("[data-ce-harita]"); await bekle(Z, 900);
+    ok("harita kodsuz açılır", await Z.evaluate(function () { return HT.acik && aktifHarita().id === "claude"; }));
+    await Z.keyboard.press("Escape"); await bekle(Z, 300);
 
     /* ---------- 4. hesaplar, teori, oylama, takip ---------- */
     console.log("topluluk");

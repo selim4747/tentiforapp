@@ -74,7 +74,11 @@ function bolumErisimi(id) {
   return e.hepsi || e.bolumler.has(id);
 }
 
+/* Kanon dışı evrenler herkese açıktır (Claude tarafından yapılan evren). */
+const KANON_DISI_EVRENLER = ["claude"];
+
 function kanonEvrenErisimi(id) {
+  if (KANON_DISI_EVRENLER.indexOf(id) !== -1) { return true; }
   const e = kanonErisim();
   return e.hepsi || e.tumEvren || e.evrenler.has(id);
 }
