@@ -10,7 +10,7 @@ const KART_RENK = {
   yarik: "#0D3560", murekkep: "#0A0F14", murekkep2: "#3D4A57"
 };
 /* kartın altına yazılan adres: sitenin açıldığı alan adı (taşınınca kendiliğinden değişir) */
-const KART_ADRES = (typeof location !== "undefined" && location.protocol === "https:" && location.host) || "tentifor.netlify.app";
+const KART_ADRES = (typeof location !== "undefined" && location.protocol === "https:" && location.host) || "tentiforapp.pages.dev";
 
 /** Sitenin yazı tipleri canvas'ta da kullanılsın; yüklenemezse yedeklerle devam eder. */
 function kartFontlariHazir() {

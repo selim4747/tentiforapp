@@ -2,7 +2,7 @@
    her sayfa için paylaşım önizlemeli kısa adres (/dunya/ gibi) üretir ve servis çalışanının
    önbellek adını içeriğe göre günceller. Dosyalar ayrı kaldığı için davranış değişmez.
 
-   Kullanım: npm run paketle   (Netlify bunu kendisi çalıştırır) */
+   Kullanım: npm run paketle   (Cloudflare Pages bunu kendisi çalıştırır) */
 
 import { transform } from "esbuild";
 import { createHash } from "node:crypto";
@@ -11,8 +11,8 @@ import { join } from "node:path";
 
 const KOK = new URL("..", import.meta.url).pathname;
 const HEDEF = join(KOK, "dist");
-/* Sitenin kalıcı adresi: SITE_URL (Cloudflare Pages vb. için elle), yoksa Netlify'ın URL'i. */
-const SITE = (process.env.SITE_URL || process.env.URL || "https://tentifor.netlify.app").replace(/\/$/, "");
+/* Sitenin kalıcı adresi: Cloudflare Pages'teki SITE_URL ortam değişkeni. */
+const SITE = (process.env.SITE_URL || "https://tentiforapp.pages.dev").replace(/\/$/, "");
 const KOPYALA = ["index.html", "veri.json", "sw.js", "manifest.webmanifest", "paylasim.png", "robots.txt", "_headers", "css", "js", "ikon"];
 
 rmSync(HEDEF, { recursive: true, force: true });
@@ -22,7 +22,7 @@ for (const ad of KOPYALA) {
   cpSync(join(KOK, ad), join(HEDEF, ad), { recursive: true });
 }
 
-/* Yönlendirmeler: Netlify netlify.toml'u, Cloudflare Pages ve diğerleri _redirects dosyasını okur. */
+/* Yönlendirmeler: Cloudflare Pages (ve benzerleri) _redirects dosyasını okur. */
 writeFileSync(join(HEDEF, "_redirects"),
   "# Profil kısa adresi: /u/kullaniciadi\n/u/*  /?profil=:splat  302\n" +
   "# Paylaşım hedefi: servis çalışanı yoksa sayfaya dön\n/paylasim-al  /#/fanAc  303\n");
