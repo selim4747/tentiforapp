@@ -89,7 +89,16 @@ function gunlukKalan(oyun) {
   const t = tavan(oyun);
   if (t === null) { return Infinity; }
   gunuTazele();
-  return Math.max(0, t - (cuzdan.gunluk[oyun] || 0));
+  const kalan = Math.max(0, t - (cuzdan.gunluk[oyun] || 0));
+  /* bütün oyunların toplam tavanı: her oyunun tavanını tek tek doldurmak günde bütün kilitleri açmasın */
+  const genel = veri && veri.cuzdan ? veri.cuzdan.genelTavan : 0;
+  return genel ? Math.min(kalan, Math.max(0, genel - gunlukToplamKazanc())) : kalan;
+}
+
+/** Bugün tavanlı oyunlardan kazanılan toplam. */
+function gunlukToplamKazanc() {
+  gunuTazele();
+  return Object.keys(cuzdan.gunluk).reduce(function (s, k) { return s + (tavan(k) !== null ? (cuzdan.gunluk[k] || 0) : 0); }, 0);
 }
 
 /** Tavana takılan kazanç. Verilen miktarın ne kadarı geçtiyse onu ekler. */

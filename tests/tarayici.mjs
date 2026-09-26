@@ -258,15 +258,143 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       const t = fanTemizle({ bicim: "tentifor-eser", tur: "evren", id: "h", ad: "H", harita: { yerler: [{ ad: "<b>", x: 500, y: -3, sekil: [[1, 2], [3, 4]] }], renk: "red" } });
       return /Tuzkent/.test(html) && /<svg class="evh-svg/.test(html) && t.harita.yerler[0].x === 100 && t.harita.yerler[0].y === 0 && !t.harita.yerler[0].sekil && !t.harita.renk;
     }, evId));
+    /* ---------- Evrengezer: stil, alfabe, kod, kilitli lore ---------- */
+    ok("kendi evreninde lore, stil ve kod sekmeleri", await Z.evaluate(function () {
+      return ["lore", "stil", "kod"].every(function (k) { return !!document.querySelector('#evrenSayfa [data-evs-sekme="' + k + '"]'); });
+    }));
+    ok("kendi evrenini gezmek para vermez", await Z.evaluate(function () { return egYukle().ziyaret.l.length === 0; }));
+    await Z.click('[data-evs-sekme="stil"]'); await bekle(Z, 200);
+    await Z.fill('#evrenSayfa [data-evst="para.ad"]', "Tuz tanesi"); await bekle(Z, 100);
+    await Z.fill('#evrenSayfa [data-evst="para.kur"]', "0.5"); await bekle(Z, 100);
+    await Z.selectOption('#evrenSayfa [data-evst="harita.stil.desen"]', "gece"); await bekle(Z, 250);
+    await Z.evaluate(function () { const i = document.querySelector('#evrenSayfa [data-evst="stil.zemin"]'); i.value = "#112233"; i.dispatchEvent(new Event("change", { bubbles: true })); }); await bekle(Z, 200);
+    await Z.click("[data-evst-alfabe-uret]"); await bekle(Z, 200);
+    await Z.check('#evrenSayfa [data-evst="alfabe.baslik"]'); await bekle(Z, 250);
+    ok("evren parası, harita deseni, sayfa stili ve alfabe kaydolur", await Z.evaluate(function (id) {
+      const e = evrenBenimBul(id);
+      return e.para.ad === "Tuz tanesi" && e.para.kur === 0.5 && e.harita.stil.desen === "gece" && e.stil.zemin === "#112233" &&
+        Object.keys(e.alfabe.harfler).length === 29 && e.alfabe.baslik === true;
+    }, evId));
+    ok("sayfa stili ve alfabeli ad uygulanır, harita gece deseninde", await Z.evaluate(function () {
+      const s = document.querySelector("#evrenSayfa");
+      return /--kar:#112233/.test(s.getAttribute("style")) && !!s.querySelector(".evs-alfabe-ad") &&
+        s.querySelector(".evst-onizleme .evh-deniz").getAttribute("fill") === "#0F1D2E";
+    }));
+    ok("stil, para ve alfabe dosyaya girer; zararlı değerler temizlenir", await Z.evaluate(function (id) {
+      const t = fanTemizle(evrenBenimBul(id));
+      const k = fanTemizle({ bicim: "tentifor-eser", tur: "evren", id: "k", ad: "K", para: { ad: "x", kur: 99 }, stil: { zemin: "red;background:url(x)", font: "comic" },
+        harita: { yerler: [], stil: { desen: "yok", kara: "javascript:" } }, alfabe: { harfler: { a: "<script>alert(1)</script>", q: "Q" } } });
+      return t.para.ad === "Tuz tanesi" && t.harita.stil.desen === "gece" && t.alfabe.baslik &&
+        k.para.kur === 1 && !k.stil && !k.harita.stil && k.alfabe.harfler.a === "<scr" && !k.alfabe.harfler.q && evrenSayfaStili(k) === "";
+    }, evId));
+    await Z.click('[data-evs-sekme="kod"]'); await bekle(Z, 200);
+    await Z.evaluate(function () { const t = document.querySelector("#evKodMetin"); t.value = "{ bozuk"; }); await Z.click("[data-evkod-uygula]"); await bekle(Z, 150);
+    ok("bozuk kod reddedilir", /okunamadı/.test(await Z.textContent("#evKodDurum")));
+    await Z.click("[data-evkod-geri]"); await bekle(Z, 150);
+    await Z.evaluate(function () {
+      const t = document.querySelector("#evKodMetin"); const o = JSON.parse(t.value);
+      o.ad = "Kodla Değişen"; o.kurallar = [{ ad: "Tuz konuşur", tur: "fizik", aciklama: "Her tane bir kelime." }]; o.uydurma = "<img onerror=x>";
+      t.value = JSON.stringify(o);
+    });
+    await Z.click("[data-evkod-uygula]"); await bekle(Z, 200);
+    ok("evrenin kodu açılıp değiştirilir, uydurma alan temizlenir", await Z.evaluate(function (id) {
+      const e = evrenBenimBul(id); return e.ad === "Kodla Değişen" && e.kurallar[0].ad === "Tuz konuşur" && !("uydurma" in e) && e.harita.yerler.length === 2;
+    }, evId));
+    await Z.click('[data-evs-sekme="lore"]'); await bekle(Z, 200);
+    await Z.fill("#evlBaslik", "Tuzun sırrı");
+    await Z.fill("#evlMetin", "Tuz aslında unutmaktır.");
+    await Z.fill("#evlYeniKod", "tuz-2024");
+    await Z.fill("#evlIpucu", "Denizin dibine bak");
+    await Z.fill("#evlIpucuFiyat", "5");
+    await Z.click("[data-evl-ekle]"); await bekle(Z, 400);
+    ok("kilitli lore şifreli kaydolur, kurucu okur", await Z.evaluate(function (id) {
+      const e = evrenBenimBul(id); const l = e.lorlar[0];
+      return e.lorlar.length === 1 && !/unutmak/.test(JSON.stringify(e)) && /unutmaktır/.test(document.querySelector("#evrenSayfa .evl-metin").textContent) &&
+        /TUZ-2024/.test(document.querySelector("#evrenSayfa .evl-kurucu").textContent) && !l.seg;
+    }, evId));
+    const loreSonuc = await Z.evaluate(async function (id) {
+      const e = evrenBenimBul(id);
+      localStorage.removeItem(EVL_ANAHTAR);
+      const kilitli = lorIcCoz(e.lorlar[0], evlAcilan(e.id)[e.lorlar[0].id]) === null;
+      const yanlis = await evrenKodDene(e, "BASKA-KOD");
+      /* başka bir evren aynı kodla kurulur: o evrenin kodu bu evrende, bu evrenin kodu orada çalışmaz */
+      const b = fanYeni("evren"); evrenBenimDegistir(b.id, function (x) { x.ad = "Öbür Evren"; });
+      await evrenLoreEkle(evrenBenimBul(b.id), { baslik: "Öbür sır", metin: "Burada başka şey var.", kod: "OBUR-KOD" });
+      const obur = await evrenKodDene(e, "OBUR-KOD");
+      const dogru = await evrenKodDene(e, "Tuz-2024");
+      const karsi = await evrenKodDene(evrenBenimBul(b.id), "TUZ-2024");
+      const y = evrenYoneticiKoduKur(evrenBenimBul(id), "EVY-SAHIP1");
+      localStorage.removeItem(EVL_ANAHTAR);
+      const yon = await evrenKodDene(evrenBenimBul(id), "evy-sahip1");
+      const yonKarsi = await evrenKodDene(evrenBenimBul(b.id), "EVY-SAHIP1");
+      const tomyeKodu = await evrenKodDene(evrenBenimBul(id), "SAFAK");
+      fanEserlerimYaz(fanEserlerim().filter(function (x) { return x.id !== b.id; }));
+      return { kilitli: kilitli, yanlis: yanlis.tur, obur: obur.tur, dogru: dogru.tur + dogru.n, karsi: karsi.tur, y: y.sarilan, yon: yon.tur + yon.n, yonKarsi: yonKarsi.tur, tomye: tomyeKodu.tur };
+    }, evId);
+    ok("lore kodu yalnızca kendi evreninde çalışır", loreSonuc.kilitli && loreSonuc.yanlis === "" && loreSonuc.obur === "" && loreSonuc.dogru === "lore1" && loreSonuc.karsi === "" && loreSonuc.tomye === "", loreSonuc);
+    ok("evren yönetici kodu bütün loreları açar, başka evrende çalışmaz", loreSonuc.y === 1 && loreSonuc.yon === "evren1" && loreSonuc.yonKarsi === "", loreSonuc);
+    const egSonuc = await Z.evaluate(async function (id) {
+      const eskiOzet = veri.yoneticiOzet;
+      veri.yoneticiOzet = dogrulamaOzeti("TEST-EVRENGEZER");
+      yoneticiGiris("TEST-EVRENGEZER");
+      const kur = await evrengezerAnahtariKur("");
+      await evrenLoreEkle(evrenBenimBul(id), { baslik: "İkinci sır", metin: "Evrengezer de okur.", kod: "IKINCI-1" });
+      const sarildi = await evrenEgSarEksik(evrenBenimBul(id));
+      const e = evrenBenimBul(id);
+      const hepsiSarili = e.lorlar.every(function (l) { return !!l.seg; });
+      yoneticiKod = null; yoneticiSinirli = false; kayitYaz(YONETICI_ANAHTAR, ""); egGizliOnbellek = null;
+      localStorage.removeItem(EVL_ANAHTAR);
+      const kapali = Object.keys(evlAcilan(e.id)).length === 0;
+      const eg = await evrenKodDene(e, "TEST-EVRENGEZER");
+      const acilan = Object.keys(evlAcilan(e.id)).length;
+      yoneticiCikis(); veri.yoneticiOzet = eskiOzet; delete veri.evrengezer; egGizliOnbellek = null;
+      for (const k in EVL_OTURUM) { delete EVL_OTURUM[k]; }
+      return { kur: kur, sarildi: sarildi, hepsiSarili: hepsiSarili, kapali: kapali, eg: eg.tur + eg.n, acilan: acilan };
+    }, evId);
+    ok("Evrengezer yönetici kodu her evrende bütün loreları açar", egSonuc.kur === "" && egSonuc.sarildi === 1 && egSonuc.hepsiSarili && egSonuc.kapali && egSonuc.eg === "evrengezer2" && egSonuc.acilan === 2, egSonuc);
+    ok("kopyalanan evren başkasının lorelarını ve kodunu taşımaz", await Z.evaluate(function (id) {
+      EVS = { kaynak: "acilan", id: id, sekme: "bilgi", secili: null, mod: "sec", cizim: [] };
+      fanAcilanEkle(fanTemizle(evrenBenimBul(id)));
+      evrenSayfaCiz();
+      document.querySelector("[data-evs-kopyala]").click();
+      const k = fanEserlerim()[fanEserlerim().length - 1];
+      window.__kopyaId = k.id;
+      return k.id !== id && !k.lorlar && !k.yoneticiOzet && k.ad === "Kodla Değişen";
+    }, evId));
+    await bekle(Z, 300);
+    await Z.evaluate(function (id) { location.hash = "#/ev/benim/" + id; }, evId); await bekle(Z, 400);
+    await Z.evaluate(function () { fanEserlerimYaz(fanEserlerim().filter(function (x) { return x.id !== window.__kopyaId; })); });
     await Z.click("[data-evs-kapat]"); await bekle(Z, 300);
     ok("evren sayfası kapanır", await Z.evaluate(function () { return !document.querySelector("#evrenSayfa") && location.hash === "#/fan"; }));
-    ok("kendi evreni seçicide", await Z.evaluate(function () { return evrenSeciciListesi().benim.some(function (x) { return x.ad === "Deneme Evreni"; }); }));
+    ok("kendi evreni seçicide", await Z.evaluate(function () { return evrenSeciciListesi().benim.some(function (x) { return x.ad === "Kodla Değişen"; }); }));
     ok("E99 katkısı fan taslaklarında görünmez", await Z.evaluate(function () { e99Katki(); fanSekme.evren = "yaz"; fanEvrenCiz(); return !/E99 katkım/.test(document.querySelector("#fanEvrenAlan").textContent); }));
 
     await Z.evaluate(function () { location.hash = "#/ev/e99"; }); await bekle(Z, 500);
     await Z.click('[data-evs-sekme="bilgi"]'); await bekle(Z, 200);
     await Z.click('#evrenSayfa [data-fan-hedef="e99-katkim"] [data-fan-ekle="kurallar"]'); await bekle(Z, 200);
     await Z.fill('#evrenSayfa [data-fan-hedef="e99-katkim"] [data-fan-alan="kurallar.0.ad"]', "Tuz hafızadır"); await bekle(Z, 450);
+    ok("başka evreni gezmek o evrenin parasını verir (günde bir kez)", await Z.evaluate(function () {
+      const ilk = egBakiye("e99");
+      const tekrar = evrenZiyaretOdulu();
+      return ilk === 40 && tekrar === 0 && /E99 jetonu/.test(document.querySelector("#evrenSayfa [data-evs-cuzdan]").textContent);
+    }));
+    await Z.click("#evrenSayfa [data-eg-buro]"); await bekle(Z, 200);
+    await Z.evaluate(function () { document.querySelector('#perde [data-eg-satir="e99"] input').value = "1"; }); 
+    await Z.click('#perde [data-eg-al="e99"]'); await bekle(Z, 200);
+    ok("Evrengezer bürosu: evren parası EG'ye çevrilir (kesintiyle)", await Z.evaluate(function () { return egBakiye("e99") === 19 && egYukle().eg === 1; }));
+    const egEckaOnce = await Z.evaluate(function () { return cuzdan.ecka; });
+    await Z.click('#perde [data-eg-sat="tomye"]'); await bekle(Z, 200);
+    ok("EG başka evrenin parasına (eçka) çevrilir", await Z.evaluate(function (o) { return egYukle().eg === 0 && cuzdan.ecka === o + 9; }, egEckaOnce));
+    await Z.click('#perde [data-eg-sat="tomye"]'); await bekle(Z, 150);
+    ok("EG yetmezse çevrilmez", /Yetmez/.test(await Z.textContent("#egDurum")) && await Z.evaluate(function (o) { return cuzdan.ecka === o + 9; }, egEckaOnce));
+    await Z.evaluate(function () { document.querySelector("#perde").hidden = true; });
+    ok("Tömye: oyunların toplam günlük tavanı", await Z.evaluate(function () {
+      const eski = cuzdan.gunluk;
+      cuzdan.gunluk = { cevirmen: 90, vardiya: 100, boyut: 90, yazi: 10 };
+      const k = gunlukKalan("baloncuk"), y = gunlukKalan("yazi");
+      cuzdan.gunluk = eski;
+      return k === 10 && y === 10 && gunlukKalan("baloncuk") > 0;
+    }));
     ok("E99 katkısı yalnızca bu cihazda tutulur", await Z.evaluate(function () { return e99Katki().kurallar[0].ad === "Tuz hafızadır" && veri.e99.kurallar.length === 0; }));
     const [zE99] = await Promise.all([Z.waitForEvent("download"), Z.click("[data-e99-gonder]")]); await bekle(Z, 300);
     ok("E99 katkısı girişsiz dosya olur, sunucuya gitmez", /\.tentifor\.html$/.test(zE99.suggestedFilename()) &&
@@ -624,6 +752,19 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     }));
     ok("aynı katkı iki kez eklenmez", await A.evaluate(function (id) { return e99Birlestir({ id: id, tur: "evren" }) === false && veri.e99.kurallar.length === 1; }, e99.oneriler[0]));
     ok("yayınlanınca okurun cihazındaki kopya kalkar", await B.evaluate(function (y) { veri.e99 = y; return e99GonderilenleriTemizle().length === 0; }, e99));
+
+    /* ---------- Evrengezer paneli ---------- */
+    await panel("bakim", "evrengezer", 300);
+    ok("Evrengezer sekmesi: anahtar, evren paraları, Tömye tavanları", /Evrengezer anahtarı/.test(await A.textContent("#yoneticiAlan")) &&
+      await A.locator('[data-y-para="e99"]').count() === 1 && await A.locator('[data-y-tavan="*"]').count() === 1);
+    await A.fill('[data-y-para="e99"] [data-y-para-alan="kur"]', "0.2");
+    await A.fill('[data-y-tavan="*"]', "280");
+    await A.click("[data-y-ekonomi-kaydet]"); await bekle(A, 200);
+    ok("evren kuru ve toplam tavan veriye yazılır", await A.evaluate(function () {
+      const tamam = veri.evrenParalari.e99.kur === 0.2 && veri.evrenParalari.e99.ad === "E99 jetonu" && veri.cuzdan.genelTavan === 280;
+      veri.evrenParalari.e99.kur = 0.05; veri.cuzdan.genelTavan = 300;
+      return tamam;
+    }));
 
     /* ---------- elle yayın ---------- */
     await panel("bakim", "yayinla", 400);

@@ -6,7 +6,8 @@
      haritasına yer ekler, taşır, alan çizer; kurallarını, kişilerini ve kendi alanlarını düzenler.
      Hepsi kişinin verisinde (tentiforapp_fan_eserlerim) durur; hesabı varsa cihazlar arasında eşitlenir.
    - E99 (#/ev/e99): herkesin yazabildiği boş evren. Okurun katkısı önce yalnızca kendi cihazında durur;
-     gönderince Supabase'deki onay kuyruğuna düşer; yönetici panelden onaylayıp siteyi yayınlayınca herkes görür.
+     gönderince dosya olur ve e-postayla yazara gider; yönetici dosyayı açıp onaylayınca E99'a eklenir.
+   - Ekonomi, stil, alfabe, kod ve kilitli lore sekmeleri: 45-evrengezer.js.
    - Panel → Bakım → Yayınla: Cloudflare'de otomatik yayın kapalıyken siteyi tek tıkla yayınlar (deploy hook). */
 
 const E99_KATKI_ID = "e99-katkim";
@@ -157,10 +158,29 @@ function evrenHaritaSvg(h, o) {
   const ekli = o.ekli || [];               /* E99: kişinin yayında olmayan katkıları (kesik çizgili) */
   const k = 0.7;
   const esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); };
+  /* harita stili (kurucunun seçtiği desen ve renkler; yalnızca #RRGGBB) */
+  const st = (h && h.stil) || {};
+  const desen = (typeof EVH_DESENLER !== "undefined" && EVH_DESENLER[st.desen]) || {};
+  const hex = function (v) { return /^#[0-9a-fA-F]{6}$/.test(v || "") ? v : ""; };
+  const deniz = hex(h && h.renk) || desen.deniz || "#BFD8EC";
+  const kara = hex(st.kara) || desen.kara || "";
+  const cizgi = hex(st.cizgi) || desen.cizgi || "#8A7B5E";
+  const yazi = hex(st.yazi) || desen.yazi || "#1D2530";
+  const hale = desen.hale || "#fff";
+  const yaziTipi = ({ sans: "system-ui,sans-serif", mono: "ui-monospace,monospace" })[st.font] || "Georgia,serif";
+  const etiket = function (ad) {
+    return st.font === "alfabe" && o.alfabe && typeof evrenAlfabeYaz === "function" ? evrenAlfabeYaz(ad, o.alfabe) : ad;
+  };
+  const alanRengi = function (tur) { return kara && tur !== "Su" ? kara : (tur === "Su" && kara ? deniz : evhTurRengi(tur)); };
+  const izgara = (st.izgara || desen.izgara)
+    ? '<g class="evh-izgara" stroke="' + cizgi + '" stroke-width="0.12" opacity="0.45">' +
+      [10, 20, 30, 40, 50, 60, 70, 80, 90].map(function (x) { return '<line x1="' + x + '" y1="0" x2="' + x + '" y2="70"></line>'; }).join("") +
+      [10, 20, 30, 40, 50, 60].map(function (y) { return '<line x1="0" y1="' + y + '" x2="100" y2="' + y + '"></line>'; }).join("") + "</g>"
+    : "";
   const alan = function (y, katki) {
     if (!y.sekil || y.sekil.length < 3) { return ""; }
-    return '<polygon points="' + y.sekil.map(function (n) { return n[0] + "," + (n[1] * k).toFixed(2); }).join(" ") + '" fill="' + evhTurRengi(y.tur) + '"' +
-      ' stroke="#8A7B5E" stroke-width="0.25"' + (katki ? ' stroke-dasharray="1 0.6"' : "") + (o.secili === y.id ? ' class="evh-secili"' : "") +
+    return '<polygon points="' + y.sekil.map(function (n) { return n[0] + "," + (n[1] * k).toFixed(2); }).join(" ") + '" fill="' + alanRengi(y.tur) + '"' +
+      ' stroke="' + cizgi + '" stroke-width="0.25"' + (katki ? ' stroke-dasharray="1 0.6"' : "") + (o.secili === y.id ? ' class="evh-secili"' : "") +
       ' data-evh-yer="' + esc(y.id) + '"' + (katki ? ' data-evh-katki="1"' : "") + "></polygon>";
   };
   const isaret = function (y, katki) {
@@ -169,14 +189,14 @@ function evrenHaritaSvg(h, o) {
       ' transform="translate(' + y.x + "," + (y.y * k).toFixed(2) + ')">' +
       '<circle r="' + (sec ? 1.6 : 1.1) + '" fill="' + (y.tur === "Şehir" ? "#1C5C96" : "#3D4A57") + '" stroke="#fff" stroke-width="0.35"' + (katki ? ' stroke-dasharray="0.6 0.4"' : "") + "></circle>" +
       '<circle r="3.2" fill="transparent"></circle>' +
-      '<text y="-2.1" text-anchor="middle" font-size="2.3" font-family="Georgia,serif" fill="#1D2530" stroke="#fff" stroke-width="0.5" paint-order="stroke">' + esc(y.ad || "—") + "</text></g>";
+      '<text y="-2.1" text-anchor="middle" font-size="2.3" font-family="' + yaziTipi + '" fill="' + yazi + '" stroke="' + hale + '" stroke-width="0.5" paint-order="stroke">' + esc(etiket(y.ad || "—")) + "</text></g>";
   };
   const taslak = (o.cizim && o.cizim.length)
     ? '<polyline points="' + o.cizim.map(function (n) { return n[0] + "," + (n[1] * k).toFixed(2); }).join(" ") + '" fill="none" stroke="#A33" stroke-width="0.4" stroke-dasharray="1 0.5"></polyline>' +
       o.cizim.map(function (n) { return '<circle cx="' + n[0] + '" cy="' + (n[1] * k).toFixed(2) + '" r="0.6" fill="#A33"></circle>'; }).join("")
     : "";
   return '<svg class="evh-svg' + (o.duzenle ? " duzenle" : "") + '" viewBox="0 0 100 70" role="img" aria-label="Evren haritası" xmlns="http://www.w3.org/2000/svg">' +
-    '<rect class="evh-deniz" x="0" y="0" width="100" height="70" fill="' + esc((h && h.renk) || "#BFD8EC") + '"></rect>' +
+    '<rect class="evh-deniz" x="0" y="0" width="100" height="70" fill="' + deniz + '"></rect>' + izgara +
     yerler.map(function (y) { return alan(y, false); }).join("") + ekli.map(function (y) { return alan(y, true); }).join("") +
     yerler.filter(function (y) { return !y.sekil; }).map(function (y) { return isaret(y, false); }).join("") +
     ekli.filter(function (y) { return !y.sekil; }).map(function (y) { return isaret(y, true); }).join("") +
@@ -195,6 +215,9 @@ function evrenSayfaAc(kaynak, id) {
   EVS = { kaynak: kaynak, id: id, sekme: evrenSonrakiSekme || ((EVS && EVS.kaynak === kaynak && EVS.id === id) ? EVS.sekme : "harita"), secili: null, mod: "sec", cizim: [] };
   evrenSonrakiSekme = null;
   evrenSayfaCiz();
+  if (EVS && typeof evrenZiyaretOdulu === "function") {
+    if (evrenZiyaretOdulu() && document.querySelector("#evrenSayfa [data-evs-cuzdan]")) { evrenSayfaCiz(); }
+  }
 }
 
 function evrenSayfaKapat() {
@@ -254,16 +277,24 @@ function evrenSayfaCiz() {
     return '<button class="dugme' + (EVS.sekme === id ? "" : " dugme-sade") + '" data-evs-sekme="' + id + '" aria-selected="' + (EVS.sekme === id) + '" role="tab">' + ad + "</button>";
   };
   s.setAttribute("aria-label", e.ad || "Evren");
+  const ek = (!v.kilitli && typeof evrenEkSekmeler === "function") ? evrenEkSekmeler(v) : [];
+  if (["harita", "bilgi"].indexOf(EVS.sekme) === -1 && !ek.some(function (x) { return x[0] === EVS.sekme; })) { EVS.sekme = "harita"; }
+  const ekGovde = ek.length && typeof evrenEkBolum === "function" ? evrenEkBolum(v) : null;
+  const alfabeAd = e.alfabe && e.alfabe.baslik && typeof evrenAlfabeYaz === "function" ? evrenAlfabeYaz(e.ad || "", e.alfabe) : "";
+  s.setAttribute("style", typeof evrenSayfaStili === "function" ? evrenSayfaStili(e) : "");
   s.innerHTML =
     '<div class="evs-ust">' +
       '<button class="dugme dugme-sade" data-evs-kapat>← Geri</button>' +
-      '<div class="evs-baslik"><span class="oyun-etiket">' + kacir(v.rozet) + "</span><h2>" + kacir(e.ad || "Adsız evren") + "</h2></div>" +
+      '<div class="evs-baslik"><span class="oyun-etiket">' + kacir(v.rozet) + "</span><h2>" + kacir(e.ad || "Adsız evren") + "</h2>" +
+        (alfabeAd ? '<div class="evs-alfabe-ad" aria-hidden="true">' + kacir(alfabeAd) + "</div>" : "") + "</div>" +
       '<button class="dugme dugme-sade" data-evren-sec>◎ Başka evren</button>' +
     "</div>" +
-    '<div class="evs-sekmeler" role="tablist">' + sekme("harita", "Harita") + sekme("bilgi", EVS.kaynak === "e99" ? "Evren ve katkın" : (v.duzenle ? "Evreni düzenle" : "Evren")) + "</div>" +
+    (!v.kilitli && typeof evrenCuzdanCubugu === "function" ? evrenCuzdanCubugu(v) : "") +
+    '<div class="evs-sekmeler" role="tablist">' + sekme("harita", "Harita") + sekme("bilgi", EVS.kaynak === "e99" ? "Evren ve katkın" : (v.duzenle ? "Evreni düzenle" : "Evren")) +
+      ek.map(function (x) { return sekme(x[0], kacir(x[1])); }).join("") + "</div>" +
     '<div class="evs-govde">' + (v.kilitli
       ? '<div class="kutu-y"><p class="oyun-giris">Bu evren kanonun parçası; kodla açılır.</p><button class="dugme" data-evs-kod>Kod gir</button></div>'
-      : (EVS.sekme === "harita" ? evrenHaritaBolumu(v) : evrenBilgiBolumu(v))) + "</div>";
+      : (ekGovde !== null ? ekGovde : (EVS.sekme === "harita" ? evrenHaritaBolumu(v) : evrenBilgiBolumu(v)))) + "</div>";
 }
 
 /* ---------- harita sekmesi ---------- */
@@ -282,8 +313,8 @@ function evrenHaritaBolumu(v) {
   const hv = evrenHaritaVerisi(v);
   const e99 = EVS.kaynak === "e99";
   const gorunen = e99 ? hv.yayin : (hv.duzen || hv.yayin);
-  const svg = evrenHaritaSvg({ yerler: gorunen.yerler, renk: (hv.duzen || gorunen).renk || gorunen.renk },
-    { duzenle: !!hv.duzen, secili: EVS.secili, cizim: EVS.cizim, ekli: e99 ? hv.duzen.yerler : [] });
+  const svg = evrenHaritaSvg({ yerler: gorunen.yerler, renk: (hv.duzen || gorunen).renk || gorunen.renk, stil: (hv.duzen || gorunen).stil || gorunen.stil },
+    { duzenle: !!hv.duzen, secili: EVS.secili, cizim: EVS.cizim, ekli: e99 ? hv.duzen.yerler : [], alfabe: v.eser.alfabe });
   const yerSay = gorunen.yerler.length + (e99 ? hv.duzen.yerler.length : 0);
   let arac = "";
   if (hv.duzen) {
@@ -291,7 +322,7 @@ function evrenHaritaBolumu(v) {
     arac = '<div class="evh-arac">' + mod("sec", "Seç / taşı") + mod("yer", "+ Yer ekle") + mod("cizim", "Alan çiz") +
       (EVS.mod === "cizim" ? '<button class="dugme" data-evh-bitir' + (EVS.cizim.length < 3 ? " disabled" : "") + ">Alanı bitir (" + EVS.cizim.length + " nokta)</button>" +
         '<button class="dugme dugme-sade" data-evh-iptal>Vazgeç</button>' : "") +
-      '<label class="evh-renk">Deniz <input type="color" data-evh-renk value="' + kacir(hv.duzen.renk || "#BFD8EC") + '"></label>' +
+      '<label class="evh-renk">Deniz <input type="color" data-evh-renk value="' + kacir(hv.duzen.renk || (typeof EVH_DESENLER !== "undefined" && EVH_DESENLER[(hv.duzen.stil || {}).desen] || {}).deniz || "#BFD8EC") + '"></label>' +
       "</div>" +
       '<p class="oyun-not">' + ({ sec: "Bir yere dokun: seçip bilgilerini düzenle; basılı tutup sürükle: taşı.",
         yer: "Haritada boş bir yere dokun: oraya yeni bir yer eklenir.",
@@ -678,6 +709,8 @@ document.addEventListener("click", async function (ev) {
     kopya.id = fanId();
     kopya.guncelleme = new Date().toISOString();
     delete kopya.eklenme; delete kopya.oneriler;
+    /* kilitli lore ve evren yönetici kodu kaynak evrene aittir: başka evrende çalışmaz */
+    delete kopya.lorlar; delete kopya.yoneticiOzet;
     l.push(kopya);
     fanEserlerimYaz(l);
     location.hash = "#/ev/benim/" + kopya.id;
