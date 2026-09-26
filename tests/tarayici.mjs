@@ -138,6 +138,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     }));
     await Z.evaluate(function () { document.querySelector("#perde").hidden = true; });
     const manifest = JSON.parse(readFileSync(dizin + "/manifest.webmanifest", "utf8"));
+    ok("_redirects üretilir (Cloudflare Pages vb.)", /\/u\/\*\s+\/\?profil=:splat\s+302/.test(readFileSync(dizin + "/_redirects", "utf8")));
     ok("manifest: paylaşım hedefi ve kısayollar", manifest.share_target && manifest.share_target.params.files[0].name === "dosya" && manifest.shortcuts.length >= 4);
     ok("aramada Claude'un evreni ve bölümler", await Z.evaluate(function () {
       const d = aramaDizini();

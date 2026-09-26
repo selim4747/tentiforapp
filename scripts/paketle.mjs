@@ -11,7 +11,8 @@ import { join } from "node:path";
 
 const KOK = new URL("..", import.meta.url).pathname;
 const HEDEF = join(KOK, "dist");
-const SITE = (process.env.URL || "https://tentifor.netlify.app").replace(/\/$/, "");
+/* Sitenin kalıcı adresi: SITE_URL (Cloudflare Pages vb. için elle), yoksa Netlify'ın URL'i. */
+const SITE = (process.env.SITE_URL || process.env.URL || "https://tentifor.netlify.app").replace(/\/$/, "");
 const KOPYALA = ["index.html", "veri.json", "sw.js", "manifest.webmanifest", "paylasim.png", "robots.txt", "_headers", "css", "js", "ikon"];
 
 rmSync(HEDEF, { recursive: true, force: true });
@@ -20,6 +21,11 @@ for (const ad of KOPYALA) {
   try { statSync(join(KOK, ad)); } catch { continue; }
   cpSync(join(KOK, ad), join(HEDEF, ad), { recursive: true });
 }
+
+/* Yönlendirmeler: Netlify netlify.toml'u, Cloudflare Pages ve diğerleri _redirects dosyasını okur. */
+writeFileSync(join(HEDEF, "_redirects"),
+  "# Profil kısa adresi: /u/kullaniciadi\n/u/*  /?profil=:splat  302\n" +
+  "# Paylaşım hedefi: servis çalışanı yoksa sayfaya dön\n/paylasim-al  /#/fanAc  303\n");
 
 /* Panelin kurulum yardımcısı (js/43-kurulum.js) telefondan kopyalayabilsin diye; gizli bilgi içermezler. */
 mkdirSync(join(HEDEF, "kurulum"), { recursive: true });
