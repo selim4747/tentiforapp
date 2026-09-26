@@ -875,7 +875,17 @@ async function githubShaOku() {
   if (!oku.ok) { return { hata: "GitHub yanıtı: " + oku.status }; }
 
   const bilgi = await oku.json();
-  return { sha: bilgi.sha };
+  /* depodaki veri.json'un sürümü: eski sürümde açık kalmış bir sayfa yeni veriyi ezmesin */
+  let surum = "";
+  try {
+    if (bilgi.content && bilgi.encoding === "base64") {
+      const ikili = atob(String(bilgi.content).replace(/\s/g, ""));
+      const bayt = new Uint8Array(ikili.length);
+      for (let i = 0; i < ikili.length; i++) { bayt[i] = ikili.charCodeAt(i); }
+      surum = JSON.parse(new TextDecoder("utf-8").decode(bayt)).surum || "";
+    }
+  } catch (_) { /* okunamadı: karşılaştırma yapılmaz */ }
+  return { sha: bilgi.sha, surum: surum };
 }
 
 /** veri.json'u doğrudan depoya yazar. Çakışma (409) olursa dosyayı yeniden okuyup bir kez daha dener. */
@@ -900,6 +910,11 @@ async function githubGonder() {
     try {
       const okunan = await githubShaOku();
       if (okunan.hata) { yoneticiDurum(okunan.hata, false); return; }
+      if (okunan.surum && typeof surumBuyukMu === "function" && surumBuyukMu(okunan.surum, veri.surum)) {
+        yoneticiDurum("Kaydedilmedi: depoda daha yeni bir sürüm var (" + okunan.surum + "), bu sayfa " + veri.surum +
+          ". Kaydetseydin yeni sürümdeki veriler silinirdi. Önce \"veri.json dışa aktar\" ile değişikliklerini yedekle, sonra sayfayı yenile.", false);
+        return;
+      }
       sha = okunan.sha;
     } catch (e) {
       yoneticiDurum("Ağ hatası: " + e.message, false);

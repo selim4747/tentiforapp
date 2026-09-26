@@ -137,6 +137,45 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       return !!h && h.textContent === "Paylaşılan hikâye" && location.hash === "#/fanAc";
     }));
     await Z.evaluate(function () { document.querySelector("#perde").hidden = true; });
+    /* ---------- güncelleme: açık kalan sayfa yeni sürümü alır ---------- */
+    const GU = await cihaz("güncelleme");
+    let ghYazildi = 0;
+    await GU.route("https://api.github.com/**", function (r) {
+      if (r.request().method() !== "GET") { ghYazildi++; return r.fulfill({ status: 200, contentType: "application/json", body: "{}" }); }
+      return r.fulfill({ status: 200, contentType: "application/json",
+        body: JSON.stringify({ sha: "abc", encoding: "base64", content: Buffer.from(JSON.stringify({ surum: "99.0.0" })).toString("base64") }) });
+    });
+    await GU.goto(adres + "/#/oyunlar"); await bekle(GU, 1500);
+    const surumDosyasi = JSON.parse(readFileSync(dizin + "/surum.json", "utf8"));
+    ok("yayın paketi sürüm kimliği taşır", await GU.evaluate(function (d) {
+      return /^[0-9a-f]{12}$/.test(sayfaPaketi()) && sayfaPaketi() === d.paket && d.surum === veri.surum;
+    }, surumDosyasi));
+    await GU.evaluate(async function () { document.querySelector('meta[name="tentifor-paket"]').content = "eskipaket000"; guncellemeSonBakis = 0; await guncellemeBak(false); });
+    ok("yayında yeni sürüm varsa çubuk çıkar", await GU.locator("#guncellemeCubugu").count() === 1 && /Yeni sürüm hazır/.test(await GU.textContent("#guncellemeCubugu")));
+    await Promise.all([GU.waitForNavigation(), GU.click("[data-guncelle]")]); await bekle(GU, 1800);
+    ok("Yenile sayfayı yeni sürümle açar ve haber verir", await GU.evaluate(function (d) {
+      return !document.querySelector("#guncellemeCubugu") && sayfaPaketi() === d.paket && /güncellendi/.test((document.querySelector("#eckaBildirim") || {}).textContent || "");
+    }, surumDosyasi));
+    await GU.evaluate(function () { document.querySelector('meta[name="tentifor-paket"]').content = "eskipaket000"; window.__eskiSayfa = true; });
+    await Promise.all([GU.waitForNavigation(), GU.evaluate(function () { guncellemeBak(true); })]); await bekle(GU, 1200);
+    ok("uzun süre arka planda kalan sayfa dönünce kendiliğinden yenilenir", await GU.evaluate(function () { return !window.__eskiSayfa; }));
+    ok("yazı yazılırken kendiliğinden yenilemez, çubuk çıkar", await GU.evaluate(async function () {
+      document.querySelector('meta[name="tentifor-paket"]').content = "eskipaket000"; window.__eskiSayfa = true;
+      const t = document.createElement("textarea"); document.body.appendChild(t); t.focus();
+      await guncellemeBak(true);
+      const sonuc = window.__eskiSayfa === true && !!document.querySelector("#guncellemeCubugu");
+      t.remove(); document.querySelector("#guncellemeCubugu").remove();
+      return sonuc;
+    }));
+    ok("eski sürümdeki panel Kaydet'le yeni veriyi ezmez", await GU.evaluate(async function () {
+      gh = { kullanici: "u", depo: "d", dal: "main", yol: "veri.json", jeton: "t" };
+      let mesaj = ""; const eski = window.yoneticiDurum;
+      window.yoneticiDurum = function (m) { mesaj = m; };
+      await githubGonder();
+      window.yoneticiDurum = eski;
+      return /daha yeni bir sürüm var \(99\.0\.0\)/.test(mesaj);
+    }) && ghYazildi === 0);
+
     const manifest = JSON.parse(readFileSync(dizin + "/manifest.webmanifest", "utf8"));
     ok("_redirects üretilir (Cloudflare Pages vb.)", /\/u\/\*\s+\/\?profil=:splat\s+302/.test(readFileSync(dizin + "/_redirects", "utf8")));
     ok("manifest: paylaşım hedefi ve kısayollar", manifest.share_target && manifest.share_target.params.files[0].name === "dosya" && manifest.shortcuts.length >= 4);
@@ -300,6 +339,8 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("evrenin kodu açılıp değiştirilir, uydurma alan temizlenir", await Z.evaluate(function (id) {
       const e = evrenBenimBul(id); return e.ad === "Kodla Değişen" && e.kurallar[0].ad === "Tuz konuşur" && !("uydurma" in e) && e.harita.yerler.length === 2;
     }, evId));
+    /* gerçek veride Evrengezer anahtarı kurulu olabilir; bu testler anahtarsız başlar, sonra kendi anahtarını kurar */
+    await Z.evaluate(function () { window.__egGercek = veri.evrengezer; delete veri.evrengezer; egGizliOnbellek = null; });
     await Z.click('[data-evs-sekme="lore"]'); await bekle(Z, 200);
     await Z.fill("#evlBaslik", "Tuzun sırrı");
     await Z.fill("#evlMetin", "Tuz aslında unutmaktır.");
@@ -348,6 +389,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       const eg = await evrenKodDene(e, "TEST-EVRENGEZER");
       const acilan = Object.keys(evlAcilan(e.id)).length;
       yoneticiCikis(); veri.yoneticiOzet = eskiOzet; delete veri.evrengezer; egGizliOnbellek = null;
+      if (window.__egGercek) { veri.evrengezer = window.__egGercek; }
       for (const k in EVL_OTURUM) { delete EVL_OTURUM[k]; }
       return { kur: kur, sarildi: sarildi, hepsiSarili: hepsiSarili, kapali: kapali, eg: eg.tur + eg.n, acilan: acilan };
     }, evId);

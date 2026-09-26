@@ -1,5 +1,5 @@
 {
-  "surum": "1.7.0",
+  "surum": "1.7.1",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -6742,6 +6742,15 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "1.7.1",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Site yeni sürümü kendi alır: açık kalan sayfa, geri dönünce kendini yeniler ya da \"Yeni sürüm hazır\" der",
+        "Eski sürümde açık kalmış panel, Kaydet'le yeni veriyi ezemez"
+      ],
+      "yeniler": []
+    },
     {
       "surum": "1.7.0",
       "tarih": "2026-09-26",
