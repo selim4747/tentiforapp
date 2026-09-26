@@ -1,5 +1,5 @@
 {
-  "surum": "1.7.1",
+  "surum": "1.8.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -89,6 +89,10 @@
           "dogrulama": "19cf232f649ebb5644d56033e601de28caf6fb1126fa1016ea800b6b7583b416",
           "metin": "\"Beyaz\" adı bir giysi seçimi değildir. Başka evrenlerin ona taktığı isimdir ve onu kendi kardeşinin gelecekteki hâlinden öğrenir. Saek ona şöyle der: \"Bana burada Kırmızı derler. Sana da Beyaz diyorlar.\"\n\nKitabı \"Yaşam\" adıyla yayımlandığında yaşı sıfır sayılır. Basım, zamanda geriye dönülerek kütüphanecilere dağıtılır."
         }
+      ],
+      "evrenler": [
+        "tomye",
+        "e25"
       ]
     },
     {
@@ -106,6 +110,10 @@
           "dogrulama": "36720be1f24ecb050fc306057bffe740ee96dc96f3ae7196d0d4d774935c767d",
           "metin": "Uyanışı üç şeyle tarif edilir: bıçak, cam, üç kat. Sonrasında laboratuvarını kurdu.\n\nKanonik sahne şudur: Yaşam kardeşlerine gerçeği açıkladıktan sonra başka bir evrene gider ve orada — zamanın tuhaflığı sayesinde — kendisinden önce o evrene gelmiş bir Saek ile karşılaşır. Yani Yaşam kendi renk adını, her şeyi daha o gün öğrenmiş kardeşinin gelecekteki hâlinden öğrenir.\n\nKyldo Zarın'la yirmi dört yıllık dostluğu vardır. Zal'ın ölümünde de oradadır. Evrenin en yalnız ölümünü — Kyldo'nunkini — izleyen kişidir."
         }
+      ],
+      "evrenler": [
+        "tomye",
+        "e25"
       ]
     },
     {
@@ -123,6 +131,10 @@
           "dogrulama": "36720be1f24ecb050fc306057bffe740ee96dc96f3ae7196d0d4d774935c767d",
           "metin": "Yöntemi buldu: ölmek üzere olan bir bedenle ruh takası yapıp, o beden ölürken kaçak yolcu gibi cennete girmek. Yakalandı ve ban yedi. Melekler asıl ruhu cennete götürdü, Kaelan'ı kendi bedenine geri bıraktı ve tek cümle söyledi: \"Tek rotan cehennem.\"\n\nCezası kesinleşince öldürmeye başladı. İlk cinayetini, cennetten atıldıktan ertesi gün, durmadan soru soran bir Kyldo'ya karşı işledi — ve bu, sonraki bütün cinayetlerin kalıbı oldu. Toplam bir sayı yoktur ama 200'den fazla kişi öldürdü. Kurbanları rastgele değildir — hep geveze ve meraklı Kyldolardır, çünkü onlar sürekli aynı şeyi sorar: cennetin kapısında ne gördün? Öldürmesi bir sırrı koruma ve bir yarayı örtme refleksidir. Öfkeliyken hesapladığından çok daha fazla zarar verir — susturmak isterken bir çizgiyi aşar.\n\nAffı nasıl aldığı önemlidir: Yaşam'ın Tanrı'yla konuştuğunu duydu ve ondan aracı olmasını istedi. Yaşam, Yansıma Tanrı'yı ikna etti ve Tanrı meleklerin hükmünü bozdu. Yani ban'ı kaldıran şey bir kahramanlık değil, bir ricaydı.\n\nAffedildikten sonra evrenler arası iyilik yapmaya başladı — sevapları günahlarını geçsin diye. Yok olmakta olan bir evreni kara delikten kurtardı, öldürdüklerinin ailelerine para yardımı yaptı, başka bir evrende kötü bir Evrengezer'le savaştı.\n\nGerçekten affedildiğine inandığında taşını bilinçli olarak bıraktı — çünkü ruhu taştaki cennete giderse asıl cennete ve anne babasına kavuşamazdı. Huzur içinde öldü. Hikâyede ölen tek ruh virüsü odur ve ölümü bir kayıp değil, bir varıştır."
         }
+      ],
+      "evrenler": [
+        "tomye",
+        "e25"
       ]
     },
     {
@@ -147,6 +159,10 @@
           "dogrulama": "36720be1f24ecb050fc306057bffe740ee96dc96f3ae7196d0d4d774935c767d",
           "metin": "Kaelan, Saek ve Feil onun yanına gider ve Evrengezer olup olmadığını sorarlar. O da taşını bıraktığını anlatır — ve onlardan da bırakmalarını ister.\n\nÜçünün cevabı, üçünü de tek sahnede tanımlar. Luyot kardeşler bahaneler sunar. Kaelan dümdüz konuşur: \"Daha hazır değilim, cehenneme gitmek istemiyorum.\"\n\nSahne, Sabıka birliktelik filminin post-credit'i değildir — filmin içinde, son sahnelerdedir. Ağırlığı sonradan anlaşılır: Kaelan yıllar sonra aynı teklifi kendi kendine yapacak ve bu kez kabul edecektir. O sahne bir reddediş değil, ertelenmiş bir kabuldür."
         }
+      ],
+      "evrenler": [
+        "tomye",
+        "e25"
       ]
     },
     {
@@ -164,6 +180,9 @@
           "dogrulama": "e67b79fb1f275263acf536d1a9bf8c9874f7a7b7eea413ecc455b4b1bf69cfd4",
           "metin": "Gri ölü bir ruhu kendi taşına bağlayabilir. Bağlama yalnızca ölü ruh üzerinde işler — yaşayan birine karşı elinde yalnızca fısıltı, telkin ve savurma kalır. Afor'u bağlayamamasının sebebi budur; onun yerine canavarları Afor'a yarattırdı.\n\nDelilik 2'de mekanik doğrudan buradan çıkar: Gri sürekli konuşur, fısıltı dinlendikçe canavarlar güçlenir. Susturmak için taş duvara vurulur — geçici bir çözümdür.\n\nGri'yi Yaşam ve Yejen birlikte yendiler; öldürücü darbeyi Yaşam vurdu. Ama Yaşam gücünü almadı, o yüzden güç taşta kaldı ve taş kendi yeteneğiyle Tömye Kütüphanesi'ne geldi.\n\nBir ayrıntı Gri'yi tanımlar: yıllarca öldürdüğü kurbanların taşlarındaki sesleri duydu ve onlarla bir kez bile konuşmadı. Katlettiği halkın sesleriyle çevrili bir bekleyiş.\n\nTaş bugün Evrengezer evreninde ve hâlâ bilinçli. Ama bir daha kendi başına yolculuk edemez — Gri'nin o gücü kalmadı. Delilik 3 gelirse Gri'yle değil, başka bir kötü Evrengezer'le gelecek."
         }
+      ],
+      "evrenler": [
+        "e25"
       ]
     },
     {
@@ -181,6 +200,9 @@
           "dogrulama": "c67c7cd16181a78e64b9b66daac1f25311a3b1f25e82ce6790631c992ecc6a58",
           "metin": "Yejen, soykırımdan önce bile zaten yalnızdı: bir Evrengezer olduğu için ailesine düzgün bağlanamadı, gerçek bir arkadaşı olmadı — sadece evren gezip macera arayan biriydi. Halkının yok oluşundan önce de kök salamayan bir hayat sürüyordu.\n\nSoykırımdan kaçtıktan sonra halkından birilerini kurtarmayı denedi ama başaramadı. Sonra evren gezdi; Yaşam'ı bulana kadar dokuz yıl geçti. Onu bulduğunda doğrudan birlikte bir maceraya atıldılar — ilişkileri bir gözlemle değil, ortak bir eylemle başladı. Yaşam, Yejen'in hayatındaki ilk gerçek bağdı.\n\nYaşam 10000 yaşında kaybolduktan sonra Yejen evrenleri kurtarmaya devam eder — tıpkı Yaşam gibi. Sevdiğini kaybeder ama kendini kaybetmez; onun işini sürdürür. Yaşam'ın bilincinin taşta yaşadığını ise hiçbir zaman öğrenmez."
         }
+      ],
+      "evrenler": [
+        "e25"
       ]
     },
     {
@@ -428,7 +450,11 @@
       "baslik": "Evrengezer İçgüdüsü",
       "ozet": "Soy, bilmeden bile kendini ele verir.",
       "metin": "Evrengezer soyundan gelenler, yeteneklerini bilmeseler bile bir içgüdü taşırlar: sınırı zorlama, ölüme yaklaşma, kuralın ötesine bakma isteği.\n\nKaelan bu içgüdüyle deney yaptı. Feil aynı içgüdüyle denek olmayı kabul etti — ikna edildiği ya da zorlandığı için değil. Yirmi beş kez ölüm riskine girmesinin altında başka bir açıklama yoktur.\n\nİçgüdünün ne zaman devreye gireceğinin bir eşiği yoktur — ölüm anında da gelebilir, sıradan bir anda da; öngörülemez olması bilinçli bir tasarımdır, bir yazım boşluğu değil.",
-      "gizli": null
+      "gizli": null,
+      "evrenler": [
+        "tomye",
+        "e25"
+      ]
     },
     {
       "id": "beyaztas",
@@ -444,6 +470,9 @@
           "dogrulama": "e67b79fb1f275263acf536d1a9bf8c9874f7a7b7eea413ecc455b4b1bf69cfd4",
           "metin": "Bir taş yalnızca bilinçli bir teslimiyetle boşalır — ruhun kendi isteğiyle bırakmasıyla. Boşalan taşlar yok edilmez; meleklere geçer ve saklanır.\n\nBoş taş nadirdir çünkü taştan vazgeçmek sonsuzluktan vazgeçmektir. Bilinen iki örnek vardır ve ikisinin taşı da meleklerdedir.\n\nKaelan, affedildikten sonra taşını bıraktı — çünkü ruhu taşın içindeki cennete giderse, asıl cennete ve anne babasına asla kavuşamayacaktı. Bir buluşma için bıraktı.\n\nPileg — dördüncü kuzen — Evrengezerlik güçlerinden tamamen vazgeçmek için taşını meleklere teslim etti. Ölümlü bir hayat için bıraktı, üstelik hayatı kötü olduğu için değil, yeterince iyi olduğu için.\n\nTaşın yok edilemezliği burada da geçerlidir: kırmaya çalışan şeye zarar verir ve bu savunmayı içindeki ruh yönetir. Farazi olarak yok edilse bile protokol meleği devreye girer, ruhu amel defteriyle birlikte başka bir evrene gönderir. Vazgeçilen şey yok olmaz."
         }
+      ],
+      "evrenler": [
+        "e25"
       ]
     },
     {
@@ -461,7 +490,10 @@
           "metin": "Emilimin tam olmamasının sebebi teknik bir sınır değil, bir koruma kuralıdır: taştaki ruh kendi cennetini yaşamaya devam edebilsin diye. Bu sınır emen kişinin kontrolünde değildir; sistemin kendi kuralıdır.\n\nGri onlarca kurbanının gücünün ancak bir kısmını alabildi. Yani onun on kat güç seviyesi, kuralın izin verdiği tavandır. Ve her cinayet, arkasında bilinci taşında yaşayan bir taş bıraktı — Evrengezer evreni bu yüzden konuşabilen ölülerle doludur.\n\nKişiyi değiştiren şey gücü emmek değil, gücün kendisidir. Gri'yi canavara çeviren eylem değil, eline geçen büyüklüktü.\n\nYaşam, Gri'yi yendikten sonra gücünü almadı — alamadığı için değil, istemediği için. Alabilirdi. Dolayısıyla Gri'nin biriktirdiği tüm güç, bilinciyle birlikte kendi taşında hapistir. Delilik 2'deki taşın ezici gücünün kaynağı budur: oyuncunun elindeki şey bir silah değil, bir hapishanedir."
         }
       ],
-      "eklendi": "2026-08-05"
+      "eklendi": "2026-08-05",
+      "evrenler": [
+        "e25"
+      ]
     },
     {
       "id": "olum",
@@ -469,7 +501,11 @@
       "baslik": "Ölüm, Melekler ve Beden",
       "ozet": "Cennete kaçak girilemez. Melekler tek cümleyle rota belirler.",
       "metin": "Bu evrende ölüm bir kapı değil, bir prosedürdür. Melekler ruhu alır, gideceği yeri belirler ve bunu tartışmaya açmaz.\n\nProsedürün bir açığı vardır: ölmek üzere olan bir bedenle ruh takası yapıp, o beden ölürken kaçak yolcu gibi cennete girmek. Kaelan bu yolu buldu.\n\nVe yakalandı. Meleklerin cevabı tek cümleydi: \"Tek rotan cehennem.\"",
-      "gizli": null
+      "gizli": null,
+      "evrenler": [
+        "tomye",
+        "e25"
+      ]
     },
     {
       "id": "sabika",
@@ -485,6 +521,10 @@
           "dogrulama": "36720be1f24ecb050fc306057bffe740ee96dc96f3ae7196d0d4d774935c767d",
           "metin": "Sabıka üçlüsünün büyükbabası Geceg Luyot'tur ve Evrengezer halkındandı. Farklı bir hayat istediği için o evrenden kaçtı, Afrı Bura ile evlendi ve sırrını sakladı.\n\nVe bu sessizlik, torunlarının başına gelen her şeyi açıklar. Kaelan Evrengezer olduğunu bilmediği için deney yapmak zorunda kaldı; Feil bilmediği için deneğe dönüştü; Saek bilmediği için bıçaklandığında ne olduğunu anlamadı. Bir adamın sessizliği üç kuşak sonra üç hayatı belirledi.\n\nSonu çoğu kişinin sandığı gibi değildir: Gri onu öldürmedi. Soykırım sırasında Evrengezer evrenindeydi, ama ölüm sebebi taşının işlevsizleşmesiydi — şarj olamayan taş zayıflar ve taşıyıcısı ölümlü hâle gelir. Geceg eceliyle öldü. Dolayısıyla Yaşam'ın Gri'yi yenmesi bir aile intikamı DEĞİLDİR.\n\nFeil kardeşlerine gerçeği açıklarken bunu da anlatır: dedeleri de Evrengezer'di ve taşlarının gücü tükendiği için öldüler. Melez taşlarını canlı tutmak için arada bir Evrengezer evrenine gidip şarj olmaları gerekir. Kaelan bu daveti kabul etmez — Pileg'e verdiği cevapla birebir tutarlı bir reddediştir.\n\nAilenin geri kalanı: Feil ve Saek'in annesi Nudhal Sarı sıradan bir Kyldo'ydu ve Kaelan'ın deneylerinden altı yıl önce öldü. Babaları Yulkom Luyot bir Evrengezerdir; taşı tükendi ve gerçekten öldü — ölmüş gibi yapmak yoktu. Kaelan'ın anne babası Ültö Sanu ve Pıda Luyot bir kazada öldüler. İki kuşak, aynı sessizlik."
         }
+      ],
+      "evrenler": [
+        "tomye",
+        "e25"
       ]
     },
     {
@@ -580,6 +620,9 @@
           "dogrulama": "e67b79fb1f275263acf536d1a9bf8c9874f7a7b7eea413ecc455b4b1bf69cfd4",
           "metin": "L25 aynı anda çok sayıda değişkeni hesaplamaya kodlandığı için tek noktaya odaklanamaz — bu yüzden Beyaz Taş'ı kendisi çalıştıramaz. Evrenin en zeki varlığı, en basit odak işini yapamaz."
         }
+      ],
+      "evrenler": [
+        "e25"
       ]
     },
     {
@@ -596,6 +639,10 @@
           "dogrulama": "b6b468da4ae6fb097dedf68c5d498427d4d904b0e797ccecd71bd972d16b6e05",
           "metin": "Sistem dört kural üzerine kuruludur. Ruh bedendeyken ölünürse, ölüm melekleri ruhu götürür. Ruh bedenden çıkmışken beden ölürse, melekler ilgilenmez. Ruh uzun süre bedensiz kalırsa boyut atlar.\n\nEski evrende bir bedene tek ruh girebilirdi. L25'in yarattığı yeni evrende ise bir bedene birden fazla ruh girebilir — ancak Yaşam'ın kitabındaki yöntemlerle bu hâlâ engellenebilir.\n\nİlk iki kural bir kaçış kapısı yaratır: Saek'in tüm yaşam stratejisi budur, her ölüme yaklaştığında beden değiştirir. Üçüncü kural bir sonuçtur: uzun süre bedensiz kalırsan taşının içine düşer, boyutlar arasında gezmeye başlarsın — Feil'in yüz yıllık yolculuğu bunun sonucudur. Dördüncü kural evrenin fiziğinin değiştiğini gösterir: artık işgalci ruh, ev sahibini atmak zorunda değildir; ikisi bir arada kalabilir."
         }
+      ],
+      "evrenler": [
+        "tomye",
+        "e25"
       ]
     },
     {
@@ -612,6 +659,10 @@
           "dogrulama": "b6b468da4ae6fb097dedf68c5d498427d4d904b0e797ccecd71bd972d16b6e05",
           "metin": "Cennete giriş kurallara bağlıdır ve kaçak giriş cezalandırılır. Kaelan ölmekte olan bir bedenle ruh takası yapıp kaçak yolcu gibi girmeye çalıştı, yakalandı ve ban yedi. Melekler ölmekte olan bedenin asıl ruhunu cennete götürdü, Kaelan'ı kendi bedenine geri bıraktı.\n\nYaşam ise aynı şeyi yasal yoldan yapar: Tanrı'dan onay alarak başka evrenlerin cennetlerinde tatil yapar. Aynı eylem, izinle mubah, izinsiz banlıktır.\n\nFeil'in annesinin ölümünde cennete gitmemesinin sebebi de budur — o dönemde onayı yoktu ve ban yiyeceğini biliyordu. Anne, deneylerden altı yıl önce öldü. Feil o sırada zaten kayıptı — bin elli yıl önceki kütüphanede. Annesinin ölümünü kendi zamanına döndüğünde öğrendi."
         }
+      ],
+      "evrenler": [
+        "tomye",
+        "e25"
       ]
     },
     {
@@ -628,6 +679,9 @@
           "dogrulama": "b6b468da4ae6fb097dedf68c5d498427d4d904b0e797ccecd71bd972d16b6e05",
           "metin": "Varsayılan durum doludur. Dolu bir taşta sahibinin ruhu, taşın içindeki kendi cennetinde yaşar ve dış dünyayla etkileşime girebilir. Taş bir hapishane değil, kişiye özel bir sonsuzluktur.\n\nBilinen dolu taşlar: Gri'nin taşı — fısıldar, savurur, canavar betimler; en aktif ve en tehlikeli olanı. Yaşam'ın taşı — kurtarılmak isteyen kişilere gider, L25'in makinesindedir. L25'e yemek veren taş — ara evrende L25'in \"yemek isteyen düşüncesini\" hissedip ona yemek verdi. Afor'un dost taşı — Evrengezer evreninden getirdiği, arkadaş canlısı taş.\n\nSon ikisi, soykırımda öldürülen halkın hayatta kalan bilinçlerindendir. L25 ara evrende hayatta kalmasını, kendisini besleyen bir ölünün iyiliğine borçludur — ve bunu hiç bilmez."
         }
+      ],
+      "evrenler": [
+        "e25"
       ]
     },
     {
@@ -676,6 +730,9 @@
           "dogrulama": "b6b468da4ae6fb097dedf68c5d498427d4d904b0e797ccecd71bd972d16b6e05",
           "metin": "Çok eskiden, ruh virüsü olmayı topluca becermiş bir halk vardı. Bu önemlidir: Tentiforverse'te ruh virüsü olmak bireysel bir keşiftir — Kaelan kendi başına denedi, Saek içgüdüyle keşfetti, Feil bir kaza sonucu öğrendi. Ama bu halk bunu bir kültür hâline getirmişti.\n\nEvrenler arası gezer, düzenli olarak kendi yerlerinde toplanırlardı. Hem dağınık hem bağlıydılar. Ve bu gelenek onları öldürdü — bir arada toplandıkları için, birinin hepsini bulması mümkün oldu.\n\nYejen onlardan biridir. Sabıka üçlüsünün büyükbabası da bu halktandı — yani hikâyenin merkezindeki dört Evrengezer'in üçü (Yaşam, Saek, Kaelan) bu halkın torunları, biri (Yejen) doğrudan üyesidir."
         }
+      ],
+      "evrenler": [
+        "e25"
       ]
     },
     {
@@ -692,6 +749,9 @@
           "dogrulama": "b6b468da4ae6fb097dedf68c5d498427d4d904b0e797ccecd71bd972d16b6e05",
           "metin": "Gri, bir gün kazara bir ruh virüsünü öldürdü. Kasıt yoktu, plan yoktu. Ama öldürdükten sonra bir şey hissetti: gücünün arttığını. Ardından içinden bir ses geldi — dışarıdan değil, kendi içgüdüsüydü: \"Hepsini öldür, ruhların gücünü em.\"\n\nOnu kandıran bir şeytan, ele geçiren bir varlık, zorlayan bir güç yoktu. Kendi dürtüsüydü. Bir kez tattı ve daha fazlasını istedi. Gri kötülüğün ete kemiğe bürünmüş hâli değil, bağımlılığın ete kemiğe bürünmüş hâlidir.\n\nArdından bir yemin etti: nerede olursa olsun tüm ruh virüslerini öldürmek. Ve bu yemini yerine getirmek için o evrenden hiç ayrılmadı — kendi ölümüne dek, oraya gelebilecek tüm Evrengezerleri öldürmek için bekledi."
         }
+      ],
+      "evrenler": [
+        "e25"
       ]
     },
     {
@@ -715,6 +775,10 @@
           "dogrulama": "b6b468da4ae6fb097dedf68c5d498427d4d904b0e797ccecd71bd972d16b6e05",
           "metin": "Önemli bir düzeltme: Sabıka üçlüsünün büyükbabası bu soykırımda ÖLMEDİ. Büyükbaba farklı bir hayat için o evrenden ayrıldı ve bir daha hiç dönmedi. Babaanne ile evlendi, sırrını sakladı — babaanne kocasının ne olduğunu bilmiyordu.\n\nAma gücünü hiç kullanmadığı, şarj istasyonuna (Evrengezer evrenine) hiç dönmediği için taşı yavaş yavaş zayıfladı ve işlevsiz hâle geldi. Büyükbaba sonunda sıradan biri gibi, eceliyle öldü. Baba da aynı kaderi paylaştı: gerçekten öldü, \"ölmüş gibi yapmak\" yoktu; onun da taşı tükendi.\n\nYani Yaşam Gri'yi yendiğinde, bu bir aile intikamı DEĞİLDİ — büyükbabasının ölümüyle Gri'nin hiçbir ilgisi yoktu. Yaşam bunu muhtemelen hiç bilmedi, ama sebebi kendi ailesi değil, yalnızca Yejen'in halkıydı."
         }
+      ],
+      "evrenler": [
+        "tomye",
+        "e25"
       ]
     },
     {
@@ -731,6 +795,10 @@
           "dogrulama": "b6b468da4ae6fb097dedf68c5d498427d4d904b0e797ccecd71bd972d16b6e05",
           "metin": "Gri'yi Yaşam ve Yejen birlikte yendiler; öldürücü darbeyi Yaşam vurdu. Yejen tek başına yenecek güçte değildi ve bunu biliyordu — bu yüzden intikamını yıllarca alamadı. Yaşam'ı bulup birlikte güçlendiler, birlikte gittiler, birlikte yendiler.\n\nGri'nin taşı, Beyaz Taşların doğal yeteneğiyle kendi başına Tömye Kütüphanesi'ne geldi. Kimse taşımadı. Gri'nin bilinci hâlâ içindeydi ve gidecek bir yer aradı. Sonra Tarı öldü. Ve taş onu buldu."
         }
+      ],
+      "evrenler": [
+        "tomye",
+        "e25"
       ]
     },
     {
@@ -795,6 +863,10 @@
           "dogrulama": "b6b468da4ae6fb097dedf68c5d498427d4d904b0e797ccecd71bd972d16b6e05",
           "metin": "Ölüm melekleri konuşur — Kaelan'a \"tek rotan cehennem\" diyen onlardır. Görünüşleri çarpıcıdır: kocaman siyah kanatları vardır ama bedenleri bembeyazdır.\n\nAma uzun süre bir kör noktaları oldu: bir Evrengezer'in ne olduğunu bilmiyorlardı. Ruhun bedenden çıkıp taşa geçtiğini fark etmiyorlardı — bunu dördüncü kuzen onlara bir taş verene kadar öğrenmediler. Her evrende, cennet olsun olmasın, bir protokol meleği vardır; bu, sistemin işlemediği durumlarda devreye giren bir güvenlik mekanizmasıdır — Beyaz Taşların yok edilmesinde ve Tarı'nın kurtuluşunda görülen sistemin ta kendisi.\n\nBir Beyaz Taş yok edilemez; kırılmaya çalışılırsa içindeki ruhun iradesiyle kendini korur, saldırana zarar verir. Farazi olarak yok edilse bile protokol meleği devreye girer ve içindeki ruhu amel defteriyle birlikte rastgele bir evrene gönderir — taş yok olsa da ruh kaybolmaz."
         }
+      ],
+      "evrenler": [
+        "tomye",
+        "e25"
       ]
     },
     {
@@ -803,7 +875,10 @@
       "baslik": "Taş Neden Yok Edilemez",
       "ozet": "Beyaz Taş'ın tuhaflıkları tek bir sebepten gelir: taş aslında dördüncü boyutta var olan bir varlıktır.",
       "metin": "Zaman ve mekân arası geçiş, duvarlardan geçebilmek ve yok edilemezlik — üçü de ayrı yetenekler değil, aynı boyutsallığın sonucudur.\n\nAynı sebep bir şeyi daha açıklar: taşın içindeki ruhun yaşadığı cennet, kendi başına bağımsız bir yerdir. Ruhun kendi evreninin cennetinden ayrı, taşa özgü küçük bir cep evren.\n\nBir Evrengezer için bu, ölümden sonra gidilecek yerin garanti olması demektir. Ve tam da bu yüzden, taşı bırakmak sanılandan çok daha ağır bir karardır.",
-      "gizli": null
+      "gizli": null,
+      "evrenler": [
+        "e25"
+      ]
     },
     {
       "id": "kutuphaneBina",
@@ -851,6 +926,9 @@
           "dogrulama": "b6b468da4ae6fb097dedf68c5d498427d4d904b0e797ccecd71bd972d16b6e05",
           "metin": "Yejen soykırımdan önce bile yalnızdı. Bir Evrengezer olduğu için ailesine düzgün bağlanamadı; gerçek bir arkadaşı olmadı. Sadece evren gezip macera arayan biriydi.\n\nYani halkını kaybettiğinde kaybettiği şey bir aile değil, bir ihtimaldi.\n\nHalkından birilerini kurtarmayı denedi, başaramadı. Sonra evren gezdi; Yaşam'ı bulana kadar dokuz yıl geçti. Onu bulduğunda doğrudan birlikte maceraya atıldılar — ilişkileri bir gözlemle değil, ortak bir aksiyonla başladı.\n\nYaşam, Yejen'in hayatındaki ilk gerçek bağdı. Ve adı tersten \"Yaşam\" demektir: sevdiği kişinin adını, tanışmalarından önce taşıyordu.\n\nZamanla fark etti ki en büyük olaylar hep Yaşam'ın çevresinde oluyor. Bir maceraperest için bundan iyi bir sebep yoktur — ama kaldığı sebep macera değildi."
         }
+      ],
+      "evrenler": [
+        "e25"
       ]
     },
     {
@@ -2952,19 +3030,35 @@
     },
     {
       "terim": "Evrengezer",
-      "tanim": "Beyaz Taş taşıyan, evrenler ve zaman arasında hareket edebilen varlık. Kendi baloncuk evrenlerini yaratabilir."
+      "tanim": "Beyaz Taş taşıyan, evrenler ve zaman arasında hareket edebilen varlık. Kendi baloncuk evrenlerini yaratabilir.",
+      "evrenler": [
+        "tomye",
+        "e25"
+      ]
     },
     {
       "terim": "Beyaz Taş",
-      "tanim": "Evrengezerliğin taşıyıcısı. Bırakmak, sonsuzluktan vazgeçmek demektir; bilinen yalnızca iki boş taş vardır."
+      "tanim": "Evrengezerliğin taşıyıcısı. Bırakmak, sonsuzluktan vazgeçmek demektir; bilinen yalnızca iki boş taş vardır.",
+      "evrenler": [
+        "tomye",
+        "e25"
+      ]
     },
     {
       "terim": "Baloncuk evren",
-      "tanim": "Bir Evrengezerin kendi deney evreninde yarattığı, kurallarını kendisinin koyduğu küçük evren."
+      "tanim": "Bir Evrengezerin kendi deney evreninde yarattığı, kurallarını kendisinin koyduğu küçük evren.",
+      "evrenler": [
+        "tomye",
+        "e25"
+      ]
     },
     {
       "terim": "Ruh virüsü",
-      "tanim": "Bir bedene girip yerleşebilen ruh. Korunmanın tek bilinen yolu Yaşam'ın kitabıdır."
+      "tanim": "Bir bedene girip yerleşebilen ruh. Korunmanın tek bilinen yolu Yaşam'ın kitabıdır.",
+      "evrenler": [
+        "tomye",
+        "e25"
+      ]
     },
     {
       "terim": "Ara evren",
@@ -2972,7 +3066,11 @@
     },
     {
       "terim": "Dördüncü boyut",
-      "tanim": "Evrenler arası geçişin gerçekleştiği katman. Bedenden uzun süre ayrı kalan ruh taşının içine girer; taş görünmez, duvar geçirgen bir araca dönüşür ve ruhu boyutlar arasında taşır."
+      "tanim": "Evrenler arası geçişin gerçekleştiği katman. Bedenden uzun süre ayrı kalan ruh taşının içine girer; taş görünmez, duvar geçirgen bir araca dönüşür ve ruhu boyutlar arasında taşır.",
+      "evrenler": [
+        "tomye",
+        "e25"
+      ]
     },
     {
       "terim": "Lebga",
@@ -6743,6 +6841,16 @@
   ],
   "degisiklik": [
     {
+      "surum": "1.8.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "E25: Evrengezerlerle ilgili her şey artık kendi evreninde; melezlerin bilgileri Tömye ile ortak",
+        "E25'e herkes kendi Evrengezerini ekleyebilir: kişilik halleri yaratanın imzasıyla kilitli, başkaları onu kendi evrenine ve hikâyesine konuk olarak götürür",
+        "Her evrenin kendi paylaşılabilir sayfası var (/evren/e25/ gibi)"
+      ],
+      "yeniler": []
+    },
+    {
       "surum": "1.7.1",
       "tarih": "2026-09-26",
       "maddeler": [
@@ -7868,6 +7976,22 @@
           "deger": "Saça bağlı bir konuşma topu."
         }
       ]
+    },
+    "e25": {
+      "bicim": "tentifor-eser",
+      "surum": 1,
+      "tur": "evren",
+      "id": "e25",
+      "ad": "E25",
+      "yazar": "",
+      "erisim": "evren",
+      "ozet": "Evrengezerlerin evreni: Beyaz Taşlar, evrenler arası geçiş ve Evrengezer halkı. Melezlerin (Sabıka soyu) bilgileri burada ve Tömye'de ortaktır; anıları ve hikâyeleri Tömye arşivinde kalır.",
+      "kurallar": [],
+      "kisiler": [],
+      "yerler": [],
+      "tarih": [],
+      "sozluk": [],
+      "ozelAlanlar": []
     }
   },
   "bildirim": {

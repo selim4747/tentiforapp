@@ -3784,3 +3784,28 @@ html.evren-acik{overflow:hidden}
   background:var(--beyaz);color:var(--murekkep);border:1px solid var(--deniz);border-radius:10px;box-shadow:0 6px 24px rgba(13,53,96,.18);font-size:14px}
 .guncelleme-cubugu .dugme{min-height:36px;padding-top:4px;padding-bottom:4px}
 .guncelleme-cubugu .pencere-kapat{position:static}
+
+/* kanon evren sayfası: kişiler, maddeler, sözlük (E25 gibi) */
+.kanon-evren-icerik{margin-top:18px}
+.evs-ara-baslik{font-family:var(--display);font-weight:400;font-size:24px;margin:22px 0 10px}
+.evs-izgara{margin-bottom:8px}
+.kart-ortak{display:flex;flex-direction:column;gap:6px;text-align:left}
+.kart-ortak .dugme{align-self:flex-start;margin-top:6px}
+.evs-sozluk dt{font-weight:bold;margin-top:10px}
+.evs-sozluk dd{margin:2px 0 0}
+.evren-tasindi{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px}
+
+/* E25 kişileri ve konuklar (js/47-e25-kisiler.js) */
+.e25-kisiler{margin-top:18px}
+.kisi-kart{margin:10px 0}
+.kisi-bas{font-size:18px}
+.kisi-haller dt{font-weight:bold;margin-top:8px}
+.kisi-haller dd{margin:2px 0 0}
+.kisi-imza{font-family:var(--mono);font-size:11px;color:var(--murekkep-2,inherit)}
+.kisi-imza.gecerli{color:#2E7D4F}
+.kisi-imza.degismis{color:#B0413E;font-weight:bold}
+.kisi-form label,.kisi-gotur label{display:block;margin-top:8px}
+.kisi-form .arac-giris,.kisi-gotur .arac-giris{width:100%;box-sizing:border-box}
+.kisi-gotur{margin-top:10px;border-top:1px solid var(--sig);padding-top:8px}
+.konuk{border-top:1px solid var(--sig);padding:8px 0}
+.konuk-duzen{margin-top:10px}
