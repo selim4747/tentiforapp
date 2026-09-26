@@ -6,7 +6,9 @@
    doğruluğu veritabanı hesaplar (supabase/kurulum.sql, YARIŞLAR bölümü).
    Kilitli (buz altındaki) içerik hiçbir soruya girmez. */
 
-const YARIS_SURUM = 1;   /* soru üretimi değişirse artır: yönetici girişinde banka yeniden yüklenir */
+const YARIS_SURUM = 2;   /* soru üretimi değişirse artır: yönetici girişinde banka yeniden yüklenir */
+/* Günün kelimesine girmeyen sıradan Türkçe kelimeler (sözlükte ya da haritada ad olarak geçseler de) */
+const GK_GENEL_KELIMELER = ["görevli", "sabıka", "dost", "kıyı", "yerin", "deniz", "kitap", "ruh"];
 
 const YARISLAR = [
   { id: "kyldo_hiz", ad: "Kyldo Hız Çevirisi", ozet: "60 saniyede Kyldo simgelerini oku, kelimeyi yaz. Puan: doğru kelime." },
@@ -198,17 +200,21 @@ function yarisPaketiUret() {
     return { soru: { kisiler: b.kisiler, ipuclari: b.ipuclari }, cevap: { dogru: b.cozum } };
   });
 
-  /* Günün kelimesi: Tentiforverse'ün kendi adları (4–7 harf) */
+  /* Günün kelimesi: Tentiforverse'ün kendi adları (4–7 harf). Kısaltmalar (GTBT) ve sıradan Türkçe
+     kelimeler (görevli, dost, kıyı…) girmez: okur "bu loreda yok" sanmasın. */
   const adaylar = [];
   const ekle = function (m) {
     const k = trk(m);
+    if (/^[A-ZÇĞİÖŞÜ]{2,}$/.test(String(m || ""))) { return; }
+    if (GK_GENEL_KELIMELER.indexOf(k) !== -1) { return; }
     if (/^[a-zçğıöşü]{4,7}$/.test(k) && adaylar.indexOf(k) === -1) { adaylar.push(k); }
   };
   acikKarakterler.forEach(function (k) { ekle(k.ad); });
   (veri.isimSozluk || []).forEach(function (s) { ekle(s.isim); });
   (veri.sozluk || []).forEach(function (s) { ekle(s.terim); });
   ((veri.takvim || {}).aylar || []).forEach(function (x) { ekle(x.ad); });
-  (veri.haritalar || []).forEach(function (h) { ekle(h.ad); (h.yerler || []).forEach(function (y) { if (!y.gizli) { ekle(y.ad); } }); });
+  /* Claude'un yazdığı evren kanon değil: adları günün kelimesine girmez */
+  (veri.haritalar || []).filter(function (h) { return h.id !== "claude"; }).forEach(function (h) { ekle(h.ad); (h.yerler || []).forEach(function (y) { if (!y.gizli) { ekle(y.ad); } }); });
   banka.gunun_kelimesi = yarisKaristir(adaylar.sort(), 2026).map(function (k) { return { soru: {}, cevap: { kelime: k } }; });
 
   const kesif = [].concat(

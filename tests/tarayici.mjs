@@ -889,6 +889,11 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("istatistik kutuları", await A.locator(".ist-kutu").count() === 5);
     ok("üç günlük grafik", await A.locator(".ist-coklu svg").count() === 3);
     ok("tablo görünümü", await A.locator(".ist-tablo tbody tr").count() === 14);
+    ok("günün kelimesi yalnızca lore adları (kısaltma ve sıradan kelime yok)", await A.evaluate(function () {
+      const l = yarisPaketiUret().banka.gunun_kelimesi.map(function (x) { return x.cevap.kelime; });
+      return l.length > 20 && ["gtbt", "görevli", "sabıka", "dost", "kıyı", "yerin"].every(function (k) { return l.indexOf(k) === -1; }) &&
+        ["eçka", "tömye", "blero", "lebga"].every(function (k) { return l.indexOf(k) !== -1; });
+    }));
     ok("İstatistik'te ziyaret sayacı", /Giriş: \/deneme\//.test(await A.textContent("#yOlayAlan")));
     await panel("bakim", "hatalar");
     ok("hatalar listelenir", /test hatası/.test(await A.textContent("#yHataAlan")));
