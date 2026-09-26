@@ -9,9 +9,9 @@ Yayına girmez (scripts/paketle.mjs bu dosyayı kopyalamaz). Biten madde silinir
 4. [x] **İsim Kayması çevirici** — adını yaz, Şomdo adını al; evren tarzında paylaşılabilir kart.
 
 ## Canlı ve ortak anlar
-5. [ ] **Kor'un Hıçkırığı** — önceden bilinmeyen anlarda o an sitede olan herkese geçen karanlık halka; sunucu doğrulamalı "Hıçkırık tanığı" rozeti.
-6. [ ] **Şifreli kartpostal** — Kyldo yazısı ya da katman koduyla kilitli mesaj; bağlantıyla gönderilir, alıcı sitede çözer.
-7. [ ] **Mevsimlik arşiv avı (ARG)** — gizli ipucu zinciri, sonunda gizli kod; ilk çözenler tabloya.
+5. [x] **Kor'un Hıçkırığı** — önceden bilinmeyen anlarda o an sitede olan herkese geçen karanlık halka; sunucu doğrulamalı "Hıçkırık tanığı" rozeti.
+6. [x] **Şifreli kartpostal** — Kyldo yazısı ya da katman koduyla kilitli mesaj; bağlantıyla gönderilir, alıcı sitede çözer.
+7. [x] **Mevsimlik arşiv avı (ARG)** — gizli ipucu zinciri, sonunda gizli kod; ilk çözenler tabloya.
 
 ## Okuma ve bağlılık
 8. [ ] **Bölüm tepkileri ve kenar notları** — roman/hikâye bölümlerine tepki ve herkese açık kısa notlar (moderasyonlu).

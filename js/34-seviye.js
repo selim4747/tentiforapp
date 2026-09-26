@@ -71,7 +71,8 @@ const XP_KAYNAKLARI = [
   ["yaris", "Yarışlar", "geçerli oyun başına 10"], ["gk", "Günün Kelimesi", "çözüm başına 25"],
   ["kesif", "Keşifler", "keşif başına 15"], ["ilk_kasif", "İlk Kâşif", "ilk bulduğun her şey için 25"],
   ["teori", "Teoriler", "görünür teori başına 5"], ["begeni", "Teorilerine beğeni", "beğeni başına 3"],
-  ["isaret", "Kanon / yakın teori", "50 / 20"], ["oy", "İçerik oylaması", "oy başına 5"]
+  ["isaret", "Kanon / yakın teori", "50 / 20"], ["oy", "İçerik oylaması", "oy başına 5"],
+  ["hickirik", "Hıçkırık tanıklığı", "tanıklık başına 20"], ["av", "Arşiv avı", "çözülen sezon başına 100"]
 ];
 
 /** Hesabın bölümündeki büyük kart: iki sistem + XP dökümü. */

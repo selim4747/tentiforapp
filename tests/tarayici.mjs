@@ -211,6 +211,39 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await B.click('[data-takip="yonetici"]'); await bekle(B, 900);
     ok("takip kaydedilir", (await sahte.kokSorgu("select count(*)::int n from public.takipler")).rows[0].n === 1);
 
+    /* ---------- kartpostal ---------- */
+    await B.evaluate(function () { location.hash = "#/kartpostal"; }); await bekle(B, 600);
+    await B.fill("#kpMesaj", "Işığın geldiği yerde buluşalım.");
+    await B.check('input[name="kpKilit"][value="sifre"]'); await B.fill("#kpSifre", "tomye");
+    await B.click('[data-kp-form] button[type=submit]'); await bekle(B, 200);
+    const kpAdres = await B.inputValue("#kpAdres");
+    ok("kartpostal bağlantısı mesajı açık taşımaz", /#\/kartpostal\//.test(kpAdres) && kpAdres.indexOf("buluşalım") === -1);
+    const K = await cihaz("kartpostal-alıcı");
+    await K.goto(kpAdres.replace(/^[^#]+/, adres + "/")); await bekle(K, 1800);
+    await K.fill("#kpCozKod", "yanlis"); await K.click("[data-kp-coz] button"); await bekle(K, 100);
+    ok("yanlış şifre açmaz", /tutmadı/.test(await K.textContent("#kpMetin")));
+    await K.fill("#kpCozKod", "tomye"); await K.click("[data-kp-coz] button"); await bekle(K, 100);
+    ok("doğru şifre açar", /buluşalım/.test(await K.textContent("#kpMetin")));
+    await K.close();
+
+    /* ---------- arşiv avı ---------- */
+    await B.evaluate(function () { location.hash = "#/av"; }); await bekle(B, 600);
+    for (const cevap of ["Kor", "an", "yol", "Ilat", "Tömye"]) {
+      await B.fill("#avCevap", cevap); await B.click("[data-av-form] button[type=submit]"); await bekle(B, 150);
+    }
+    ok("beş ipucu çözülünce son soru çıkar", await B.locator("[data-av-son]").count() === 1);
+    await B.fill("#avSon", "KAYIT"); await B.click("[data-av-son] button"); await bekle(B, 1200);
+    ok("son cevap sunucuda doğrulanır", /1\. çözensin/.test(await B.textContent("#avDurum")), await B.textContent("#avDurum"));
+
+    /* ---------- Kor'un Hıçkırığı ---------- */
+    await sahte.kokSorgu("delete from public.hickirik_olaylari");
+    await sahte.kokSorgu("insert into public.hickirik_olaylari (gun, bas) values ((now() at time zone 'Europe/Istanbul')::date, now() - interval '30 seconds')");
+    await B.evaluate(function () { try { localStorage.removeItem("tentiforapp_hickirik_gun"); } catch (e) {} return hickirikSor(); }); await bekle(B, 600);
+    ok("hıçkırık herkese görünür", await B.locator("#hickirik").count() === 1);
+    await B.click('[data-hickirik="tanik"]'); await bekle(B, 1000);
+    ok("tanıklık kaydedilir", (await sahte.kokSorgu("select count(*)::int n from public.hickirik_taniklari")).rows[0].n === 1);
+    await B.click('[data-hickirik="kapat"]');
+
     /* ---------- 5. hata bildirimi ---------- */
     await B.evaluate(function () { window.__hataYereldeGonder = true; window.hataGonder({ baslik: "Hata", mesaj: "test hatası", yigin: "a.js:1" }); });
     await bekle(B, 900);

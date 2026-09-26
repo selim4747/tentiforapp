@@ -1237,6 +1237,119 @@ language sql stable security definer set search_path = '' as $$
     'hafta', (select bas from h));
 $$;
 
+-- ======================================================================
+-- ================== KOR'UN HIÇKIRIĞI ve ARŞİV AVI ====================
+-- ======================================================================
+
+-- Hıçkırık: günde en çok bir kez, 09:00–23:00 (İstanbul) arasında rastgele bir anda 3 dakika sürer.
+-- Zaman tabloda saklanır ve okunamaz; istemci yalnızca "şu an var mı" diye sorar.
+create table if not exists public.hickirik_olaylari (gun date primary key, bas timestamptz);
+alter table public.hickirik_olaylari enable row level security;
+
+create table if not exists public.hickirik_taniklari (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  gun date not null,
+  zaman timestamptz not null default now(),
+  primary key (kullanici, gun)
+);
+alter table public.hickirik_taniklari enable row level security;
+
+create or replace function public.hickirik_bugun() returns timestamptz
+language plpgsql security definer set search_path = '' as $$
+declare
+  g date := (now() at time zone 'Europe/Istanbul')::date;
+  b timestamptz;
+  var boolean;
+begin
+  select bas, true into b, var from public.hickirik_olaylari where gun = g;
+  if var is null then
+    /* üç günden biri hıçkırıksız geçer */
+    if random() < 0.34 then b := null;
+    else b := (g::timestamp + interval '9 hours' + random() * interval '14 hours') at time zone 'Europe/Istanbul'; end if;
+    insert into public.hickirik_olaylari (gun, bas) values (g, b) on conflict (gun) do nothing;
+    select bas into b from public.hickirik_olaylari where gun = g;
+  end if;
+  return b;
+end;
+$$;
+
+create or replace function public.hickirik_durum() returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare b timestamptz := public.hickirik_bugun();
+begin
+  if b is not null and now() >= b and now() < b + interval '3 minutes' then
+    return jsonb_build_object('aktif', true, 'kalan', extract(epoch from (b + interval '3 minutes' - now()))::int);
+  end if;
+  return jsonb_build_object('aktif', false);
+end;
+$$;
+
+create or replace function public.hickirik_tanik() returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  b timestamptz := public.hickirik_bugun();
+  g date := (now() at time zone 'Europe/Istanbul')::date;
+begin
+  if auth.uid() is null then return jsonb_build_object('durum', 'giris'); end if;
+  if b is null or now() < b or now() > b + interval '4 minutes' then return jsonb_build_object('durum', 'gec'); end if;
+  insert into public.hickirik_taniklari (kullanici, gun) values (auth.uid(), g) on conflict do nothing;
+  return jsonb_build_object('durum', 'tamam',
+    'toplam', (select count(*) from public.hickirik_taniklari where kullanici = auth.uid()),
+    'bugun', (select count(*) from public.hickirik_taniklari where gun = g));
+end;
+$$;
+
+-- Arşiv avı: ipuçları sitede (veri.json), son cevabın özeti yalnızca burada.
+create table if not exists public.av_sezonlari (sezon int primary key, ozet text not null, ad text not null);
+alter table public.av_sezonlari enable row level security;
+insert into public.av_sezonlari (sezon, ozet, ad)
+values (1, 'c49b0f1b4adc47d356ca82227869e147455c4862838fcc9f6a2588c02cd53046', 'İlk Kayıt')
+on conflict (sezon) do update set ozet = excluded.ozet, ad = excluded.ad;
+
+create table if not exists public.av_cozumleri (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  sezon int not null references public.av_sezonlari(sezon) on delete cascade,
+  zaman timestamptz not null default now(),
+  primary key (kullanici, sezon)
+);
+alter table public.av_cozumleri enable row level security;
+
+create table if not exists public.av_denemeleri (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  zaman timestamptz not null default now()
+);
+alter table public.av_denemeleri enable row level security;
+
+create or replace function public.av_normal(t text) returns text
+language sql immutable set search_path = '' as $$
+  select regexp_replace(lower(translate(coalesce(t, ''), 'ıİŞşĞğÜüÖöÇçÂâÎîÛû', 'iissgguuooccaaiiuu')), '[^a-z0-9]', '', 'g')
+$$;
+
+create or replace function public.av_coz(p_sezon int, p_cevap text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  u uuid := auth.uid();
+  o text;
+begin
+  if u is null then return jsonb_build_object('durum', 'giris'); end if;
+  if exists (select 1 from public.av_cozumleri where kullanici = u and sezon = p_sezon) then
+    return jsonb_build_object('durum', 'zaten');
+  end if;
+  if (select count(*) from public.av_denemeleri where kullanici = u and zaman > now() - interval '1 hour') >= 20 then
+    return jsonb_build_object('durum', 'sinir');
+  end if;
+  insert into public.av_denemeleri (kullanici) values (u);
+  select ozet into o from public.av_sezonlari where sezon = p_sezon;
+  if o is null then return jsonb_build_object('durum', 'yok'); end if;
+  if encode(sha256(convert_to(public.av_normal(p_cevap) || '#av', 'UTF8')), 'hex') <> o then
+    return jsonb_build_object('durum', 'yanlis');
+  end if;
+  insert into public.av_cozumleri (kullanici, sezon) values (u, p_sezon);
+  return jsonb_build_object('durum', 'tamam',
+    'sira', (select count(*) from public.av_cozumleri where sezon = p_sezon));
+end;
+$$;
+
 -- Arşivci seviyesi: bütün ilerlemeden sunucuda hesaplanan XP.
 -- Aynı XP iki sistemi besler:
 --   seviye  : arşivci seviyesi (unvanlar), gereken XP = 40·(seviye−1)²
@@ -1264,19 +1377,21 @@ create or replace view public.arsivci_seviyeleri as
       50 * (select count(*) from public.teoriler t where t.kullanici = p.id and t.isaret = 'kanon')
       + 20 * (select count(*) from public.teoriler t where t.kullanici = p.id and t.isaret = 'yakin') as x_isaret,
       5 * (select count(*) from public.yapim_oylari o where o.kullanici = p.id) as x_oy,
+      20 * (select count(*) from public.hickirik_taniklari h where h.kullanici = p.id) as x_hickirik,
+      100 * (select count(*) from public.av_cozumleri a where a.kullanici = p.id) as x_av,
       10 * (select count(*) from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli and y.sezon / 100 = public.tomye_ay(now()) / 100)
       + 25 * (select count(*) from public.gk_tahminler g where g.kullanici = p.id and g.cozuldu and public.tomye_ay(g.gun::timestamptz) / 100 = public.tomye_ay(now()) / 100)
       + 15 * (select count(*) from public.kesifler k where k.kullanici = p.id and public.tomye_ay(k.zaman) / 100 = public.tomye_ay(now()) / 100) as yil_xp
     from p),
   t as (
-    select x.*, x_tamlik + x_gun + x_madalya + x_katman + x_yaris + x_kesif + x_ilk_kasif + x_gk + x_teori + x_begeni + x_isaret + x_oy as xp
+    select x.*, x_tamlik + x_gun + x_madalya + x_katman + x_yaris + x_kesif + x_ilk_kasif + x_gk + x_teori + x_begeni + x_isaret + x_oy + x_hickirik + x_av as xp
     from x)
   select kullanici_adi, gorunen_ad, xp, yil_xp,
     (floor(sqrt(xp / 40.0)) + 1)::int as seviye,
     floor((-3 + sqrt(25 + 0.8 * xp)) / 2)::int as basamak,
     jsonb_build_object('tamlik', x_tamlik, 'gun', x_gun, 'madalya', x_madalya, 'katman', x_katman, 'yaris', x_yaris,
       'kesif', x_kesif, 'ilk_kasif', x_ilk_kasif, 'gk', x_gk, 'teori', x_teori, 'begeni', x_begeni,
-      'isaret', x_isaret, 'oy', x_oy) as dokum
+      'isaret', x_isaret, 'oy', x_oy, 'hickirik', x_hickirik, 'av', x_av) as dokum
   from t;
 
 -- Yönetici istatistikleri
@@ -1378,6 +1493,24 @@ grant execute on function public.hesabimi_sil(), public.hata_temizle(), public.t
   public.site_istatistik(), public.yedek_al(), public.teori_denetim() to authenticated;
 -- hata kaydı hesapsız ziyaretçiden de gelebilir
 grant execute on function public.hata_kaydet(text, text, text, text, text) to anon, authenticated;
+
+-- Hıçkırık ve arşiv avı: herkese açık sayılar
+create or replace view public.hickirik_sayilari as
+  select g.kullanici_adi, g.gorunen_ad, count(*) as tanik, max(t.gun) as son
+  from public.hickirik_taniklari t join public.gorunur_kullanicilar g on g.id = t.kullanici
+  group by g.kullanici_adi, g.gorunen_ad;
+
+create or replace view public.av_cozenler as
+  select a.sezon, g.kullanici_adi, g.gorunen_ad, a.zaman,
+         row_number() over (partition by a.sezon order by a.zaman) as sira
+  from public.av_cozumleri a join public.gorunur_kullanicilar g on g.id = a.kullanici;
+
+grant select on public.hickirik_sayilari, public.av_cozenler to anon, authenticated;
+revoke all on public.hickirik_olaylari, public.hickirik_taniklari, public.av_sezonlari, public.av_cozumleri,
+  public.av_denemeleri from anon, authenticated;
+revoke execute on function public.hickirik_bugun(), public.hickirik_tanik(), public.av_coz(int, text) from public, anon;
+grant execute on function public.hickirik_tanik(), public.av_coz(int, text) to authenticated;
+grant execute on function public.hickirik_durum() to anon, authenticated;
 
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';
