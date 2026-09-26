@@ -24,7 +24,7 @@ const HESAP_ESIT_ANAHTAR = "sb-tentiforapp-esitleme";   /* { [kullanıcıId]: { 
 const ESITLEME_DISI = [
   "tentiforapp_github", "tentiforapp_yonetici", "tentiforapp_katman_kodlari", "tentiforapp_duzenleme",
   "tentiforapp_konum", "tentiforapp_sayfa", "tentiforapp_tur",
-  "tentiforapp_ziyaret_izleri", "tentiforapp_ziyaret_fark", "tentiforapp_fan_acilan"
+  "tentiforapp_ziyaret_izleri", "tentiforapp_ziyaret_fark", "tentiforapp_fan_acilan", "tentiforapp_bildirim"
 ];
 
 /* Bu anahtarlardan biri varsa cihazda "gerçek" ilerleme var sayılır. (rol_gecmis ilk

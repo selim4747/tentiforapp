@@ -9,6 +9,7 @@ import { createServer } from "node:http";
 import { readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 import { tarayiciTestleri } from "./tarayici.mjs";
+import { bildirimFonksiyonTestleri } from "./bildirim-fonksiyonu.mjs";
 
 const KOK = new URL("..", import.meta.url).pathname;
 const DB = process.env.TEST_DB || "tentifor_test";
@@ -84,10 +85,12 @@ const sunucu = createServer(function (istek, yanit) {
 await new Promise(function (r) { sunucu.listen(0, "127.0.0.1", r); });
 const adres = "http://127.0.0.1:" + sunucu.address().port;
 
-console.log("• tarayıcı testleri (" + adres + ")");
+console.log("• bildirim fonksiyonu (Edge Function)");
 try {
+  const f = await bildirimFonksiyonTestleri(KOK);
+  console.log("• tarayıcı testleri (" + adres + ")");
   const n = await tarayiciTestleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
-  console.log("\nHepsi geçti: " + sqlSayisi + " veritabanı + " + n + " tarayıcı kontrolü.");
+  console.log("\nHepsi geçti: " + sqlSayisi + " veritabanı + " + f + " fonksiyon + " + n + " tarayıcı kontrolü.");
 } catch (e) {
   console.error("\n" + (e.stack || e.message || e));
   process.exitCode = 1;
