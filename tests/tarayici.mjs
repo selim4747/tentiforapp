@@ -339,6 +339,8 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("evrenin kodu açılıp değiştirilir, uydurma alan temizlenir", await Z.evaluate(function (id) {
       const e = evrenBenimBul(id); return e.ad === "Kodla Değişen" && e.kurallar[0].ad === "Tuz konuşur" && !("uydurma" in e) && e.harita.yerler.length === 2;
     }, evId));
+    /* gerçek veride Evrengezer anahtarı kurulu olabilir; bu testler anahtarsız başlar, sonra kendi anahtarını kurar */
+    await Z.evaluate(function () { window.__egGercek = veri.evrengezer; delete veri.evrengezer; egGizliOnbellek = null; });
     await Z.click('[data-evs-sekme="lore"]'); await bekle(Z, 200);
     await Z.fill("#evlBaslik", "Tuzun sırrı");
     await Z.fill("#evlMetin", "Tuz aslında unutmaktır.");
@@ -387,6 +389,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       const eg = await evrenKodDene(e, "TEST-EVRENGEZER");
       const acilan = Object.keys(evlAcilan(e.id)).length;
       yoneticiCikis(); veri.yoneticiOzet = eskiOzet; delete veri.evrengezer; egGizliOnbellek = null;
+      if (window.__egGercek) { veri.evrengezer = window.__egGercek; }
       for (const k in EVL_OTURUM) { delete EVL_OTURUM[k]; }
       return { kur: kur, sarildi: sarildi, hepsiSarili: hepsiSarili, kapali: kapali, eg: eg.tur + eg.n, acilan: acilan };
     }, evId);
