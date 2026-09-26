@@ -236,6 +236,23 @@ select test.ok('abonelik silinir', (public.bildirim_abonelik_sil('https://fcm.go
 reset role;
 set role authenticated;
 
+-- ---------- ziyaret sayacı ----------
+reset role;
+set role anon;
+select public.olay_say('giris:arsiv');
+select public.olay_say('giris:arsiv');
+select public.olay_say('Kötü Ad!');
+select test.ok('anonim sayamaz okuyamaz', test.patlar('select * from public.olay_sayaclari'));
+select test.ok('anonim sayıları göremez', test.patlar('select * from public.olay_sayilari(14)'));
+reset role;
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('yönetici olmayan sayıları göremez', test.patlar('select * from public.olay_sayilari(14)'));
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select test.ok('sayaç artar, geçersiz ad sayılmaz', (select count(*) = 1 and max(sayi) = 2 from public.olay_sayilari(14)));
+reset role;
+set role authenticated;
+
 -- ---------- E99: sunucu aracı yok ----------
 select test.ok('E99 sunucu fonksiyonu yok', not exists (select 1 from pg_proc where proname like 'e99%'));
 

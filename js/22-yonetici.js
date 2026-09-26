@@ -871,6 +871,38 @@ function githubBaslik() {
   };
 }
 
+/* Kaydet koruması: sayfa açıldığında (ya da son başarılı kayıtta) GitHub'la aynı sayılan verinin özeti.
+   Depodaki veri bundan farklıysa (başka bir cihazdan kaydedilmiş, ya da bu sayfa eski) üzerine yazmadan sorulur. */
+let veriTabanOzeti = null;
+let ghZorla = false;
+let ghUzakBekleyen = null;
+
+function veriOzeti(o) { return onaltilik(sha256Bayt(metniBayta(JSON.stringify(o)))); }
+
+function yoneticiCakisma(uzakSurum) {
+  const el = document.querySelector("#yDurum");
+  if (!el) { return; }
+  el.className = "pencere-durum kotu";
+  el.innerHTML = "Kaydedilmedi: GitHub'daki veri bu sayfa açıldıktan sonra değişmiş" + (uzakSurum ? " (depoda " + kacir(uzakSurum) + ", bu sayfa " + kacir(veri.surum) + ")" : "") +
+    ". Kaydedersen oradaki değişiklikler silinir. " +
+    '<span class="oyun-sira"><button class="dugme dugme-sade" data-y-gh-yukle>GitHub\'dakini yükle</button>' +
+    '<button class="dugme dugme-sade y-sil" data-y-gh-zorla>Yine de üzerine yaz</button></span>' +
+    '<span class="oyun-not">“GitHub\'dakini yükle” bu sayfada kaydetmediğin değişiklikleri atar; önce “veri.json dışa aktar” ile yedek alabilirsin.</span>';
+}
+
+document.addEventListener("click", function (e) {
+  if (e.target.closest("[data-y-gh-zorla]")) { ghZorla = true; githubGonder(); return; }
+  if (e.target.closest("[data-y-gh-yukle]") && ghUzakBekleyen) {
+    veri = ghUzakBekleyen;
+    ghUzakBekleyen = null;
+    veriTabanOzeti = veriOzeti(veri);
+    if (typeof kanonSifirla === "function") { kanonSifirla(); }
+    if (typeof arsiviTazele === "function") { arsiviTazele(); }
+    yoneticiCiz();
+    yoneticiDurum("GitHub'daki veri yüklendi; değişikliklerini şimdi yapıp kaydedebilirsin", true);
+  }
+});
+
 /** Dosyanın güncel sha'sını okur. GitHub bu yanıtı ~60 sn önbelleğe aldırdığı için tarayıcı
     eski sha döndürüp "dosya aynı değil" (409) hatasına yol açabiliyordu; bu yüzden her
     okuma önbelleksiz ve benzersiz adresle yapılır. */
@@ -885,16 +917,18 @@ async function githubShaOku() {
 
   const bilgi = await oku.json();
   /* depodaki veri.json'un sürümü: eski sürümde açık kalmış bir sayfa yeni veriyi ezmesin */
-  let surum = "";
+  let surum = "", uzak = null, ozet = null;
   try {
     if (bilgi.content && bilgi.encoding === "base64") {
       const ikili = atob(String(bilgi.content).replace(/\s/g, ""));
       const bayt = new Uint8Array(ikili.length);
       for (let i = 0; i < ikili.length; i++) { bayt[i] = ikili.charCodeAt(i); }
-      surum = JSON.parse(new TextDecoder("utf-8").decode(bayt)).surum || "";
+      uzak = JSON.parse(new TextDecoder("utf-8").decode(bayt));
+      surum = uzak.surum || "";
+      ozet = veriOzeti(uzak);
     }
   } catch (_) { /* okunamadı: karşılaştırma yapılmaz */ }
-  return { sha: bilgi.sha, surum: surum };
+  return { sha: bilgi.sha, surum: surum, uzak: uzak, ozet: ozet };
 }
 
 /** veri.json'u doğrudan depoya yazar. Çakışma (409) olursa dosyayı yeniden okuyup bir kez daha dener. */
@@ -919,9 +953,10 @@ async function githubGonder() {
     try {
       const okunan = await githubShaOku();
       if (okunan.hata) { yoneticiDurum(okunan.hata, false); return; }
-      if (okunan.surum && typeof surumBuyukMu === "function" && surumBuyukMu(okunan.surum, veri.surum)) {
-        yoneticiDurum("Kaydedilmedi: depoda daha yeni bir sürüm var (" + okunan.surum + "), bu sayfa " + veri.surum +
-          ". Kaydetseydin yeni sürümdeki veriler silinirdi. Önce \"veri.json dışa aktar\" ile değişikliklerini yedekle, sonra sayfayı yenile.", false);
+      /* depodaki veri bu sayfanın bildiğinden farklıysa (ve kaydedeceğimizle aynı değilse) sormadan ezme */
+      if (deneme === 1 && okunan.ozet && veriTabanOzeti && okunan.ozet !== veriTabanOzeti && okunan.ozet !== veriOzeti(veri) && !ghZorla) {
+        ghUzakBekleyen = okunan.uzak;
+        yoneticiCakisma(okunan.surum);
         return;
       }
       sha = okunan.sha;
@@ -950,7 +985,9 @@ async function githubGonder() {
     }
 
     if (yaz.ok) {
-      yoneticiDurum("Kaydedildi. Site 30–60 saniye içinde güncellenir.", true);
+      ghZorla = false;
+      veriTabanOzeti = veriOzeti(veri);
+      yoneticiDurum("Kaydedildi. Siteye çıkması için Bakım → Yayınla.", true);
       return;
     }
 

@@ -2061,5 +2061,41 @@ drop function if exists public.e99_onerilerim();
 drop function if exists public.e99_oneriler(text);
 drop function if exists public.e99_karar(bigint, text);
 
+-- ---------- ziyaret sayacı (anonim, kişisel veri yok) ----------
+-- Günlük toplamlar: hangi sayfadan girildi, nereden gelindi, başlangıç kodu kaç kez girildi.
+-- Herkes sayabilir (ad biçimi sınırlı, günde en çok 300 farklı ad); yalnızca tam yönetici okur.
+create table if not exists public.olay_sayaclari (
+  gun date not null default current_date,
+  ad text not null,
+  sayi integer not null default 0,
+  primary key (gun, ad)
+);
+alter table public.olay_sayaclari enable row level security;
+
+create or replace function public.olay_say(p_ad text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if p_ad is null or p_ad !~ '^[a-z0-9_:]{1,40}$' then return; end if;
+  if not exists (select 1 from public.olay_sayaclari where gun = current_date and ad = p_ad)
+     and (select count(*) from public.olay_sayaclari where gun = current_date) >= 300 then return; end if;
+  insert into public.olay_sayaclari (gun, ad, sayi) values (current_date, p_ad, 1)
+  on conflict (gun, ad) do update set sayi = public.olay_sayaclari.sayi + 1;
+end $$;
+
+create or replace function public.olay_sayilari(p_gun integer)
+returns table (gun date, ad text, sayi integer)
+language plpgsql security definer stable set search_path = public as $$
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  return query select o.gun, o.ad, o.sayi from public.olay_sayaclari o
+    where o.gun > current_date - greatest(1, least(coalesce(p_gun, 14), 90))
+    order by o.gun desc, o.ad;
+end $$;
+
+revoke all on public.olay_sayaclari from anon, authenticated;
+revoke execute on function public.olay_say(text), public.olay_sayilari(integer) from public;
+grant execute on function public.olay_say(text) to anon, authenticated;
+grant execute on function public.olay_sayilari(integer) to authenticated;
+
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';

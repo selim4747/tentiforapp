@@ -216,6 +216,7 @@ function kisiKartHtml(x) {
     (e.ozet ? paragraf(e.ozet) : "") + kisiHalleriHtml(e) +
     '<div class="oyun-sira">' +
       '<button class="dugme dugme-sade" data-kisi-gotur="' + kacir(anahtar) + '">Başka evrene götür</button>' +
+      '<button class="dugme dugme-sade" data-kisi-kart="' + kacir(anahtar) + '">Kişi kartı (hikâye)</button>' +
       (kendi ? '<button class="dugme dugme-sade" data-kisi-duzenle="' + kacir(e.id) + '">Düzenle</button>' +
         '<button class="dugme dugme-sade" data-kisi-paylas="' + kacir(anahtar) + '">Dosya / yazara gönder</button>' : "") +
     "</div>" + (kisiGoturulen === anahtar ? kisiGoturHtml(e, anahtar) : "") + "</div>";
@@ -301,6 +302,75 @@ function kisiGotur(kisi, hedef) {
   fanEserlerimYaz(l);
   return { tur: e.tur, id: e.id };
 }
+
+/* ==================== kişi kartı: Instagram hikâyesi (1080×1920) ==================== */
+
+async function kisiKartUret(e) {
+  if (typeof kartFontlariHazir !== "function") { return null; }
+  await kartFontlariHazir();
+  const EN = 1080, BOY = 1920;
+  const t = document.createElement("canvas");
+  t.width = EN; t.height = BOY;
+  const c = t.getContext && t.getContext("2d");
+  if (!c) { return null; }
+  kartZemin(c, EN, BOY);
+  const cerceve = typeof egKartCercevesi === "function" ? egKartCercevesi() : null;
+  if (cerceve) { c.strokeStyle = cerceve.renk; c.lineWidth = 18; c.strokeRect(34, 34, EN - 68, BOY - 68); }
+  const sol = 110, gen = EN - 220;
+  c.fillStyle = KART_RENK.deniz;
+  c.fillRect(sol, 170, 6, 64);
+  kartEtiket(c, "E25 · Evrengezer", sol + 26, 214, KART_RENK.murekkep2, 26);
+  let y = 330;
+  c.fillStyle = KART_RENK.murekkep;
+  let px = 120;
+  c.font = KART_FONT.baslik(px);
+  let sat = kartSar(c, e.ad, gen);
+  while (sat.length > 2 && px > 64) { px -= 8; c.font = KART_FONT.baslik(px); sat = kartSar(c, e.ad, gen); }
+  sat.slice(0, 2).forEach(function (s) { y += px; c.fillText(s, sol, y); });
+  y += 30;
+  c.font = KART_FONT.yazi(40, true);
+  c.fillStyle = KART_RENK.deniz;
+  const bilgi = [e.unvan, e.yazar ? "yaratan: " + e.yazar : ""].filter(Boolean).join(" · ");
+  if (bilgi) { kartSar(c, bilgi, gen).slice(0, 2).forEach(function (s) { y += 52; c.fillText(s, sol, y); }); }
+  y += 40;
+  c.font = KART_FONT.yazi(38);
+  c.fillStyle = KART_RENK.murekkep2;
+  kartSar(c, String(e.ozet || "").replace(/\s+/g, " ").slice(0, 300), gen).slice(0, 5).forEach(function (s) { y += 52; c.fillText(s, sol, y); });
+  y += 50;
+  (e.kisilik || []).slice(0, 5).forEach(function (h) {
+    if (y > BOY - 360) { return; }
+    c.font = KART_FONT.mono(30, true);
+    c.fillStyle = KART_RENK.deniz;
+    y += 56; c.fillText(String(h.ad || "").toLocaleUpperCase("tr").slice(0, 40), sol, y);
+    c.font = KART_FONT.yazi(36);
+    c.fillStyle = KART_RENK.murekkep;
+    kartSar(c, String(h.aciklama || "").replace(/\s+/g, " ").slice(0, 160), gen).slice(0, 2).forEach(function (s) { y += 48; c.fillText(s, sol, y); });
+    y += 10;
+  });
+  kartEtiket(c, "Kişilik halleri yaratanın imzasıyla kilitli", sol, BOY - 190, KART_RENK.murekkep2, 22);
+  kartEtiket(c, "TentiforApp · " + KART_ADRES + "/evren/e25/", sol, BOY - 130, KART_RENK.yarik, 24);
+  return t;
+}
+
+document.addEventListener("click", async function (ev) {
+  const k = ev.target.closest("[data-kisi-kart]");
+  if (!k) { return; }
+  const p = k.dataset.kisiKart.split(":");
+  const e = kisiBul(p[0], p.slice(1).join(":"));
+  if (!e) { return; }
+  k.disabled = true;
+  try {
+    const t = await kisiKartUret(e);
+    if (!t) { return; }
+    const blob = await new Promise(function (coz) { t.toBlob(coz, "image/png"); });
+    const ad = fanSlug(e.ad) + "-e25-kart.png";
+    const dosya = new File([blob], ad, { type: "image/png" });
+    if (navigator.canShare && navigator.share && navigator.canShare({ files: [dosya] })) {
+      try { await navigator.share({ files: [dosya], title: e.ad + " — E25 Evrengezeri" }); return; } catch (err) { if (err && err.name === "AbortError") { return; } }
+    }
+    kartIndir(blob, ad);
+  } finally { k.disabled = false; }
+});
 
 document.addEventListener("click", async function (ev) {
   const h = ev.target.closest("[data-kisi-kaydet], [data-kisi-vazgec], [data-kisi-sil], [data-kisi-duzenle], [data-kisi-paylas], [data-kisi-gotur], [data-kisi-gotur-kapat], [data-kisi-gotur-onay], [data-konuk-cikar]");

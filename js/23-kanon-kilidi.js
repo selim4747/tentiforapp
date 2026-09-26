@@ -263,6 +263,7 @@ function ustaGiris(kod, durum) {
 
 let yoneticiKisiTaslak = null;        /* { duzenle, ad, selamlama, bolumler:{}, evrenler:{}, katmanMod, katmanlar:{}, ozel } */
 let yoneticiKisiGoster = null;        /* kodu ekranda açık olan kişinin kimliği */
+let yoneticiBaslangicOnay = null;     /* başlangıç profilini genişletme onayı (iki kez Kaydet) */
 
 function yoneticiKodUret(onek) {
   const harfler = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -383,6 +384,9 @@ function yoneticiKisiler() {
     "istediğin zaman \"kodu göster\"le tekrar görebilirsin. Oyunlar ve araçlar herkese açıktır.</p>" +
     liste +
     '<div class="kutu-y y-kisi-form"><label>' + (t.duzenle ? "Kişiyi düzenle" : "Yeni kişi") + "</label>" +
+      (t.duzenle && t.duzenle === veri.baslangicProfil
+        ? '<p class="pencere-durum kotu">Bu, başlangıç profili: kodu sitede herkese gösterilir (“Yeni misin? Başlangıç kodu”). ' +
+          "Bir arkadaşına özel kod vermek istiyorsan bunu değiştirme; Vazgeç'e bas ve yeni kişi ekle.</p>" : "") +
       '<input class="kod-giris arac-giris" id="yKisiAd" placeholder="ad" value="' + kacir(t.ad) + '">' +
       '<label>Hazır paket</label>' + paketler +
       '<label>Görebileceği bölümler</label>' + bolumler +
@@ -441,11 +445,24 @@ function yoneticiKisiKaydet() {
   if (!veri.profiller) { veri.profiller = []; }
   const p = t.duzenle ? veri.profiller.find(function (x) { return x.id === t.duzenle; }) : null;
 
+  /* başlangıç profili herkese açık: Arşiv + Evren (yalnızca Tömye) dışına genişletmek iki kez onay ister */
+  if (p && p.id === veri.baslangicProfil) {
+    const genis = bolumler.some(function (b) { return ["arsiv", "evren"].indexOf(b) === -1; }) ||
+      evrenler.some(function (x) { return x !== (veri.haritalar[0] || {}).id; });
+    if (genis && yoneticiBaslangicOnay !== p.id) {
+      yoneticiBaslangicOnay = p.id;
+      yoneticiDurum("Dikkat: bu kod sitede herkese gösteriliyor ve bu erişim herkese açılır. Emin misin? Eminsen yeniden Kaydet'e bas; " +
+        "arkadaşına özel kod içinse Vazgeç'e basıp yeni kişi ekle.", false);
+      return;
+    }
+  }
+  yoneticiBaslangicOnay = null;
+
   /* kod: düzenlemede aynı kalır (saklıysa); yeni kişide üretilir */
   let kod = p ? kisiKodunuCoz(p) : null;
   const istenen = (t.ozelKod || "").trim().toUpperCase();
   if (istenen) {
-    if (!/^[A-Z0-9][A-Z0-9-]{3,23}$/.test(istenen)) { yoneticiDurum("Kod 4-24 karakter olmalı: harf, rakam ve tire", false); return; }
+    if (!/^[A-Z0-9][A-Z0-9-]{9,23}$/.test(istenen)) { yoneticiDurum("Kod 10-24 karakter olmalı: harf, rakam ve tire", false); return; }
     const oz = dogrulamaOzeti(istenen);
     const cakisma = oz === veri.yoneticiOzet || oz === veri.sinirliYoneticiOzet ||
       (veri.katmanlar || []).concat(veri.kisiselKatmanlar || []).some(function (k) { return k.dogrulama === oz; }) ||
@@ -454,7 +471,7 @@ function yoneticiKisiKaydet() {
     kod = istenen;
   }
   const yeniKod = !kod;
-  if (!kod) { kod = yoneticiKodUret("TNTF-K-"); }
+  if (!kod) { kod = kod10(); }
 
   /* buz katmanları */
   const ana = (veri.katmanlar || []).map(function (k) { return k.id; });
@@ -511,7 +528,7 @@ function yoneticiKisiYenile(id) {
   const p = (veri.profiller || []).find(function (x) { return x.id === id; });
   if (!p) { return; }
   const idler = Object.keys(p.anahtarlar || {}).filter(function (k) { return !!katmanKodlari[k]; });
-  const kod = yoneticiKodUret("TNTF-K-");
+  const kod = kod10();
   p.dogrulama = dogrulamaOzeti(kod);
   p.anahtarlar = yoneticiKisiKatmanSar(kod, idler);
   p.kodSifreli = sifrele(kod, yoneticiKod);

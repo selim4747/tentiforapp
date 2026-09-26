@@ -458,6 +458,7 @@ function perdeKapat() {
 /** Kişiye özel kod: sarılmış katman kodlarını açar, her birini doğrular ve çözülenlere ekler. */
 function profilUygula(profil, kod, durum) {
   let acilan = 0;
+  if (veri.baslangicProfil === profil.id && typeof olaySay === "function") { olaySay("baslangic_kodu"); }
   Object.keys(profil.anahtarlar || {}).forEach(function (id) {
     const katman = katmanBulHepsi(id);
     if (!katman) { return; }
@@ -748,6 +749,8 @@ const veriKaynak = window.__VERI__
 veriKaynak
   .then(function (d) {
     veri = d;
+    /* panelin Kaydet koruması: bu sayfanın GitHub'la aynı saydığı veri (22-yonetici.js) */
+    if (typeof veriOzeti === "function") { try { veriTabanOzeti = veriOzeti(d); } catch (_) { /* yok */ } }
 
     /* Her çizim ayrı korumada: biri patlarsa sayfanın kalanı yaşamaya devam eder.
        Eskiden tek bir hata bütün siteyi boşaltıyordu. */

@@ -101,7 +101,7 @@ const kacir = function (s) { return String(s).replace(/&/g, "&amp;").replace(/</
 const anaHtml = readFileSync(anaYol, "utf8");
 const veriPaket = JSON.parse(readFileSync(join(HEDEF, "veri.json"), "utf8"));
 const meta = function (ad, deger) { return new RegExp('(<meta (?:name|property)="' + ad.replace(/[:.]/g, "\\$&") + '" content=")[^"]*(")'); };
-function sayfaHtml(yol, baslik, aciklama) {
+function sayfaHtml(yol, baslik, aciklama, dizinleme) {
   const a = kacir(String(aciklama || "").replace(/\s+/g, " ").trim().slice(0, 280));
   const b = kacir(baslik);
   let h = anaHtml
@@ -112,22 +112,40 @@ function sayfaHtml(yol, baslik, aciklama) {
     .replace(/<meta property="og:image" content="paylasim.png">/, '<meta property="og:image" content="' + SITE + '/paylasim.png">')
     .replace(/<meta name="twitter:image" content="paylasim.png">/, '<meta name="twitter:image" content="' + SITE + '/paylasim.png">');
   h = h.replace("</head>", '<link rel="canonical" href="' + SITE + yol + '">\n<meta property="og:url" content="' + SITE + yol + '">\n</head>');
+  /* kişiye özel sayfalar (Sen) dizinlenmez */
+  if (dizinleme === false) { h = h.replace(/<meta name="robots" content="[^"]*">/, '<meta name="robots" content="noindex, follow">'); }
+  /* sayfaya özel paylaşım görseli (ikon/og/<ad>.png varsa) */
+  const gorsel = ogGorseli(yol);
+  if (gorsel) { h = h.replace(new RegExp(SITE.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&") + "/paylasim\\.png", "g"), SITE + "/" + gorsel); }
   return h;
 }
-const sayfaYaz = function (yol, baslik, aciklama) {
+/** /evren/e25/ → ikon/og/e25.png · /dunya/ → ikon/og/dunya.png (dosya varsa) */
+function ogGorseli(yol) {
+  const p = yol.split("/").filter(Boolean);
+  const ad = !p.length ? "" : (p[0] === "evren" ? p[1] : (p[0] === "fan" ? "" : p[0]));
+  if (!ad) { return ""; }
+  try { statSync(join(HEDEF, "ikon", "og", ad + ".png")); return "ikon/og/" + ad + ".png"; } catch (e) { return ""; }
+}
+const sayfaYaz = function (yol, baslik, aciklama, dizinleme) {
   const dizin = join(HEDEF, ...yol.split("/").filter(Boolean));
   mkdirSync(dizin, { recursive: true });
-  writeFileSync(join(dizin, "index.html"), sayfaHtml(yol, baslik, aciklama));
+  writeFileSync(join(dizin, "index.html"), sayfaHtml(yol, baslik, aciklama, dizinleme));
 };
 /* ana sayfanın kanonik adresi */
 writeFileSync(anaYol, sayfaHtml("/", "TentiforApp — Tentiforverse Arşivi",
   (anaHtml.match(/<meta name="description" content="([^"]*)"/) || [])[1] || ""));
 
 const adresler = ["/"];
+const KISISEL_SAYFALAR = ["sen"];
 for (const s of sayfalar) {
-  sayfaYaz("/" + s.id + "/", s.ad + " — TentiforApp", s.bolumler.join(", ") + ". Tentiforverse evren arşivi.");
-  adresler.push("/" + s.id + "/");
+  const kisisel = KISISEL_SAYFALAR.indexOf(s.id) !== -1;
+  sayfaYaz("/" + s.id + "/", s.ad + " — TentiforApp", s.bolumler.join(", ") + ". Tentiforverse evren arşivi.", !kisisel);
+  if (!kisisel) { adresler.push("/" + s.id + "/"); }
 }
+/* karşılama: Instagram gibi dışarıdan gelenler için */
+sayfaYaz("/basla/", "Tentiforverse'e hoş geldin — TentiforApp",
+  "Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker. Başlangıç koduyla arşivi aç; evrenleri, kilitli kayıtları ve oyunları keşfet.");
+adresler.push("/basla/");
 
 /* evrenler: kanon evrenler (kodla açılanların özeti yazılmaz), E99, fanmade evrenler */
 let evrenSayisi = 0;

@@ -809,7 +809,7 @@ document.addEventListener("click", function (e) {
     return;
   }
   if (e.target.closest("[data-y-sinirli-uret]") && yoneticiAcik()) {
-    yListeYeniKod = yoneticiKodUret("YRD-") + yoneticiKodUret("").slice(0, 2);
+    yListeYeniKod = kod10();
     veri.sinirliYoneticiOzet = dogrulamaOzeti(yListeYeniKod);
     yoneticiCiz();
     yoneticiDurum("Yeni sınırlı kod üretildi", true);

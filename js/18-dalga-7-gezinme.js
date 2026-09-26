@@ -456,7 +456,8 @@ function sayfaGoster(sayfa, kaydirma) {
   /* hero yalnızca arşiv sayfasında */
   if (hero) { hero.hidden = sayfa !== "arsiv"; }
 
-  document.title = SAYFA_BASLIK[sayfa] + " — TentiforApp";
+  /* evren sayfası açıksa başlık evrenin adı (sekme ve arama motorları için) */
+  document.title = (typeof evrenSayfaBasligi === "function" && evrenSayfaBasligi()) || (SAYFA_BASLIK[sayfa] + " — TentiforApp");
   hataSayfasiKapat();
   sayfaBasiCiz(sayfa);
   sayfalamaCiz(sayfa);
@@ -497,6 +498,13 @@ function sayfaYonlendir() {
   if (bas === "kartpostal" && parca[1]) {
     if (aktifSayfa !== "araclar") { sayfaGoster("araclar", false); }
     if (typeof kartpostalAc === "function") { kartpostalAc(parca.slice(1).join("/")); }
+    return;
+  }
+
+  /* karşılama: #/basla — Arşiv'in üstünde açılır (48-karsilama.js) */
+  if (bas === "basla") {
+    if (!aktifSayfa) { sayfaGoster("arsiv", false); }
+    if (typeof karsilamaAc === "function") { karsilamaAc(); }
     return;
   }
 
