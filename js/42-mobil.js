@@ -36,7 +36,7 @@ function altMenuCiz() {
   const acik = !!document.querySelector("#mobilMenu");
   n.innerHTML = ALT_MENU.map(function (m) {
     if (m[0] === "evren") {
-      const ev = location.hash.indexOf("#/ev/") === 0 || !!document.querySelector("#evrenSecici");
+      const ev = rota().indexOf("#/ev/") === 0 || !!document.querySelector("#evrenSecici");
       return '<button class="alt-oge' + (ev ? " bu" : "") + '" data-evren-sec aria-haspopup="dialog">' +
         '<span class="alt-ikon" aria-hidden="true">' + m[2] + "</span><span>" + kacir(m[1]) + "</span></button>";
     }
@@ -130,8 +130,8 @@ const PAYLASIM_ONBELLEK = "tf-paylasim";
 
 /** Servis çalışanı paylaşılan dosyayı önbelleğe koyup #/fan/paylasim'a yönlendirir; burada açılır. */
 async function paylasilanDosyaAc() {
-  if (location.hash.indexOf("#/fan/paylasim") !== 0) { return; }
-  history.replaceState(null, "", location.pathname + location.search + "#/fanAc");
+  if (rota().indexOf("#/fan/paylasim") !== 0) { return; }
+  history.replaceState(null, "", rotadanYol("#/fanAc") + location.search);
   if (typeof sayfaYonlendir === "function") { sayfaYonlendir(); }
   if (!("caches" in window)) { return; }
   try {
@@ -175,7 +175,7 @@ if ("launchQueue" in window && window.launchQueue && window.launchQueue.setConsu
 })();
 
 window.addEventListener("hashchange", function () {
-  if (location.hash.indexOf("#/fan/paylasim") === 0) { paylasilanDosyaAc(); }
+  if (rota().indexOf("#/fan/paylasim") === 0) { paylasilanDosyaAc(); }
   if (document.querySelector("#mobilMenu")) { mobilMenuKapat(); }
 });
 
@@ -185,7 +185,7 @@ document.addEventListener("click", function (e) {
   if (h.classList.contains("mobil-menu-katman")) { if (e.target === h) { mobilMenuKapat(); } return; }
   if (h.classList.contains("mm-sayfa")) {
     /* aynı sayfaya dokununca da kapansın */
-    if (h.getAttribute("href") === location.hash) { mobilMenuKapat(); }
+    if (h.getAttribute("href") === rota()) { mobilMenuKapat(); }
     return;
   }
   const d = h.dataset;
@@ -210,7 +210,7 @@ document.addEventListener("keydown", function (e) {
 document.addEventListener("DOMContentLoaded", function () {
   try { altMenuCiz(); } catch (e) { /* veri gelince gezinmeyle birlikte çizilir */ }
   /* paylaşılan dosya: veri yüklenince aç (fanMetindenEser veri gerektirmez ama sayfa gezinmesi gerektirir) */
-  if (location.hash.indexOf("#/fan/paylasim") === 0) {
+  if (rota().indexOf("#/fan/paylasim") === 0) {
     const bekle = setInterval(function () {
       if (typeof veri !== "undefined" && veri) { clearInterval(bekle); paylasilanDosyaAc(); }
     }, 100);

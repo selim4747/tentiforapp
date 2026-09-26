@@ -227,12 +227,12 @@ function meydanKodu(oyun, tohum, skor) {
 }
 
 function meydanBaglantisi(oyun, tohum, skor) {
-  return location.origin + location.pathname + "#/meydan/" +
+  return rotaAdresi("#/meydan/") +
          encodeURIComponent(meydanKodu(oyun, tohum, skor));
 }
 
 function meydanUygula() {
-  const h = location.hash;
+  const h = rota();
   if (h.indexOf("#/meydan/") !== 0) { return; }
 
   const p = decodeURIComponent(h.slice(9)).split(".");

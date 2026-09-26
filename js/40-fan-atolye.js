@@ -431,7 +431,7 @@ function fanBul(kaynak, tur, id) {
 
 /** #/fan/hikaye/<id> bağlantısı */
 function fanSiteEserAc(tur, id) {
-  const e = fanBul("site", tur === "evren" ? "evren" : "hikaye", id);
+  const e = fanBul("site", tur === "evren" ? "evren" : (tur === "kisi" ? "kisi" : "hikaye"), id);
   if (e) { fanPencere(e, "site"); }
 }
 
@@ -719,7 +719,7 @@ document.addEventListener("click", async function (ev) {
     }
     else if (d.fanP === "paylas") { const s = await fanPaylas(e); if (s) { fanPDurum(s, true); } }
     else if (d.fanP === "baglanti") {
-      const adres = location.href.split("#")[0] + "#/fan/" + e.tur + "/" + encodeURIComponent(e.id);
+      const adres = rotaAdresi("#/fan/" + e.tur + "/" + encodeURIComponent(e.id));
       if (typeof panoyaKopyala === "function") { panoyaKopyala(adres).then(function () { fanPDurum("Bağlantı kopyalandı", true); }); }
     } else if (d.fanP === "kopyala") {
       const l = fanEserlerim();

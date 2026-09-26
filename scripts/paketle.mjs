@@ -24,7 +24,6 @@ for (const ad of KOPYALA) {
 
 /* Yönlendirmeler: Cloudflare Pages (ve benzerleri) _redirects dosyasını okur. */
 writeFileSync(join(HEDEF, "_redirects"),
-  "# Profil kısa adresi: /u/kullaniciadi\n/u/*  /?profil=:splat  302\n" +
   "# Paylaşım hedefi: servis çalışanı yoksa sayfaya dön\n/paylasim-al  /#/fanAc  303\n");
 
 /* Panelin kurulum yardımcısı (js/43-kurulum.js) telefondan kopyalayabilsin diye; gizli bilgi içermezler. */
@@ -87,7 +86,9 @@ writeFileSync(anaYol, surumle(readFileSync(anaYol, "utf8")).replace("</head>", '
 const sw = join(HEDEF, "sw.js");
 writeFileSync(sw, surumle(readFileSync(sw, "utf8")).replace(/tentiforapp-[^"]+"/, "tentiforapp-" + paket + '"'));
 
-/* paylaşım adresleri: /dunya/ → önizleme etiketleri + #/dunya'ya yönlendirme */
+/* Her sayfa kendi adresinde: /arsiv/, /dunya/, /evren/e25/, /fan/hikaye/<id>/ …
+   Her biri uygulamanın tam bir kopyasıdır (yönlendirme yok): kendi başlığı, açıklaması ve kanonik adresi
+   vardır; uygulama rotayı yoldan okur (js/00-rota.js). Böylece arama motorları her sayfayı ayrı dizinler. */
 const gez = readFileSync(join(KOK, "js/18-dalga-7-gezinme.js"), "utf8");
 const blok = gez.slice(gez.indexOf("const GEZINME"), gez.indexOf("];", gez.indexOf("const GEZINME")));
 const sayfalar = [...blok.matchAll(/\{\s*id:\s*"([^"]+)",\s*ad:\s*"([^"]+)"[\s\S]*?bolumler:\s*\[([\s\S]*?)\]\s*\}/g)]
@@ -97,83 +98,72 @@ const sayfalar = [...blok.matchAll(/\{\s*id:\s*"([^"]+)",\s*ad:\s*"([^"]+)"[\s\S
 if (sayfalar.length < 5) { throw new Error("Sayfa listesi okunamadı (" + sayfalar.length + ")"); }
 
 const kacir = function (s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); };
+const anaHtml = readFileSync(anaYol, "utf8");
+const veriPaket = JSON.parse(readFileSync(join(HEDEF, "veri.json"), "utf8"));
+const meta = function (ad, deger) { return new RegExp('(<meta (?:name|property)="' + ad.replace(/[:.]/g, "\\$&") + '" content=")[^"]*(")'); };
+function sayfaHtml(yol, baslik, aciklama) {
+  const a = kacir(String(aciklama || "").replace(/\s+/g, " ").trim().slice(0, 280));
+  const b = kacir(baslik);
+  let h = anaHtml
+    .replace(/<title>[^<]*<\/title>/, "<title>" + b + "</title>")
+    .replace(meta("description"), "$1" + a + "$2")
+    .replace(meta("og:title"), "$1" + b + "$2").replace(meta("og:description"), "$1" + a + "$2")
+    .replace(meta("twitter:title"), "$1" + b + "$2").replace(meta("twitter:description"), "$1" + a + "$2")
+    .replace(/<meta property="og:image" content="paylasim.png">/, '<meta property="og:image" content="' + SITE + '/paylasim.png">')
+    .replace(/<meta name="twitter:image" content="paylasim.png">/, '<meta name="twitter:image" content="' + SITE + '/paylasim.png">');
+  h = h.replace("</head>", '<link rel="canonical" href="' + SITE + yol + '">\n<meta property="og:url" content="' + SITE + yol + '">\n</head>');
+  return h;
+}
+const sayfaYaz = function (yol, baslik, aciklama) {
+  const dizin = join(HEDEF, ...yol.split("/").filter(Boolean));
+  mkdirSync(dizin, { recursive: true });
+  writeFileSync(join(dizin, "index.html"), sayfaHtml(yol, baslik, aciklama));
+};
+/* ana sayfanın kanonik adresi */
+writeFileSync(anaYol, sayfaHtml("/", "TentiforApp — Tentiforverse Arşivi",
+  (anaHtml.match(/<meta name="description" content="([^"]*)"/) || [])[1] || ""));
+
+const adresler = ["/"];
 for (const s of sayfalar) {
-  const baslik = "TentiforApp — " + s.ad;
-  const aciklama = s.bolumler.join(", ") + ". Tentiforverse evren arşivi.";
-  mkdirSync(join(HEDEF, s.id), { recursive: true });
-  writeFileSync(join(HEDEF, s.id, "index.html"), `<!DOCTYPE html>
-<html lang="tr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${kacir(baslik)}</title>
-<meta name="description" content="${kacir(aciklama)}">
-<link rel="canonical" href="${SITE}/${s.id}/">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="TentiforApp">
-<meta property="og:title" content="${kacir(baslik)}">
-<meta property="og:description" content="${kacir(aciklama)}">
-<meta property="og:url" content="${SITE}/${s.id}/">
-<meta property="og:image" content="${SITE}/paylasim.png">
-<meta property="og:locale" content="tr_TR">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="${kacir(baslik)}">
-<meta name="twitter:description" content="${kacir(aciklama)}">
-<meta name="twitter:image" content="${SITE}/paylasim.png">
-<meta http-equiv="refresh" content="0; url=/#/${s.id}">
-<script>location.replace("/#/${s.id}" + (location.hash ? "/" + location.hash.replace(/^#\\/?/, "") : ""));</script>
-</head><body><p><a href="/#/${s.id}">${kacir(baslik)}</a></p></body></html>
-`);
+  sayfaYaz("/" + s.id + "/", s.ad + " — TentiforApp", s.bolumler.join(", ") + ". Tentiforverse evren arşivi.");
+  adresler.push("/" + s.id + "/");
 }
 
-/* evren sayfaları: her evrenin kendi paylaşılabilir, arama motorlarınca bulunabilir adresi (/evren/e25/ gibi).
-   Kodla açılan kanon evrenlerin özeti yazılmaz. */
-const veriPaket = JSON.parse(readFileSync(join(HEDEF, "veri.json"), "utf8"));
-const evrenSayfalari = [];
+/* evrenler: kanon evrenler (kodla açılanların özeti yazılmaz), E99, fanmade evrenler */
+let evrenSayisi = 0;
 for (const [id, k] of Object.entries(veriPaket.kanonEvrenleri || {})) {
-  evrenSayfalari.push({ yol: id, ad: (k.ad || id.toUpperCase()) + (id === "e25" ? " · Evrengezerlerin evreni" : ""), hedef: "/#/ev/site/" + id,
-    aciklama: k.erisim ? (k.ozet || "") : "Tentiforverse'ün kanon evrenlerinden biri. İçeriği kodla açılır." });
+  sayfaYaz("/evren/" + id + "/", (k.ad || id.toUpperCase()) + (id === "e25" ? " · Evrengezerlerin evreni" : "") + " — TentiforApp",
+    k.erisim ? (k.ozet || "") : "Tentiforverse'ün kanon evrenlerinden biri. İçeriği kodla açılır.");
+  adresler.push("/evren/" + id + "/"); evrenSayisi++;
 }
 if (veriPaket.e99) {
-  evrenSayfalari.push({ yol: "e99", ad: "E99 · herkesin evreni", hedef: "/#/ev/e99", aciklama: veriPaket.e99.ozet || "Herkesin yazabildiği boş evren." });
+  sayfaYaz("/evren/e99/", "E99 · herkesin evreni — TentiforApp", veriPaket.e99.ozet || "Herkesin yazabildiği boş evren.");
+  adresler.push("/evren/e99/"); evrenSayisi++;
 }
+const guvenli = function (x) { return String(x || "").replace(/[^A-Za-z0-9_-]/g, ""); };
 for (const e of ((veriPaket.fanEserleri || {}).evrenler || [])) {
-  const yol = String(e.id || "").replace(/[^A-Za-z0-9_-]/g, "");
-  if (!yol) { continue; }
-  evrenSayfalari.push({ yol: yol, ad: (e.ad || "Fan evreni") + " · fan evreni", hedef: "/#/ev/fan/" + yol,
-    aciklama: (e.ozet || "Tentiforverse okurlarının kurduğu bir evren.") + (e.yazar ? " Kuran: " + e.yazar + "." : "") });
+  const id = guvenli(e.id);
+  if (!id || /^e\d+$/.test(id)) { continue; }
+  sayfaYaz("/evren/" + id + "/", (e.ad || "Fan evreni") + " · fan evreni — TentiforApp",
+    (e.ozet || "Tentiforverse okurlarının kurduğu bir evren.") + (e.yazar ? " Kuran: " + e.yazar + "." : ""));
+  adresler.push("/evren/" + id + "/"); evrenSayisi++;
 }
-for (const s of evrenSayfalari) {
-  const baslik = "TentiforApp — " + s.ad;
-  const aciklama = String(s.aciklama).replace(/\s+/g, " ").slice(0, 280);
-  mkdirSync(join(HEDEF, "evren", s.yol), { recursive: true });
-  writeFileSync(join(HEDEF, "evren", s.yol, "index.html"), `<!DOCTYPE html>
-<html lang="tr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${kacir(baslik)}</title>
-<meta name="description" content="${kacir(aciklama)}">
-<link rel="canonical" href="${SITE}/evren/${s.yol}/">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="TentiforApp">
-<meta property="og:title" content="${kacir(baslik)}">
-<meta property="og:description" content="${kacir(aciklama)}">
-<meta property="og:url" content="${SITE}/evren/${s.yol}/">
-<meta property="og:image" content="${SITE}/paylasim.png">
-<meta property="og:locale" content="tr_TR">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="${kacir(baslik)}">
-<meta name="twitter:description" content="${kacir(aciklama)}">
-<meta name="twitter:image" content="${SITE}/paylasim.png">
-<meta http-equiv="refresh" content="0; url=${s.hedef}">
-<script>location.replace(${JSON.stringify(s.hedef)});</script>
-</head><body><h1>${kacir(baslik)}</h1><p>${kacir(aciklama)}</p><p><a href="${s.hedef}">Evrene git</a></p></body></html>
-`);
+/* fanmade hikâyeler ve okur Evrengezerleri */
+let eserSayisi = 0;
+for (const [tur, liste, ek] of [["hikaye", (veriPaket.fanEserleri || {}).hikayeler, "fan hikâyesi"], ["kisi", (veriPaket.fanEserleri || {}).kisiler, "E25 Evrengezeri"]]) {
+  for (const e of (liste || [])) {
+    const id = guvenli(e.id);
+    if (!id) { continue; }
+    sayfaYaz("/fan/" + tur + "/" + id + "/", (tur === "hikaye" ? e.baslik : e.ad) + " · " + ek + " — TentiforApp",
+      (e.ozet || "") + (e.yazar ? " Yazan: " + e.yazar + "." : ""));
+    adresler.push("/fan/" + tur + "/" + id + "/"); eserSayisi++;
+  }
 }
 
-/* site haritası: sayfalar + evrenler */
-const adresler = [SITE + "/"].concat(sayfalar.map(function (s) { return SITE + "/" + s.id + "/"; }))
-  .concat(evrenSayfalari.map(function (s) { return SITE + "/evren/" + s.yol + "/"; }));
+/* site haritası */
 writeFileSync(join(HEDEF, "sitemap.xml"), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-  adresler.map(function (u) { return "  <url><loc>" + kacir(u) + "</loc></url>"; }).join("\n") + "\n</urlset>\n");
+  adresler.map(function (u) { return "  <url><loc>" + kacir(SITE + u) + "</loc></url>"; }).join("\n") + "\n</urlset>\n");
 writeFileSync(join(HEDEF, "robots.txt"), readFileSync(join(HEDEF, "robots.txt"), "utf8").replace(/\s*$/, "\n") + "Sitemap: " + SITE + "/sitemap.xml\n");
 
-console.log("Paket hazır: " + sayfalar.length + " sayfa, " + evrenSayfalari.length + " evren adresi, JS+CSS " +
+console.log("Paket hazır: " + sayfalar.length + " sayfa, " + evrenSayisi + " evren, " + eserSayisi + " fan eseri adresi, JS+CSS " +
   Math.round(once / 1024) + " KB → " + Math.round(sonra / 1024) + " KB");

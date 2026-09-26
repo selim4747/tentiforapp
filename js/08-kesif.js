@@ -441,7 +441,7 @@ function bolumeGit(id) {
 }
 
 function baglantiyiUygula() {
-  const h = location.hash;
+  const h = rota();
   if (h.indexOf("#/") !== 0) { return; }
 
   const parca = h.slice(2).split("/");
@@ -472,7 +472,7 @@ function baglantiyiUygula() {
 }
 
 function baglantiKopyala(id, tur) {
-  const url = location.origin + location.pathname + "#/" + tur + "/" + id;
+  const url = rotaAdresi("#/" + tur + "/" + id);
 
   panoyaKopyala(url).then(function () {
     eckaBildir("Bağlantı kopyalandı");

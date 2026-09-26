@@ -200,7 +200,7 @@ document.addEventListener("click", function (e) {
     ziyaretGoruldu(a);
     if (b) {
       /* aynı adrese tekrar gidilirse hashchange tetiklenmez; o zaman elle uygula */
-      if (location.hash === b.git) {
+      if (rota() === b.git) {
         if (typeof baglantiyiUygula === "function") { baglantiyiUygula(); }
         if (b.git.split("/").length === 2 && typeof bolumeGit === "function") { bolumeGit(b.bolum); }
       } else {

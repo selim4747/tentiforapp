@@ -80,7 +80,11 @@ const sunucu = createServer(function (istek, yanit) {
     if (statSync(dosya).isDirectory()) { yanit.writeHead(301, { Location: yol + "/" }); yanit.end(); return; }
     yanit.writeHead(200, { "Content-Type": TURLER[extname(dosya)] || "application/octet-stream" });
     yanit.end(readFileSync(dosya));
-  } catch (e) { yanit.writeHead(404); yanit.end("yok"); }
+  } catch (e) {
+    /* Cloudflare Pages gibi: uzantısız bilinmeyen yollarda ana sayfa (rota yoldan okunur) */
+    if (!extname(yol)) { yanit.writeHead(200, { "Content-Type": TURLER[".html"] }); yanit.end(readFileSync(join(DIZIN, "index.html"))); return; }
+    yanit.writeHead(404); yanit.end("yok");
+  }
 });
 await new Promise(function (r) { sunucu.listen(0, "127.0.0.1", r); });
 const adres = "http://127.0.0.1:" + sunucu.address().port;

@@ -1,5 +1,5 @@
 {
-  "surum": "1.8.0",
+  "surum": "1.8.1",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -6840,6 +6840,15 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "1.8.1",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Her sayfanın kendi adresi var: /arsiv/, /dunya/, /evren/e25/… Adres doğrudan açılır, yenileyince aynı yerde kalır, geri/ileri çalışır",
+        "Arama motorları her sayfayı ve her evreni ayrı görür (kendi başlığı, açıklaması ve site haritası)"
+      ],
+      "yeniler": []
+    },
     {
       "surum": "1.8.0",
       "tarih": "2026-09-26",

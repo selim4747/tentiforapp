@@ -134,7 +134,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await bekle(Z, 900);
     ok("paylaşılan dosya Fan'da açılır", await Z.evaluate(function () {
       const h = document.querySelector(".fan-pencere h1");
-      return !!h && h.textContent === "Paylaşılan hikâye" && location.hash === "#/fanAc";
+      return !!h && h.textContent === "Paylaşılan hikâye" && rota() === "#/fanAc" && location.pathname === "/fanAc/";
     }));
     await Z.evaluate(function () { document.querySelector("#perde").hidden = true; });
     /* ---------- güncelleme: açık kalan sayfa yeni sürümü alır ---------- */
@@ -176,8 +176,48 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       return /daha yeni bir sürüm var \(99\.0\.0\)/.test(mesaj);
     }) && ghYazildi === 0);
 
+    /* ---------- her sayfa kendi adresinde ---------- */
+    const R = await cihaz("adresler");
+    await R.goto(adres + "/evren/e25/"); await bekle(R, 1500);
+    ok("/evren/e25/ doğrudan E25'i açar, adres temiz kalır", await R.evaluate(function () {
+      return location.pathname === "/evren/e25/" && !location.hash && !!document.querySelector("#evrenSayfa") && EVS && EVS.id === "e25" &&
+        document.title.indexOf("—") !== -1;
+    }));
+    await R.evaluate(function () { window.__ayniBelge = true; location.hash = "#/oyunlar"; }); await bekle(R, 700);
+    ok("uygulama içi geçiş gerçek yola yazılır, sayfa yeniden yüklenmez", await R.evaluate(function () {
+      return location.pathname === "/oyunlar/" && !location.hash && aktifSayfa === "oyunlar" && !document.querySelector("#evrenSayfa") && window.__ayniBelge === true;
+    }));
+    await R.goBack(); await bekle(R, 700);
+    ok("geri tuşu önceki sayfaya (E25) döner", await R.evaluate(function () {
+      return location.pathname === "/evren/e25/" && !!document.querySelector("#evrenSayfa") && window.__ayniBelge === true;
+    }));
+    await R.goForward(); await bekle(R, 700);
+    ok("ileri tuşu da çalışır", await R.evaluate(function () { return location.pathname === "/oyunlar/" && aktifSayfa === "oyunlar"; }));
+    await R.evaluate(function () {
+      const a = document.createElement("a"); a.href = "#/fan"; a.id = "rotaDeneme"; a.textContent = "fan"; document.body.appendChild(a);
+    });
+    await R.click("#rotaDeneme"); await bekle(R, 700);
+    ok("#/ bağlantıları aynı belgede kalır", await R.evaluate(function () {
+      return location.pathname === "/fan/" && aktifSayfa === "fan" && window.__ayniBelge === true;
+    }));
+    await R.goto(adres + "/dunya/"); await bekle(R, 1500);
+    ok("alt sayfa doğrudan açılır (yenileme de aynı yere)", await R.evaluate(function () {
+      return location.pathname === "/dunya/" && aktifSayfa === "dunya" && /Dünya/.test(document.title);
+    }));
+    await R.goto(adres + "/#/okuma"); await bekle(R, 1500);
+    ok("eski #/ bağlantıları çalışır ve temiz adrese çevrilir", await R.evaluate(function () {
+      return location.pathname === "/okuma/" && !location.hash && aktifSayfa === "okuma";
+    }));
+    ok("paylaşım adresleri temiz yol", await R.evaluate(function () {
+      return rotaAdresi("#/ev/site/e25") === location.origin + "/evren/e25/" && rotaAdresi("#/karakter/feil") === location.origin + "/karakter/feil/" &&
+        yoldanRota("/evren/fabc12/") === "#/ev/fan/fabc12" && yoldanRota(rotadanYol("#/ev/benim/fx1")) === "#/ev/benim/fx1" &&
+        yoldanRota(rotadanYol("#/fan/hikaye/f1%20a")) === "#/fan/hikaye/f1%20a" && rotaAdresi("#/kartpostal/abc").indexOf("/#/kartpostal/abc") !== -1;
+    }));
+    const siteHaritasi = readFileSync(dizin + "/sitemap.xml", "utf8");
+    ok("site haritası bütün sayfaları ayrı listeler", ["/arsiv/", "/dunya/", "/oyunlar/", "/sen/", "/evren/e25/", "/evren/e26/", "/evren/e99/"].every(function (y) { return siteHaritasi.indexOf(y + "</loc>") !== -1; }));
+
     const manifest = JSON.parse(readFileSync(dizin + "/manifest.webmanifest", "utf8"));
-    ok("_redirects üretilir (Cloudflare Pages vb.)", /\/u\/\*\s+\/\?profil=:splat\s+302/.test(readFileSync(dizin + "/_redirects", "utf8")));
+    ok("_redirects üretilir (Cloudflare Pages vb.)", /\/paylasim-al/.test(readFileSync(dizin + "/_redirects", "utf8")) && !/\/u\/\*/.test(readFileSync(dizin + "/_redirects", "utf8")));
     ok("manifest: paylaşım hedefi ve kısayollar", manifest.share_target && manifest.share_target.params.files[0].name === "dosya" && manifest.shortcuts.length >= 4);
     ok("aramada Claude'un evreni ve bölümler", await Z.evaluate(function () {
       const d = aramaDizini();
@@ -268,7 +308,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     }));
     await Z.click("[data-es-yeni]"); await bekle(Z, 600);
     ok("yeni evren kendi sayfasında, bilgi sekmesiyle açılır", await Z.evaluate(function () {
-      return /^#\/ev\/benim\//.test(location.hash) && !!document.querySelector('#evrenSayfa [data-fan-hedef] [data-fan-alan="ad"]');
+      return /^#\/ev\/benim\//.test(rota()) && !!document.querySelector('#evrenSayfa [data-fan-hedef] [data-fan-alan="ad"]');
     }));
     await Z.fill('#evrenSayfa [data-fan-alan="ad"]', "Deneme Evreni"); await bekle(Z, 450);
     const evId = await Z.evaluate(function () { return EVS.id; });
@@ -407,7 +447,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await Z.evaluate(function (id) { location.hash = "#/ev/benim/" + id; }, evId); await bekle(Z, 400);
     await Z.evaluate(function () { fanEserlerimYaz(fanEserlerim().filter(function (x) { return x.id !== window.__kopyaId; })); });
     await Z.click("[data-evs-kapat]"); await bekle(Z, 300);
-    ok("evren sayfası kapanır", await Z.evaluate(function () { return !document.querySelector("#evrenSayfa") && location.hash === "#/fan"; }));
+    ok("evren sayfası kapanır", await Z.evaluate(function () { return !document.querySelector("#evrenSayfa") && rota() === "#/fan"; }));
     ok("kendi evreni seçicide", await Z.evaluate(function () { return evrenSeciciListesi().benim.some(function (x) { return x.ad === "Kodla Değişen"; }); }));
     ok("E99 katkısı fan taslaklarında görünmez", await Z.evaluate(function () { e99Katki(); fanSekme.evren = "yaz"; fanEvrenCiz(); return !/E99 katkım/.test(document.querySelector("#fanEvrenAlan").textContent); }));
 
@@ -485,7 +525,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await Z.click("[data-kisi-gotur-onay]"); await bekle(Z, 700);
     ok("kişiyle yeni hikâye yazılır, kişiliği hikâyede salt okunur", await Z.evaluate(function () {
       const h = fanEserlerim().filter(function (x) { return x.tur === "hikaye"; }).pop();
-      return location.hash === "#/fan" && h.konuklar[0].ad === "Taşsız Mira" && /Taşsız Mira/.test(h.karakterler) &&
+      return rota() === "#/fan" && h.konuklar[0].ad === "Taşsız Mira" && /Taşsız Mira/.test(h.karakterler) &&
         !!document.querySelector("#fanHikayeAlan .konuk-duzen") && !document.querySelector("#fanHikayeAlan .konuk-duzen textarea");
     }));
     ok("yönetici okur kişisini sitede yayımlar", await Z.evaluate(function (id) {
@@ -501,8 +541,9 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
 
     /* ---------- 2. paylaşım adresi ve PWA ---------- */
     const kisa = await (await fetch(adres + "/dunya/")).text();
-    ok("/dunya/ önizleme etiketi", /og:title" content="TentiforApp — Dünya"/.test(kisa));
-    ok("/dunya/ yönlendirir", /location\.replace\("\/#\/dunya"/.test(kisa));
+    ok("/dunya/ kendi başlığıyla ayrı sayfa", /<title>Dünya — TentiforApp<\/title>/.test(kisa) && /og:title" content="Dünya — TentiforApp"/.test(kisa) &&
+      /rel="canonical" href="[^"]*\/dunya\/"/.test(kisa));
+    ok("/dunya/ yönlendirmez, uygulamanın kendisi", !/location\.replace|http-equiv="refresh"/.test(kisa) && /<base href="\/">/.test(kisa) && /js\/00-rota\.js/.test(kisa));
     const man = await (await fetch(adres + "/manifest.webmanifest")).json();
     ok("manifest simgeleri", man.icons.length >= 2 && (await fetch(adres + "/" + man.icons[0].src)).ok);
 
@@ -869,7 +910,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await A.click('#evrenListe [data-evren-git="#/ev/site/e25"]'); await bekle(A, 700);
     ok("E25 kendi sayfasında: Evrengezerler, ortak melezler, maddeler, sözlük", await A.evaluate(function () {
       const s = document.querySelector("#evrenSayfa");
-      if (!s || location.hash !== "#/ev/site/e25") { return false; }
+      if (!s || rota() !== "#/ev/site/e25") { return false; }
       const t = s.textContent;
       const gri = veri.karakterler.findIndex(function (k) { return k.id === "gri"; });
       return !!s.querySelector('[data-karakter="' + gri + '"]') && !!s.querySelector('.kart-ortak [data-evren-git="#/karakter/feil"]') &&
@@ -877,14 +918,14 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
         !!s.querySelector('.madde .buzul') && !/Yaşam Gücü Almadı/.test(t);
     }));
     await A.click('#evrenSayfa .kart-ortak [data-evren-git="#/karakter/feil"]'); await bekle(A, 900);
-    ok("melezin anıları Tömye'de açılır", await A.evaluate(function () { return !document.querySelector("#evrenSayfa") && /karakter\/feil/.test(location.hash); }));
+    ok("melezin anıları Tömye'de açılır", await A.evaluate(function () { return !document.querySelector("#evrenSayfa") && /karakter\/feil/.test(rota()); }));
     await A.evaluate(function () { if (typeof perdeKapat === "function") { perdeKapat(); } location.hash = "#/sen"; }); await bekle(A, 500);
     ok("E25 evren seçicide, kodsuz ziyaretçiye kilitli", await Z.evaluate(function () {
       const e = evrenSeciciListesi().site.find(function (x) { return x.ad === "E25"; });
       return !!e && e.kilitli && e.git === "#/ev/site/e25";
     }));
     ok("her evrenin kendi sayfası ve site haritası", /E25/.test(readFileSync(dizin + "/evren/e25/index.html", "utf8")) &&
-      /url=\/#\/ev\/site\/e25/.test(readFileSync(dizin + "/evren/e25/index.html", "utf8")) &&
+      /rel="canonical" href="[^"]*\/evren\/e25\/"/.test(readFileSync(dizin + "/evren/e25/index.html", "utf8")) &&
       /kodla açılır/.test(readFileSync(dizin + "/evren/e26/index.html", "utf8")) &&
       /\/evren\/e25\//.test(readFileSync(dizin + "/sitemap.xml", "utf8")) && /Sitemap:/.test(readFileSync(dizin + "/robots.txt", "utf8")));
 

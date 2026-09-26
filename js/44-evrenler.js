@@ -289,8 +289,8 @@ function evrenSayfaKapat() {
   if (s) { s.remove(); }
   document.documentElement.classList.remove("evren-acik");
   EVS = null;
-  if (location.hash.indexOf("#/ev/") === 0) {
-    history.replaceState(null, "", location.pathname + location.search + "#/fan");
+  if (rota().indexOf("#/ev/") === 0) {
+    history.replaceState(null, "", rotadanYol("#/fan") + location.search);
     if (typeof sayfaYonlendir === "function") { sayfaYonlendir(); }
   }
 }
@@ -745,12 +745,12 @@ async function siteyiYayinla() {
 
 /** #/ev/benim/<id> · #/ev/fan/<id> · #/ev/acilan/<id> · #/ev/e99 */
 function evrenAdresiAc() {
-  const m = location.hash.match(/^#\/ev\/([a-z0-9]+)(?:\/([\w-]+))?/);
+  const m = rota().match(/^#\/ev\/([a-z0-9]+)(?:\/([\w-]+))?/);
   if (!m) { if (document.querySelector("#evrenSayfa")) { const s = document.querySelector("#evrenSayfa"); s.remove(); document.documentElement.classList.remove("evren-acik"); EVS = null; } return; }
   if (typeof veri === "undefined" || !veri) { return; }
   evrenSayfaAc(m[1], m[2] || "");
   if (!EVS) {
-    if (typeof hataSayfasiAc === "function") { hataSayfasiAc(location.hash.slice(2)); }
+    if (typeof hataSayfasiAc === "function") { hataSayfasiAc(rota().slice(2)); }
     return;
   }
 }
@@ -867,7 +867,7 @@ document.addEventListener("keydown", function (e) {
 document.addEventListener("DOMContentLoaded", function () {
   evrenDugmesiKur();
   /* veri gelince adresteki evren sayfası açılsın */
-  if (location.hash.indexOf("#/ev/") === 0) {
+  if (rota().indexOf("#/ev/") === 0) {
     const bekle = setInterval(function () {
       if (typeof veri !== "undefined" && veri) { clearInterval(bekle); evrenAdresiAc(); }
     }, 100);

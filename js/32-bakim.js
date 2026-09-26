@@ -889,7 +889,7 @@ document.addEventListener("click", function (e) {
 
 /* Profil penceresi #/u/ad adresiyle açılır; adres değişince (geri tuşu, başka sayfa) kapansın */
 window.addEventListener("hashchange", function () {
-  if (/^#\/u\//.test(location.hash)) { return; }
+  if (/^#\/u\//.test(rota())) { return; }
   const perde = document.querySelector("#perde");
   if (perde && !perde.hidden && perde.querySelector(".hesap-profil") && typeof perdeKapat === "function") { perdeKapat(); }
 });
