@@ -3324,6 +3324,16 @@
       "id": "arsivAvcisi",
       "ad": "Arşiv Avcısı",
       "not": "Bir arşiv avı sezonunu sonuna kadar çözdün."
+    },
+    {
+      "id": "rehber",
+      "ad": "Rehber",
+      "not": "Davet ettiğin biri ilk haftasını tamamladı."
+    },
+    {
+      "id": "cirak",
+      "ad": "Çırak",
+      "not": "Davetle geldin ve ilk haftanı tamamladın."
     }
   ],
   "yaziTipleri": [

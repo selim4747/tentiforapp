@@ -3429,3 +3429,31 @@ html.bolum-olc section.bolum{content-visibility:visible}
 .kenar-form{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .kenar-form textarea{width:100%;font-family:var(--govde);font-size:15px;letter-spacing:normal;text-transform:none;text-align:left}
 #ortamSes.acik{color:var(--deniz);border-color:var(--deniz)}
+
+/* ---------- Topluluk II ---------- */
+.t2-form{display:flex;flex-direction:column;gap:6px;align-items:flex-start;margin:10px 0}
+.t2-form textarea,.t2-form input.kod-giris{width:100%;font-family:var(--govde);font-size:15px;letter-spacing:normal;text-transform:none;text-align:left}
+.defter-sayfa{background:#fbf6ea;border:1px solid #e6dcc4;border-radius:3px;padding:18px 20px;margin:10px 0;color:#2a2418}
+html[data-ayar-tema="gece"] .defter-sayfa{background:#1e1b16;border-color:#3a3326;color:#e8dfcc}
+.defter-metin{font-family:var(--display);font-size:19px;line-height:1.7}
+.defter-cumle.tohum{font-style:italic}
+.defter-cumle.guclu{font-weight:600}
+.defter-kim{font-family:var(--mono);font-size:11px;color:var(--murekkep-2);white-space:nowrap}
+.defter-oy{border:none;background:none;color:var(--murekkep-2);cursor:pointer;font:inherit;padding:0 2px}
+.defter-oy.acik{color:var(--deniz)}
+.defter-arsiv details{border-bottom:1px solid var(--buz);padding:6px 0}
+.defter-arsiv summary{cursor:pointer;font-size:14.5px}
+.yazar-soru{background:var(--beyaz);border:1px solid var(--buz);border-radius:3px;padding:12px 14px;margin:8px 0}
+.yazar-soru.cevapli{border-color:var(--deniz)}
+.yazar-soru-metin{font-weight:600;margin-bottom:6px}
+.yazar-cevap{margin-top:10px;padding-left:10px;border-left:2px solid var(--deniz)}
+.yazar-cevapla{margin-top:8px}
+.yazar-cevapla textarea{width:100%;margin:6px 0}
+.kulup-secici{flex-wrap:wrap}
+.kulup-hedef .lider-cubuk{display:block}
+.kulup-duvar{display:flex;flex-direction:column;gap:8px}
+.ob-liste{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.ob-isim{font-family:var(--display);font-size:30px;color:var(--deniz)}
+.ob-coz{flex-direction:row;flex-wrap:wrap}
+.ob-coz input{flex:1;min-width:120px}
+.davet-kutu{margin-top:12px}

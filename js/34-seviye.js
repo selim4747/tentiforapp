@@ -72,7 +72,9 @@ const XP_KAYNAKLARI = [
   ["kesif", "Keşifler", "keşif başına 15"], ["ilk_kasif", "İlk Kâşif", "ilk bulduğun her şey için 25"],
   ["teori", "Teoriler", "görünür teori başına 5"], ["begeni", "Teorilerine beğeni", "beğeni başına 3"],
   ["isaret", "Kanon / yakın teori", "50 / 20"], ["oy", "İçerik oylaması", "oy başına 5"],
-  ["hickirik", "Hıçkırık tanıklığı", "tanıklık başına 20"], ["av", "Arşiv avı", "çözülen sezon başına 100"]
+  ["hickirik", "Hıçkırık tanıklığı", "tanıklık başına 20"], ["av", "Arşiv avı", "çözülen sezon başına 100"],
+  ["defter", "Kütüphane Defteri", "cümle başına 10, beğeni başına 2"], ["soru", "Yazara sor", "cevaplanan soru başına 15"],
+  ["okur_bulmaca", "Okur bulmacaları", "çözüm başına 5, bulmacan çözüldükçe 2"], ["davet", "Davet", "ilk haftasını tamamlayan davetli başına 50"]
 ];
 
 /** Hesabın bölümündeki büyük kart: iki sistem + XP dökümü. */

@@ -169,6 +169,51 @@ reset role;
 select test.ok('başkasının notunu silemez', (select count(*) = 1 from public.kenar_notlari where id = :not_no));
 set role authenticated;
 
+-- ---------- Topluluk II ----------
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('defter cümlesi', public.defter_yaz('Kütüphanenin ışıkları bir anda söndü.') ->> 'durum' = 'tamam');
+select test.ok('defter günde bir', public.defter_yaz('İkinci cümle bugün yazılamaz.') ->> 'durum' = 'bugun');
+select id as cumle_no from public.defter_listesi where benim limit 1 \gset
+select test.ok('kendi cümlesini beğenemez', not public.defter_oyla(:cumle_no));
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select test.ok('başkası beğenir', public.defter_oyla(:cumle_no));
+select test.ok('soru sorulur', public.yazara_sor('Tarı neden hiç kendi adını duymuyor?') ->> 'durum' = 'tamam');
+select id as soru_no from public.yazara_sorular where benim limit 1 \gset
+select test.ok('yönetici olmayan cevaplayamaz', test.patlar('select public.yazar_cevapla(' || :soru_no || $q$, 'x')$q$));
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select public.yazar_cevapla(:soru_no, 'Çünkü adı kendisinden önce gelir.');
+select test.ok('cevap görünür', (select cevap is not null from public.yazara_sorular where id = :soru_no));
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select public.yazar_soru_sil(:soru_no);
+select test.ok('cevaplanmış soruyu soran silemez', (select count(*) = 1 from public.yazara_sorular where id = :soru_no));
+select test.ok('kulüpsüz yazamaz', public.kulup_yaz('merhaba') ->> 'durum' = 'kulupsuz');
+reset role;
+insert into public.istatistikler (id, kisilik) values ('44444444-4444-4444-4444-444444444444', 'Aksiyon Delisi')
+  on conflict (id) do update set kisilik = excluded.kisilik;
+set role authenticated;
+select test.ok('kulübüne yazar', public.kulup_yaz('Bu hafta hedefi geçelim!') ->> 'kulup' = 'Aksiyon Delisi');
+select test.ok('kulüp duvarı görünür', (select count(*) = 1 from public.kulup_duvari where kisilik = 'Aksiyon Delisi'));
+select test.ok('kulüp haftası', (select hedef = 60 from public.kulup_haftasi where kisilik = 'Aksiyon Delisi'));
+select test.ok('isim bulmacası yazılır', public.okur_bulmaca_yaz('isim', 'dünya', 'gezegen') ->> 'durum' = 'tamam');
+select test.ok('isim bulmacası: soru harf çevirisi', (select soru = 'Tömye' from public.okur_bulmaca_listesi where benim));
+select test.ok('geçersiz cevap reddedilir', public.okur_bulmaca_yaz('kyldo', 'iki kelime', null) ->> 'durum' = 'kelime');
+select id as ob_no from public.okur_bulmaca_listesi where benim limit 1 \gset
+select test.ok('kendi bulmacasını çözemez', public.okur_bulmaca_coz(:ob_no, 'dünya') ->> 'durum' = 'kendi');
+select test.ok('cevap özeti okunamaz', test.patlar('select cevap_ozet from public.okur_bulmacalari'));
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('yanlış çözüm', public.okur_bulmaca_coz(:ob_no, 'tömye') ->> 'durum' = 'yanlis');
+select test.ok('doğru çözüm (büyük harf/Türkçe fark etmez)', public.okur_bulmaca_coz(:ob_no, 'DÜNYA') ->> 'durum' = 'tamam');
+select test.ok('davet: kendini davet edemez', public.davet_kaydet('cem') ->> 'durum' = 'yok');
+select test.ok('davet kaydedilir', public.davet_kaydet('deniz') ->> 'durum' = 'tamam');
+select test.ok('davet bir kez', public.davet_kaydet('deniz') ->> 'durum' = 'zaten');
+reset role;
+insert into public.istatistikler (id, gun) values ('33333333-3333-3333-3333-333333333333', 3)
+  on conflict (id) do update set gun = 3;
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select test.ok('rehber: tamamlayan davetli sayılır', (public.davet_durumum() ->> 'tamamlayan')::int = 1);
+select test.ok('rehber XP', (select (dokum->>'davet')::int = 50 from public.arsivci_seviyeleri where kullanici_adi = 'deniz'));
+
 -- ---------- hesap silme ----------
 set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
 select public.hesabimi_sil();
