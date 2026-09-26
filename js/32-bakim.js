@@ -117,7 +117,7 @@ function sesliDurdur() {
   sesliAktif = null;
 }
 
-function sesliOku(dugme) {
+function sesliDugmeOku(dugme) {
   if (sesliAktif === dugme) { sesliDurdur(); return; }
   sesliDurdur();
   const metinEl = dugme.nextElementSibling;
@@ -724,7 +724,7 @@ async function yoneticiTeorilerYukle() {
 
 document.addEventListener("click", function (e) {
   const s = e.target.closest("[data-sesli-oku]");
-  if (s) { sesliOku(s); return; }
+  if (s) { sesliDugmeOku(s); return; }
 
   const l = e.target.closest("[data-y-liste]");
   if (l) { yListe = l.dataset.yListe; yListeAcik = null; yListeSilOnay = null; yoneticiCiz(); return; }

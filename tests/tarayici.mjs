@@ -241,8 +241,35 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await B.evaluate(function () { try { localStorage.removeItem("tentiforapp_hickirik_gun"); } catch (e) {} return hickirikSor(); }); await bekle(B, 600);
     ok("hıçkırık herkese görünür", await B.locator("#hickirik").count() === 1);
     await B.click('[data-hickirik="tanik"]'); await bekle(B, 1000);
+    ok("erişilebilirlikteki sesli okuma fonksiyonu ezilmiyor", await B.evaluate(function () {
+      return typeof sesliOku === "function" && sesliOku.toString().indexOf("speechSynthesis.cancel") !== -1 && typeof sesliDugmeOku === "function";
+    }));
     ok("tanıklık kaydedilir", (await sahte.kokSorgu("select count(*)::int n from public.hickirik_taniklari")).rows[0].n === 1);
     await B.click('[data-hickirik="kapat"]');
+
+    /* ---------- tepkiler, kenar notları, ortam sesi ---------- */
+    await B.evaluate(function () { location.hash = "#/claudeEvren"; }); await bekle(B, 800);
+    await B.click('[data-ce-sekme="hikayeler"]'); await bekle(B, 200);
+    await B.evaluate(function () { document.querySelector(".ce-hikaye").open = true; }); await bekle(B, 1200);
+    const tAlan = B.locator(".ce-hikaye .tepki-alan").first();
+    await tAlan.locator('[data-tepki="kalp"]').click(); await bekle(B, 900);
+    ok("tepki kaydedilir ve sayılır", /1/.test(await tAlan.locator('[data-tepki="kalp"]').textContent()));
+    await tAlan.locator("[data-not-form] textarea").fill("Uzlım'ın beklemesi içime dokundu.");
+    await tAlan.locator("[data-not-form] button").click(); await bekle(B, 900);
+    ok("kenar notu görünür", /içime dokundu/.test(await tAlan.textContent()));
+    await B.evaluate(function () { document.querySelector("#claudeEvren").scrollIntoView({ behavior: "instant", block: "start" }); }); await bekle(B, 500);
+    await B.evaluate(function () { document.querySelector("#ortamSes").click(); }); await bekle(B, 300);
+    const ortamDurum = await B.evaluate(function () {
+      const r = document.querySelector("#claudeEvren").getBoundingClientRect();
+      return { var: !!ortamSesi, mod: ortamSesi && ortamSesi.mod, ust: Math.round(r.top), alt: Math.round(r.bottom), gizli: document.querySelector("#claudeEvren").hidden, h: innerHeight,
+        y: Math.round(scrollY), boy: document.documentElement.scrollHeight, perde: !document.querySelector("#perde").hidden,
+        tasma: getComputedStyle(document.body).overflow + "/" + getComputedStyle(document.documentElement).overflow, sinif: document.documentElement.className };
+    });
+    ok("ortam sesi açılır, Şomdo bölümünde Şomdo sesi", ortamDurum.var && ortamDurum.mod === "somdo", ortamDurum);
+    await B.evaluate(function () { window.scrollTo({ top: 0, behavior: "instant" }); }); await bekle(B, 500);
+    ok("bölümden çıkınca Tömye sesine geçer", await B.evaluate(function () { return ortamSesi.mod === "tomye"; }));
+    await B.evaluate(function () { document.querySelector("#ortamSes").click(); }); await bekle(B, 200);
+    ok("ortam sesi kapanır", await B.evaluate(function () { return ortamSesi === null; }));
 
     /* ---------- 5. hata bildirimi ---------- */
     await B.evaluate(function () { window.__hataYereldeGonder = true; window.hataGonder({ baslik: "Hata", mesaj: "test hatası", yigin: "a.js:1" }); });

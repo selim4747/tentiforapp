@@ -1512,5 +1512,112 @@ revoke execute on function public.hickirik_bugun(), public.hickirik_tanik(), pub
 grant execute on function public.hickirik_tanik(), public.av_coz(int, text) to authenticated;
 grant execute on function public.hickirik_durum() to anon, authenticated;
 
+-- ======================================================================
+-- ================= OKUMA: TEPKİLER ve KENAR NOTLARI ==================
+-- ======================================================================
+-- hedef: okunan şeyin kimliği, ör. 'roman:3', 'ce:cl_h1'
+
+create table if not exists public.tepkiler (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  hedef text not null check (hedef ~ '^[a-z]{1,10}:[A-Za-z0-9_-]{1,40}$'),
+  tepki text not null check (tepki in ('buz', 'kalp', 'yildiz', 'soru')),
+  zaman timestamptz not null default now(),
+  primary key (kullanici, hedef, tepki)
+);
+alter table public.tepkiler enable row level security;
+
+create table if not exists public.kenar_notlari (
+  id bigserial primary key,
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  hedef text not null check (hedef ~ '^[a-z]{1,10}:[A-Za-z0-9_-]{1,40}$'),
+  metin text not null check (char_length(metin) between 3 and 280),
+  zaman timestamptz not null default now(),
+  gizli boolean not null default false
+);
+alter table public.kenar_notlari enable row level security;
+create index if not exists kenar_notlari_hedef on public.kenar_notlari (hedef, zaman);
+
+create table if not exists public.kenar_not_bildirimleri (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  not_id bigint not null references public.kenar_notlari(id) on delete cascade,
+  zaman timestamptz not null default now(),
+  primary key (kullanici, not_id)
+);
+alter table public.kenar_not_bildirimleri enable row level security;
+
+create or replace function public.tepki_ver(p_hedef text, p_tepki text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception 'giriş gerekli'; end if;
+  if exists (select 1 from public.tepkiler where kullanici = uid and hedef = p_hedef and tepki = p_tepki) then
+    delete from public.tepkiler where kullanici = uid and hedef = p_hedef and tepki = p_tepki;
+    return false;
+  end if;
+  if (select count(*) from public.tepkiler where kullanici = uid and zaman > now() - interval '1 hour') >= 120 then
+    raise exception 'çok hızlı';
+  end if;
+  insert into public.tepkiler (kullanici, hedef, tepki) values (uid, p_hedef, p_tepki);
+  return true;
+end;
+$$;
+
+create or replace function public.tepkilerim(p_hedef text) returns text[]
+language sql stable security definer set search_path = '' as $$
+  select coalesce(array_agg(tepki), '{}') from public.tepkiler where kullanici = auth.uid() and hedef = p_hedef
+$$;
+
+create or replace function public.kenar_not_yaz(p_hedef text, p_metin text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); yeni bigint;
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if exists (select 1 from public.istatistikler where id = uid and engelli) then return jsonb_build_object('durum', 'engelli'); end if;
+  if char_length(trim(coalesce(p_metin, ''))) < 3 then return jsonb_build_object('durum', 'kisa'); end if;
+  if (select count(*) from public.kenar_notlari where kullanici = uid and zaman > now() - interval '1 day') >= 10 then
+    return jsonb_build_object('durum', 'sinir');
+  end if;
+  insert into public.kenar_notlari (kullanici, hedef, metin) values (uid, p_hedef, left(trim(p_metin), 280)) returning id into yeni;
+  return jsonb_build_object('durum', 'tamam', 'id', yeni);
+end;
+$$;
+
+create or replace function public.kenar_not_bildir(p_not bigint) returns text
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then return 'giris'; end if;
+  if (select count(*) from public.kenar_not_bildirimleri where kullanici = uid and zaman > now() - interval '1 day') >= 10 then return 'sinir'; end if;
+  insert into public.kenar_not_bildirimleri (kullanici, not_id) select uid, p_not
+    where exists (select 1 from public.kenar_notlari where id = p_not and kullanici <> uid) on conflict do nothing;
+  if (select count(*) from public.kenar_not_bildirimleri where not_id = p_not) >= 3 then
+    update public.kenar_notlari set gizli = true where id = p_not;
+  end if;
+  return 'tamam';
+end;
+$$;
+
+create or replace function public.kenar_not_sil(p_not bigint) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  delete from public.kenar_notlari where id = p_not and (kullanici = auth.uid() or public.yonetici_mi());
+end;
+$$;
+
+create or replace view public.tepki_sayilari as
+  select hedef, tepki, count(*) as sayi from public.tepkiler group by hedef, tepki;
+
+create or replace view public.kenar_notlari_listesi as
+  select n.id, n.hedef, n.metin, n.zaman, g.kullanici_adi, g.gorunen_ad, (n.kullanici = auth.uid()) as benim
+  from public.kenar_notlari n join public.gorunur_kullanicilar g on g.id = n.kullanici
+  where not n.gizli;
+
+grant select on public.tepki_sayilari, public.kenar_notlari_listesi to anon, authenticated;
+revoke all on public.tepkiler, public.kenar_notlari, public.kenar_not_bildirimleri from anon, authenticated;
+revoke execute on function public.tepki_ver(text, text), public.tepkilerim(text), public.kenar_not_yaz(text, text),
+  public.kenar_not_bildir(bigint), public.kenar_not_sil(bigint) from public, anon;
+grant execute on function public.tepki_ver(text, text), public.tepkilerim(text), public.kenar_not_yaz(text, text),
+  public.kenar_not_bildir(bigint), public.kenar_not_sil(bigint) to authenticated;
+
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';

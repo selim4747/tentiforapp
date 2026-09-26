@@ -155,9 +155,11 @@ function romanAc(no) {
       "<h3>" + kacir(b.baslik || b.ad || "") + "</h3>" +
       '<p class="pencere-alt">' + kacir(veri.roman.baslik || "") + " · " + b.no + ". bölüm</p>" +
       '<div class="okuma">' + paragraf(b.metin) + "</div>" +
+      '<div class="tepki-alan" data-hedef="roman:' + Number(b.no) + '"></div>' +
     "</div>";
 
   document.querySelector("#perde").hidden = false;
+  if (typeof tepkiAlanlariKur === "function") { tepkiAlanlariKur(document.querySelector("#perde")); }
 }
 
 /* ==================== HARİTA ==================== */

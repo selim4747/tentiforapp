@@ -14,9 +14,9 @@ Yayına girmez (scripts/paketle.mjs bu dosyayı kopyalamaz). Biten madde silinir
 7. [x] **Mevsimlik arşiv avı (ARG)** — gizli ipucu zinciri, sonunda gizli kod; ilk çözenler tabloya.
 
 ## Okuma ve bağlılık
-8. [ ] **Bölüm tepkileri ve kenar notları** — roman/hikâye bölümlerine tepki ve herkese açık kısa notlar (moderasyonlu).
-9. [ ] **Yeni bölüm bildirimi** — Web Push; Supabase Edge Function + VAPID anahtarı kurulumu gerekir.
-10. [ ] **Ortam sesi** — sayfaya göre tarayıcıda üretilen ses, varsayılan kapalı.
+8. [x] **Bölüm tepkileri ve kenar notları** — roman/hikâye bölümlerine tepki ve herkese açık kısa notlar (moderasyonlu).
+9. [ ] **Yeni bölüm bildirimi** — Web Push; Supabase Edge Function + VAPID anahtarı kurulumu gerekir. *Bekliyor: kurulum senin tarafında (Supabase CLI ile fonksiyon yayınlama ve gizli anahtar); hazır olunca kodu ekleriz.*
+10. [x] **Ortam sesi** — sayfaya göre tarayıcıda üretilen ses, varsayılan kapalı.
 
 ## Topluluk
 11. [ ] **Kütüphane Defteri** — herkes günde tek cümle ekler, cümleler oylanır; haftanın en iyi zinciri bölüm olarak arşive girer.
