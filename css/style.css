@@ -3809,3 +3809,27 @@ html.evren-acik{overflow:hidden}
 .kisi-gotur{margin-top:10px;border-top:1px solid var(--sig);padding-top:8px}
 .konuk{border-top:1px solid var(--sig);padding:8px 0}
 .konuk-duzen{margin-top:10px}
+
+/* karşılama /basla/ ve ziyaret sayacı (js/48-karsilama.js) */
+.karsilama{z-index:58}
+.krs-govde{max-width:760px}
+.krs-govde h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,8vw,56px);line-height:1.05;margin:6px 0 12px}
+.krs-giris{font-size:18px;line-height:1.6;max-width:62ch}
+.krs-kod{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:18px 0;border-color:var(--deniz)}
+.krs-kod-yazi{display:block;font-family:var(--mono);font-size:24px;letter-spacing:.08em}
+.krs-kartlar{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:14px 0}
+.krs-kart{display:flex;flex-direction:column;gap:6px;text-align:left;padding:14px;border:1px solid var(--sig);border-radius:10px;background:var(--beyaz);color:var(--murekkep);font:inherit;cursor:pointer;min-height:44px}
+.krs-kart:hover,.krs-kart:focus-visible{border-color:var(--deniz)}
+.krs-kart b{font-family:var(--display);font-weight:400;font-size:22px}
+.krs-kart span{font-size:14px;color:var(--murekkep-2,inherit)}
+.krs-alt{margin-top:16px}
+.olay-alan{margin-top:22px}
+.olay-baslik{font-family:var(--display);font-weight:400;font-size:20px;margin:0 0 6px}
+.olay-tablo{width:100%;border-collapse:collapse;font-size:14px}
+.olay-tablo th,.olay-tablo td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--sig)}
+.olay-tablo td:not(:first-child),.olay-tablo th:not(:first-child){text-align:right;font-family:var(--mono)}
+
+/* EG mağazası (js/49-eg-magaza.js) */
+.eg-magaza{margin-top:14px;border-top:1px solid var(--sig);padding-top:10px}
+.eg-urun{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--sig)}
+.eg-urun-var{font-family:var(--mono);font-size:12px;color:var(--deniz)}

@@ -96,6 +96,16 @@ function anahtarAkisi(kod, uzunluk) {
   return akis;
 }
 
+/** 10 karakterlik rastgele kod: harf ve rakam (karışan 0/O, 1/I hariç). Kişi, lore ve evren kodları bununla üretilir;
+    katman kodları değişmez. */
+const KOD_HARFLER = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const KOD_UZUNLUK = 10;
+function kod10() {
+  const b = new Uint8Array(KOD_UZUNLUK);
+  (window.crypto || window.msCrypto).getRandomValues(b);
+  return Array.from(b).map(function (n) { return KOD_HARFLER[n % KOD_HARFLER.length]; }).join("");
+}
+
 /* Kodun kendisi hiçbir yerde saklanmaz; bu özet saklanır. */
 function dogrulamaOzeti(kod) {
   return onaltilik(sha256Bayt(metniBayta(kod + "#dogrula")));

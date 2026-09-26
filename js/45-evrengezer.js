@@ -24,7 +24,10 @@ const EVH_DESENLER = {
   duz: { ad: "Düz" },
   kagit: { ad: "Eski kâğıt", deniz: "#D8C8A0", kara: "#EFE3C4", cizgi: "#6B5433", yazi: "#3B2A14", hale: "#F4EAD2" },
   gece: { ad: "Gece", deniz: "#0F1D2E", kara: "#2A3B4F", cizgi: "#7FB2DC", yazi: "#E8EEF4", hale: "#0F1D2E" },
-  izgara: { ad: "Izgara", izgara: true }
+  izgara: { ad: "Izgara", izgara: true },
+  /* EG mağazasından alınanlar (herkes görür; seçmek için sahip olmak gerekir) */
+  neon: { ad: "Neon", deniz: "#070B1A", kara: "#141B3A", cizgi: "#39F3FF", yazi: "#F2F7FF", hale: "#070B1A", magaza: "desen_neon" },
+  yildiz: { ad: "Yıldız haritası", deniz: "#0A0820", kara: "#241A4A", cizgi: "#F5D76E", yazi: "#FFF6D8", hale: "#0A0820", yildiz: true, magaza: "desen_yildiz" }
 };
 const EV_FONTLAR = { serif: "Georgia,serif", sans: "system-ui,sans-serif", mono: "ui-monospace,monospace" };
 
@@ -96,8 +99,8 @@ function evrenAlfabeYaz(metin, alfabe) {
   }).join("");
 }
 
-function evrenRastgeleAlfabe() {
-  const havuz = Array.from(ALFABE_HAVUZ);
+function evrenRastgeleAlfabe(havuzMetni) {
+  const havuz = Array.from(havuzMetni || ALFABE_HAVUZ);
   const h = {};
   ALFABE_HARFLER.split("").forEach(function (c) {
     const i = Math.floor(Math.random() * havuz.length);
@@ -230,6 +233,13 @@ function evrenZiyaretOdulu() {
   const p = evrenParasi(anahtar, v.eser);
   const n = Math.max(1, Math.round(EG_ZIYARET_DEGER / p.kur));
   egCuzdan.ziyaret.l.push(anahtar);
+  /* günün evren turu: 3 farklı evren gezilince bir kez EG ödülü */
+  if (egCuzdan.ziyaret.l.length === EG_TUR_HEDEF && !egCuzdan.ziyaret.tur) {
+    egCuzdan.ziyaret.tur = true;
+    egCuzdan.eg += EG_TUR_ODUL;
+    egGecmis(EG_TUR_ODUL, "Günün evren turu");
+    setTimeout(function () { if (typeof eckaBildir === "function") { eckaBildir("Günün evren turu tamam · +" + EG_TUR_ODUL + " EG"); } }, 2500);
+  }
   egParaHatirla(anahtar, p);
   egKaydet();
   egBakiyeDegistir(anahtar, n, "Evren gezisi");
@@ -270,6 +280,7 @@ function egBuroHtml(odak) {
       "her çeviride %" + Math.round(EG_KESINTI * 100) + " kesinti yakılır.</p>" +
     '<p class="eg-toplam"><b>' + egCuzdan.eg + " EG</b></p>" +
     anahtarlar.map(satir).join("") +
+    egMagazaHtml() +
     '<p class="pencere-durum" id="egDurum" role="status"></p></div>';
 }
 
@@ -319,12 +330,9 @@ function evRastHex(n) {
 
 function evKodTemiz(k) { return String(k || "").trim().toUpperCase(); }
 
-function evKodUret(onek) {
-  const harf = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const b = new Uint8Array(8);
-  crypto.getRandomValues(b);
-  return (onek || "EVR") + "-" + Array.from(b).map(function (x) { return harf[x % harf.length]; }).join("");
-}
+/** Lore ve evren yönetici kodları: 10 karakter, harf ve rakam (kod10, 02-kripto.js). */
+function evKodUret() { return kod10(); }
+const EV_KOD_EN_AZ = 10;
 
 function lorKodOzet(eid, kod) { return dogrulamaOzeti("lore|" + eid + "|" + evKodTemiz(kod)); }
 function evYonOzet(eid, kod) { return dogrulamaOzeti("evyon|" + eid + "|" + evKodTemiz(kod)); }
@@ -472,7 +480,7 @@ async function evrenLoreEkle(e, bilgi) {
   const kod = evKodTemiz(bilgi.kod);
   if (!String(bilgi.baslik || "").trim()) { return "Başlık yaz."; }
   if (!String(bilgi.metin || "").trim()) { return "Kilitlenecek metni yaz."; }
-  if (kod.length < 4) { return "Kod en az 4 karakter olsun."; }
+  if (kod.replace(/[^A-Z0-9]/g, "").length < EV_KOD_EN_AZ) { return "Kod en az " + EV_KOD_EN_AZ + " harf ve rakam olsun (Kod üret ile rastgele oluştur)."; }
   const ck = evRastHex(16), tuz = evRastHex(12);
   const l = { id: "l" + Date.now().toString(36) + evRastHex(2), baslik: String(bilgi.baslik).slice(0, 160), ipucu: String(bilgi.ipucu || "").slice(0, 500),
     ipucuFiyat: Math.max(0, Math.min(10000, Math.round(Number(bilgi.ipucuFiyat) || 0))), tuz: tuz,
@@ -490,7 +498,7 @@ async function evrenLoreEkle(e, bilgi) {
 /** Kurucu: evren yönetici kodu. Anahtarı bilinen (bu cihazda açık) bütün lorelar koda yeniden sarılır. */
 function evrenYoneticiKoduKur(e, kod) {
   const k = evKodTemiz(kod);
-  if (k.length < 6) { return { hata: "Yönetici kodu en az 6 karakter olsun." }; }
+  if (k.replace(/[^A-Z0-9]/g, "").length < EV_KOD_EN_AZ) { return { hata: "Yönetici kodu en az " + EV_KOD_EN_AZ + " harf ve rakam olsun (Kod üret ile rastgele oluştur)." }; }
   const acik = evlAcilan(e.id);
   let sarilan = 0, kalan = 0;
   evrenBenimDegistir(e.id, function (x) {
@@ -637,7 +645,9 @@ function evrenStilBolumu(v) {
       '<label>Köşe yuvarlaklığı<input type="range" min="0" max="24" data-evst="stil.kose" value="' + kacir(typeof st.kose === "number" ? st.kose : 4) + '"></label></div>' +
       '<button class="dugme dugme-sade" data-evst-sifirla="stil">Sitenin stiline dön</button></div>' +
     '<div class="kutu-y"><label>Harita stili</label><div class="evst-izgara">' +
-      "<label>Desen" + secim("harita.stil.desen", hs.desen, Object.keys(EVH_DESENLER).map(function (k) { return [k === "duz" ? "" : k, EVH_DESENLER[k].ad]; })) + "</label>" +
+      "<label>Desen" + secim("harita.stil.desen", hs.desen, Object.keys(EVH_DESENLER).filter(function (k) {
+        return !EVH_DESENLER[k].magaza || egSahipMi(EVH_DESENLER[k].magaza) || hs.desen === k;
+      }).map(function (k) { return [k === "duz" ? "" : k, EVH_DESENLER[k].ad]; })) + "</label>" +
       renk("harita.stil.kara", hs.kara, "#E6DCC3", "Kara") + renk("harita.stil.cizgi", hs.cizgi, "#8A7B5E", "Sınır") + renk("harita.stil.yazi", hs.yazi, "#1D2530", "Yazı") +
       "<label>Harita yazısı" + secim("harita.stil.font", hs.font, [["", "Tırnaklı"], ["sans", "Sade"], ["mono", "Daktilo"], ["alfabe", "Evrenin alfabesi"]]) + "</label>" +
       '<label class="evst-kutu"><input type="checkbox" data-evst="harita.stil.izgara"' + (hs.izgara ? " checked" : "") + "> Izgara çizgileri</label></div>" +
@@ -650,6 +660,7 @@ function evrenStilBolumu(v) {
       }).join("") + "</div>" +
       '<label class="evst-kutu"><input type="checkbox" data-evst="alfabe.baslik"' + (e.alfabe && e.alfabe.baslik ? " checked" : "") + "> Evrenin adını alfabeyle de göster</label>" +
       '<div class="oyun-sira"><button class="dugme dugme-sade" data-evst-alfabe-uret>Rastgele alfabe üret</button>' +
+      (egSahipMi("alfabe_yildiz") ? '<button class="dugme dugme-sade" data-evst-alfabe-uret="yildiz">Yıldız alfabesi</button>' : "") +
       '<button class="dugme dugme-sade" data-evst-sifirla="alfabe">Alfabeyi sil</button></div>' +
       evrenAlfabeCevirici(e) + "</div>";
 }
@@ -819,7 +830,7 @@ document.addEventListener("click", async function (ev) {
       (s.tur === "evren" ? "Evren yönetici kodu · " + s.n + " lore açıldı" : s.n + " lore açıldı"), true);
     return;
   }
-  if (h.hasAttribute("data-evl-kod-uret")) { const i = document.querySelector("#evlYeniKod"); if (i) { i.value = evKodUret("LOR"); } return; }
+  if (h.hasAttribute("data-evl-kod-uret")) { const i = document.querySelector("#evlYeniKod"); if (i) { i.value = evKodUret(); } return; }
   if (h.hasAttribute("data-evl-ekle") && EVS.kaynak === "benim") {
     const deger = function (s) { const x = document.querySelector(s); return x ? x.value : ""; };
     h.disabled = true;
@@ -849,7 +860,7 @@ document.addEventListener("click", async function (ev) {
     evrenSayfaCiz();
     return;
   }
-  if (h.hasAttribute("data-evy-uret")) { const i = document.querySelector("#evyKod"); if (i) { i.value = evKodUret("EVY"); } return; }
+  if (h.hasAttribute("data-evy-uret")) { const i = document.querySelector("#evyKod"); if (i) { i.value = evKodUret(); } return; }
   if (h.hasAttribute("data-evy-kur") && EVS.kaynak === "benim") {
     const s = evrenYoneticiKoduKur(e, (document.querySelector("#evyKod") || {}).value);
     if (s.hata) { durum("#evyDurum", s.hata, false); return; }
@@ -868,7 +879,8 @@ document.addEventListener("click", async function (ev) {
     return;
   }
   if (h.hasAttribute("data-evst-alfabe-uret") && EVS.kaynak === "benim") {
-    evrenBenimDegistir(e.id, function (x) { x.alfabe = { harfler: evrenRastgeleAlfabe(), baslik: !!(x.alfabe && x.alfabe.baslik) }; });
+    const havuz = h.dataset.evstAlfabeUret === "yildiz" && egSahipMi("alfabe_yildiz") ? EG_MAGAZA.find(function (m) { return m.id === "alfabe_yildiz"; }).havuz : null;
+    evrenBenimDegistir(e.id, function (x) { x.alfabe = { harfler: evrenRastgeleAlfabe(havuz), baslik: !!(x.alfabe && x.alfabe.baslik) }; });
     evrenSayfaCiz();
     return;
   }

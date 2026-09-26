@@ -62,6 +62,15 @@ function rotaYolaCevir() {
 
 let rotaSon = "";
 
+/* kişiye özel sayfalar arama motorlarında dizinlenmez */
+const ROTA_KISISEL = /^#\/(sen|u\/|ev\/(benim|acilan)|kartpostal|fanAc|fan\/paylasim)/;
+function rotaRobotlar() {
+  const m = document.querySelector('meta[name="robots"]');
+  if (m) { m.setAttribute("content", ROTA_KISISEL.test(rota()) ? "noindex, follow" : "index, follow"); }
+}
+window.addEventListener("hashchange", function () { rotaRobotlar(); });
+document.addEventListener("DOMContentLoaded", rotaRobotlar);
+
 /* ilk listener: diğer hashchange dinleyicileri rota()'yı okur, sonuç aynıdır */
 window.addEventListener("hashchange", function () { rotaYolaCevir(); rotaSon = rota(); });
 

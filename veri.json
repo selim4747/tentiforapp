@@ -1,5 +1,5 @@
 {
-  "surum": "1.8.2",
+  "surum": "1.9.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -6840,6 +6840,19 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "1.9.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Karşılama sayfası: /basla/ — başlangıç kodunu tek dokunuşla gir, evrenleri keşfet",
+        "Her sayfanın ve evrenin kendi paylaşım görseli (Instagram, WhatsApp)",
+        "E25 kişi kartı: kendi Evrengezerini Instagram hikâyesi olarak paylaş",
+        "Evrengezer mağazası: Neon ve Yıldız haritası desenleri, Yıldız alfabesi, kart çerçeveleri; günün evren turu ödülü",
+        "Yeni kodlar 10 karakter (harf ve rakam)",
+        "Düzeltmeler: evren sayfalarının başlığı, kişisel sayfalar arama motorlarında gizli, panelde güvenli kaydetme"
+      ],
+      "yeniler": []
+    },
     {
       "surum": "1.8.2",
       "tarih": "2026-09-26",

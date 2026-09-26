@@ -259,6 +259,11 @@ function evrenHaritaSvg(h, o) {
     : "";
   return '<svg class="evh-svg' + (o.duzenle ? " duzenle" : "") + '" viewBox="0 0 100 70" role="img" aria-label="Evren haritası" xmlns="http://www.w3.org/2000/svg">' +
     '<rect class="evh-deniz" x="0" y="0" width="100" height="70" fill="' + deniz + '"></rect>' + izgara +
+    /* Yıldız haritası deseni: sabit (her çizimde aynı) yıldızlar */
+    (desen.yildiz ? '<g class="evh-yildizlar" fill="' + (desen.yazi || "#fff") + '">' + Array.from({ length: 46 }, function (_, i) {
+      const x = (i * 37.3 + 11) % 100, y = (i * 23.9 + 7) % 70, r = 0.12 + (i % 4) * 0.07;
+      return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(2) + '" opacity="' + (0.35 + (i % 3) * 0.2).toFixed(2) + '"></circle>';
+    }).join("") + "</g>" : "") +
     yerler.map(function (y) { return alan(y, false); }).join("") + ekli.map(function (y) { return alan(y, true); }).join("") +
     yerler.filter(function (y) { return !y.sekil; }).map(function (y) { return isaret(y, false); }).join("") +
     ekli.filter(function (y) { return !y.sekil; }).map(function (y) { return isaret(y, true); }).join("") +
@@ -323,6 +328,12 @@ function evrenSayfaVerisi() {
   return null;
 }
 
+function evrenSayfaBasligi() {
+  if (!EVS) { return ""; }
+  const v = evrenSayfaVerisi();
+  return v && v.eser ? (v.eser.ad || "Evren") + " — TentiforApp" : "";
+}
+
 function evrenSayfaCiz() {
   const v = evrenSayfaVerisi();
   let s = document.querySelector("#evrenSayfa");
@@ -341,6 +352,7 @@ function evrenSayfaCiz() {
     return '<button class="dugme' + (EVS.sekme === id ? "" : " dugme-sade") + '" data-evs-sekme="' + id + '" aria-selected="' + (EVS.sekme === id) + '" role="tab">' + ad + "</button>";
   };
   s.setAttribute("aria-label", e.ad || "Evren");
+  document.title = evrenSayfaBasligi();
   const ek = (!v.kilitli && typeof evrenEkSekmeler === "function") ? evrenEkSekmeler(v) : [];
   if (["harita", "bilgi"].indexOf(EVS.sekme) === -1 && !ek.some(function (x) { return x[0] === EVS.sekme; })) { EVS.sekme = "harita"; }
   const ekGovde = ek.length && typeof evrenEkBolum === "function" ? evrenEkBolum(v) : null;

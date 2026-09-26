@@ -167,14 +167,15 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       t.remove(); document.querySelector("#guncellemeCubugu").remove();
       return sonuc;
     }));
-    ok("eski sürümdeki panel Kaydet'le yeni veriyi ezmez", await GU.evaluate(async function () {
+    ok("depodaki veri değişmişse panel Kaydet'le ezmez, sorar", await GU.evaluate(async function () {
       gh = { kullanici: "u", depo: "d", dal: "main", yol: "veri.json", jeton: "t" };
-      let mesaj = ""; const eski = window.yoneticiDurum;
-      window.yoneticiDurum = function (m) { mesaj = m; };
+      let d = document.querySelector("#yDurum");
+      if (!d) { d = document.createElement("p"); d.id = "yDurum"; document.body.appendChild(d); }
       await githubGonder();
-      window.yoneticiDurum = eski;
-      return /daha yeni bir sürüm var \(99\.0\.0\)/.test(mesaj);
+      return /değişmiş/.test(d.textContent) && /99\.0\.0/.test(d.textContent) && !!d.querySelector("[data-y-gh-zorla]") && !!d.querySelector("[data-y-gh-yukle]");
     }) && ghYazildi === 0);
+    await GU.evaluate(function () { document.querySelector("#yDurum [data-y-gh-zorla]").click(); }); await bekle(GU, 500);
+    ok("“Yine de üzerine yaz” kaydeder ve tabanı günceller", ghYazildi === 1 && await GU.evaluate(function () { return veriTabanOzeti === veriOzeti(veri) && !ghZorla; }));
 
     /* ---------- her sayfa kendi adresinde ---------- */
     const R = await cihaz("adresler");
@@ -183,6 +184,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       return location.pathname === "/evren/e25/" && !location.hash && !!document.querySelector("#evrenSayfa") && EVS && EVS.id === "e25" &&
         document.title.indexOf("—") !== -1;
     }));
+    ok("evren sayfasının başlığı evrenin adı", await R.evaluate(function () { return document.title === "E25 — TentiforApp"; }));
     await R.evaluate(function () { window.__ayniBelge = true; location.hash = "#/oyunlar"; }); await bekle(R, 700);
     ok("uygulama içi geçiş gerçek yola yazılır, sayfa yeniden yüklenmez", await R.evaluate(function () {
       return location.pathname === "/oyunlar/" && !location.hash && aktifSayfa === "oyunlar" && !document.querySelector("#evrenSayfa") && window.__ayniBelge === true;
@@ -213,6 +215,27 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
         yoldanRota("/evren/fabc12/") === "#/ev/fan/fabc12" && yoldanRota(rotadanYol("#/ev/benim/fx1")) === "#/ev/benim/fx1" &&
         yoldanRota(rotadanYol("#/fan/hikaye/f1%20a")) === "#/fan/hikaye/f1%20a" && rotaAdresi("#/kartpostal/abc").indexOf("/#/kartpostal/abc") !== -1;
     }));
+    await R.goto(adres + "/sen/"); await bekle(R, 1200);
+    ok("kişisel sayfa dizinlenmez, diğerleri dizinlenir", await R.evaluate(function () {
+      const kisisel = document.querySelector('meta[name="robots"]').content;
+      location.hash = "#/dunya";
+      return new Promise(function (coz) { setTimeout(function () { coz(kisisel === "noindex, follow" && document.querySelector('meta[name="robots"]').content === "index, follow"); }, 300); });
+    }));
+    await R.goto(adres + "/basla/"); await bekle(R, 1500);
+    ok("/basla/ karşılaması açılır", await R.evaluate(function () {
+      const k = document.querySelector("#karsilama");
+      return !!k && /Hoş geldin/.test(k.textContent) && /TNTF-BASLA/.test(k.textContent) && document.title.indexOf("Başla") === 0 && location.pathname === "/basla/";
+    }));
+    await R.click("[data-krs-kod]"); await bekle(R, 900);
+    ok("karşılamadan kod tek dokunuşla girilir, Arşiv açılır", await R.evaluate(function () {
+      kanonSifirla();
+      return !document.querySelector("#karsilama") && location.pathname === "/arsiv/" && bolumErisimi("arsiv") && !bolumErisimi("roman");
+    }));
+    await R.evaluate(function () { if (typeof perdeKapat === "function") { perdeKapat(); } });
+    await R.evaluate(function () { window.__olayTest = true; sessionStorage.clear(); olaySay("giris:deneme"); olaySay("giris:deneme"); olaySay("basla_kod", true); olaySay("Kötü Ad"); });
+    await bekle(R, 900);
+    ok("ziyaret sayacı: oturumda bir kez, kişisel veri yok", (await sahte.kokSorgu("select sayi from public.olay_sayaclari where ad = 'giris:deneme'")).rows[0].sayi === 1 &&
+      (await sahte.kokSorgu("select count(*)::int n from public.olay_sayaclari where ad like '%ötü%'")).rows[0].n === 0);
     ok("başlangıç kodu TNTF-BASLA yalnızca Arşiv ve Evren'i açar", await R.evaluate(function () {
       const gosterilen = veri.baslangicKodu;
       kodPenceresi(); kodDene("TNTF-BASLA");
@@ -221,7 +244,10 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
         !kanonEvrenErisimi("e26") && baslangicProfili().ad === "Başlangıç";
     }));
     const siteHaritasi = readFileSync(dizin + "/sitemap.xml", "utf8");
-    ok("site haritası bütün sayfaları ayrı listeler", ["/arsiv/", "/dunya/", "/oyunlar/", "/sen/", "/evren/e25/", "/evren/e26/", "/evren/e99/"].every(function (y) { return siteHaritasi.indexOf(y + "</loc>") !== -1; }));
+    ok("site haritası bütün sayfaları ayrı listeler (kişisel sayfa hariç)", ["/arsiv/", "/dunya/", "/oyunlar/", "/basla/", "/evren/e25/", "/evren/e26/", "/evren/e99/"].every(function (y) { return siteHaritasi.indexOf(y + "</loc>") !== -1; }) &&
+      siteHaritasi.indexOf("/sen/</loc>") === -1);
+    ok("her evrene ve sayfaya ayrı paylaşım görseli", /og:image" content="[^"]*\/ikon\/og\/e25\.png"/.test(readFileSync(dizin + "/evren/e25/index.html", "utf8")) &&
+      /og:image" content="[^"]*\/ikon\/og\/dunya\.png"/.test(readFileSync(dizin + "/dunya/index.html", "utf8")));
 
     const manifest = JSON.parse(readFileSync(dizin + "/manifest.webmanifest", "utf8"));
     ok("_redirects üretilir (Cloudflare Pages vb.)", /\/paylasim-al/.test(readFileSync(dizin + "/_redirects", "utf8")) && !/\/u\/\*/.test(readFileSync(dizin + "/_redirects", "utf8")));
@@ -391,14 +417,20 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await Z.click('[data-evs-sekme="lore"]'); await bekle(Z, 200);
     await Z.fill("#evlBaslik", "Tuzun sırrı");
     await Z.fill("#evlMetin", "Tuz aslında unutmaktır.");
-    await Z.fill("#evlYeniKod", "tuz-2024");
+    await Z.fill("#evlYeniKod", "tuzkodu-2024");
     await Z.fill("#evlIpucu", "Denizin dibine bak");
     await Z.fill("#evlIpucuFiyat", "5");
     await Z.click("[data-evl-ekle]"); await bekle(Z, 400);
     ok("kilitli lore şifreli kaydolur, kurucu okur", await Z.evaluate(function (id) {
       const e = evrenBenimBul(id); const l = e.lorlar[0];
       return e.lorlar.length === 1 && !/unutmak/.test(JSON.stringify(e)) && /unutmaktır/.test(document.querySelector("#evrenSayfa .evl-metin").textContent) &&
-        /TUZ-2024/.test(document.querySelector("#evrenSayfa .evl-kurucu").textContent) && !l.seg;
+        /TUZKODU-2024/.test(document.querySelector("#evrenSayfa .evl-kurucu").textContent) && !l.seg;
+    }, evId));
+    ok("kodlar 10 karakter harf ve rakam; kısa lore kodu reddedilir", await Z.evaluate(async function (id) {
+      const k = evKodUret(), p = kod10();
+      const kisa = await evrenLoreEkle(evrenBenimBul(id), { baslik: "Kısa", metin: "x", kod: "ABC-123" });
+      const yon = evrenYoneticiKoduKur(evrenBenimBul(id), "KISA-1");
+      return /^[A-Z0-9]{10}$/.test(k) && /^[A-Z0-9]{10}$/.test(p) && /en az 10/.test(kisa) && /en az 10/.test(yon.hata || "");
     }, evId));
     const loreSonuc = await Z.evaluate(async function (id) {
       const e = evrenBenimBul(id);
@@ -407,14 +439,14 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       const yanlis = await evrenKodDene(e, "BASKA-KOD");
       /* başka bir evren aynı kodla kurulur: o evrenin kodu bu evrende, bu evrenin kodu orada çalışmaz */
       const b = fanYeni("evren"); evrenBenimDegistir(b.id, function (x) { x.ad = "Öbür Evren"; });
-      await evrenLoreEkle(evrenBenimBul(b.id), { baslik: "Öbür sır", metin: "Burada başka şey var.", kod: "OBUR-KOD" });
-      const obur = await evrenKodDene(e, "OBUR-KOD");
-      const dogru = await evrenKodDene(e, "Tuz-2024");
-      const karsi = await evrenKodDene(evrenBenimBul(b.id), "TUZ-2024");
-      const y = evrenYoneticiKoduKur(evrenBenimBul(id), "EVY-SAHIP1");
+      await evrenLoreEkle(evrenBenimBul(b.id), { baslik: "Öbür sır", metin: "Burada başka şey var.", kod: "OBURKOD-12345" });
+      const obur = await evrenKodDene(e, "OBURKOD-12345");
+      const dogru = await evrenKodDene(e, "Tuzkodu-2024");
+      const karsi = await evrenKodDene(evrenBenimBul(b.id), "TUZKODU-2024");
+      const y = evrenYoneticiKoduKur(evrenBenimBul(id), "EVY-SAHIP12");
       localStorage.removeItem(EVL_ANAHTAR);
-      const yon = await evrenKodDene(evrenBenimBul(id), "evy-sahip1");
-      const yonKarsi = await evrenKodDene(evrenBenimBul(b.id), "EVY-SAHIP1");
+      const yon = await evrenKodDene(evrenBenimBul(id), "evy-sahip12");
+      const yonKarsi = await evrenKodDene(evrenBenimBul(b.id), "EVY-SAHIP12");
       const tomyeKodu = await evrenKodDene(evrenBenimBul(id), "SAFAK");
       fanEserlerimYaz(fanEserlerim().filter(function (x) { return x.id !== b.id; }));
       return { kilitli: kilitli, yanlis: yanlis.tur, obur: obur.tur, dogru: dogru.tur + dogru.n, karsi: karsi.tur, y: y.sarilan, yon: yon.tur + yon.n, yonKarsi: yonKarsi.tur, tomye: tomyeKodu.tur };
@@ -426,7 +458,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       veri.yoneticiOzet = dogrulamaOzeti("TEST-EVRENGEZER");
       yoneticiGiris("TEST-EVRENGEZER");
       const kur = await evrengezerAnahtariKur("");
-      await evrenLoreEkle(evrenBenimBul(id), { baslik: "İkinci sır", metin: "Evrengezer de okur.", kod: "IKINCI-1" });
+      await evrenLoreEkle(evrenBenimBul(id), { baslik: "İkinci sır", metin: "Evrengezer de okur.", kod: "IKINCI-12345" });
       const sarildi = await evrenEgSarEksik(evrenBenimBul(id));
       const e = evrenBenimBul(id);
       const hepsiSarili = e.lorlar.every(function (l) { return !!l.seg; });
@@ -534,6 +566,25 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       const h = fanEserlerim().filter(function (x) { return x.tur === "hikaye"; }).pop();
       return rota() === "#/fan" && h.konuklar[0].ad === "Taşsız Mira" && /Taşsız Mira/.test(h.karakterler) &&
         !!document.querySelector("#fanHikayeAlan .konuk-duzen") && !document.querySelector("#fanHikayeAlan .konuk-duzen textarea");
+    }));
+    ok("kişi kartı Instagram hikâyesi boyutunda", await Z.evaluate(async function (id) {
+      const t = await kisiKartUret(fanEserlerim().find(function (x) { return x.id === id; }));
+      return !!t && t.width === 1080 && t.height === 1920;
+    }, kisiId));
+    ok("EG mağazası: alınır, iki kez alınmaz, yetmezse alınmaz", await Z.evaluate(function () {
+      const c = egYukle(); c.eg = 30;
+      const a = egMagazaAl("desen_neon"), b = egMagazaAl("desen_neon"), y = egMagazaAl("desen_yildiz");
+      return a === "" && /Zaten/.test(b) && /Yetmez/.test(y) && egYukle().eg === 15 && egSahipMi("desen_neon") && !egSahipMi("desen_yildiz") &&
+        /evh-yildizlar/.test(evrenHaritaSvg({ yerler: [], stil: { desen: "yildiz" } }, {}));
+    }));
+    ok("günün evren turu: 3 farklı evren = EG ödülü, bir kez", await Z.evaluate(function () {
+      const c = egYukle(); c.ziyaret = { gun: bugununAdi(), l: ["site:x", "fan:y"] };
+      const once = c.eg, eskiEVS = EVS;
+      EVS = { kaynak: "e99", id: "e99", sekme: "harita", secili: null, mod: "sec", cizim: [] };
+      evrenZiyaretOdulu();
+      const sonra = egYukle().eg;
+      EVS = eskiEVS;
+      return sonra === once + 3 && egYukle().ziyaret.tur === true;
     }));
     ok("yönetici okur kişisini sitede yayımlar", await Z.evaluate(function (id) {
       const eski = window.panelAcik; window.panelAcik = function () { return true; };
@@ -838,6 +889,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("istatistik kutuları", await A.locator(".ist-kutu").count() === 5);
     ok("üç günlük grafik", await A.locator(".ist-coklu svg").count() === 3);
     ok("tablo görünümü", await A.locator(".ist-tablo tbody tr").count() === 14);
+    ok("İstatistik'te ziyaret sayacı", /Giriş: \/deneme\//.test(await A.textContent("#yOlayAlan")));
     await panel("bakim", "hatalar");
     ok("hatalar listelenir", /test hatası/.test(await A.textContent("#yHataAlan")));
     await panel("bakim", "yedek", 400);
@@ -904,6 +956,15 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       veri.evrenParalari.e99.kur = 0.05; veri.cuzdan.genelTavan = 300;
       return tamam;
     }));
+
+    ok("panelde başlangıç profiline geniş erişim onay ister", await A.evaluate(function () {
+      const p = veri.profiller.find(function (x) { return x.id === veri.baslangicProfil; });
+      const once = JSON.stringify(p.erisim);
+      yoneticiKisiTaslak = kisiTaslakProfilden(p); yoneticiKisiTaslak.bolumler.roman = true;
+      yoneticiKisiKaydet();
+      return JSON.stringify(p.erisim) === once && /herkese gösteriliyor/.test(document.querySelector("#yDurum").textContent);
+    }));
+    await A.evaluate(function () { yoneticiBaslangicOnay = null; yoneticiKisiTaslak = null; });
 
     /* ---------- E25: Evrengezerler kendi evreninde, melezler ortak ---------- */
     await A.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(A, 900);
