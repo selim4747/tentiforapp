@@ -110,7 +110,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("menü sayfası bütün sayfaları listeler", await Z.locator("#mobilMenu .mm-sayfa").count() === 12);
     await Z.click('#mobilMenu .mm-sayfa[href="#/fan"]'); await bekle(Z, 600);
     ok("menüden sayfaya gidilir, menü kapanır", await Z.evaluate(function () { return aktifSayfa === "fan" && !document.querySelector("#mobilMenu"); }));
-    ok("alt menüde Fan seçili", await Z.evaluate(function () { return !!document.querySelector('#altMenu .alt-oge.bu[href="#/fan"]'); }));
+    ok("alt menüde Evren düğmesi", await Z.evaluate(function () { return !!document.querySelector("#altMenu [data-evren-sec]"); }));
     const acikBaslik = await Z.evaluate(function () { return getComputedStyle(document.querySelector(".ust")).backgroundColor; });
     await Z.click("[data-mobil-menu]"); await bekle(Z, 300);
     await Z.click('[data-mobil-eylem="tema"]'); await bekle(Z, 200);
@@ -218,6 +218,59 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("güncellemeden sonra \"Neler yeni\" kartı", await Z.locator("#surumNotuAlan .surum-notu li").count() > 0);
     await Z.evaluate(function () { document.querySelector("[data-surum-kapat]").click(); });
     ok("kart kapatılınca bir daha çıkmaz", await Z.evaluate(function () { surumNotuCiz(); return !document.querySelector(".surum-notu") && localStorage.getItem("tentiforapp_gorulen_surum") === veri.surum; }));
+
+    /* ---------- evren seçici, kendi evreni ve haritası ---------- */
+    console.log("evrenler");
+    await Z.evaluate(function () { location.hash = "#/oyunlar"; }); await bekle(Z, 500);
+    await Z.click("#altMenu [data-evren-sec]"); await bekle(Z, 300);
+    ok("evren seçici açılır ve E99'u listeler", await Z.evaluate(function () {
+      const t = document.querySelector("#evrenSecici").textContent;
+      return /E99/.test(t) && /Claude/.test(t) && /Senin evrenlerin/.test(t);
+    }));
+    await Z.click("[data-es-yeni]"); await bekle(Z, 600);
+    ok("yeni evren kendi sayfasında, bilgi sekmesiyle açılır", await Z.evaluate(function () {
+      return /^#\/ev\/benim\//.test(location.hash) && !!document.querySelector('#evrenSayfa [data-fan-hedef] [data-fan-alan="ad"]');
+    }));
+    await Z.fill('#evrenSayfa [data-fan-alan="ad"]', "Deneme Evreni"); await bekle(Z, 450);
+    const evId = await Z.evaluate(function () { return EVS.id; });
+    ok("evren adı kişinin verisine yazılır", await Z.evaluate(function (id) { return evrenBenimBul(id).ad === "Deneme Evreni"; }, evId));
+    await Z.click('[data-evs-sekme="harita"]'); await bekle(Z, 200);
+    await Z.click('[data-evh-mod="yer"]'); await bekle(Z, 100);
+    let kutu = await Z.locator("#evrenSayfa .evh-svg").boundingBox();
+    await Z.mouse.click(kutu.x + kutu.width * 0.3, kutu.y + kutu.height * 0.3); await bekle(Z, 200);
+    await Z.fill("#evhAd", "Tuzkent"); await bekle(Z, 100);
+    ok("haritaya yer eklenir", await Z.evaluate(function (id) {
+      const y = evrenBenimBul(id).harita.yerler; return y.length === 1 && y[0].ad === "Tuzkent" && Math.abs(y[0].x - 30) < 2 && Math.abs(y[0].y - 30) < 2;
+    }, evId));
+    await Z.click('[data-evh-mod="cizim"]'); await bekle(Z, 100);
+    kutu = await Z.locator("#evrenSayfa .evh-svg").boundingBox();
+    for (const n of [[0.6, 0.2], [0.9, 0.3], [0.8, 0.8]]) { await Z.mouse.click(kutu.x + kutu.width * n[0], kutu.y + kutu.height * n[1]); await bekle(Z, 80); }
+    await Z.click("[data-evh-bitir]"); await bekle(Z, 200);
+    ok("alan (kıta) çizilir", await Z.evaluate(function (id) { const y = evrenBenimBul(id).harita.yerler; return y.length === 2 && y[1].sekil.length === 3; }, evId));
+    kutu = await Z.locator("#evrenSayfa .evh-svg").boundingBox();
+    await Z.click('[data-evh-mod="sec"]'); await bekle(Z, 100);
+    kutu = await Z.locator("#evrenSayfa .evh-svg").boundingBox();
+    await Z.mouse.move(kutu.x + kutu.width * 0.3, kutu.y + kutu.height * 0.3);
+    await Z.mouse.down(); await Z.mouse.move(kutu.x + kutu.width * 0.45, kutu.y + kutu.height * 0.5, { steps: 6 }); await Z.mouse.up(); await bekle(Z, 200);
+    ok("yer sürüklenerek taşınır", await Z.evaluate(function (id) { const y = evrenBenimBul(id).harita.yerler[0]; return y.x > 40 && y.y > 42; }, evId));
+    ok("harita dosyaya girer, dışarıdan gelen harita sınırlanır", await Z.evaluate(function (id) {
+      const html = fanDosyaHtml(fanTemizle(evrenBenimBul(id)));
+      const t = fanTemizle({ bicim: "tentifor-eser", tur: "evren", id: "h", ad: "H", harita: { yerler: [{ ad: "<b>", x: 500, y: -3, sekil: [[1, 2], [3, 4]] }], renk: "red" } });
+      return /Tuzkent/.test(html) && /<svg class="evh-svg/.test(html) && t.harita.yerler[0].x === 100 && t.harita.yerler[0].y === 0 && !t.harita.yerler[0].sekil && !t.harita.renk;
+    }, evId));
+    await Z.click("[data-evs-kapat]"); await bekle(Z, 300);
+    ok("evren sayfası kapanır", await Z.evaluate(function () { return !document.querySelector("#evrenSayfa") && location.hash === "#/fan"; }));
+    ok("kendi evreni seçicide", await Z.evaluate(function () { return evrenSeciciListesi().benim.some(function (x) { return x.ad === "Deneme Evreni"; }); }));
+    ok("E99 katkısı fan taslaklarında görünmez", await Z.evaluate(function () { e99Katki(); fanSekme.evren = "yaz"; fanEvrenCiz(); return !/E99 katkım/.test(document.querySelector("#fanEvrenAlan").textContent); }));
+
+    await Z.evaluate(function () { location.hash = "#/ev/e99"; }); await bekle(Z, 500);
+    await Z.click('[data-evs-sekme="bilgi"]'); await bekle(Z, 200);
+    await Z.click('#evrenSayfa [data-fan-hedef="e99-katkim"] [data-fan-ekle="kurallar"]'); await bekle(Z, 200);
+    await Z.fill('#evrenSayfa [data-fan-hedef="e99-katkim"] [data-fan-alan="kurallar.0.ad"]', "Tuz hafızadır"); await bekle(Z, 450);
+    ok("E99 katkısı yalnızca bu cihazda tutulur", await Z.evaluate(function () { return e99Katki().kurallar[0].ad === "Tuz hafızadır" && veri.e99.kurallar.length === 0; }));
+    await Z.click("[data-e99-gonder]"); await bekle(Z, 800);
+    ok("girişsiz gönderilemez, katkı kaybolmaz", /giriş/.test(await Z.textContent("#e99Durum")) && await Z.evaluate(function () { return e99Katki().kurallar.length === 1; }));
+    await Z.evaluate(function () { const p = document.querySelector("#perde"); if (p) { p.hidden = true; } evrenSayfaKapat(); });
     ok("sayfa paylaş düğmesi", await Z.locator("#sayfaBasi [data-sayfa-paylas]").count() === 1);
     await Z.evaluate(function () { location.hash = "#/mektuplar"; }); await bekle(Z, 800);
     ok("uzun metinlerde Dinle düğmesi", await Z.locator(".sesli-dugme").count() > 0);
@@ -540,6 +593,41 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("kopyalanan parça işaretlenir", /✓/.test(await A.textContent('[data-y-kurulum-parca="0"]')));
     ok("fonksiyon kodu da kopyalanabilir", await A.locator("[data-y-kurulum-fonksiyon]").count() === 1);
 
+    /* ---------- E99: okur gönderir, yönetici onaylar ---------- */
+    await B.evaluate(function () { location.hash = "#/ev/e99"; }); await bekle(B, 700);
+    await B.evaluate(function () {
+      const l = fanEserlerim(); const k = e99Katki(); const t = fanEserlerim();
+      const e = t.find(function (x) { return x.id === "e99-katkim"; });
+      e.kurallar = [{ ad: "Kuzey hiç yoktur", tur: "yön", aciklama: "Pusulalar döner durur." }];
+      e.harita = { yerler: [{ id: "k1", ad: "Dönen Liman", tur: "Şehir", not: "", x: 40, y: 40 }] };
+      fanEserlerimYaz(t); EVS.sekme = "bilgi"; evrenSayfaCiz(); void l; void k;
+    });
+    await B.evaluate(function () { document.querySelector("[data-e99-gonder]").click(); }); await bekle(B, 1500);
+    ok("E99 katkısı onay kuyruğuna gider", (await sahte.kokSorgu("select count(*)::int n from public.e99_onerileri where veri->'kurallar'->0->>'ad' = 'Kuzey hiç yoktur'")).rows[0].n === 1,
+      await B.textContent("#e99Durum"));
+    ok("gönderince katkı sıfırlanır, gönderilenlerde durur", await B.evaluate(function () { return e99Katki().kurallar.length === 0 && e99Gonderilenler().length === 1; }));
+    await panel("bakim", "e99", 1500);
+    ok("yönetici bekleyen katkıyı görür", /Kuzey hiç yoktur/.test(await A.textContent("#yE99Alan")));
+    await A.evaluate(function () { document.querySelector("[data-y-e99-onay]").click(); }); await bekle(A, 1000);
+    const e99 = await A.evaluate(function () { return JSON.parse(JSON.stringify(veri.e99)); });
+    ok("onaylanan katkı E99'a eklenir", e99.kurallar.length === 1 && e99.harita.yerler.length === 1 && e99.oneriler.length === 1, e99);
+    ok("onay sunucuya yazılır", (await sahte.kokSorgu("select count(*)::int n from public.e99_onerileri where durum = 'onaylandi'")).rows[0].n === 1);
+    ok("yayınlanınca okurun cihazındaki kopya kalkar", await B.evaluate(function (y) { veri.e99 = y; return e99GonderilenleriTemizle().length === 0; }, e99));
+
+    /* ---------- elle yayın ---------- */
+    await panel("bakim", "yayinla", 400);
+    await A.fill("#yYayinKanca", "https://ornek.com/kanca");
+    await A.evaluate(function () { document.querySelector("[data-y-yayin-kaydet]").click(); }); await bekle(A, 200);
+    ok("yanlış yayın adresi reddedilir", await A.evaluate(function () { return !localStorage.getItem("tentiforapp_yayin_kancasi"); }));
+    const kanca = "https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/test-kanca-123";
+    let yayinIstegi = null;
+    await A.route(kanca, function (r) { yayinIstegi = r.request().method(); return r.fulfill({ status: 200, body: "{}" }); });
+    await A.fill("#yYayinKanca", kanca);
+    await A.evaluate(function () { document.querySelector("[data-y-yayin-kaydet]").click(); }); await bekle(A, 300);
+    await A.evaluate(function () { document.querySelector("[data-y-yayinla]").click(); }); await bekle(A, 800);
+    ok("Yayınla düğmesi Cloudflare'e istek atar", yayinIstegi === "POST", yayinIstegi);
+    ok("yayın bağlantısı hesapla eşitlenmez", await A.evaluate(function () { return ESITLEME_DISI.indexOf("tentiforapp_yayin_kancasi") !== -1; }));
+
     /* ---------- Web Push ---------- */
     await panel("bakim", "bildirim", 1200);
     await A.evaluate(function () { document.querySelector("[data-y-bildirim-uret]").click(); }); await bekle(A, 600);
@@ -600,7 +688,8 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("listeye kayıt eklenir", await A.evaluate(function () { return veri.sozluk[veri.sozluk.length - 1].terim; }) === "Deneme terimi");
     ok("liste bir büyür", await A.evaluate(function () { return veri.sozluk.length; }) === once + 1);
     await A.click('[data-y-liste="degisiklik"]'); await bekle(A, 300);
-    ok("değişiklik özeti yalnızca gerçek değişikliği yazar", await A.inputValue("#yDegMaddeler") === "1 yeni sözlük terimi: Deneme terimi",
+    ok("değişiklik özeti yalnızca gerçek değişikliği yazar (onaylanan E99 katkısı dahil)", await A.inputValue("#yDegMaddeler") ===
+      "1 yeni sözlük terimi: Deneme terimi\n1 yeni E99 kuralı: Kuzey hiç yoktur\n1 yeni E99 harita yeri: Dönen Liman",
       await A.inputValue("#yDegMaddeler"));
     const surum = await A.evaluate(function () { return veri.surum; });
     await A.click("[data-y-deg-ekle]"); await bekle(A, 300);

@@ -62,7 +62,7 @@ function yeniSahte(dbAdi) {
     if (yol === '/auth/v1/recover') return cevap(200, {});
 
     // ---------------- rpc ----------------
-    let m = yol.match(/^\/rest\/v1\/rpc\/([a-z_]+)$/);
+    let m = yol.match(/^\/rest\/v1\/rpc\/([a-z0-9_]+)$/);
     if (m) {
       const fn = m[1]; const adlar = Object.keys(govde).filter(k => ID.test(k));
       const argSql = adlar.map((k, i) => k + ' => $' + (i + 1)).join(', ');
@@ -79,7 +79,7 @@ function yeniSahte(dbAdi) {
     }
 
     // ---------------- tablolar ve görünümler ----------------
-    m = yol.match(/^\/rest\/v1\/([a-z_]+)$/);
+    m = yol.match(/^\/rest\/v1\/([a-z0-9_]+)$/);
     if (m) {
       const rel = m[1]; const where = []; const vals = []; let order = []; let limit = null; let select = '*';
       for (const [k, v] of url.searchParams) {

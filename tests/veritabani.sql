@@ -236,6 +236,31 @@ select test.ok('abonelik silinir', (public.bildirim_abonelik_sil('https://fcm.go
 reset role;
 set role authenticated;
 
+-- ---------- E99 önerileri ----------
+reset role;
+set role anon;
+select test.ok('anonim E99 önerisi gönderemez', test.patlar($q$select public.e99_oner('{"a":1}')$q$));
+reset role;
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('E99 önerisi gönderilir', public.e99_oner('{"kurallar":[{"ad":"Tuz","tur":"kimya","aciklama":"Her şey tuzdur"}]}') ->> 'durum' = 'tamam');
+select test.ok('dizi gönderilemez', public.e99_oner('[1,2]') ->> 'durum' = 'gecersiz');
+select test.ok('öneri sahibinde listelenir', (select count(*) = 1 and min(durum) = 'bekliyor' from public.e99_onerilerim()));
+select test.ok('başkası önerileri okuyamaz', test.patlar('select * from public.e99_onerileri'));
+select test.ok('yönetici olmayan karar veremez', test.patlar('select public.e99_karar(1, $$onaylandi$$)'));
+select test.ok('yönetici olmayan listeyi göremez', test.patlar($q$select * from public.e99_oneriler('bekliyor')$q$));
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select id as e99_no from public.e99_oneriler('bekliyor') limit 1 \gset
+select test.ok('yönetici bekleyenleri görür (yazan adıyla)', (select count(*) = 1 and min(kullanici_adi) = 'cem' from public.e99_oneriler('bekliyor')));
+select test.ok('yönetici onaylar', public.e99_karar(:e99_no, 'onaylandi') ->> 'durum' = 'tamam');
+select test.ok('geçersiz karar reddedilir', public.e99_karar(:e99_no, 'sil') ->> 'durum' = 'gecersiz');
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('yazan onayı görür', (select durum = 'onaylandi' from public.e99_onerilerim() limit 1));
+select test.ok('günlük sınır', (select bool_and(public.e99_oner('{"x":1}') ->> 'durum' in ('tamam', 'bekleyen')) from generate_series(1, 6))
+  and public.e99_oner('{"x":1}') ->> 'durum' = 'bekleyen');
+reset role;
+set role authenticated;
+
 -- ---------- hesap silme ----------
 set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
 select public.hesabimi_sil();
