@@ -146,13 +146,18 @@ function fanEserGovde(e, dosya) {
     FAN_EVREN_GRUPLARI.map(function (g) {
       const liste = (e[g.k] || []).filter(function (x) { return Object.keys(x).some(function (k) { return String(x[k] || "").trim(); }); });
       if (!liste.length) { return ""; }
-      return "<h2>" + kacir(g.ad) + "</h2><dl>" + liste.map(function (x) {
+      /* "kutu" kişi: isim satırı yok, yalnızca anlatım */
+      const kutular = liste.filter(function (x) { return x.kutu; });
+      const satirlar = liste.filter(function (x) { return !x.kutu; });
+      return "<h2>" + kacir(g.ad) + "</h2>" +
+        kutular.map(function (x) { return '<div class="kisi-kutu">' + paragraf(x.aciklama) + "</div>"; }).join("") +
+        (satirlar.length ? "<dl>" + satirlar.map(function (x) {
         const bas = g.k === "tarih" ? x.zaman : (g.k === "sozluk" ? x.terim : x.ad);
         const ek = g.k === "kurallar" ? x.tur : (g.k === "kisiler" ? x.rol : "");
         const govde = g.k === "tarih" ? x.olay : (g.k === "sozluk" ? x.tanim : (g.k === "ozelAlanlar" ? x.deger : x.aciklama));
         return "<dt>" + kacir(bas || "—") + (ek ? ' <span class="bilgi">· ' + kacir(ek) + "</span>" : "") + "</dt>" +
           "<dd>" + paragraf(govde) + "</dd>";
-      }).join("") + "</dl>";
+      }).join("") + "</dl>" : "");
     }).join("") + konuk;
 }
 
