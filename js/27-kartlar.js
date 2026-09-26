@@ -9,7 +9,8 @@ const KART_RENK = {
   kar: "#F4F9FD", buz: "#DFEDF8", sig: "#B8D6EC", deniz: "#1C5C96",
   yarik: "#0D3560", murekkep: "#0A0F14", murekkep2: "#3D4A57"
 };
-const KART_ADRES = "tentifor.netlify.app";
+/* kartın altına yazılan adres: sitenin açıldığı alan adı (taşınınca kendiliğinden değişir) */
+const KART_ADRES = (typeof location !== "undefined" && location.protocol === "https:" && location.host) || "tentifor.netlify.app";
 
 /** Sitenin yazı tipleri canvas'ta da kullanılsın; yüklenemezse yedeklerle devam eder. */
 function kartFontlariHazir() {
