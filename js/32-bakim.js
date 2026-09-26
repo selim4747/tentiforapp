@@ -318,7 +318,11 @@ function yListeOgeBaslik(x) {
 }
 
 function yoneticiListeler() {
-  const secici = '<div class="filtre y-liste-secici">' + Object.keys(Y_LISTELER).map(function (k) {
+  /* site ayarları (sınırlı kod dahil) yalnızca tam yöneticide */
+  if (!yoneticiAcik() && yListe === "site") { yListe = "bulmacalar"; }
+  const secici = '<div class="filtre y-liste-secici">' + Object.keys(Y_LISTELER).filter(function (k) {
+    return k !== "site" || yoneticiAcik();
+  }).map(function (k) {
     const n = Array.isArray(veri[k]) ? " · " + veri[k].length : "";
     return '<button class="filtre-btn' + (yListe === k ? " secili" : "") + '" data-y-liste="' + k + '">' +
              kacir(Y_LISTELER[k].ad) + n + "</button>";
@@ -457,8 +461,20 @@ function yListeSite() {
     "<label>Gizlilik sayfasındaki iletişim adresi</label>" +
     '<p class="oyun-not">Bir e-posta ya da bağlantı yaz. Herkese açık görünür — kişisel adresin yerine bu site için açtığın bir adres önerilir. Boş bırakırsan GitHub sayfası gösterilir.</p>' +
     '<input class="kod-giris arac-giris" id="yIletisim" value="' + kacir(veri.iletisim || "") + '" placeholder="ornek: arsiv@alanadin.com">' +
-    '<button class="dugme" data-y-site-kaydet>Kaydet</button></div>';
+    '<button class="dugme" data-y-site-kaydet>Kaydet</button></div>' +
+    '<div class="kutu-y">' +
+      "<label>Sınırlı yönetici kodu</label>" +
+      '<p class="oyun-not">Bu kodu giren kişi paneli açar (roman, basın, listeler, ekleme sekmeleri, denetim, istatistik, kaydet) ' +
+        "ama buz katmanları ve gizli bloklar onun için kilitli kalır; onları oynayarak açar. Kişiler, anahtarlar, yedek ve karakter/evren " +
+        "düzenleyicileri yalnızca senin kodunla açılır.</p>" +
+      '<p class="oyun-not">Durum: <b>' + (veri.sinirliYoneticiOzet ? "tanımlı" : "tanımsız") + "</b>. Kod sitede saklanmaz; yenisini üretince eskisi geçersiz olur.</p>" +
+      (yListeYeniKod ? '<p class="y-kod-goster">Yeni kod: <code>' + kacir(yListeYeniKod) + "</code> — şimdi bir yere yaz, sonra Kaydet sekmesinden yayınla.</p>" : "") +
+      '<button class="dugme dugme-sade" data-y-sinirli-uret>' + (veri.sinirliYoneticiOzet ? "Yeni kod üret (eskisini iptal et)" : "Kod üret") + "</button>" +
+      (veri.sinirliYoneticiOzet ? ' <button class="dugme dugme-sade y-sil" data-y-sinirli-sil>Kodu iptal et</button>' : "") +
+    "</div>";
 }
+
+let yListeYeniKod = null;
 
 /* ==================== PANEL: HATALAR ==================== */
 
@@ -729,6 +745,20 @@ document.addEventListener("click", function (e) {
     yListeSilOnay = null;
     degisiklikCiz();
     yoneticiCiz();
+    return;
+  }
+  if (e.target.closest("[data-y-sinirli-uret]") && yoneticiAcik()) {
+    yListeYeniKod = yoneticiKodUret("YRD-") + yoneticiKodUret("").slice(0, 2);
+    veri.sinirliYoneticiOzet = dogrulamaOzeti(yListeYeniKod);
+    yoneticiCiz();
+    yoneticiDurum("Yeni sınırlı kod üretildi", true);
+    return;
+  }
+  if (e.target.closest("[data-y-sinirli-sil]") && yoneticiAcik()) {
+    delete veri.sinirliYoneticiOzet;
+    yListeYeniKod = null;
+    yoneticiCiz();
+    yoneticiDurum("Sınırlı kod iptal edildi — Kaydet sekmesinden yayınla", true);
     return;
   }
   if (e.target.closest("[data-y-site-kaydet]")) {

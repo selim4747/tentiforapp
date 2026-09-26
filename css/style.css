@@ -214,6 +214,7 @@ body{
 .madde-bolum{
   font-family:var(--mono);font-size:10px;letter-spacing:.13em;
   text-transform:uppercase;color:var(--deniz);flex-shrink:0;min-width:78px;
+  max-width:30%;line-height:1.5;
 }
 .madde-baslik{font-family:var(--display);font-size:21px;font-weight:400;line-height:1.2;flex:1}
 .madde-ok{color:var(--sig);font-size:15px;transition:.2s}

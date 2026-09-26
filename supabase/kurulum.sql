@@ -113,6 +113,18 @@ language sql stable security definer set search_path = '' as $$
   select exists (select 1 from public.yoneticiler where id = auth.uid());
 $$;
 
+-- İki düzey: 'tam' (her şey) ve 'sinirli' (denetim ve istatistik var; yedek yok).
+-- Sınırlı yönetici eklemek: insert into public.yoneticiler (id, duzey) select id, 'sinirli' from auth.users where email = '...';
+alter table public.yoneticiler add column if not exists duzey text not null default 'tam';
+do $$ begin
+  alter table public.yoneticiler add constraint yoneticiler_duzey check (duzey in ('tam', 'sinirli'));
+exception when duplicate_object then null; end $$;
+
+create or replace function public.tam_yonetici_mi() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.yoneticiler where id = auth.uid() and duzey = 'tam');
+$$;
+
 -- ---------- istatistikler (yalnızca sahibi ve yönetici okur; herkes görünüm üzerinden) ----------
 create table if not exists public.istatistikler (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -1273,7 +1285,7 @@ $$;
 create or replace function public.yedek_al() returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
 begin
-  if not public.yonetici_mi() then raise exception 'yetki yok'; end if;
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
   return jsonb_build_object(
     'zaman', now(),
     'kullanicilar', (select coalesce(jsonb_agg(jsonb_build_object('id', id, 'created_at', created_at)), '[]') from auth.users),  -- e-posta bilerek yok

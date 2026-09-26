@@ -492,6 +492,8 @@ function kodDene(ham) {
 
   /* yönetici kodu: her şeyi açar (bölümler, evrenler, buz katmanları) */
   if (veri.yoneticiOzet && ozet === veri.yoneticiOzet) { ustaGiris(kod, durum); return; }
+  /* sınırlı yönetici kodu: panel açılır, katmanlar kilitli kalır */
+  if (veri.sinirliYoneticiOzet && ozet === veri.sinirliYoneticiOzet) { ustaGiris(kod, durum); return; }
 
   const profil = (veri.profiller || []).find(function (p) { return p.dogrulama === ozet; });
   if (profil) { profilUygula(profil, kod, durum); return; }

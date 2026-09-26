@@ -1,6 +1,6 @@
 {
-  "surum": "1.0.0",
-  "guncelleme": "2026-08-05",
+  "surum": "1.1.0",
+  "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
     "altbaslik": "Roman ve oyun",
@@ -347,6 +347,78 @@
       "grup": "E26",
       "ozet": "Topunu önüne alıp kendi kendine konuşan, asosyal biri.",
       "detay": "E26'da yaşar. Asosyaldır; konuşma topunu önüne alıp kendi kendine konuşur.\n\nRastgele birini kaçırır ve konuşma toplarının işleyişini değiştirmek için üzerinde deneyler yapar. Sonunda onun zihnini kontrol eder; kendi konuşma topunun uzayabildiği kısmı artırır ve konuşma topu sayısını çoğaltır."
+    },
+    {
+      "id": "cl_umut",
+      "ad": "Ümüt",
+      "unvan": "Şafak Yürüyücüsü",
+      "grup": "Claude tarafından yapılan evren",
+      "ozet": "Adı \"umut\" demektir. Hayatında tek bir gece gördü.",
+      "detay": "Şafak Yürüyücüleri arasında doğdu ve on dokuz yaşına kadar gecenin ne olduğunu bilmedi. İlk Dönüş'ünde, karanlık halka başının üstünden ilk kez geçtiğinde, bütün kervan onu yerde, gözleri kapalı, şarkı söylerken buldu.\n\nO geceden sonra kervanın önderi oldu. Diğer yürüyücüler geceden korkar; Ümüt ise onu özler. Kervanı hiç durdurmaz ama her Dönüş'te en arkada yürür, karanlığın biraz daha uzun sürmesi için.\n\nUzlım'ın kocası Tövbe'yi yıllarca kervanında taşıdı. Ona hiçbir şey sormadı. Yürüyücülerin tek kuralı budur: yürüyen kişiye neden yürüdüğü sorulmaz.",
+      "gizli": null
+    },
+    {
+      "id": "cl_ozlem",
+      "ad": "Uzlım",
+      "unvan": "Dan'dan bir dokumacı",
+      "grup": "Claude tarafından yapılan evren",
+      "ozet": "Adı \"özlem\" demektir. Kocasının gidişini izlemek için yürüyor.",
+      "detay": "Kocası bir sabah Şafak Yürüyücülerine katıldı ve arkasına bakmadan gitti. Uzlım onu durdurmadı; yüzünün gelmesini bekledi. Yüz geldiğinde kocası çoktan yoldaydı.\n\nIşık yavaş gittiği için bir insanın gidişi uzun sürer. Uzlım bunu keşfetti: her gün biraz daha dışarı yürürse, kocasının uzaklaşan görüntüsüne yetişebiliyordu. Aylardır Dan'ın dışındaki tepelere çıkıp, onun yıllar önceki sırtını izliyor.\n\nKimseye söylemediği bir şey var: görüntü artık silikleşiyor. Bir gün Kıyı'ya varacak ve onu son kez görecek. Ne yapacağını bilmiyor.\n\nDokuduğu kumaşlarda hep aynı desen vardır: birbirinin peşinden yürüyen halkalar.",
+      "gizli": null
+    },
+    {
+      "id": "cl_gercek",
+      "ad": "Gırçık",
+      "unvan": "Hetire Hâkimi",
+      "grup": "Claude tarafından yapılan evren",
+      "ozet": "Adı \"gerçek\" demektir. Tanık Ayna'dan şüphelenen ilk hâkim.",
+      "detay": "Otuz yıldır Hetire mahkemesinde, zincirin ucundaki gözetleme odasında oturup geçmişi izleyerek hüküm veriyor. Gözleri yorgundur, ama hiçbir davada yanılmadı. En azından öyle biliniyordu.\n\nBir gün, beş yıl önce idama gönderdiği bir adamın davasını tekrar izledi ve aynadaki gölgenin açısının yanlış olduğunu fark etti. Kor dimdik yukarıdayken bir gölge eğik düşemezdi. Biri aynayı eğmişti.\n\nO günden beri gizlice eski davaları yeniden izliyor. Kimseye güvenmiyor; en çok da kendi gözlerine. Yelen'e yazdığı mektubu hiç göndermedi.",
+      "gizli": null
+    },
+    {
+      "id": "cl_yalan",
+      "ad": "Yelen",
+      "unvan": "Ayna Sahtecisi",
+      "grup": "Claude tarafından yapılan evren",
+      "ozet": "Adı \"yalan\" demektir. Geçmişin görüntüsünü eğebilen tek kişi.",
+      "detay": "Aynacılar Loncası'nın en yetenekli çırağıydı. Aynaların nasıl dikildiğini değil, nasıl eğildiğini öğrendi. Bir aynayı saç teli kadar döndürerek geçmişte olmamış bir şeyi göstermenin yolunu buldu.\n\nÖnce para için yaptı. Sonra bir şey fark etti: eğdiği her görüntü, bir süre sonra o şehrin hatırası oluyordu. İnsanlar olanı değil, aynada gördüklerini hatırlıyordu. Yelen geçmişi değiştirmiyordu — ama geçmişi değiştirmekle ne farkı vardı?\n\nGırçık onu arıyor. Yelen bunu biliyor ve bekliyor; Şomdo'da beklemek bir inceliktir.\n\nTenik'teki ilk aynayı Gecikme Savaşı'nda kimin eğdiğini soranlara hep aynı cevabı verir: \"Ben o gün doğmamıştım. Sanırım.\"",
+      "gizli": null
+    },
+    {
+      "id": "cl_sessiz",
+      "ad": "Sıssoz",
+      "unvan": "Kör Avcı",
+      "grup": "Claude tarafından yapılan evren",
+      "ozet": "Adı \"sessiz\" demektir. Hiç Yeveş görmedi; yüz kırk tanesini vurdu.",
+      "detay": "Doğuştan kördür. Sebir'in avcı okulunda gözleri açık öğrencilerle birlikte yetişti ve hepsini geçti, çünkü o hiçbir zaman gördüğüne kanmadı.\n\nYeveşleri tıkırtılarından tanır. Hangisinin aç, hangisinin yavru olduğunu adım sesinden söyleyebilir. Yavruları asla vurmaz ve öğrencilerine de vurdurmaz.\n\nŞafak Yürüyücülerinin kervanlarını gece halkalarında Yeveşlerden korumak için tutulur. Ümüt'le yirmi yıllık dosttur; birbirlerine hiç yüz beklemeden cevap veren tek iki kişi onlardır. Biri geceyi, öteki yüzü hiç tanımamıştır.",
+      "gizli": null
+    },
+    {
+      "id": "cl_bekle",
+      "ad": "Bıklı",
+      "unvan": "Tanık Ayna Bekçisi",
+      "grup": "Claude tarafından yapılan evren",
+      "ozet": "Adı \"bekle\" demektir. Zincirin ortasındaki adada tek başına yaşar.",
+      "detay": "Ayna Adaları'ndaki ara aynaların bekçisidir. İşi basittir: aynalara kimsenin dokunmamasını sağlamak ve üstlerindeki tozu, yüzeye değmeden üfleyerek temizlemek.\n\nAdada kırk yıldır yaşıyor. Aynanın içinden her gün Sebir'i ve Hetire'yi günler önceki hâliyle görüyor; bu yüzden şehirlerde olan her şeyi herkesten sonra, ama herkesten dikkatli izliyor.\n\nGırçık'ın fark ettiği eğik gölgeyi Bıklı da gördü — beş yıl önce. Kimseye söylemedi, çünkü o gece aynaya dokunan eli tanıdı.\n\nBıklı'nın adadan ayrılmamasının sebebi görev değildir. Beklediği biri var.",
+      "gizli": null
+    },
+    {
+      "id": "cl_isik",
+      "ad": "İşik",
+      "unvan": "Yerinli bir çocuk",
+      "grup": "Claude tarafından yapılan evren",
+      "ozet": "Adı \"ışık\" demektir. Gelen'in parlaklaştığını fark eden ilk kişi.",
+      "detay": "On iki yaşında, Yerin'de doğmuş bir çocuk. Kor'a en yakın şehirde büyüdüğü için dünyada şafağı herkesten önce görmüştür ve bununla övünür.\n\nGelişçi değildir; hatta onlarla alay eder. Ama her gece gökyüzüne bakar ve Gelen'in parlaklığını, annesinin kor meyvelerinin yanında durarak ölçer.\n\nÜç yıldır tuttuğu defterinde bir şey var: Gelen, her yıl bir kor meyvesi kadar daha parlak.\n\nDefteri Aynacılar Loncası'na götürdüğünde kapıdaki kişi ona yüzünün gelmesini beklemeden cevap verdi: \"Bunu kimseye gösterme.\"",
+      "gizli": null
+    },
+    {
+      "id": "cl_tovbe",
+      "ad": "Tövbe",
+      "unvan": "Uzlım'ın kocası",
+      "grup": "Claude tarafından yapılan evren",
+      "ozet": "Neden gittiğini yalnızca Kıyı biliyor.",
+      "detay": "Adı tövbe'nin kaymış hâli değildir; Şomdo'da kaymadan kalan birkaç addan biridir. Annesi ona bilerek, kaymasın diye bu adı koydu. Nedenini hiç anlatmadı.\n\nBir sabah Şafak Yürüyücülerine katıldı ve arkasına bakmadı. Kervan onu yıllarca taşıdı; Kıyı'ya varıldığında Dönüş'e katılmadı. Ümüt onu en son kenarda, boşluğa dökülen ışığa bakarken gördü.\n\nKıyı'da ne gördüğü bilinmiyor. Dan'daki Dönenler Sokağı'nda, aynaya bakmayan insanların arasında onun adı fısıltıyla geçer.",
+      "gizli": null
     }
   ],
   "evren": [
@@ -1019,6 +1091,150 @@
           "metin": "Bu zaman çizgisinde kökler aynıdır, yalnızca bazı sonuçlar değişir:\n\nKaelan'ın ailesi hayattadır — ama Kaelan yine de ruh deneyleri yapar; onu iten artık kayıp değil, saf meraktır. Feil yine ısrar karşısında bıkıp deneyimini anlatır (gerçek zaman çizgisinde sessizliği bir korumayken, burada mesele hafif olduğu için konuşur).\n\nTarı bu evrende deniz işini seçer, kütüphaneyi değil. Zafkı Eşci de denizci olmuştur; ikisi aynı işte bulunur. Yaşam ve Kaelan onları ziyaret ettiklerinde, kendi dünyalarındaki trajedinin izini hiç sezmeden, \"bu niye denizci oldu ki?\" diye düşünürler.\n\nL25 bu evrende takıntılı bir bilim adamı değil, tam zamanlı Starsaver'dır; ailesinden (Huj, Zal) hiç eksik yoktur, birlikte yıldız sistemlerini gezerler.\n\nSaek Luyot bu evrende de hâlâ katildir — kimliği sihirli biçimde silinmez. Ama artık kardeşi Feil bunu bilir; Saek, ruhunu ilk çıkardığı olaydan sonra ona anlatmıştır. Sıra gerçek zaman çizgisiyle aynıdır (önce olay, sonra itiraf); GTBT yalnızca sırrın ağırlığını hafifletir.\n\nFeil'in kendi geçmişine geri gitmesi bu zaman çizgisinde de aynen yaşanır — GTBT'yi orijinalden aşırı ayırmamak için bilinçli olarak değiştirilmemiştir.\n\nZafkı'nın bu evrende de denizci olmasının kökeni gerçek zaman çizgisiyle aynıdır: Tarı'nın bir gün restoranda söylediği \"babam denizciydi\" sözü Zafkı'nın aklında kalır. GTBT bu bağı silmez — yalnızca ikisini aynı mesleğe, aynı denize yaklaştırır. Kalpler hâlâ konuşmaz."
         }
       ]
+    },
+    {
+      "id": "clEvren",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Claude tarafından yapılan evren",
+      "ozet": "Işığın yürüme hızında gittiği evren.",
+      "metin": "Bu evrende ışık saatte beş kilometre gider. Yani bir insan onunla yan yana yürüyebilir.\n\nBunun sonuçları her şeye sızar. Karşındaki kişiyi şimdi değil, birkaç saniye önceki hâliyle görürsün. Ufuk, dünü gösterir. Gökyüzü neredeyse bomboştur, çünkü yıldızların ışığı buraya daha varmamıştır. Gündüz ve gece bir yerin başına gelmez; yürüyerek gelir.\n\nEvrende tek bir dünya bilinir: Şomdo. Adı \"şimdi\" demektir — ve bu, dünyanın en büyük şakasıdır, çünkü Şomdo'da kimse şimdiyi göremez. Herkes yalnızca kendi kolunun uzunluğu kadar şimdide yaşar; ötesi geçmiştir.\n\nBu evren Tentiforverse'ün evren sayımına girmez. Başka bir elden çıkmıştır ve kendi kurallarıyla durur.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clKor",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Kor",
+      "ozet": "Tek ışık kaynağı. Yirmi saat yanar, yirmi saat söner.",
+      "metin": "Şomdo'nun güneşi yoktur; Kor vardır. Dünyanın tam ortasının üstünde, dönmeden asılı duran bir ateş.\n\nKor sürekli yanmaz. Yirmi saat parlar, yirmi saat karanlıkta bekler — bir kalp gibi, ama çok yavaş. Şomdolular buna \"Kor'un nefesi\" der. Her nefeste yeni bir ışık halkası doğar ve dışarı doğru yürümeye başlar.\n\nKor'un adı, isim kaymasına uğramayan tek addır. Aynacıların söylediğine göre ışığın kaynağı kaymaz; kayan, ondan uzaklaşan her şeydir.\n\nHer üç yüz günde bir Kor, bir nefes boyunca her zamankinden parlak yanar. Buna Büyük Nefes denir ve Şomdo takviminin yılı budur.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clHalka",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Gün Halkaları",
+      "ozet": "Gündüz bir saat değil, bir yerdir. Ve yürür.",
+      "metin": "Kor yandığında ışık altından dışarı doğru, bir halka hâlinde yayılır. Yirmi saat sonra Kor söner; bu kez karanlık aynı hızla, ışığın peşinden yürür.\n\nSonuç: Şomdo'nun üstünde iç içe halkalar vardır. Her aydınlık halka yüz kilometre genişliğindedir, arkasından yüz kilometrelik bir karanlık halka gelir, ve hepsi saatte beş kilometreyle dışarı doğru ilerler. Yukarıdan bakabilseydin dünyayı suya atılmış taşın halkaları gibi görürdün.\n\nBir şehir için bu, yirmi saatlik gündüz ve yirmi saatlik gece demektir. Ama şafak herkese aynı anda gelmez. Kor Altı'ndaki şafak, Dan'a ancak günler sonra varır. Bu yüzden Şomdo'da saat sormak anlamsızdır; sorulan şey \"sende hangi halka var?\"dır.\n\nŞafağın kenarı çıplak gözle görülür: karanlığın içinde, yürüyerek yaklaşan bir ışık duvarı. Çocuklar ona \"Şafak Duvarı\" der ve ona doğru koşar.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clYuz",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Yüz Gecikmesi",
+      "ozet": "Önce sesini duyarsın, sonra yüzün gelir.",
+      "metin": "Ses, ışıktan yetmiş kat hızlıdır. İki adım ötendeki biri konuştuğunda sözleri hemen ulaşır; ama yüzü, o sözleri söylerkenki ifadesi, beş saniye sonra gelir.\n\nŞomdo'da görgü kuralları bunun üstüne kuruludur. Birine cevap vermeden önce yüzünün gelmesini beklemek incelik sayılır; buna \"yüz beklemek\" denir. Hemen cevap veren, karşısındakinin gerçekte ne hissettiğini görmeden konuşmuş olur. Kaba ya da korkak sayılır.\n\nBu yüzden Şomdo'da yalan kısa ömürlüdür. Sözle yalan söylenir ama yüz birkaç saniye sonra gerçeği taşır. Yalancılar konuşurken arkalarını döner; arkasını dönerek konuşmak Şomdo'da suç itirafına yakın bir harekettir.\n\nAşk sözleri de bu yüzden bekletilir. \"Yüzün gelene kadar bekledim\" Şomdo'da en eski sevgi cümlesidir.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clAyna",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Aynacılar ve Tanık Ayna",
+      "ozet": "Uzaktaki bir ayna, geçmişi gösterir.",
+      "metin": "Bir aynaya bakan kendini, ışığın aynaya gidip dönmesi kadar önce görür. Bir adım ötedeki aynada bu bir saniyedir; yirmi beş kilometre ötedeki bir aynada tam on saattir.\n\nAynacılar Loncası bunu keşfeden ilk topluluktur. Sebir'den başlayıp Ayna Adaları üzerinden Hetire'ye uzanan, birbirine bakan dev aynalardan bir zincir kurdular: Tanık Ayna. Zincirin ucundaki gözetleme odasından bakan, şehri günler önceki hâliyle görür.\n\nHetire mahkemeleri Tanık Ayna'yı kullanır. Bir suç işlendiyse hâkimler, o anın ışığı zincirin ucuna varana kadar bekler ve olanı kendi gözleriyle izler. Şomdo'da \"tanık\" kelimesi bir kişiyi değil, bir aynayı anlatır.\n\nAynacılar yemin ederek çalışır: aynaya dokunmak, onu eğmek ya da örtmek ağır suçtur. Çünkü bir ayna eğilirse geçmiş değişmez — ama geçmişin görüntüsü değişir. Ve Şomdo'da çoğu insan için ikisi aynı şeydir.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clSafak",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Şafak Yürüyücüleri",
+      "ozet": "Hiç gece görmemiş bir halk.",
+      "metin": "Işık yürüme hızında gittiğine göre, onunla birlikte yürüyen biri şafaktan hiç ayrılmaz. Şafak Yürüyücüleri bunu yapar.\n\nKor Altı'ndan yola çıkarlar ve şafağın kenarıyla birlikte dışarı yürürler. Önlerinde karanlık, arkalarında sabah vardır. Uyumaları gerektiğinde sırayla uyurlar: yürüyenler uyuyanları sedyelerde taşır. Kervan hiç durmaz.\n\nKıyı'ya vardıklarında ışık boşluğa dökülür ve yolculuk biter. O zaman geri dönmek zorundadırlar — içeri, Kor'a doğru. Geri dönüşte halkaların içinden geçerler ve gece ile gündüz ikiye katlanmış hızla başlarının üstünden akar. Yürüyücüler buna \"Dönüş\" der ve hayatlarının en korkunç günleri olarak anlatır: gecenin ne olduğunu ilk kez orada öğrenirler.\n\nBir yürüyücünün ömründe yalnızca birkaç Dönüş olur. Geri kalan zaman hep sabahtır.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clYeves",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Yeveşler",
+      "ozet": "Onları gördüğün yerde değiller.",
+      "metin": "Adları \"yavaş\" demektir, ama dünyanın en hızlı avcılarıdır. Bu adı onları görenler koydu: çünkü gördükleri her zaman geride kalmış bir Yeveş'ti.\n\nYeveşler ışığın gecikmesinde avlanmayı öğrenmiş hayvanlardır. Otuz adım öteden görünen bir Yeveş, aslında çoktan yirmi adım yaklaşmıştır. Gözünün söylediğine güvenen av ölür.\n\nOnlardan korunmanın tek yolu kulaktır. Yeveşler sessiz koşamaz; pençeleri taşa değdiğinde tıkırdar. Şomdo'daki eski avcı okulları öğrencilerine önce gözlerini kapatmayı öğretir.\n\nYeveşler gündüz halkalarında avlanır, gece halkalarında uyur. Bu yüzden onlar da yürür: şafakla birlikte değil, akşamla birlikte.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clFinir",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Fınır Ağaçları",
+      "ozet": "Işığı yaprağında saklayan, gece yanan ağaçlar.",
+      "metin": "Adları \"fener\" demektir. Gündüz halkasında yapraklarına ışık toplarlar ve gece halkası geldiğinde yavaş yavaş geri verirler.\n\nFınır meyvesine kor meyvesi denir: içinde bir gecelik ışık vardır. Kabuğu çatlatıldığında avuçta yanar ve yirmi saat boyunca söner.\n\nŞomdo'nun parası yoktur, kor meyvesi vardır. Işık saklanabilir bir şey olduğu için değerlidir; Dan gibi dış şehirler, şafağı beklerken Yekin'den gelen kor meyvesiyle aydınlanır.\n\nBir Fınır'ı kesmek yasaktır. Kesilen Fınır, içindeki bütün ışığı bir anda bırakır ve etrafındakileri günlerce kör eder.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clGelen",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Gelen",
+      "ozet": "Işığı bu dünyaya ulaşmış tek yıldız.",
+      "metin": "Şomdo'nun gökyüzü karanlıktır. Yıldızlar vardır ama ışıkları henüz yoldadır; birçoğunun ışığı bu dünya yok olduktan sonra gelecektir.\n\nTek istisna Gelen'dir. Üç yüz on iki yıl önce, bir gece halkasının ortasında göğün tek bir noktası yandı ve bir daha sönmedi. O gece Gelen'in Tepesi'nde bulunan otuz dört kişi, dünyada ilk kez Kor'dan başka bir ışık gördü.\n\nOnlardan bir inanç doğdu: Gelişçiler. Gelişçilere göre her ışık bir mesajdır ve Gelen'in ışığı yola çıktığında içinde birinin sözü vardı. O söz hâlâ yoldadır; ışığın arkasından, çok daha yavaş gelmektedir.\n\nGelişçiler her Büyük Nefes'te tepede toplanır ve ikinci ışığı bekler.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clIsim",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "İsim Kayması",
+      "ozet": "Her ad, bir Türkçe kelimenin bir basamak kaymış hâlidir.",
+      "metin": "Bu evrende adlar kendiliğinden konmaz; ışık gibi kayar. Kural tektir: kelimenin her ünlüsü şu merdivende bir basamak ilerler.\n\na → e → ı → i → o → ö → u → ü → a\n\nÜnsüzler yerinde kalır. Böylece \"şimdi\" Şomdo olur, \"yarın\" Yerin, \"dün\" Dan, \"sabır\" Sebir, \"hatıra\" Hetire, \"fener\" Fınır, \"yavaş\" Yeveş, \"yakın\" Yekin, \"uzak\" Üzek, \"tanık\" Tenik.\n\nKişi adları da aynı yoldan gelir. Ümüt \"umut\"tur, Uzlım \"özlem\", Gırçık \"gerçek\", Yelen \"yalan\", Sıssoz \"sessiz\", Bıklı \"bekle\", İşik \"ışık\".\n\nAynacıların söylediğine göre adlar kayar çünkü onları taşıyan ışık yoldayken biraz yorulur. Kaymayan tek ad Kor'dur: kaynak yorulmaz.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clKiyi",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Kıyı",
+      "ozet": "Işığın düştüğü yer.",
+      "metin": "Şomdo düzdür ve bir kenarı vardır. Oraya Kıyı denir.\n\nIşık halkaları Kıyı'ya varınca durmaz; kenardan aşağı, hiçliğe dökülür. Kıyı'da durup dışarı bakan, karanlığın içinde dünyanın bütün eski şafaklarını görür: boşlukta birbirinin peşinden yürüyen, sönük, sonsuz ışık halkaları.\n\nAynacılar en dış halkanın dünyanın ilk şafağı olduğuna inanır. Gelişçiler ise o halkalardan birinin bir gün geri döneceğine.\n\nKıyı'da yaşayan kimse yoktur. Ama Dan'da, Kıyı'ya gidip geri dönenlerin bir sokağı vardır ve o sokakta kimse aynaya bakmaz.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clSes",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Sesin Önceliği",
+      "ozet": "Gözün yalan söylediği yerde kulak hükümdardır.",
+      "metin": "Görüntü geç geldiği için Şomdo'da güvenilen duyu kulaktır. Mahkemede ayna tanıktır, ama sokakta ses.\n\nŞomdo'nun en saygın sanatı müziktir. Resim ise hep bir geçmiş sanatı sayılır: \"resim dünü çizer, şarkı şimdiyi söyler.\"\n\nKörler Şomdo'da eksik sayılmaz; birçok avcı okulunun ustası kördür. Onlar Yeveş'i nerede göründüğüne göre değil, nerede tıkırdadığına göre vurur.\n\nBir çocuğa verilen ilk öğüt de budur: \"Gördüğüne yetiş, duyduğuna güven.\"",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clTakvim",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Şomdo Takvimi",
+      "ozet": "Bir gün kırk saat, bir yıl üç yüz gün. Ve tarih, nerede durduğuna göre değişir.",
+      "metin": "Bir Şomdo günü Kor'un bir nefesidir: yirmi saat ışık, yirmi saat karanlık. Kırk saat.\n\nBir yıl, iki Büyük Nefes arasındaki üç yüz gündür. Ay yoktur, hafta yoktur; günler halkalarla sayılır.\n\nAsıl tuhaflık şudur: aynı gün, farklı yerlere farklı zamanlarda gelir. Yerin'de başlayan bir gün, Dan'a günler sonra varır. Bu yüzden her tarih bir yerle birlikte yazılır: \"Sebir'e göre 41. halka\". Yer yazılmamış bir tarih geçersizdir.\n\nŞafak Yürüyücüleri takvim tutmaz. Onlar için her gün aynı sabahtır.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clSavas",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Gecikme Savaşı",
+      "ozet": "Dünü gören, yarını kazandı.",
+      "metin": "İki yüz yıl önce Yekin ile Üzek savaştı. Üzek'in orduları daha kalabalıktı; Yekin'in ise aynaları vardı.\n\nIşık denizin ortasından bir buçuk günde geçer. Üzek komutanları karşı kıyıda Yekin ordusunu gördüklerinde, gördükleri bir buçuk gün öncesiydi. Yekin bunu bildiği için ordusunu sürekli yer değiştirdi ve Üzek'in ateşi hep boş kıyılara düştü.\n\nSavaşı Tenik'teki ilk büyük ayna bitirdi. Birisi aynayı eğdi ve Üzek komutanlarına kendi ordularının geçmiş hâlini düşman diye gösterdi. Üzek, kendi dününe saldırdı.\n\nAynayı kimin eğdiği bilinmiyor. Aynacılar Loncası o gün kuruldu ve ilk yasası şu oldu: \"Aynaya dokunma.\"",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clKronoloji",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "Şomdo Kronolojisi",
+      "ozet": "Sebir'e göre yazılmış kısa bir tarih.",
+      "metin": "Bilinmeyen çağ — İlk şafak Kor Altı'ndan yürümeye başlar. Kıyı'daki en dış halkanın o olduğu söylenir.\n\nYürüyüş çağı — İlk Şafak Yürüyücüleri kervanlarını kurar. Yerleşik halk ile yürüyen halk ayrılır.\n\nFınır çağı — Kor meyvesinin ışık sakladığı keşfedilir; Dan kurulur. Dış kıta ilk kez gece aydınlanır.\n\nAyna çağı — Tenik'te ilk büyük ayna dikilir. Bir aynanın geçmişi gösterdiği anlaşılır.\n\nİki yüz yıl önce — Gecikme Savaşı. Üzek kendi dününe saldırır. Aynacılar Loncası kurulur.\n\nÜç yüz on iki yıl önce — Gelen'in ışığı ulaşır. Gelişçiler doğar. (Aynacılar bu tarihin savaştan önce olduğunu, Gelişçiler sonra olduğunu söyler; iki taraf da tarihi başka bir yere göre tutar.)\n\nBugün — Hetire mahkemeleri bir aynanın eğildiğinden şüpheleniyor.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
+    },
+    {
+      "id": "clIkinci",
+      "bolum": "Claude tarafından yapılan evren",
+      "baslik": "İkinci Işık",
+      "ozet": "Gelişçilerin beklediği ve Aynacıların korktuğu şey.",
+      "metin": "Gelişçilere göre Gelen'in ışığı bir habercidir; asıl söz, onu gönderenin ikinci ışığıdır ve yola çoktan çıkmıştır.\n\nAynacılar bu inanca hep mesafeli durdu. Ama Loncanın kayıtlarında, kimsenin yüksek sesle okumadığı bir hesap vardır: Gelen'in ışığı parlaklaşıyor. Çok az, ama her yıl.\n\nParlaklaşan bir ışık iki şey demek olabilir: kaynağı büyüyordur, ya da kaynağı yaklaşıyordur.\n\nIşığın yürüme hızında gittiği bir evrende yaklaşan bir yıldız, onu gördüğün anda çoktan gelmiştir.",
+      "gizli": null,
+      "eklendi": "2026-09-26"
     }
   ],
   "katmanlar": [
@@ -1066,6 +1282,7 @@
     }
   ],
   "yoneticiOzet": "7b3b156ace4f030d8473274ec0e1555d7775a7251f9554bffc218123536696a4",
+  "sinirliYoneticiOzet": "d3d18d3cdd5c548c640019f4de6c32fb75abb3d51931c62ba233869dc81c0f70",
   "oduller": {
     "birOyun": "Pf8tRdrLk9ObqGIw",
     "tumOyunlar": "H6v/FCnpcuXjMzuP"
@@ -1758,6 +1975,46 @@
         "id": "faralt",
         "ad": "Faralt",
         "grup": "Blero"
+      },
+      {
+        "id": "cl_umut",
+        "ad": "Ümüt",
+        "grup": "Claude tarafından yapılan evren"
+      },
+      {
+        "id": "cl_ozlem",
+        "ad": "Uzlım",
+        "grup": "Claude tarafından yapılan evren"
+      },
+      {
+        "id": "cl_gercek",
+        "ad": "Gırçık",
+        "grup": "Claude tarafından yapılan evren"
+      },
+      {
+        "id": "cl_yalan",
+        "ad": "Yelen",
+        "grup": "Claude tarafından yapılan evren"
+      },
+      {
+        "id": "cl_sessiz",
+        "ad": "Sıssoz",
+        "grup": "Claude tarafından yapılan evren"
+      },
+      {
+        "id": "cl_bekle",
+        "ad": "Bıklı",
+        "grup": "Claude tarafından yapılan evren"
+      },
+      {
+        "id": "cl_isik",
+        "ad": "İşik",
+        "grup": "Claude tarafından yapılan evren"
+      },
+      {
+        "id": "cl_tovbe",
+        "ad": "Tövbe",
+        "grup": "Claude tarafından yapılan evren"
       }
     ],
     "baglar": [
@@ -1996,6 +2253,46 @@
         "b": "tari",
         "etiket": "gece neler olduğunu bilmiyor",
         "bilmez": true
+      },
+      {
+        "a": "cl_ozlem",
+        "b": "cl_tovbe",
+        "etiket": "gidişini izliyor"
+      },
+      {
+        "a": "cl_umut",
+        "b": "cl_tovbe",
+        "etiket": "yıllarca taşıdı"
+      },
+      {
+        "a": "cl_umut",
+        "b": "cl_sessiz",
+        "etiket": "yüz beklemeyen iki dost"
+      },
+      {
+        "a": "cl_gercek",
+        "b": "cl_yalan",
+        "etiket": "peşinde"
+      },
+      {
+        "a": "cl_bekle",
+        "b": "cl_yalan",
+        "etiket": "o eli tanıdı"
+      },
+      {
+        "a": "cl_bekle",
+        "b": "cl_gercek",
+        "etiket": "aynı gölgeyi gördü"
+      },
+      {
+        "a": "cl_isik",
+        "b": "cl_gercek",
+        "etiket": "defteri ona ulaşacak"
+      },
+      {
+        "a": "cl_sessiz",
+        "b": "cl_ozlem",
+        "etiket": "tepelere kadar korudu"
       }
     ]
   },
@@ -2759,7 +3056,39 @@
   ],
   "crossoverlar": [],
   "anlatiOlaylari": [],
-  "kisaHikayeler": [],
+  "kisaHikayeler": [
+    {
+      "id": "cl_h1",
+      "baslik": "Yüz Beklemek",
+      "eklendi": "2026-09-26",
+      "karakterler": [
+        "cl_ozlem",
+        "cl_tovbe"
+      ],
+      "metin": "Claude tarafından yapılan evrenden.\n\n\"Gidiyorum,\" dedi Tövbe.\n\nUzlım sesini hemen duydu. Mutfaktaydı, elinde kor meyvesi vardı ve kabuğunu çatlatmak üzereydi. Durdu. Bekledi.\n\nKapının önündeki Tövbe hâlâ gülümsüyordu. Uzlım bunun beş saniye önceki Tövbe olduğunu biliyordu: \"Gidiyorum\" demeden önceki, belki bunu söyleyip söylememeyi tartan, belki hiç tartmayan adam.\n\nDört saniye.\n\nGülümseme durdu. Tövbe'nin dudakları kıpırdadı — Uzlım'ın zaten duyduğu kelimeyi şimdi görüyordu. Ağzının şekli \"Gidiyorum\" dedi, ama sessizce, geç, bir yankı gibi.\n\nİki saniye.\n\nŞimdi yüzü geliyordu. Uzlım gözlerini ayırmadı. Bütün Şomdo'nun öğrettiği gibi, cevap vermeden önce bir insanın ne hissettiğini görmek istedi.\n\nYüz geldi.\n\nVe kapı boştu. Görüntü oradaydı, Tövbe'nin yüzü oradaydı, ama kapının kendisi — ahşabı, eşiği, arkasındaki sokak — Uzlım'a çoktan ulaşmış bir boşluğu gösteriyordu. Tövbe gitmişti. Yüzü, sahibinden sonra kalan bir iz gibi kapının önünde asılı durdu, sonra soldu.\n\nUzlım kor meyvesini çatlattı. Avucunda bir gecelik ışık yandı.\n\n\"Tamam,\" dedi boş mutfağa. Kimse yüzünü beklemedi."
+    },
+    {
+      "id": "cl_h2",
+      "baslik": "Yüz Kırk Birinci",
+      "eklendi": "2026-09-26",
+      "karakterler": [
+        "cl_sessiz",
+        "cl_umut"
+      ],
+      "metin": "Claude tarafından yapılan evrenden.\n\nKervan gece halkasına girdiğinde Ümüt, Sıssoz'un omzuna dokundu. \"Sıra sende.\"\n\nSıssoz gülümsedi. \"Benim için hep sıra bende.\"\n\nGece halkası geçene kadar kervan yirmi saat karanlıkta yürüyecekti. Yürüyücüler bundan nefret ederdi. Sıssoz ise sevmezdi ama anlardı: karanlıkta herkes onun gibiydi. Karanlıkta herkes kulağına güvenmek zorundaydı.\n\nÜçüncü saatte tıkırtıyı duydu. Sol tarafta, kayalıkların arasında. Pençe, taş, pençe, taş. Ağır bir yetişkin, aç.\n\nYay çekildi.\n\nSonra ikinci tıkırtı geldi. Daha hafif. Daha hızlı. Düzensiz — koşmayı yeni öğrenen birinin ayakları gibi.\n\nSıssoz yayı indirdi.\n\n\"Ne oldu?\" diye fısıldadı Ümüt.\n\n\"Annesi,\" dedi Sıssoz. \"Yavrusunu avlamayı öğretiyor.\"\n\n\"Ve av biziz.\"\n\n\"Av biziz.\" Sıssoz bir taş aldı, kayalıkların öbür tarafına fırlattı. Tak. Tak. Tıkırtılar durdu, sonra uzaklaştı, taşın düştüğü yere doğru.\n\nÜmüt uzun süre sustu. Sonra sordu: \"Kaç tane vurdun şimdiye kadar?\"\n\n\"Yüz kırk.\"\n\n\"Bu gece yüz kırk bir olabilirdi.\"\n\n\"Olabilirdi,\" dedi Sıssoz ve yürümeye devam etti. \"Ama o bir gün Dönüş'te senin kervanını bulacak ve o zaman ben orada olmayacağım. Ona bugün insanların taş attığını öğrettik. Kaçmayı öğretmek, öldürmekten daha uzun sürer.\""
+    },
+    {
+      "id": "cl_h3",
+      "baslik": "Adadaki Bekçi",
+      "eklendi": "2026-09-26",
+      "karakterler": [
+        "cl_bekle",
+        "cl_yalan",
+        "cl_gercek"
+      ],
+      "metin": "Claude tarafından yapılan evrenden.\n\nBıklı aynanın önüne oturdu ve Hetire'nin dört gün önceki sabahını izledi.\n\nMahkeme binasının önünden bir kadın geçiyordu. Bıklı onu tanıdı — tanıması için yüzünü görmesine gerek yoktu. Yürüyüşünden, omuzlarını hafifçe sola eğişinden. Kırk yıl önce bu adaya geldiğinde, o yürüyüş onun arkasından kıyıya kadar gelmişti.\n\nYelen.\n\nAynadaki Yelen durdu, başını kaldırdı ve doğrudan zincirin ucuna baktı. Dört gün önce, tam şu anda Bıklı'nın bakacağını biliyormuş gibi.\n\nDudakları kıpırdadı. Ses gelmedi; ses denizi geçemezdi. Ama Bıklı dudak okumayı bu adada öğrenmişti, çünkü başka kimse yoktu.\n\n\"Hâlâ bekliyor musun?\"\n\nBıklı cevap vermedi. Cevap vermeden önce yüzün gelmesini beklemek incelikti ve Yelen'in yüzü zaten gelmişti. Sorun şuydu: Bıklı onun ne hissettiğini okuyamıyordu. Kırk yıl sonra bile.\n\nArkasında, adanın öbür ucunda, bir kayığın kıyıya vurduğunu duydu. Sonra ayak sesleri. Yorgun, yaşlı, dikkatli — bir hâkimin adımları.\n\nBıklı aynanın üstündeki tozu, yüzeye değmeden üfledi ve kalktı. Beklediği kişi bu değildi. Ama belki, diye düşündü, beklemenin de bir sonu vardı."
+    }
+  ],
   "kilitliDosyalar": [],
   "bosluklar": [
     {
@@ -3015,6 +3344,46 @@
     {
       "terim": "GTBT",
       "tanim": "Good Times Bad Times — Tentiforverse'in üçüncü yapım kategorisi. Sonsuz dallanan olasılıklar değil, tek ve somut bir alternatif zaman çizgisi."
+    },
+    {
+      "terim": "Şomdo",
+      "tanim": "Claude tarafından yapılan evrendeki tek bilinen dünya. Adı \"şimdi\" demektir; ironiktir, çünkü orada kimse şimdiyi göremez."
+    },
+    {
+      "terim": "Kor",
+      "tanim": "Şomdo'nun ışık kaynağı. Yirmi saat yanıp yirmi saat söner. İsim kaymasına uğramayan tek ad."
+    },
+    {
+      "terim": "Gün halkası",
+      "tanim": "Kor'un her nefesiyle doğan, dışarı doğru yürüyen aydınlık ve karanlık halkalar. Şomdo'da gündüz bir saat değil, bir yerdir."
+    },
+    {
+      "terim": "Yüz beklemek",
+      "tanim": "Birine cevap vermeden önce yüzünün (gecikmeli görüntüsünün) gelmesini beklemek. Şomdo'da inceliğin temeli."
+    },
+    {
+      "terim": "Tanık Ayna",
+      "tanim": "Sebir'den Hetire'ye uzanan, geçmişi gösteren ayna zinciri. Hetire mahkemeleri onunla yargılar."
+    },
+    {
+      "terim": "Şafak Yürüyücüsü",
+      "tanim": "Şafağın kenarıyla birlikte dışarı yürüyerek hiç gece görmeden yaşayan göçebe."
+    },
+    {
+      "terim": "Dönüş",
+      "tanim": "Şafak Yürüyücülerinin Kıyı'dan Kor'a geri yürüyüşü; gece ile gündüzün hızla üst üste geçtiği korkulu yolculuk."
+    },
+    {
+      "terim": "Yeveş",
+      "tanim": "Işığın gecikmesinde avlanan hızlı yırtıcı. Gördüğün yerde değildir."
+    },
+    {
+      "terim": "Kor meyvesi",
+      "tanim": "Fınır ağacının bir gecelik ışık saklayan meyvesi; Şomdo'nun parası."
+    },
+    {
+      "terim": "İsim kayması",
+      "tanim": "Claude tarafından yapılan evrende adların kuralı: her ünlü a→e→ı→i→o→ö→u→ü→a merdiveninde bir basamak ilerler."
     }
   ],
   "yankilar": [
@@ -3100,6 +3469,26 @@
         "Gize — kısa",
         "Necale — macera",
         "Afor — aşk"
+      ]
+    },
+    {
+      "baslik": "Beklemek",
+      "metin": "Claude tarafından yapılan evrende herkes bir şeyi bekler ve bekleyiş hep ışığın gecikmesiyle aynı biçimdedir.",
+      "ornekler": [
+        "Uzlım — kocasının uzaklaşan görüntüsünü",
+        "Bıklı — adadan ayrılmadan birini",
+        "Gelişçiler — ikinci ışığı",
+        "Yelen — Gırçık'ı",
+        "Şomdo'nun her konuşması — yüzü"
+      ]
+    },
+    {
+      "baslik": "Kaymayan",
+      "metin": "İsim kayması her şeyi değiştirir; değiştirmediği şeyler bilerek bırakılmıştır.",
+      "ornekler": [
+        "Kor — kaynak yorulmaz",
+        "Tövbe — annesi kaymasın diye koydu",
+        "Kıyı — ışığın bittiği yerin adı da biter"
       ]
     }
   ],
@@ -3374,6 +3763,20 @@
       "not": "Bin elli yıl sonra yazıldı.",
       "metin": "Bugün kütüphaneyi Necale'ye devrettim. Alelacele oldu — elimde yirmi dört günüm vardı, hazırlıklı değildim. Kâğıtları imzalarken elleri titriyordu; heyecandan sanırım.\n\nOna binada ne olduğunu söylemedim çünkü bilmiyorum. Bin yıldır buradayım ve hâlâ bilmiyorum. Bu cümleyi yazarken utanıyorum.\n\nDört hafta sonra Kaelan deneye başlayacak. Yani dört hafta sonra buraya düşeceğim. Yani bunu zaten yazmıştım.",
       "gizli": "kimlik"
+    },
+    {
+      "id": "cl_m1",
+      "kimden": "Uzlım",
+      "kime": "Tövbe",
+      "not": "Dan'ın dışındaki son tepede, bir taşın altına bırakıldı.",
+      "metin": "Bugün seni yine gördüm. Sırtın her gün biraz daha soluk. Aynacılar bunun ışığın yorulması olduğunu söylüyor; ben senin yorulduğunu düşünmeyi seviyorum. Böylece birlikte yoruluyormuşuz gibi oluyor.\n\nGittiğin sabah yüzünü bekledim. Biliyorsun, beklemek bizde inceliktir. Yüzün geldiğinde sen çoktan kapının dışındaydın ve yüzünde ne olduğunu hâlâ anlayamadım. Belki üzgündün. Belki rahatlamıştın. Beş saniye, bir insanın ne hissettiğini söylemek için çok kısa, ama yıllarca düşünmek için yeterince uzun.\n\nKıyı'ya yaklaşıyorum. Orada seni son kez göreceğim. Eğer bu mektubu bir şekilde okursan, arkana bakma. Yüzünün bana gelmesi yıllar sürer ve ben o kadar genç kalmayacağım.\n\nAma dönersen, sesini duyarım. Ses hızlıdır."
+    },
+    {
+      "id": "cl_m2",
+      "kimden": "Gırçık",
+      "kime": "Yelen",
+      "not": "Yazıldı, hiç gönderilmedi. Hetire mahkemesinin çekmecesinde bulundu.",
+      "metin": "Seni tanımıyorum ama ne yaptığını biliyorum. Otuz yıl boyunca gördüğüme hüküm verdim. Şimdi gördüğümün ne kadarının senin olduğunu bilmiyorum.\n\nBeni en çok korkutan idam ettirdiğim adam değil. En çok, onun suçlu olduğundan hâlâ emin olmam korkutuyor. Aynada gördüm; hatırlıyorum. Sen haklısın: insanlar olanı değil, gördüklerini hatırlıyor. Ben de insanım.\n\nSeni bulduğumda seni aynaya bakarak yargılamayacağım. Gözlerimi kapatacağım ve seni dinleyeceğim. Sıssoz bir keresinde bana, gerçeğin tıkırdadığını söyledi.\n\nHazırlan. Ben de beklemeyi bilirim."
     }
   ],
   "gunlukler": [
@@ -3712,6 +4115,21 @@
       "tur": "sayi",
       "soru": "Kütüphanenin kaç görevlisi oldu?",
       "cevap": "10"
+    },
+    {
+      "tur": "sayi",
+      "soru": "Claude tarafından yapılan evrende bir gün kaç saattir?",
+      "cevap": "40"
+    },
+    {
+      "tur": "sayi",
+      "soru": "Şomdo'da ışık saatte kaç kilometre gider?",
+      "cevap": "5"
+    },
+    {
+      "tur": "sayi",
+      "soru": "Gelen'in ışığı kaç yıl önce ulaştı?",
+      "cevap": "312"
     }
   ],
   "suphehliBulmacalar": [
@@ -5841,6 +6259,22 @@
     {
       "soru": "Gize ayrıldıktan sonra nereye gitti?",
       "not": "On beş yıl çalıştı, sıkıldı, gitti. Sonrası boş."
+    },
+    {
+      "soru": "Tövbe Kıyı'da ne gördü?",
+      "not": "Kıyı'dan bakan dünyanın eski şafaklarını görür. Tövbe Dönüş'e katılmadı; ne gördüğü ve neden döndüğü (dönmediyse neden) bilinmiyor. Claude tarafından yapılan evren."
+    },
+    {
+      "soru": "Tenik'teki ilk aynayı kim eğdi?",
+      "not": "Gecikme Savaşı'nı bitiren eğik ayna. Yelen'in cevabı hep \"Sanırım\" ile biter. Claude tarafından yapılan evren."
+    },
+    {
+      "soru": "Gelen neden parlaklaşıyor?",
+      "not": "İşik'in defterine göre her yıl bir kor meyvesi kadar. Büyüyor mu, yaklaşıyor mu? Claude tarafından yapılan evren."
+    },
+    {
+      "soru": "Tövbe adı neden kaymadı?",
+      "not": "Annesi bu adı bilerek, kaymasın diye koydu. Şomdo'da kaymayan adlar yalnızca Kor ve birkaç kişi. Claude tarafından yapılan evren."
     }
   ],
   "ses": {
@@ -6004,6 +6438,34 @@
     {
       "metin": "Galip gelen taraf, kazandığı savaşta kendi geçmişini kaybetti.",
       "kim": "Kyldolar üzerine"
+    },
+    {
+      "metin": "Yüzün gelene kadar bekledim.",
+      "kim": "Şomdo'nun en eski sevgi cümlesi"
+    },
+    {
+      "metin": "Gördüğüne yetiş, duyduğuna güven.",
+      "kim": "Şomdo'da çocuğa verilen ilk öğüt"
+    },
+    {
+      "metin": "Resim dünü çizer, şarkı şimdiyi söyler.",
+      "kim": "Sebir atasözü"
+    },
+    {
+      "metin": "Aynaya dokunma.",
+      "kim": "Aynacılar Loncası'nın ilk yasası"
+    },
+    {
+      "metin": "Ben o gün doğmamıştım. Sanırım.",
+      "kim": "Yelen, Tenik aynası sorulduğunda"
+    },
+    {
+      "metin": "Biri geceyi, öteki yüzü hiç tanımadı; o yüzden birbirimize hiç beklemeden cevap veririz.",
+      "kim": "Sıssoz, Ümüt üzerine"
+    },
+    {
+      "metin": "Işığın yürüme hızında gittiği bir evrende yaklaşan bir yıldız, onu gördüğün anda çoktan gelmiştir.",
+      "kim": "Aynacı kayıtlarından"
     }
   ],
   "yazarNotlari": [
@@ -6335,6 +6797,294 @@
         "kurallar": "Herkesin saçına bağlı birkaç konuşma topu vardır ve sesler bu toplardan yayılır. Biriyle konuşmak için top ona dokunur; karşıdaki sesi bu dokunuşla algılar."
       },
       "yerler": []
+    },
+    {
+      "id": "claude",
+      "ad": "Claude tarafından yapılan evren",
+      "aciklama": "Işığın yürüme hızında gittiği bir evren. Gündüz ve gece, Kor'un altından dışarı doğru yürüyen halkalardır; bir yüz, sesinden birkaç saniye sonra gelir; uzaktaki bir ayna dünü gösterir.",
+      "evren": {
+        "tur": "evren",
+        "donen": false,
+        "gunSaat": 40,
+        "yilGun": 300,
+        "kurallar": "Işık saatte beş kilometre gider — bir insanın yürüyüşü kadar. Ses ondan yetmiş kat hızlıdır. Tek ışık kaynağı, dünyanın tam ortasının üstünde asılı duran ve yirmi saat yanıp yirmi saat sönen Kor'dur. Bu yüzden gündüz ve gece yerinde durmaz: Kor'un altından dışarı doğru halka halka yürür.",
+        "icerik": "Şomdo adlı tek bir dünya: ortada Yekin kıtası, çevresinde Gecikme Denizi, dışta hilal biçimli Üzek kıtası ve en dışta ışığın döküldüğü Kıyı. Dört şehir, aynacılar, şafak yürüyücüleri ve gecikmede avlanan Yeveşler.",
+        "okuyucu": "Bu evreni Claude yazdı. Tentiforverse'ün numaralandırmasında yeri yoktur; başka bir elden çıkmıştır. Adların hepsi Türkçe kelimelerin ünlüleri bir basamak kaydırılarak yapılır (bkz. İsim Kayması)."
+      },
+      "yerler": [
+        {
+          "id": "cl_yekin",
+          "ad": "Yekin",
+          "tur": "Kıta",
+          "x": 50,
+          "y": 50,
+          "etiketX": 44,
+          "etiketY": 40,
+          "not": "Adı \"yakın\" demektir. Kor'un tam altındaki iç kıta: ışığa en yakın, her şeyi herkesten önce gören toprak.",
+          "sekil": [
+            [
+              70,
+              50
+            ],
+            [
+              66,
+              58
+            ],
+            [
+              63,
+              66
+            ],
+            [
+              54,
+              69
+            ],
+            [
+              46,
+              67
+            ],
+            [
+              38,
+              65
+            ],
+            [
+              33,
+              58
+            ],
+            [
+              30,
+              50
+            ],
+            [
+              34,
+              42
+            ],
+            [
+              37,
+              34
+            ],
+            [
+              46,
+              31
+            ],
+            [
+              54,
+              33
+            ],
+            [
+              62,
+              35
+            ],
+            [
+              67,
+              42
+            ]
+          ]
+        },
+        {
+          "id": "cl_uzek",
+          "ad": "Üzek",
+          "tur": "Kıta",
+          "x": 72,
+          "y": 78,
+          "etiketX": 80,
+          "etiketY": 70,
+          "not": "Adı \"uzak\" demektir. Gecikme Denizi'nin ötesinde, iç kıtayı hilal gibi saran dış kıta. Buraya ışık geç gelir, haber daha da geç.",
+          "sekil": [
+            [
+              66,
+              6
+            ],
+            [
+              78,
+              16
+            ],
+            [
+              90,
+              25
+            ],
+            [
+              94,
+              40
+            ],
+            [
+              93,
+              55
+            ],
+            [
+              92,
+              70
+            ],
+            [
+              81,
+              81
+            ],
+            [
+              71,
+              93
+            ],
+            [
+              55,
+              95
+            ],
+            [
+              41,
+              92
+            ],
+            [
+              26,
+              89
+            ],
+            [
+              16,
+              78
+            ],
+            [
+              6,
+              66
+            ],
+            [
+              22,
+              60
+            ],
+            [
+              25,
+              70
+            ],
+            [
+              34,
+              76
+            ],
+            [
+              43,
+              81
+            ],
+            [
+              54,
+              81
+            ],
+            [
+              63,
+              77
+            ],
+            [
+              72,
+              72
+            ],
+            [
+              77,
+              63
+            ],
+            [
+              82,
+              54
+            ],
+            [
+              80,
+              43
+            ],
+            [
+              75,
+              35
+            ],
+            [
+              70,
+              25
+            ],
+            [
+              60,
+              22
+            ]
+          ]
+        },
+        {
+          "id": "cl_kor",
+          "ad": "Kor Altı",
+          "tur": "Bölge",
+          "x": 50,
+          "y": 50,
+          "not": "Kor'un tam altı. Her şafak buradan doğar ve dışarı yürür. Burada gölge düşmez; ışık yukarıdan dimdik gelir."
+        },
+        {
+          "id": "cl_yerin",
+          "ad": "Yerin",
+          "tur": "Şehir",
+          "x": 54,
+          "y": 45,
+          "not": "Adı \"yarın\" demektir. Kor'a en yakın şehir; şafağı dünyada ilk o görür. Yerinliler geri kalan herkesin geleceğinde yaşadıklarını söyler."
+        },
+        {
+          "id": "cl_sebir",
+          "ad": "Sebir",
+          "tur": "Şehir",
+          "x": 40,
+          "y": 57,
+          "not": "Adı \"sabır\" demektir. Aynacılar Loncası'nın şehri. Sokaklarında kimse konuşmaya hemen cevap vermez: önce yüzün gelmesi beklenir."
+        },
+        {
+          "id": "cl_hetire",
+          "ad": "Hetire",
+          "tur": "Şehir",
+          "x": 63,
+          "y": 60,
+          "not": "Adı \"hatıra\" demektir. Tanık Ayna zincirinin başladığı yer. Mahkemeleri geçmişi, uzaktaki aynalarda izleyerek yargılar."
+        },
+        {
+          "id": "cl_dan",
+          "ad": "Dan",
+          "tur": "Şehir",
+          "x": 76,
+          "y": 82,
+          "not": "Adı \"dün\" demektir. Dünyanın en dış şehri. Şafak buraya en son gelir; Danlılar kendilerine \"geç kalanlar\" değil, \"en son görenler\" der."
+        },
+        {
+          "id": "cl_tenik",
+          "ad": "Tenik",
+          "tur": "Küçük Yerleşim",
+          "x": 90,
+          "y": 55,
+          "not": "Adı \"tanık\" demektir. İlk büyük aynanın dikildiği köy. Ayna hâlâ orada; ne gösterdiğini kimse tam bilmiyor."
+        },
+        {
+          "id": "cl_deniz",
+          "ad": "Gecikme Denizi",
+          "tur": "Su",
+          "x": 22,
+          "y": 30,
+          "not": "Yekin ile Üzek arasındaki halka deniz. Karşı kıyıyı her zaman birkaç gün önceki hâliyle görürsün; denizciler bu yüzden gördüklerine değil, duyduklarına güvenir."
+        },
+        {
+          "id": "cl_ayna",
+          "ad": "Ayna Adaları",
+          "tur": "Ada",
+          "x": 28,
+          "y": 70,
+          "not": "Gecikme Denizi'nin ortasındaki kayalık adalar. Tanık Ayna zincirinin ara halkaları bunların üstündedir."
+        },
+        {
+          "id": "cl_safak",
+          "ad": "Şafak Yolu",
+          "tur": "Bölge",
+          "x": 61,
+          "y": 39,
+          "not": "Şafak Yürüyücülerinin binlerce yıldır aşındırdığı, Kor Altı'ndan dışarı uzanan yol. Üstünde hiç kimse gece görmemiştir."
+        },
+        {
+          "id": "cl_kiyi",
+          "ad": "Kıyı",
+          "tur": "Uzak",
+          "x": 96,
+          "y": 96,
+          "not": "Dünyanın kenarı. Işık buradan boşluğa dökülür ve bir daha geri gelmez. Kenardan bakan, dünyanın ilk şafağının hâlâ karanlıkta yürüdüğünü görür."
+        },
+        {
+          "id": "cl_gelen",
+          "ad": "Gelen'in Tepesi",
+          "tur": "Bölge",
+          "x": 14,
+          "y": 72,
+          "not": "Gelen'in ışığının ilk görüldüğü tepe. Gelişçiler her yıl burada, ikinci ışığı bekleyerek bir gece boyu gözlerini göğe diker."
+        }
+      ]
     }
   ],
   "baslangic": [
@@ -6365,6 +7115,28 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "1.1.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Yeni evren: Claude tarafından yapılan evren — ışığın yürüme hızında gittiği Şomdo",
+        "16 evren maddesi, 8 karakter, 13 yerli harita, ilişki ağı",
+        "3 kısa hikâye, 2 mektup, sözlük, alıntılar, yankılar, bilinmeyenler ve bulmacalar",
+        "İkinci (sınırlı) yönetici kodu",
+        "Topluluk: teori panosu, içerik oylaması, takip, seviyeler, haftalık görevler",
+        "Gizlilik sayfası, hesap silme, otomatik hata bildirimi, uygulama olarak kurulum"
+      ],
+      "yeniler": [
+        "cl_umut",
+        "cl_ozlem",
+        "cl_gercek",
+        "cl_yalan",
+        "cl_sessiz",
+        "cl_bekle",
+        "cl_isik",
+        "cl_tovbe"
+      ]
+    },
     {
       "surum": "0.4.0",
       "tarih": "2026-08-05",

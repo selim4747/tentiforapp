@@ -85,6 +85,37 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("karanlık cihazda gece teması", await G.evaluate(function () { return document.documentElement.getAttribute("data-ayar-tema"); }) === "gece");
     await G.close();
 
+    /* ---------- 3b. sınırlı yönetici kodu (testte kendi kodumuz) ---------- */
+    const Y = await cihaz("sinirli");
+    await Y.goto(adres + "/"); await bekle(Y, 1200);
+    const giris = await Y.evaluate(function () {
+      veri.sinirliYoneticiOzet = dogrulamaOzeti("YRD-TESTKOD1");
+      const d = { textContent: "", className: "" };
+      return [ustaGiris("YRD-TESTKOD1", d), yoneticiAcik(), panelAcik()];
+    });
+    ok("sınırlı kod paneli açar ama tam yönetici yapmaz", giris[0] === true && giris[1] === false && giris[2] === true, giris);
+    await bekle(Y, 1200);
+    await Y.evaluate(function () { location.hash = "#/sen"; }); await bekle(Y, 600);
+    const sekmeAdlari = await Y.evaluate(function () {
+      return Object.keys(Y_GRUPLARI).map(function (g) { return yoneticiSekmeleri(g).join(","); }).join("|");
+    });
+    ok("kişiler, anahtarlar ve yedek sınırlı kodda yok", !/kisiler|anahtarlar|yedek|karakterler/.test(sekmeAdlari), sekmeAdlari);
+    ok("buz katmanları kilitli kalır", await Y.evaluate(function () {
+      return (veri.katmanlar || []).every(function (k) { return !cozulenler[k.dogrulama]; });
+    }));
+    ok("kanon bölümleri açılır", await Y.evaluate(function () { return bolumErisimi("evren"); }));
+    await Y.evaluate(function () { yoneticiGrup = "bakim"; yoneticiSekme = "yedek"; yoneticiCiz(); });
+    ok("izinsiz sekmeye zorla gidilemez", await Y.evaluate(function () { return yoneticiSekme !== "yedek"; }));
+    await Y.close();
+
+    /* ---------- 3c. Claude tarafından yapılan evren ---------- */
+    const evr = await Z.evaluate(function () {
+      return { harita: (veri.haritalar || []).some(function (h) { return h.id === "claude" && h.ad === "Claude tarafından yapılan evren"; }),
+               madde: (veri.evren || []).filter(function (e) { return e.bolum === "Claude tarafından yapılan evren"; }).length,
+               kisi: (veri.karakterler || []).filter(function (k) { return k.grup === "Claude tarafından yapılan evren"; }).length };
+    });
+    ok("yeni evren verisi yüklü", evr.harita && evr.madde >= 10 && evr.kisi >= 6, evr);
+
     /* ---------- 4. hesaplar, teori, oylama, takip ---------- */
     console.log("topluluk");
     const A = await cihaz("A");

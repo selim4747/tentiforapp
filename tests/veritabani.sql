@@ -104,6 +104,18 @@ select test.ok('yedekte e-posta yok', position('ornek.test' in public.yedek_al()
 select public.hata_temizle();
 select test.ok('hatalar temizlenir', (select count(*) = 0 from public.hata_kayitlari));
 
+-- ---------- sınırlı yönetici ----------
+select test.ok('kullanıcı kendini yönetici yapamaz', test.patlar($q$update public.yoneticiler set duzey = 'tam'$q$));
+reset role;
+update public.yoneticiler set duzey = 'sinirli' where id = '11111111-1111-1111-1111-111111111111';
+set role authenticated;
+select test.ok('sınırlı yönetici istatistik görür', jsonb_array_length(public.site_istatistik() -> 'gunluk') = 14);
+select test.ok('sınırlı yönetici yedek alamaz', test.patlar('select public.yedek_al()'));
+reset role;
+select test.ok('geçersiz düzey reddedilir', test.patlar($q$update public.yoneticiler set duzey = 'kral'$q$));
+update public.yoneticiler set duzey = 'tam' where id = '11111111-1111-1111-1111-111111111111';
+set role authenticated;
+
 -- ---------- hesap silme ----------
 set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
 select public.hesabimi_sil();
