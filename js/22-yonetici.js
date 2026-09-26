@@ -9,6 +9,12 @@
 const YONETICI_ANAHTAR = "tentiforapp_yonetici";
 
 let yoneticiKod = null;      // oturum boyunca bellekte
+/* İkinci (sınırlı) yönetici kodu: panel açılır ama buz katmanları ve gizli bloklar kilitli kalır;
+   kişi onları oynayarak açar. Kod hiçbir şeyin şifresini çözmez; yalnızca özeti veride durur. */
+let yoneticiSinirli = false;
+const SINIRLI_SEKMELER = ["roman", "basin", "listeler",
+  "hizli", "yapimEkle", "olayEkle", "hikayeEkle", "gorselEkle", "sesEkle",
+  "denetim", "istatistik", "liderlik", "teoriler", "hatalar", "test", "kaydet"];
 let yoneticiSekme = "karakterler";
 let yoneticiSecili = null;
 let yoneticiBlokIndeksi = null;   /* null: kapalı, sayı: o bloğu düzenliyor, "yeni": yeni blok ekliyor */
@@ -17,12 +23,23 @@ function yoneticiAcik() {
   return yoneticiKod !== null;
 }
 
+/** Panel açık mı (tam ya da sınırlı yönetici). Kilit aşan her şey yoneticiAcik()'e bakar. */
+function panelAcik() {
+  return yoneticiAcik() || yoneticiSinirli;
+}
+
+function sinirliKodMu(kod) {
+  return !!(veri && veri.sinirliYoneticiOzet && dogrulamaOzeti(String(kod || "").trim()) === veri.sinirliYoneticiOzet);
+}
+
 function yoneticiHatirla() {
   githubYukle();
   const ham = kayitOku(YONETICI_ANAHTAR);
   if (!ham) { return; }
   if (veri && veri.yoneticiOzet && dogrulamaOzeti(ham) === veri.yoneticiOzet) {
     yoneticiKod = ham;
+  } else if (sinirliKodMu(ham)) {
+    yoneticiSinirli = true;
   }
 }
 
@@ -55,11 +72,19 @@ function hepsiAcikMi(dizi) {
 function yoneticiGiris(kod) {
   const temiz = String(kod).trim();
 
+  if (sinirliKodMu(temiz)) {
+    yoneticiKod = null;
+    yoneticiSinirli = true;
+    kayitYaz(YONETICI_ANAHTAR, temiz);
+    return "sinirli";
+  }
+
   if (!veri.yoneticiOzet || dogrulamaOzeti(temiz) !== veri.yoneticiOzet) {
     return false;
   }
 
   yoneticiKod = temiz;
+  yoneticiSinirli = false;
   kayitYaz(YONETICI_ANAHTAR, temiz);
   return true;
 }
@@ -67,6 +92,7 @@ function yoneticiGiris(kod) {
 function yoneticiCikis() {
   if (typeof ustaTemizle === "function") { ustaTemizle(); }
   yoneticiKod = null;
+  yoneticiSinirli = false;
   if (typeof kanonSifirla === "function") { kanonSifirla(); }
   kayitYaz(YONETICI_ANAHTAR, "");
   yoneticiCiz();
@@ -225,22 +251,23 @@ function yoneticiDisaAktar() {
 
 /* Dokuz sekme bir şeritte sığmıyordu; iki gruba ayrıldı. */
 const Y_GRUPLARI = {
-  icerik: { ad: "İçerik", sekmeler: ["karakterler", "evren", "roman", "haritaDuzen", "yollar", "kisiler", "basin", "anahtarlar", "bosluklar"] },
+  icerik: { ad: "İçerik", sekmeler: ["karakterler", "evren", "roman", "haritaDuzen", "yollar", "kisiler", "basin", "listeler", "anahtarlar", "bosluklar"] },
   ekle:   { ad: "Ekle",   sekmeler: ["hizli", "yapimEkle", "olayEkle", "hikayeEkle", "gorselEkle", "sesEkle", "dosyaEkle"] },
-  bakim:  { ad: "Bakım",  sekmeler: ["denetim", "liderlik", "yayilma", "araclar", "test", "kaydet"] },
+  bakim:  { ad: "Bakım",  sekmeler: ["denetim", "istatistik", "liderlik", "teoriler", "hatalar", "yedek", "yayilma", "araclar", "test", "kaydet"] },
 };
 
 let yoneticiGrup = "icerik";
 
-function yoneticiSekmeleri() {
-  return Y_GRUPLARI[yoneticiGrup].sekmeler;
+function yoneticiSekmeleri(grup) {
+  const l = Y_GRUPLARI[grup || yoneticiGrup].sekmeler;
+  return yoneticiAcik() ? l : l.filter(function (s) { return SINIRLI_SEKMELER.indexOf(s) !== -1; });
 }
 
 function yoneticiCiz() {
   const alan = document.querySelector("#yoneticiAlan");
   if (!alan) { return; }
 
-  if (!yoneticiAcik()) {
+  if (!panelAcik()) {
     alan.innerHTML =
       '<p class="oyun-giris">Bu bölüm siteyi yöneten kişi içindir. ' +
       "İçeriği canlı düzenler, kilitleri değiştirir ve sonucu dışa aktarır.</p>" +
@@ -251,9 +278,15 @@ function yoneticiCiz() {
     return;
   }
 
+  /* sınırlı yönetici izinli olmayan sekmede kalmasın */
+  if (!yoneticiAcik()) {
+    if (!yoneticiSekmeleri().length) { yoneticiGrup = "icerik"; }
+    if (yoneticiSekmeleri().indexOf(yoneticiSekme) === -1) { yoneticiSekme = yoneticiSekmeleri()[0]; }
+  }
+
   const sekmeler =
     '<div class="filtre y-grup-secici">' +
-      Object.keys(Y_GRUPLARI).map(function (g) {
+      Object.keys(Y_GRUPLARI).filter(function (g) { return yoneticiSekmeleri(g).length; }).map(function (g) {
         return '<button class="filtre-btn' + (yoneticiGrup === g ? " secili" : "") +
                '" data-y-grup="' + g + '">' + kacir(Y_GRUPLARI[g].ad) + "</button>";
       }).join("") +
@@ -264,6 +297,7 @@ function yoneticiCiz() {
                      yapimEkle: "Yapım Ekle", haritaDuzen: "Evren / Harita", yollar: "Yollar", kisiler: "Kişiler",
                      olayEkle: "Olay Ekle", hikayeEkle: "Hikâye Ekle", gorselEkle: "Görsel Ekle",
                      dosyaEkle: "Kilitli Dosya Ekle", roman: "Roman", sesEkle: "Ses Ekle", basin: "Basın Kiti", liderlik: "Liderlik",
+                     listeler: "Listeler", istatistik: "İstatistik", teoriler: "Teoriler", hatalar: "Hatalar", yedek: "Yedek",
                      anahtarlar: "Anahtarlar", bosluklar: "Boşluklar",
                      denetim: "Denetim", yayilma: "Yayılma", araclar: "Araçlar",
                      test: "Test", kaydet: "Kaydet" }[s];
@@ -294,15 +328,20 @@ function yoneticiCiz() {
   else if (yoneticiSekme === "sesEkle") { govde = yoneticiSesEkle(); }
   else if (yoneticiSekme === "basin") { govde = yoneticiBasin(); }
   else if (yoneticiSekme === "liderlik") { govde = yoneticiLiderlik(); }
+  else if (yoneticiSekme === "listeler") { govde = yoneticiListeler(); }
+  else if (yoneticiSekme === "istatistik") { govde = yoneticiIstatistik(); }
+  else if (yoneticiSekme === "teoriler") { govde = yoneticiTeoriler(); }
+  else if (yoneticiSekme === "hatalar") { govde = yoneticiHatalar(); }
+  else if (yoneticiSekme === "yedek") { govde = yoneticiYedek(); }
   else if (yoneticiSecili === null) { govde = yoneticiListe(); }
   else { govde = yoneticiForm(); }
 
   alan.innerHTML =
     '<div class="y-ust">' +
-      '<span class="y-rozet">yönetici</span>' +
-      '<button class="dugme dugme-sade y-kucuk" data-duzenleme="ac">' +
+      '<span class="y-rozet">' + (yoneticiAcik() ? "yönetici" : "sınırlı yönetici") + "</span>" +
+      (yoneticiAcik() ? '<button class="dugme dugme-sade y-kucuk" data-duzenleme="ac">' +
         ((typeof duzenlemeAcikMi === "function" && duzenlemeAcikMi())
-          ? "Düzenleme açık" : "Yerinde düzenle") + "</button>" +
+          ? "Düzenleme açık" : "Yerinde düzenle") + "</button>" : "") +
       '<button class="dugme dugme-sade y-kucuk" data-yonetici="cikis">Çık</button>' +
     "</div>" +
     sekmeler + govde +
@@ -1667,7 +1706,7 @@ document.addEventListener("click", function (e) {
   if (!g) { return; }
 
   yoneticiGrup = g.dataset.yGrup;
-  yoneticiSekme = Y_GRUPLARI[yoneticiGrup].sekmeler[0];
+  yoneticiSekme = yoneticiSekmeleri()[0] || Y_GRUPLARI[yoneticiGrup].sekmeler[0];
   yoneticiCiz();
 });
 

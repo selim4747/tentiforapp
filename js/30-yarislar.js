@@ -222,7 +222,16 @@ function yarisPaketiUret() {
     oyun: (typeof OYUNLAR !== "undefined") ? OYUNLAR.length : 6
   };
 
-  const govde = { banka: banka, kesif: kesif, sayilar: sayilar };
+  /* sıradaki içerik oylaması: henüz başlanmamış yapımlar (yapımda/yazımda/yayında olanlar hariç) */
+  const baslanmis = /^(yapımda|yazımda|yayında|çıktı|tamamlandı)$/i;
+  const yapimlar = [];
+  (veri.yapimlar || []).forEach(function (y) {
+    if (!y || !y.ad || baslanmis.test(String(y.durum || "").trim())) { return; }
+    const ad = yapimlar.indexOf(y.ad) === -1 ? y.ad : y.ad + " (" + y.tur + ")";
+    if (yapimlar.indexOf(ad) === -1) { yapimlar.push(ad.slice(0, 120)); }
+  });
+
+  const govde = { banka: banka, kesif: kesif, sayilar: sayilar, yapimlar: yapimlar };
   govde.ozet = YARIS_SURUM + "-" + metinTohumu(JSON.stringify(govde)).toString(36);
   return govde;
 }
@@ -258,6 +267,8 @@ function yarislarCiz() {
     return;
   }
   if (Y2 && !Y2.sonuc) { yarisOyunCiz(); return; }
+  /* hesap kütüphanesi gerekince yüklenir; hazır olunca hesapOturumAyarla bu bölümü yeniden çizer */
+  if (typeof hesapIstemci !== "undefined" && !hesapIstemci && typeof hesapGerekli === "function") { hesapGerekli(); }
 
   const e = tomyeEtkinligi();
   alan.innerHTML =
@@ -266,6 +277,7 @@ function yarislarCiz() {
          "ay boyunca ayrı bir sıralaması var.</p>" +
          '<button class="dugme dugme-sade" data-yaris-basla="' + e.yaris + '">Hemen oyna</button></div>' : "") +
     '<div id="gkAlan"></div>' +
+    '<div id="haftalikAlan"></div>' +
     '<div id="kulupSavasAlan"></div>' +
     (Y2 && Y2.sonuc ? '<div id="yarisSonucAlan">' + yarisSonucHtml() + "</div>" : "") +
     '<div class="yaris-izgara">' + YARISLAR.map(function (y) {
@@ -284,6 +296,7 @@ function yarislarCiz() {
   gunKelimesiYukle();
   kulupSavasiCiz();
   yarisEnIyileriYukle();
+  if (typeof haftalikCiz === "function") { haftalikCiz(); }
 }
 
 async function yarisEnIyileriYukle() {
@@ -362,6 +375,7 @@ async function yarisBitir() {
   } finally { yarisBitiyor = false; }
 
   if (Y2.sonuc.durum === "tamam") { yarisOdul(Y2.yaris, Y2.sonuc.puan); }
+  if (typeof toplulukMadalyaKontrol === "function") { toplulukMadalyaKontrol(); }
   yarislarCiz();
   if (typeof bolumeGit === "function") { bolumeGit("yarislar"); }
 }
@@ -604,7 +618,11 @@ async function gunKelimesiTahmin(k) {
     const once = gkDurum && gkDurum.bitti;
     gkDurum = data;
     gunKelimesiCiz();
-    if (!once && data.cozuldu) { yarisOdul("gunun_kelimesi", 1); }
+    if (!once && data.cozuldu) {
+      yarisOdul("gunun_kelimesi", 1);
+      if (typeof toplulukMadalyaKontrol === "function") { toplulukMadalyaKontrol(); }
+      if (typeof haftalikCiz === "function") { haftalikCiz(); }
+    }
     const g = document.querySelector("#gkGiris"); if (g) { g.focus({ preventScroll: true }); }
   }
 }
@@ -695,7 +713,7 @@ let yarisKapsam = "tum";
 
 YARISLAR.forEach(function (y) {
   LIDERLIK_TABLOLARI.push({ id: "y_" + y.id, grup: "yarislar", ad: y.ad, birim: "puan", unvan: "", not: y.ozet,
-    yukle: function (kutu, t) { return liderlikYarisCiz(kutu, y.id); } });
+    takipli: true, yukle: function (kutu, t) { return liderlikYarisCiz(kutu, y.id); } });
 });
 LIDERLIK_TABLOLARI.push(
   { id: "y_kyldo_toplam", grup: "yarislar", ad: "Toplam çeviri", birim: "kelime", unvan: "Kyldo Kâtibi",
@@ -712,8 +730,8 @@ delete LIDERLIK_GRUPLARI.kapsamli;
 async function liderlikYarisCiz(kutu, yaris) {
   const e = tomyeEtkinligi();
   const kapsamlar = [["tum", "Tüm zamanlar"], ["hafta", "Bu hafta"], ["sezon", e ? e.ay + " ayı" : "Bu ay"]];
-  const { data, error } = await hesapIstemci.from("yaris_tablolari").select("kullanici_adi, gorunen_ad, puan")
-    .eq("yaris", yaris).eq("kapsam", yarisKapsam).gt("puan", 0).order("puan", { ascending: false }).limit(LIDERLIK_SATIR);
+  const { data, error } = await (await liderlikFiltrele(hesapIstemci.from("yaris_tablolari").select("kullanici_adi, gorunen_ad, puan")
+    .eq("yaris", yaris).eq("kapsam", yarisKapsam).gt("puan", 0))).order("puan", { ascending: false }).limit(LIDERLIK_SATIR);
   if (error) { throw error; }
   const ust = '<div class="filtre yaris-kapsam">' + kapsamlar.map(function (k) {
     return '<button class="' + (k[0] === yarisKapsam ? "secili" : "") + '" data-yaris-kapsam="' + k[0] + '">' + kacir(k[1]) + "</button>";

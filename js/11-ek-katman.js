@@ -97,10 +97,22 @@ function ortamDurdur() {
 
 const TEMA_ANAHTAR = "tentiforapp_tema";
 
+/** Kayıtlı tercih yoksa telefonun/bilgisayarın karanlık tema ayarını izler.
+    Düğmeyle bir kez seçildiğinde o tercih geçerli olur. */
 function temaYukle() {
-  const t = kayitOku(TEMA_ANAHTAR) || "buz";
+  const kayitli = kayitOku(TEMA_ANAHTAR);
+  const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const t = kayitli || (mq && mq.matches ? "gece" : "buz");
   document.documentElement.setAttribute("data-ayar-tema", t);
   temaDugmesiTazele();
+  if (!kayitli && mq && mq.addEventListener && !temaYukle.dinliyor) {
+    temaYukle.dinliyor = true;
+    mq.addEventListener("change", function (e) {
+      if (kayitOku(TEMA_ANAHTAR)) { return; }
+      document.documentElement.setAttribute("data-ayar-tema", e.matches ? "gece" : "buz");
+      temaDugmesiTazele();
+    });
+  }
 }
 
 /* ==================== SİTE TEMASI ====================

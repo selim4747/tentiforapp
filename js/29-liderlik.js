@@ -28,6 +28,19 @@ const LIDERLIK_GRUPLARI = { genel: "Genel", oyun: "Oyunlar", ozel: "Topluluk" };
 const LIDERLIK_SATIR = 20;
 
 let liderlikSecili = "haftalik";
+let liderlikTakip = false;       /* yalnızca takip ettiklerim */
+let liderlikTakipListesi = null;
+
+/** Takip filtresi açıksa sorguyu takip edilenlere (ve kendine) daraltır. */
+async function liderlikFiltrele(sorgu) {
+  if (!liderlikTakip || typeof hesapKullanici === "undefined" || !hesapKullanici) { return sorgu; }
+  if (!liderlikTakipListesi) {
+    const { data } = await hesapIstemci.rpc("takip_ettiklerim");
+    liderlikTakipListesi = Array.isArray(data) ? data : [];
+  }
+  const liste = liderlikTakipListesi.concat(hesapProfil && hesapProfil.kullanici_adi ? [hesapProfil.kullanici_adi] : []);
+  return sorgu.in("kullanici_adi", liste.length ? liste : ["-"]);
+}
 let liderlikBenim = null;       /* kendi istatistik satırım: { gizli, askida, askida_neden, engelli } */
 
 function liderlikTablo(id) { return LIDERLIK_TABLOLARI.find(function (t) { return t.id === id; }) || LIDERLIK_TABLOLARI[0]; }
@@ -135,15 +148,17 @@ function liderlikCiz() {
         (liderlikUnvan(t) ? '<span class="lider-unvan-ipucu">birinciye unvan: <b>' + kacir(liderlikUnvan(t)) + "</b></span>" : "") +
       "</div>" +
       (t.not ? '<p class="oyun-not">' + kacir(t.not) + "</p>" : "") +
+      (typeof hesapKullanici !== "undefined" && hesapKullanici && !(t.yukle && !t.takipli) && ["bulmaca", "kulupler", "topluluk"].indexOf(t.id) === -1
+        ? '<label class="lider-gorun lider-takip"><input type="checkbox" data-lider-takip="1"' + (liderlikTakip ? " checked" : "") +
+          "> yalnızca takip ettiklerim ve ben</label>" : "") +
       '<div id="liderlikIcerik"><p class="oyun-not">Yükleniyor…</p></div>' +
       '<div id="liderlikBen"></div>' +
     "</div>";
 
   if (typeof hesapIstemci === "undefined" || !hesapIstemci) {
-    if (typeof hesapHazir !== "undefined" && hesapHazir) {
-      document.querySelector("#liderlikIcerik").innerHTML = '<p class="oyun-not">Tablolara şu an ulaşılamıyor.</p>';
-    }
-    return;   /* hesap hazır olunca hesapOturumAyarla tekrar çağırır */
+    /* kütüphane gerekince yüklenir; hazır olunca hesapOturumAyarla tabloyu yeniden çizer */
+    if (typeof hesapGerekli === "function") { hesapGerekli(); }
+    return;
   }
   liderlikIcerikYukle(t);
 }
@@ -190,8 +205,8 @@ function liderlikDegerMetni(t, v) {
 }
 
 async function liderlikSiralamaCiz(kutu, t) {
-  const { data, error } = await hesapIstemci.from("liderlik")
-    .select("kullanici_adi, gorunen_ad, " + t.id).gt(t.id, 0)
+  const { data, error } = await (await liderlikFiltrele(hesapIstemci.from("liderlik")
+    .select("kullanici_adi, gorunen_ad, " + t.id).gt(t.id, 0)))
     .order(t.id, { ascending: false }).order("guncelleme", { ascending: true }).limit(LIDERLIK_SATIR);
   if (error) { throw error; }
   if (!data || !data.length) {
@@ -421,6 +436,7 @@ document.addEventListener("click", function (e) {
 });
 
 document.addEventListener("change", function (e) {
+  if (e.target.closest("[data-lider-takip]")) { liderlikTakip = e.target.checked; liderlikCiz(); return; }
   const g = e.target.closest("[data-lider-gorun]");
   if (!g) { return; }
   hesapIstemci.rpc("liderlik_gorunurluk", { gizle: !g.checked }).then(function () { liderlikCiz(); });

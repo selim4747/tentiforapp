@@ -40,7 +40,8 @@ const GEZINME = [
     ["moodboard", "Moodboard"], ["degisiklik", "Değişiklik günlüğü"] ] },
 
   { id: "sen", ad: "Sen", ikon: "▭", bolumler: [
-    ["hesap", "Hesabın"], ["arsivci", "Arşivci kartın"], ["defter", "Defterin"], ["basarim", "Başarımlar"] ] },
+    ["hesap", "Hesabın"], ["arsivci", "Arşivci kartın"], ["defter", "Defterin"], ["basarim", "Başarımlar"],
+    ["gizlilik", "Gizlilik"] ] },
 ];
 
 /* Üst şerit: her düğme kendi sayfasını açar. Bölüm listesi İçindekiler'de. */
@@ -645,6 +646,7 @@ function sayfaBasiCiz(sayfa) {
   c.innerHTML =
     '<p class="sayfa-no">Sayfa ' + (i + 1) + " / " + SAYFA_SIRASI.length + "</p>" +
     "<h1>" + kacir(g.ad) + "</h1>" +
+    '<button class="dugme dugme-sade sayfa-paylas" data-sayfa-paylas="' + sayfa + '">Paylaş</button>' +
     '<div class="sayfa-icerik">' +
       g.bolumler.map(function (b) {
         return '<button class="sayfa-icerik-oge" data-gez-git="' + b[0] + '">' +

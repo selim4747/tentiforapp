@@ -56,11 +56,42 @@ function hesapKutuphaneYukle() {
   });
 }
 
-/** 24-arsiv-mantigi.js çizimden sonra bir kez çağırır. */
+let hesapKuruluyor = null;   /* hesapIstemciKur sözü: kütüphane bir kez yüklenir */
+
+/** 24-arsiv-mantigi.js çizimden sonra bir kez çağırır.
+    Hız için hesap kütüphanesi (218 KB) yalnızca gerekince yüklenir: oturumu olan
+    ya da e-posta bağlantısından dönen ziyaretçide hemen; diğerlerinde giriş,
+    liderlik, yarış ya da profil açıldığında (hesapGerekli). */
 async function hesapBaslat() {
   hesapDugmesiCiz();
   if (!hesapEtkin()) { hesapHazir = true; hesapCiz(); return; }
 
+  /* /u/kullaniciadi paylaşım adresi (_redirects → ?profil=) */
+  const q = new URLSearchParams(location.search);
+  if (q.get("profil")) {
+    const ad = q.get("profil");
+    try { history.replaceState(null, "", location.pathname + "#/u/" + encodeURIComponent(ad)); } catch (_) { /* yoksay */ }
+    if (typeof hesapProfilAc === "function") { hesapProfilAc(ad); }
+  }
+
+  let oturumVar = false;
+  try { oturumVar = !!window.localStorage.getItem(HESAP_OTURUM_ANAHTAR); } catch (_) { oturumVar = false; }
+  const donus = q.get("code") || q.get("hesap") || q.get("error");
+  if (oturumVar || donus) { await hesapGerekli(); return; }
+
+  hesapHazir = true;
+  hesapDugmesiCiz();
+  hesapCiz();
+}
+
+/** Hesap kütüphanesi ve istemci hazır olsun; hazır olunca çözülür. */
+function hesapGerekli() {
+  if (!hesapEtkin()) { return Promise.resolve(); }
+  if (!hesapKuruluyor) { hesapKuruluyor = hesapIstemciKur(); }
+  return hesapKuruluyor;
+}
+
+async function hesapIstemciKur() {
   try {
     await hesapKutuphaneYukle();
     hesapIstemci = window.supabase.createClient(HESAP_AYAR.url, HESAP_AYAR.anahtar, {
@@ -187,7 +218,9 @@ function hesapDonusAdresi(tur) {
   return location.origin + location.pathname + "?hesap=" + tur;
 }
 
+/** Paylaşılan profil adresi: canlı sitede kısa /u/ad (netlify.toml yönlendirir), yerelde #/u/ad. */
 function hesapProfilAdresi(ad) {
+  if (location.protocol === "https:") { return location.origin + "/u/" + encodeURIComponent(ad); }
   return location.origin + location.pathname + "#/u/" + encodeURIComponent(ad);
 }
 
@@ -240,7 +273,8 @@ let hesapKayitAdKontrol = 0;
 
 function hesapPencere(tur) {
   const perde = document.querySelector("#perde");
-  if (!perde || !hesapIstemci) { return; }
+  if (!perde) { return; }
+  if (!hesapIstemci) { hesapGerekli().then(function () { if (hesapIstemci) { hesapPencere(tur); } }); return; }
 
   const alan = function (id, etiket, tip, oz) {
     return "<label class=\"hesap-etiket\" for=\"" + id + "\">" + etiket + "</label>" +
@@ -602,6 +636,7 @@ function hesapCiz() {
               ' placeholder="İsim Sistemi\'nden çıkan adın">' +
             '<label class="hesap-etiket" for="hpHakkinda">Hakkında</label>' +
             '<textarea class="kod-giris" id="hpHakkinda" rows="3" maxlength="280">' + kacir(p.hakkinda || "") + "</textarea>" +
+            (typeof vitrinSecimleri === "function" ? vitrinSecimleri(p.vitrin || {}) : "") +
             '<div class="oyun-sira">' +
               '<button class="dugme" type="submit">Kaydet</button>' +
               '<button class="dugme dugme-sade" type="button" data-hesap-duzen="kapat">Vazgeç</button>' +
@@ -626,9 +661,53 @@ function hesapCiz() {
       '<div class="oyun-sira">' +
         '<button class="dugme dugme-sade" data-hesap-pencere="yenisifre">Şifreyi değiştir</button>' +
         '<button class="dugme dugme-sade" data-hesap-cikis="1">Çıkış yap</button>' +
+        '<button class="dugme dugme-sade y-sil" data-hesap-sil="1">Hesabımı sil</button>' +
       "</div>" +
-    "</div>";
+      '<p class="oyun-not"><button class="ic-bag" data-gez-git="gizlilik">Gizlilik ve verilerin</button></p>' +
+    "</div>" +
+    '<div id="hesapTopluluk"></div>';
   hesapEsitDurumCiz();
+  if (typeof toplulukHesapEk === "function") { toplulukHesapEk(); }
+}
+
+/* ==================== hesabımı sil ==================== */
+
+function hesapSilPencere() {
+  const perde = document.querySelector("#perde");
+  if (!perde || !hesapKullanici) { return; }
+  const ad = (hesapProfil && hesapProfil.kullanici_adi) || "";
+  perde.innerHTML =
+    '<div class="pencere hesap-pencere" role="dialog" aria-modal="true">' +
+      '<button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button>' +
+      "<h3>Hesabımı sil</h3>" +
+      '<p class="pencere-alt">Hesabın, profilin, buluttaki ilerlemen, skorların, teorilerin, oyların ve takiplerin ' +
+        "kalıcı olarak silinir. Bu geri alınamaz. Bu cihazdaki ilerlemen yerinde kalır.</p>" +
+      '<form data-hesap-sil-form="1">' +
+        '<label class="hesap-etiket" for="hSilOnay">Onaylamak için kullanıcı adını yaz: <b>' + kacir(ad || "sil") + "</b></label>" +
+        '<input class="kod-giris" id="hSilOnay" autocomplete="off" spellcheck="false">' +
+        '<button class="dugme dugme-tam sil" type="submit">Kalıcı olarak sil</button>' +
+      "</form>" +
+      '<p class="pencere-durum" id="hesapDurum" role="status"></p>' +
+    "</div>";
+  perde.hidden = false;
+  const g = perde.querySelector("#hSilOnay"); if (g) { g.focus(); }
+}
+
+async function hesapSil(form) {
+  const beklenen = (hesapProfil && hesapProfil.kullanici_adi) || "sil";
+  const yazilan = kullaniciAdiSade((form.querySelector("#hSilOnay") || {}).value || "");
+  if (yazilan !== beklenen) { hesapDurum("Kullanıcı adı eşleşmedi."); return; }
+  hesapFormMesgul(form, true);
+  const { error } = await hesapIstemci.rpc("hesabimi_sil");
+  if (error) { hesapFormMesgul(form, false); hesapDurum(hesapHataMetni(error)); return; }
+  clearInterval(hesapEsitZamanlayici);
+  try {
+    Object.keys(window.localStorage).forEach(function (k) { if (k.indexOf("sb-tentiforapp") === 0) { window.localStorage.removeItem(k); } });
+  } catch (_) { /* yoksay */ }
+  await hesapIstemci.auth.signOut().catch(function () {});
+  if (typeof perdeKapat === "function") { perdeKapat(); }
+  hesapOturumAyarla(null, "SIGNED_OUT");
+  hesapBildir("Hesabın ve bütün verilerin silindi");
 }
 
 function hesapEsitDurumCiz() {
@@ -655,6 +734,7 @@ async function hesapProfilKaydet(form) {
     kullanici_adi: kadi,
     tentifor_adi: al("hpTentifor").trim().slice(0, 40) || null,
     hakkinda: al("hpHakkinda").trim().slice(0, 280) || null,
+    vitrin: { karakter: al("hpVitrinKarakter") || null, alinti: al("hpVitrinAlinti") || null },
     guncelleme: new Date().toISOString()
   };
   /* Tetikleyici çalışmadıysa (eski kurulum) satır olmayabilir: upsert */
@@ -682,11 +762,11 @@ async function hesapProfilAc(ad) {
 
   if (!hesapEtkin()) { goster("<h3>Profiller henüz açık değil</h3>"); return; }
   goster('<p class="oyun-not">Profil yükleniyor…</p>');
-  if (!hesapIstemci) { await new Promise(function (c) { setTimeout(c, 400); }); }
+  if (!hesapIstemci) { await hesapGerekli(); }
   if (!hesapIstemci) { goster("<h3>Profil yüklenemedi</h3>"); return; }
 
   const { data: p, error } = await hesapIstemci.from("profiller")
-    .select("kullanici_adi, gorunen_ad, tentifor_adi, hakkinda, ozet, olusturma").eq("kullanici_adi", kadi).maybeSingle();
+    .select("kullanici_adi, gorunen_ad, tentifor_adi, hakkinda, ozet, vitrin, olusturma").eq("kullanici_adi", kadi).maybeSingle();
 
   if (error || !p) {
     goster("<h3>Böyle bir arşivci yok</h3>" +
@@ -721,6 +801,7 @@ async function hesapProfilAc(ad) {
       : "") +
     '<div id="profilDereceler"></div>' +
     '<div id="profilYaris"></div>' +
+    '<div id="profilTopluluk"></div>' +
     (o.madalyalar && o.madalyalar.length
       ? '<div class="hesap-madalya">' + o.madalyalar.map(function (m) { return "<span>" + kacir(m) + "</span>"; }).join("") + "</div>"
       : "") +
@@ -731,6 +812,7 @@ async function hesapProfilAc(ad) {
   );
   if (typeof liderlikProfilDereceleri === "function") { liderlikProfilDereceleri(p.kullanici_adi); }
   if (typeof yarisProfilEk === "function") { yarisProfilEk(p); }
+  if (typeof toplulukProfilEk === "function") { toplulukProfilEk(p); }
 }
 
 /* ==================== olaylar ==================== */
@@ -748,6 +830,7 @@ document.addEventListener("click", function (e) {
   if (d) { hesapDuzenle = d.dataset.hesapDuzen === "ac"; hesapCiz(); return; }
 
   if (e.target.closest("[data-hesap-cikis]")) { hesapCikis(); return; }
+  if (e.target.closest("[data-hesap-sil]")) { hesapSilPencere(); return; }
   if (e.target.closest("[data-hesap-esitle]")) { hesapEsitDurum = "eşitleniyor…"; hesapEsitDurumCiz(); hesapEsitle(true); return; }
 
   const bag = e.target.closest("[data-hesap-bag]");
@@ -779,6 +862,8 @@ document.addEventListener("click", function (e) {
 document.addEventListener("submit", function (e) {
   const f = e.target.closest("[data-hesap-form]");
   if (f) { e.preventDefault(); hesapFormGonder(f.dataset.hesapForm, f); return; }
+  const hs = e.target.closest("[data-hesap-sil-form]");
+  if (hs) { e.preventDefault(); hesapSil(hs); return; }
   const pf = e.target.closest("[data-hesap-profil-form]");
   if (pf) { e.preventDefault(); hesapProfilKaydet(pf); }
 });

@@ -113,6 +113,18 @@ language sql stable security definer set search_path = '' as $$
   select exists (select 1 from public.yoneticiler where id = auth.uid());
 $$;
 
+-- İki düzey: 'tam' (her şey) ve 'sinirli' (denetim ve istatistik var; yedek yok).
+-- Sınırlı yönetici eklemek: insert into public.yoneticiler (id, duzey) select id, 'sinirli' from auth.users where email = '...';
+alter table public.yoneticiler add column if not exists duzey text not null default 'tam';
+do $$ begin
+  alter table public.yoneticiler add constraint yoneticiler_duzey check (duzey in ('tam', 'sinirli'));
+exception when duplicate_object then null; end $$;
+
+create or replace function public.tam_yonetici_mi() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.yoneticiler where id = auth.uid() and duzey = 'tam');
+$$;
+
 -- ---------- istatistikler (yalnızca sahibi ve yönetici okur; herkes görünüm üzerinden) ----------
 create table if not exists public.istatistikler (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -607,6 +619,12 @@ begin
     where id = 1;
   end if;
 
+  -- içerik oylamasına açık yapımlar
+  if p ? 'yapimlar' and to_regclass('public.oylanabilir') is not null then
+    delete from public.oylanabilir where ad not in (select jsonb_array_elements_text(p->'yapimlar'));
+    insert into public.oylanabilir (ad) select jsonb_array_elements_text(p->'yapimlar') on conflict do nothing;
+  end if;
+
   update public.yaris_ayar set icerik_ozet = p->>'ozet', guncelleme = now() where id = 1;
   return jsonb_build_object('durum', 'tamam',
     'soru', (select count(*) from public.yaris_banka), 'kesif', (select count(*) from public.kesif_anahtarlari));
@@ -942,6 +960,399 @@ revoke execute on function public.yaris_icerik_yukle(jsonb), public.yaris_baslat
 grant execute on function public.yaris_icerik_yukle(jsonb), public.yaris_baslat(text), public.yaris_bitir(uuid, jsonb),
   public.gk_durum(), public.gk_tahmin(text), public.kesif_kaydet(text) to authenticated;
 revoke execute on function public.gk_cevap(date) from authenticated;
+
+-- ======================================================================
+-- ============ HESAP SİLME, YEDEK, HATA KAYDI =========================
+-- ======================================================================
+
+-- Kullanıcı kendi hesabını ve bütün verisini siler (KVKK). Diğer tablolar
+-- auth.users'a "on delete cascade" ile bağlı olduğu için hepsi birlikte gider.
+create or replace function public.hesabimi_sil() returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then raise exception 'giriş gerekli'; end if;
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
+-- Tarayıcıdaki hatalar: aynı hata aynı gün tek satırda sayılır; günde en çok 5000 satır
+create table if not exists public.hata_kayitlari (
+  no bigserial primary key,
+  gun date not null default (now() at time zone 'utc')::date,
+  ozet text not null,
+  mesaj text not null,
+  kaynak text,
+  adres text,
+  tarayici text,
+  surum text,
+  kullanici uuid references auth.users(id) on delete set null,
+  sayi int not null default 1,
+  ilk timestamptz not null default now(),
+  son timestamptz not null default now(),
+  unique (gun, ozet)
+);
+alter table public.hata_kayitlari enable row level security;
+drop policy if exists "yönetici hataları okur" on public.hata_kayitlari;
+create policy "yönetici hataları okur" on public.hata_kayitlari for select using (public.yonetici_mi());
+
+create or replace function public.hata_kaydet(p_mesaj text, p_kaynak text default null, p_adres text default null,
+                                              p_tarayici text default null, p_surum text default null) returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  bugun date := (now() at time zone 'utc')::date;
+  o text := md5(left(coalesce(p_mesaj, ''), 300) || '|' || left(coalesce(p_kaynak, ''), 200));
+begin
+  if coalesce(p_mesaj, '') = '' then return; end if;
+  if (select count(*) from public.hata_kayitlari where gun = bugun) >= 5000 then return; end if;
+  insert into public.hata_kayitlari (gun, ozet, mesaj, kaynak, adres, tarayici, surum, kullanici)
+  values (bugun, o, left(p_mesaj, 500), left(p_kaynak, 300), left(p_adres, 300), left(p_tarayici, 300), left(p_surum, 40), auth.uid())
+  on conflict (gun, ozet) do update set sayi = public.hata_kayitlari.sayi + 1, son = now();
+end;
+$$;
+
+create or replace function public.hata_temizle() returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.yonetici_mi() then raise exception 'yetki yok'; end if;
+  delete from public.hata_kayitlari;
+end;
+$$;
+
+-- ======================================================================
+-- ============ TOPLULUK: TEORİLER, OYLAMA, TAKİP, VİTRİN ==============
+-- ======================================================================
+
+alter table public.profiller add column if not exists vitrin jsonb not null default '{}'::jsonb;
+do $$ begin
+  alter table public.profiller add constraint profiller_vitrin_boyut check (pg_column_size(vitrin) < 2000);
+exception when duplicate_object then null; end $$;
+
+-- teori panosu: "Bilinmeyenler"deki sorulara okur teorileri
+create table if not exists public.teoriler (
+  id bigserial primary key,
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  konu text not null check (char_length(konu) between 1 and 200),
+  metin text not null check (char_length(metin) between 20 and 1000),
+  zaman timestamptz not null default now(),
+  gizli boolean not null default false,
+  isaret text check (isaret in ('kanon', 'yakin'))
+);
+alter table public.teoriler enable row level security;
+
+create table if not exists public.teori_begenileri (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  teori bigint not null references public.teoriler(id) on delete cascade,
+  primary key (kullanici, teori)
+);
+alter table public.teori_begenileri enable row level security;
+
+create table if not exists public.teori_bildirimleri (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  teori bigint not null references public.teoriler(id) on delete cascade,
+  zaman timestamptz not null default now(),
+  primary key (kullanici, teori)
+);
+alter table public.teori_bildirimleri enable row level security;
+
+create or replace function public.teori_yaz(p_konu text, p_metin text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); yeni bigint;
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if exists (select 1 from public.istatistikler where id = uid and engelli) then return jsonb_build_object('durum', 'engelli'); end if;
+  if char_length(trim(coalesce(p_metin, ''))) < 20 then return jsonb_build_object('durum', 'kisa'); end if;
+  if (select count(*) from public.teoriler where kullanici = uid and zaman > now() - interval '1 day') >= 5 then
+    return jsonb_build_object('durum', 'sinir');
+  end if;
+  insert into public.teoriler (kullanici, konu, metin) values (uid, left(trim(p_konu), 200), left(trim(p_metin), 1000))
+    returning id into yeni;
+  return jsonb_build_object('durum', 'tamam', 'id', yeni);
+end;
+$$;
+
+create or replace function public.teori_begen(p_teori bigint) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then return false; end if;
+  if exists (select 1 from public.teori_begenileri where kullanici = uid and teori = p_teori) then
+    delete from public.teori_begenileri where kullanici = uid and teori = p_teori;
+    return false;
+  end if;
+  if not exists (select 1 from public.teoriler where id = p_teori and not gizli and kullanici <> uid) then return false; end if;
+  insert into public.teori_begenileri (kullanici, teori) values (uid, p_teori);
+  return true;
+end;
+$$;
+
+-- üç ayrı kişi bildirirse teori gizlenir; yönetici geri açabilir
+create or replace function public.teori_bildir(p_teori bigint) returns text
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then return 'giris'; end if;
+  if (select count(*) from public.teori_bildirimleri where kullanici = uid and zaman > now() - interval '1 day') >= 10 then return 'sinir'; end if;
+  insert into public.teori_bildirimleri (kullanici, teori) select uid, p_teori
+    where exists (select 1 from public.teoriler where id = p_teori and kullanici <> uid) on conflict do nothing;
+  if (select count(*) from public.teori_bildirimleri where teori = p_teori) >= 3 then
+    update public.teoriler set gizli = true where id = p_teori and isaret is null;
+  end if;
+  return 'tamam';
+end;
+$$;
+
+-- kendi teorini ya da (yönetici) herhangi birini sil
+create or replace function public.teori_sil(p_teori bigint) returns void
+language sql security definer set search_path = '' as $$
+  delete from public.teoriler where id = p_teori and (kullanici = auth.uid() or public.yonetici_mi());
+$$;
+
+-- yönetici: kanon / yakın işareti, gizle / aç
+create or replace function public.teori_isaretle(p_teori bigint, p_isaret text, p_gizli boolean) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.yonetici_mi() then raise exception 'yetki yok'; end if;
+  update public.teoriler set isaret = nullif(p_isaret, ''), gizli = p_gizli where id = p_teori;
+  if not p_gizli then delete from public.teori_bildirimleri where teori = p_teori; end if;
+end;
+$$;
+
+-- yönetici: gizlenmiş (bildirilen) teoriler ve işaretliler
+create or replace function public.teori_denetim() returns table (
+  id bigint, konu text, metin text, zaman timestamptz, gizli boolean, isaret text,
+  kullanici_adi text, bildirim bigint, begeni bigint)
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.yonetici_mi() then raise exception 'yetki yok'; end if;
+  return query
+    select t.id, t.konu, t.metin, t.zaman, t.gizli, t.isaret, p.kullanici_adi,
+           (select count(*) from public.teori_bildirimleri b where b.teori = t.id),
+           (select count(*) from public.teori_begenileri b where b.teori = t.id)
+    from public.teoriler t join public.profiller p on p.id = t.kullanici
+    where t.gizli or exists (select 1 from public.teori_bildirimleri b where b.teori = t.id)
+    order by t.zaman desc limit 200;
+end;
+$$;
+
+-- sıradaki içerik oylaması: yapımlar listesinden, kişi başı en çok 3 oy
+create table if not exists public.oylanabilir (ad text primary key);
+alter table public.oylanabilir enable row level security;
+drop policy if exists "oylanabilir herkese açık" on public.oylanabilir;
+create policy "oylanabilir herkese açık" on public.oylanabilir for select using (true);
+
+create table if not exists public.yapim_oylari (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  yapim text not null references public.oylanabilir(ad) on delete cascade,
+  zaman timestamptz not null default now(),
+  primary key (kullanici, yapim)
+);
+alter table public.yapim_oylari enable row level security;
+
+create or replace function public.yapim_oyla(p_yapim text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if exists (select 1 from public.yapim_oylari where kullanici = uid and yapim = p_yapim) then
+    delete from public.yapim_oylari where kullanici = uid and yapim = p_yapim;
+  elsif not exists (select 1 from public.oylanabilir where ad = p_yapim) then
+    return jsonb_build_object('durum', 'yok');
+  elsif (select count(*) from public.yapim_oylari where kullanici = uid) >= 3 then
+    return jsonb_build_object('durum', 'sinir');
+  else
+    insert into public.yapim_oylari (kullanici, yapim) values (uid, p_yapim);
+  end if;
+  return jsonb_build_object('durum', 'tamam',
+    'oylarim', coalesce((select jsonb_agg(yapim) from public.yapim_oylari where kullanici = uid), '[]'::jsonb));
+end;
+$$;
+
+create or replace function public.oylarim() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(yapim), '[]'::jsonb) from public.yapim_oylari where kullanici = auth.uid();
+$$;
+
+-- takip
+create table if not exists public.takipler (
+  takip_eden uuid not null references auth.users(id) on delete cascade,
+  takip_edilen uuid not null references auth.users(id) on delete cascade,
+  zaman timestamptz not null default now(),
+  primary key (takip_eden, takip_edilen),
+  check (takip_eden <> takip_edilen)
+);
+alter table public.takipler enable row level security;
+
+create or replace function public.takip_et(p_ad text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); hedef uuid;
+begin
+  if uid is null then return false; end if;
+  select id into hedef from public.profiller where kullanici_adi = lower(p_ad);
+  if hedef is null or hedef = uid then return false; end if;
+  if exists (select 1 from public.takipler where takip_eden = uid and takip_edilen = hedef) then
+    delete from public.takipler where takip_eden = uid and takip_edilen = hedef;
+    return false;
+  end if;
+  if (select count(*) from public.takipler where takip_eden = uid) >= 500 then return false; end if;
+  insert into public.takipler (takip_eden, takip_edilen) values (uid, hedef);
+  return true;
+end;
+$$;
+
+create or replace function public.takip_ettiklerim() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(p.kullanici_adi), '[]'::jsonb)
+  from public.takipler t join public.profiller p on p.id = t.takip_edilen
+  where t.takip_eden = auth.uid() and p.kullanici_adi is not null;
+$$;
+
+-- ======================================================================
+-- ============ OYUNLAŞTIRMA: SEVİYE, HAFTALIK, İSTATİSTİK =============
+-- ======================================================================
+
+-- Günün Kelimesi serisi: bugün ya da dün biten, arka arkaya bulunan günler
+create or replace function public.gk_seri() returns int
+language plpgsql stable security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); g date := (now() at time zone 'utc')::date; n int := 0;
+begin
+  if uid is null then return 0; end if;
+  if not exists (select 1 from public.gk_tahminler where kullanici = uid and gun = g and cozuldu) then g := g - 1; end if;
+  while exists (select 1 from public.gk_tahminler where kullanici = uid and gun = g and cozuldu) loop
+    n := n + 1; g := g - 1;
+  end loop;
+  return n;
+end;
+$$;
+
+create or replace function public.haftalik_ilerleme() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  with h as (select date_trunc('week', now() at time zone 'utc')::date as bas)
+  select jsonb_build_object(
+    'farkli_yaris', (select count(distinct yaris) from public.yaris_skorlari, h where kullanici = auth.uid() and hafta = h.bas and not supheli),
+    'yaris', (select count(*) from public.yaris_skorlari, h where kullanici = auth.uid() and hafta = h.bas and not supheli),
+    'kyldo', (select coalesce(sum(dogru), 0) from public.yaris_skorlari, h where kullanici = auth.uid() and hafta = h.bas and yaris = 'kyldo_hiz' and not supheli),
+    'gk', (select count(*) from public.gk_tahminler, h where kullanici = auth.uid() and gun >= h.bas and cozuldu),
+    'kesif', (select count(*) from public.kesifler, h where kullanici = auth.uid() and zaman >= h.bas),
+    'teori', (select count(*) from public.teoriler, h where kullanici = auth.uid() and zaman >= h.bas),
+    'hafta', (select bas from h));
+$$;
+
+-- Arşivci seviyesi: bütün ilerlemeden sunucuda hesaplanan XP
+create or replace view public.arsivci_seviyeleri as
+  with x as (
+    select p.id, p.kullanici_adi, p.gorunen_ad,
+      coalesce(s.tamlik, 0) * 20 + coalesce(s.gun, 0) * 5 + coalesce(s.madalya, 0) * 30 + coalesce(s.katman, 0) * 40
+      + 10 * (select count(*) from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli)
+      + 15 * (select count(*) from public.kesifler k where k.kullanici = p.id)
+      + 25 * (select count(*) from public.gk_tahminler g where g.kullanici = p.id and g.cozuldu)
+      + 50 * (select count(*) from public.teoriler t where t.kullanici = p.id and t.isaret = 'kanon')
+      + 20 * (select count(*) from public.teoriler t where t.kullanici = p.id and t.isaret = 'yakin') as xp,
+      10 * (select count(*) from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli and y.sezon / 100 = public.tomye_ay(now()) / 100)
+      + 25 * (select count(*) from public.gk_tahminler g where g.kullanici = p.id and g.cozuldu and public.tomye_ay(g.gun::timestamptz) / 100 = public.tomye_ay(now()) / 100)
+      + 15 * (select count(*) from public.kesifler k where k.kullanici = p.id and public.tomye_ay(k.zaman) / 100 = public.tomye_ay(now()) / 100) as yil_xp
+    from public.profiller p left join public.istatistikler s on s.id = p.id
+    where p.kullanici_adi is not null and not coalesce(s.engelli or s.askida, false))
+  select kullanici_adi, gorunen_ad, xp, yil_xp, (floor(sqrt(xp / 40.0)) + 1)::int as seviye from x;
+
+-- Yönetici istatistikleri
+create or replace function public.site_istatistik() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.yonetici_mi() then raise exception 'yetki yok'; end if;
+  return jsonb_build_object(
+    'kullanici', (select count(*) from auth.users),
+    'profil', (select count(*) from public.profiller where kullanici_adi is not null),
+    'aktif7', (select count(distinct k) from (
+        select kullanici k from public.yaris_oturumlari where baslangic > now() - interval '7 days'
+        union select id from public.istatistikler where guncelleme > now() - interval '7 days') a),
+    'gunluk', (select jsonb_agg(jsonb_build_object('gun', g::date,
+        'kayit', (select count(*) from auth.users u where (u.created_at at time zone 'utc')::date = g::date),
+        'aktif', (select count(distinct kullanici) from public.yaris_oturumlari o where (o.baslangic at time zone 'utc')::date = g::date),
+        'yaris', (select count(*) from public.yaris_skorlari y where (y.zaman at time zone 'utc')::date = g::date)) order by g)
+      from generate_series((now() at time zone 'utc')::date - 13, (now() at time zone 'utc')::date, interval '1 day') g),
+    'yarislar', (select coalesce(jsonb_agg(jsonb_build_object('yaris', yaris, 'oyun', n) order by n desc), '[]'::jsonb)
+      from (select yaris, count(*) n from public.yaris_skorlari where zaman > now() - interval '30 days' group by yaris) y),
+    'kulupler', (select coalesce(jsonb_agg(jsonb_build_object('kisilik', kisilik, 'uye', n) order by n desc), '[]'::jsonb)
+      from (select kisilik, count(*) n from public.istatistikler where kisilik is not null group by kisilik) k),
+    'teori', (select count(*) from public.teoriler),
+    'teori_bekleyen', (select count(*) from public.teoriler where gizli),
+    'hata_bugun', (select coalesce(sum(sayi), 0) from public.hata_kayitlari where gun = (now() at time zone 'utc')::date),
+    'supheli7', (select count(*) from public.liderlik_suphe where zaman > now() - interval '7 days'));
+end;
+$$;
+
+-- Yönetici yedeği: bütün tablolar tek JSON
+create or replace function public.yedek_al() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  return jsonb_build_object(
+    'zaman', now(),
+    'kullanicilar', (select coalesce(jsonb_agg(jsonb_build_object('id', id, 'created_at', created_at)), '[]') from auth.users),  -- e-posta bilerek yok
+    'profiller', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.profiller t),
+    'ilerlemeler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.ilerlemeler t),
+    'istatistikler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.istatistikler t),
+    'yaris_skorlari', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.yaris_skorlari t),
+    'gk_tahminler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.gk_tahminler t),
+    'kesifler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.kesifler t),
+    'bulmaca_cozumleri', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.bulmaca_cozumleri t),
+    'bildirimler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.bildirimler t),
+    'teoriler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.teoriler t),
+    'teori_begenileri', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.teori_begenileri t),
+    'yapim_oylari', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.yapim_oylari t),
+    'takipler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.takipler t),
+    'yoneticiler', (select coalesce(jsonb_agg(to_jsonb(t)), '[]') from public.yoneticiler t),
+    'liderlik_ayar', (select to_jsonb(t) from public.liderlik_ayar t where id = 1));
+end;
+$$;
+
+-- ---------- herkese açık görünümler ----------
+drop view if exists public.teori_listesi;
+drop view if exists public.teori_rozetleri;
+drop view if exists public.yapim_oy_sayilari;
+drop view if exists public.takip_sayilari;
+
+create view public.teori_listesi as
+  select t.id, t.konu, t.metin, t.zaman, t.isaret, p.kullanici_adi, p.gorunen_ad,
+         (select count(*) from public.teori_begenileri b where b.teori = t.id) as begeni,
+         exists (select 1 from public.teori_begenileri b where b.teori = t.id and b.kullanici = auth.uid()) as ben_begendim,
+         t.kullanici = auth.uid() as benim
+  from public.teoriler t join public.profiller p on p.id = t.kullanici
+  left join public.istatistikler s on s.id = t.kullanici
+  where not t.gizli and p.kullanici_adi is not null and not coalesce(s.engelli, false);
+
+create view public.teori_rozetleri as
+  select p.kullanici_adi, count(*) filter (where t.isaret = 'kanon') as kanon, count(*) filter (where t.isaret = 'yakin') as yakin
+  from public.teoriler t join public.profiller p on p.id = t.kullanici
+  where t.isaret is not null and not t.gizli group by p.kullanici_adi;
+
+create view public.yapim_oy_sayilari as
+  select o.ad as yapim, count(y.kullanici) as oy from public.oylanabilir o
+  left join public.yapim_oylari y on y.yapim = o.ad group by o.ad;
+
+create view public.takip_sayilari as
+  select p.kullanici_adi,
+    (select count(*) from public.takipler t where t.takip_edilen = p.id) as takipci,
+    (select count(*) from public.takipler t where t.takip_eden = p.id) as takip
+  from public.profiller p where p.kullanici_adi is not null;
+
+grant select on public.teori_listesi, public.teori_rozetleri, public.yapim_oy_sayilari, public.takip_sayilari,
+                public.arsivci_seviyeleri to anon, authenticated;
+
+revoke insert, update, delete on public.hata_kayitlari, public.teoriler, public.teori_begenileri, public.teori_bildirimleri,
+  public.oylanabilir, public.yapim_oylari, public.takipler from anon, authenticated;
+revoke select on public.teoriler, public.teori_begenileri, public.teori_bildirimleri, public.yapim_oylari, public.takipler
+  from anon, authenticated;
+revoke execute on function public.hesabimi_sil(), public.hata_temizle(), public.teori_yaz(text, text), public.teori_begen(bigint),
+  public.teori_bildir(bigint), public.teori_sil(bigint), public.teori_isaretle(bigint, text, boolean), public.yapim_oyla(text),
+  public.oylarim(), public.takip_et(text), public.takip_ettiklerim(), public.gk_seri(), public.haftalik_ilerleme(),
+  public.site_istatistik(), public.yedek_al(), public.teori_denetim() from public, anon;
+grant execute on function public.hesabimi_sil(), public.hata_temizle(), public.teori_yaz(text, text), public.teori_begen(bigint),
+  public.teori_bildir(bigint), public.teori_sil(bigint), public.teori_isaretle(bigint, text, boolean), public.yapim_oyla(text),
+  public.oylarim(), public.takip_et(text), public.takip_ettiklerim(), public.gk_seri(), public.haftalik_ilerleme(),
+  public.site_istatistik(), public.yedek_al(), public.teori_denetim() to authenticated;
+-- hata kaydı hesapsız ziyaretçiden de gelebilir
+grant execute on function public.hata_kaydet(text, text, text, text, text) to anon, authenticated;
 
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';

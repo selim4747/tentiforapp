@@ -1,0 +1,93 @@
+/* Yayın paketi: siteyi dist/ klasörüne kopyalar, her JS ve CSS dosyasını ayrı ayrı küçültür,
+   her sayfa için paylaşım önizlemeli kısa adres (/dunya/ gibi) üretir ve servis çalışanının
+   önbellek adını içeriğe göre günceller. Dosyalar ayrı kaldığı için davranış değişmez.
+
+   Kullanım: npm run paketle   (Netlify bunu kendisi çalıştırır) */
+
+import { transform } from "esbuild";
+import { createHash } from "node:crypto";
+import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const KOK = new URL("..", import.meta.url).pathname;
+const HEDEF = join(KOK, "dist");
+const SITE = (process.env.URL || "https://tentifor.netlify.app").replace(/\/$/, "");
+const KOPYALA = ["index.html", "veri.json", "sw.js", "manifest.webmanifest", "paylasim.png", "robots.txt", "_headers", "css", "js", "ikon"];
+
+rmSync(HEDEF, { recursive: true, force: true });
+mkdirSync(HEDEF, { recursive: true });
+for (const ad of KOPYALA) {
+  try { statSync(join(KOK, ad)); } catch { continue; }
+  cpSync(join(KOK, ad), join(HEDEF, ad), { recursive: true });
+}
+
+const ozet = createHash("sha256");
+let once = 0, sonra = 0;
+
+/* JS: her dosya kendi başına küçültülür. Düz betik olarak kalır; üst düzey adlar
+   (dosyalar arası paylaşılan fonksiyonlar) değişmez. */
+for (const ad of readdirSync(join(HEDEF, "js"))) {
+  if (!ad.endsWith(".js")) { continue; }
+  const yol = join(HEDEF, "js", ad);
+  const kaynak = readFileSync(yol, "utf8");
+  const { code } = await transform(kaynak, { loader: "js", minify: true, target: "es2019", charset: "utf8", legalComments: "none" });
+  writeFileSync(yol, code);
+  once += Buffer.byteLength(kaynak); sonra += Buffer.byteLength(code);
+  ozet.update(code);
+}
+
+for (const ad of readdirSync(join(HEDEF, "css"))) {
+  if (!ad.endsWith(".css")) { continue; }
+  const yol = join(HEDEF, "css", ad);
+  const kaynak = readFileSync(yol, "utf8");
+  const { code } = await transform(kaynak, { loader: "css", minify: true, charset: "utf8" });
+  writeFileSync(yol, code);
+  once += Buffer.byteLength(kaynak); sonra += Buffer.byteLength(code);
+  ozet.update(code);
+}
+ozet.update(readFileSync(join(HEDEF, "index.html")));
+ozet.update(readFileSync(join(HEDEF, "veri.json")));
+
+/* servis çalışanı: yeni paket = yeni önbellek adı */
+const sw = join(HEDEF, "sw.js");
+writeFileSync(sw, readFileSync(sw, "utf8").replace(/tentiforapp-[^"]+"/, "tentiforapp-" + ozet.digest("hex").slice(0, 12) + '"'));
+
+/* paylaşım adresleri: /dunya/ → önizleme etiketleri + #/dunya'ya yönlendirme */
+const gez = readFileSync(join(KOK, "js/18-dalga-7-gezinme.js"), "utf8");
+const blok = gez.slice(gez.indexOf("const GEZINME"), gez.indexOf("];", gez.indexOf("const GEZINME")));
+const sayfalar = [...blok.matchAll(/\{\s*id:\s*"([^"]+)",\s*ad:\s*"([^"]+)"[\s\S]*?bolumler:\s*\[([\s\S]*?)\]\s*\}/g)]
+  .map(function (m) {
+    return { id: m[1], ad: m[2], bolumler: [...m[3].matchAll(/\[\s*"[^"]+",\s*"([^"]+)"\s*\]/g)].map(function (b) { return b[1]; }) };
+  });
+if (sayfalar.length < 5) { throw new Error("Sayfa listesi okunamadı (" + sayfalar.length + ")"); }
+
+const kacir = function (s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); };
+for (const s of sayfalar) {
+  const baslik = "TentiforApp — " + s.ad;
+  const aciklama = s.bolumler.join(", ") + ". Tentiforverse evren arşivi.";
+  mkdirSync(join(HEDEF, s.id), { recursive: true });
+  writeFileSync(join(HEDEF, s.id, "index.html"), `<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${kacir(baslik)}</title>
+<meta name="description" content="${kacir(aciklama)}">
+<link rel="canonical" href="${SITE}/${s.id}/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TentiforApp">
+<meta property="og:title" content="${kacir(baslik)}">
+<meta property="og:description" content="${kacir(aciklama)}">
+<meta property="og:url" content="${SITE}/${s.id}/">
+<meta property="og:image" content="${SITE}/paylasim.png">
+<meta property="og:locale" content="tr_TR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${kacir(baslik)}">
+<meta name="twitter:description" content="${kacir(aciklama)}">
+<meta name="twitter:image" content="${SITE}/paylasim.png">
+<meta http-equiv="refresh" content="0; url=/#/${s.id}">
+<script>location.replace("/#/${s.id}" + (location.hash ? "/" + location.hash.replace(/^#\\/?/, "") : ""));</script>
+</head><body><p><a href="/#/${s.id}">${kacir(baslik)}</a></p></body></html>
+`);
+}
+
+console.log("Paket hazır: " + sayfalar.length + " sayfa adresi, JS+CSS " +
+  Math.round(once / 1024) + " KB → " + Math.round(sonra / 1024) + " KB");

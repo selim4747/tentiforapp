@@ -46,7 +46,8 @@ function kanonProfilEkle(id) {
 
 /** { hepsi, tumEvren, bolumler:Set, evrenler:Set } — bu cihazdaki erişim. */
 function kanonErisim() {
-  const yon = (typeof yoneticiAcik === "function") && yoneticiAcik();
+  /* sınırlı yönetici de bütün bölümleri ve evrenleri görür (düzenleyebilmek için); buz katmanları hariç */
+  const yon = (typeof panelAcik === "function") ? panelAcik() : ((typeof yoneticiAcik === "function") && yoneticiAcik());
   if (kanonOnbellek && kanonOnbellekYonetici === yon) { return kanonOnbellek; }
 
   const e = { hepsi: false, tumEvren: false, bolumler: new Set(), evrenler: new Set() };
@@ -235,10 +236,13 @@ function ustaTemizle() {
 
 /** "Kod" penceresine yazılan yönetici kodu. */
 function ustaGiris(kod, durum) {
-  if (!yoneticiGiris(kod)) { return false; }
+  const tur = yoneticiGiris(kod);
+  if (!tur) { return false; }
   kanonSifirla();
   const yeni = ustaAnahtarlariYukle();
-  durum.textContent = "Yönetici girişi · her şey açıldı" + (yeni ? " (" + yeni + " buz katmanı)" : "");
+  durum.textContent = tur === "sinirli"
+    ? "Sınırlı yönetici girişi · panel açıldı, buz katmanları oyunla açılır"
+    : "Yönetici girişi · her şey açıldı" + (yeni ? " (" + yeni + " buz katmanı)" : "");
   durum.className = "pencere-durum iyi";
   setTimeout(function () {
     perdeKapat();
@@ -438,7 +442,7 @@ function yoneticiKisiKaydet() {
   if (istenen) {
     if (!/^[A-Z0-9][A-Z0-9-]{3,23}$/.test(istenen)) { yoneticiDurum("Kod 4-24 karakter olmalı: harf, rakam ve tire", false); return; }
     const oz = dogrulamaOzeti(istenen);
-    const cakisma = oz === veri.yoneticiOzet ||
+    const cakisma = oz === veri.yoneticiOzet || oz === veri.sinirliYoneticiOzet ||
       (veri.katmanlar || []).concat(veri.kisiselKatmanlar || []).some(function (k) { return k.dogrulama === oz; }) ||
       veri.profiller.some(function (x) { return x.dogrulama === oz && x !== p; });
     if (cakisma) { yoneticiDurum("Bu kod başka bir yerde kullanılıyor, başka bir kod dene", false); return; }
