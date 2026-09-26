@@ -15,7 +15,8 @@ const GEZINME = [
     ["yankilar", "Yankılar"] ] },
 
   { id: "dunya", ad: "Dünya", ikon: "▦", bolumler: [
-    ["harita", "Harita"], ["zaman", "Zaman çizelgesi"], ["takvim", "Tömye takvimi"] ] },
+    ["harita", "Harita"], ["zaman", "Zaman çizelgesi"], ["takvim", "Tömye takvimi"],
+    ["claudeEvren", "Claude'un evreni"] ] },
 
   { id: "okuma", ad: "Okuma", ikon: "▧", bolumler: [
     ["sira", "Nereden başlamalı"], ["roman", "Roman"], ["olaylar", "Olaylar"],
@@ -307,7 +308,7 @@ const GEC_CIZILENLER = {
   olaylar: "olaylarCiz", kisaHikayeler: "kisaHikayelerCiz", dosyalar: "dosyalarCiz",
   hikaye: "hikayeCiz", defter: "defterCiz", arsivci: "arsivciCiz",
   bag: "bagCiz", sira: "siraCiz", basarim: "basarimCiz",
-  degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz", yarislar: "yarislarCiz",
+  degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz", yarislar: "yarislarCiz", claudeEvren: "claudeEvrenCiz",
 };
 
 const cizildi = {};

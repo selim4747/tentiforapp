@@ -174,7 +174,10 @@ const OZET_LISTELERI = [
   ["galeri", "galeri görseli", null],
   ["kilitliDosyalar", "kilitli dosya", function (x) { return x.baslik || x.ad; }],
   ["gunlukler", "günlük", null],
-  ["kayitlar", "kayıt", null]
+  ["kayitlar", "kayıt", null],
+  ["claudeEvreni.maddeler", "Claude evreni maddesi", function (x) { return x.baslik; }],
+  ["claudeEvreni.kisiler", "Claude evreni kişisi", function (x) { return x.ad; }],
+  ["claudeEvreni.hikayeler", "Claude evreni hikâyesi", function (x) { return x.baslik; }]
 ];
 
 function bakimAnahtar(x) {
@@ -184,7 +187,7 @@ function bakimAnahtar(x) {
 function bakimFotoAl() {
   const f = {};
   OZET_LISTELERI.forEach(function (l) {
-    const liste = Array.isArray(veri[l[0]]) ? veri[l[0]] : [];
+    const liste = (yDizi(l[0], true) || []);
     /* aynı adlı kayıtlar olabilir (iki "Delilik" gibi): kaçıncı olduğu da anahtara girer */
     const sayac = {};
     const anahtarlar = liste.map(function (x) {
@@ -214,7 +217,7 @@ function bakimOzetMaddeleri() {
   const maddeler = [];
   OZET_LISTELERI.forEach(function (l) {
     const once = bakimFoto[l[0]], sonra = simdi[l[0]];
-    const liste = Array.isArray(veri[l[0]]) ? veri[l[0]] : [];
+    const liste = (yDizi(l[0], true) || []);
     const yeni = [];
     let degisen = 0;
     sonra.anahtarlar.forEach(function (a, i) {
@@ -259,14 +262,35 @@ const Y_LISTELER = {
   sozluk:             { ad: "Sözlük",              ornek: { terim: "", tanim: "" } },
   alintilar:          { ad: "Alıntılar",           ornek: { metin: "", kim: "" } },
   zamanCizelgesi:     { ad: "Zaman çizelgesi",     ornek: { no: 0, cag: "", baslik: "", metin: "" } },
+  "claudeEvreni.maddeler":  { ad: "Claude evreni · maddeler", ornek: { id: "", tur: "fizik", baslik: "", ozet: "", metin: "" } },
+  "claudeEvreni.kisiler":   { ad: "Claude evreni · kişiler", ornek: { id: "", ad: "", unvan: "", ozet: "", detay: "" } },
+  "claudeEvreni.hikayeler": { ad: "Claude evreni · hikâyeler", ornek: { id: "", baslik: "", karakterler: [], metin: "" } },
+  "claudeEvreni.mektuplar": { ad: "Claude evreni · mektuplar", ornek: { id: "", kimden: "", kime: "", not: "", metin: "" } },
+  "claudeEvreni.sozluk":    { ad: "Claude evreni · sözlük", ornek: { terim: "", tanim: "" } },
+  "claudeEvreni.sorular":   { ad: "Claude evreni · sorular", ornek: { soru: "", not: "" } },
   degisiklik:         { ad: "Değişiklik günlüğü",  ozel: true },
   site:               { ad: "Site ayarları",       ozel: true }
 };
 
+/** "claudeEvreni.kisiler" gibi noktalı yolları da çözer; dizi yoksa (bakma değilse) oluşturur. */
+function yDizi(yol, bakma) {
+  const parca = String(yol).split(".");
+  let o = veri;
+  for (let i = 0; i < parca.length - 1; i++) {
+    if (!o[parca[i]] || typeof o[parca[i]] !== "object") { if (bakma) { return undefined; } o[parca[i]] = {}; }
+    o = o[parca[i]];
+  }
+  const son = parca[parca.length - 1];
+  if (!Array.isArray(o[son])) { if (bakma) { return o[son]; } o[son] = []; }
+  return o[son];
+}
+
 const Y_LISTE_CIZICILER = {
   bulmacalar: "bulmacaCiz", suphehliBulmacalar: "supheliCiz", mektuplar: "mektupCiz",
   bilinmeyenler: "bilinmeyenCiz", yankilar: "yankiCiz", sozluk: "sozlukCiz",
-  alintilar: "alintiCiz", zamanCizelgesi: "cizZaman", degisiklik: "degisiklikCiz", site: "gizlilikCiz"
+  alintilar: "alintiCiz", zamanCizelgesi: "cizZaman", degisiklik: "degisiklikCiz", site: "gizlilikCiz",
+  "claudeEvreni.maddeler": "claudeEvrenCiz", "claudeEvreni.kisiler": "claudeEvrenCiz", "claudeEvreni.hikayeler": "claudeEvrenCiz",
+  "claudeEvreni.mektuplar": "claudeEvrenCiz", "claudeEvreni.sozluk": "claudeEvrenCiz", "claudeEvreni.sorular": "claudeEvrenCiz"
 };
 
 let yListe = "bulmacalar";
@@ -275,7 +299,7 @@ let yListeSilOnay = null;
 
 function yListeSablon(anahtar) {
   const t = Y_LISTELER[anahtar];
-  const liste = veri[anahtar] || [];
+  const liste = yDizi(anahtar);
   const kaynak = t.ornek || liste[0] || {};
   const bos = {};
   Object.keys(kaynak).forEach(function (k) {
@@ -286,6 +310,7 @@ function yListeSablon(anahtar) {
   if ("no" in bos) { bos.no = liste.reduce(function (m, x) { return Math.max(m, Number(x.no) || 0); }, 0) + 1; }
   if ("id" in bos && anahtar === "mektuplar") { bos.id = "m" + (liste.length + 1) + Date.now().toString(36).slice(-3); }
   if ("id" in bos && anahtar === "suphehliBulmacalar") { bos.id = "b" + (liste.length + 1); }
+  if ("id" in bos && anahtar.indexOf("claudeEvreni.") === 0) { bos.id = "cl_" + Date.now().toString(36); }
   return bos;
 }
 
@@ -323,7 +348,7 @@ function yoneticiListeler() {
   const secici = '<div class="filtre y-liste-secici">' + Object.keys(Y_LISTELER).filter(function (k) {
     return k !== "site" || yoneticiAcik();
   }).map(function (k) {
-    const n = Array.isArray(veri[k]) ? " · " + veri[k].length : "";
+    const n = Array.isArray(yDizi(k, true)) ? " · " + yDizi(k).length : "";
     return '<button class="filtre-btn' + (yListe === k ? " secili" : "") + '" data-y-liste="' + k + '">' +
              kacir(Y_LISTELER[k].ad) + n + "</button>";
   }).join("") + "</div>";
@@ -332,8 +357,7 @@ function yoneticiListeler() {
   if (yListe === "degisiklik") { return secici + yListeDegisiklik(); }
   if (yListe === "site") { return secici + yListeSite(); }
 
-  if (!Array.isArray(veri[yListe])) { veri[yListe] = []; }
-  const liste = veri[yListe];
+  const liste = yDizi(yListe);
 
   if (yListeAcik !== null && liste[yListeAcik]) {
     const x = liste[yListeAcik];
@@ -367,7 +391,7 @@ function yListeFormKaydet() {
   const form = document.querySelector("[data-y-liste-form]");
   if (!form) { return; }
   const i = parseInt(form.dataset.yListeForm, 10);
-  const x = veri[yListe][i];
+  const x = yDizi(yListe)[i];
   let hata = null;
   form.querySelectorAll("[data-y-alan]").forEach(function (el) {
     const k = el.dataset.yAlan, tip = el.dataset.yTip;
@@ -709,8 +733,8 @@ document.addEventListener("click", function (e) {
   if (e.target.closest("[data-y-liste-geri]")) { yListeAcik = null; yListeSilOnay = null; yoneticiCiz(); return; }
   if (e.target.closest("[data-y-liste-kaydet]")) { yListeFormKaydet(); return; }
   if (e.target.closest("[data-y-liste-yeni]")) {
-    veri[yListe].push(yListeSablon(yListe));
-    yListeAcik = veri[yListe].length - 1;
+    yDizi(yListe).push(yListeSablon(yListe));
+    yListeAcik = yDizi(yListe).length - 1;
     yoneticiCiz();
     return;
   }
@@ -718,7 +742,7 @@ document.addEventListener("click", function (e) {
   if (ls) {
     const i = parseInt(ls.dataset.yListeSil, 10);
     if (yListeSilOnay !== i) { yListeSilOnay = i; yoneticiCiz(); return; }
-    veri[yListe].splice(i, 1);
+    yDizi(yListe).splice(i, 1);
     yListeSilOnay = null; yListeAcik = null;
     yListeYenidenCiz();
     yoneticiCiz();
@@ -728,7 +752,7 @@ document.addEventListener("click", function (e) {
   const lt = e.target.closest("[data-y-liste-tasi]");
   if (lt) {
     const i = parseInt(lt.dataset.yListeTasi, 10), j = i + parseInt(lt.dataset.yon, 10);
-    const liste = veri[yListe];
+    const liste = yDizi(yListe);
     if (j < 0 || j >= liste.length) { return; }
     const t = liste[i]; liste[i] = liste[j]; liste[j] = t;
     yListeYenidenCiz();
