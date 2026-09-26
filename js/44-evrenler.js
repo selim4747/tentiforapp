@@ -75,11 +75,18 @@ function kanonEvrenIcerigi(id) {
 function evrenSeciciListesi() {
   const site = [];
   (veri.haritalar || []).forEach(function (h) {
+    if (h.ustEvren) { return; }   /* gezegen: üst evreninin altında listelenir */
     const kilitli = !kanonSayfaErisimi(h.id);
-    const git = h.id === "claude" ? "#/claude" : (h.id === (veri.haritalar[0] || {}).id ? "#/arsiv"
+    const ilk = h.id === (veri.haritalar[0] || {}).id;
+    const git = h.id === "claude" ? "#/claude" : (ilk ? "#/arsiv"
       : ((veri.kanonEvrenleri || {})[h.id] ? "#/ev/site/" + h.id : "harita:" + h.id));
-    site.push({ ad: h.id === (veri.haritalar[0] || {}).id ? h.ad + " · 24. Evren" : h.ad, git: git, kilitli: kilitli,
-      not: h.id === "claude" ? "kanon dışı" : "" });
+    const gezegenler = (veri.haritalar || []).filter(function (x) { return x.ustEvren === h.id; });
+    site.push({ ad: ilk ? (h.evrenAdi || h.ad) + " · 24. Evren" : (h.evrenAdi || h.ad), git: git, kilitli: kilitli,
+      not: h.id === "claude" ? "kanon dışı" : (gezegenler.length ? (gezegenler.length + 1) + " gezegen" : ""),
+      /* aynı evrendeki gezegenler: her birinin haritası */
+      alt: gezegenler.length ? [h].concat(gezegenler).map(function (g) {
+        return { ad: g.ad, git: "harita:" + g.id, kilitli: kilitli, not: "gezegen" };
+      }) : null });
   });
   /* haritası olmayan kanon evrenler (ör. E25) */
   Object.keys(veri.kanonEvrenleri || {}).forEach(function (id) {
@@ -108,9 +115,12 @@ function evrenSeciciAc() {
   const grup = function (baslik, liste, bos) {
     return '<div class="es-grup"><div class="oyun-etiket">' + kacir(baslik) + "</div>" +
       (liste.length ? liste.map(function (x) {
-        return '<button class="es-oge' + (x.kilitli ? " kilitli" : "") + '" data-evren-git="' + kacir(x.git) + '">' +
-          '<span class="es-ad">' + kacir(x.ad) + (x.kilitli && typeof KANON_KILIT_SVG !== "undefined" ? " " + KANON_KILIT_SVG : "") + "</span>" +
-          (x.not ? '<span class="es-not">' + kacir(x.not) + "</span>" : "") + "</button>";
+        const oge = function (y, alt) {
+          return '<button class="es-oge' + (alt ? " es-alt" : "") + (y.kilitli ? " kilitli" : "") + '" data-evren-git="' + kacir(y.git) + '">' +
+            '<span class="es-ad">' + (alt ? '<span aria-hidden="true">◦ </span>' : "") + kacir(y.ad) + (y.kilitli && typeof KANON_KILIT_SVG !== "undefined" ? " " + KANON_KILIT_SVG : "") + "</span>" +
+            (y.not ? '<span class="es-not">' + kacir(y.not) + "</span>" : "") + "</button>";
+        };
+        return oge(x, false) + (x.alt ? x.alt.map(function (y) { return oge(y, true); }).join("") : "");
       }).join("") : '<p class="oyun-not">' + kacir(bos) + "</p>") + "</div>";
   };
   const k = document.createElement("div");
@@ -400,6 +410,13 @@ function evrenSayfaCiz() {
 
 /* ---------- harita sekmesi ---------- */
 
+/** Evrenin seçili gezegeninin haritası: EVS.gezegen boşsa ana harita (e.harita), yoksa e.gezegenler'deki. */
+function evrenGezegenHaritasi(e) {
+  const g = EVS && EVS.gezegen ? (e.gezegenler || []).find(function (x) { return x.id === EVS.gezegen; }) : null;
+  if (EVS && EVS.gezegen && !g) { EVS.gezegen = null; }
+  return g ? (g.harita || { yerler: [] }) : (e.harita || { yerler: [] });
+}
+
 function evrenHaritaVerisi(v) {
   if (EVS.kaynak === "e99") { return { yayin: (veri.e99 && veri.e99.harita) || { yerler: [] }, duzen: v.katki.harita }; }
   if (EVS.kaynak === "site") {
@@ -407,7 +424,9 @@ function evrenHaritaVerisi(v) {
     if (!Array.isArray(h.yerler)) { h.yerler = []; }
     return v.duzenle ? { yayin: { yerler: [] }, duzen: h } : { yayin: h, duzen: null };
   }
-  return { yayin: v.duzenle ? { yerler: [] } : (v.eser.harita || { yerler: [] }), duzen: v.duzenle ? (v.eser.harita || { yerler: [] }) : null };
+  const h = evrenGezegenHaritasi(v.eser);
+  if (!Array.isArray(h.yerler)) { h.yerler = []; }
+  return { yayin: v.duzenle ? { yerler: [] } : h, duzen: v.duzenle ? h : null };
 }
 
 function evrenHaritaBolumu(v) {
@@ -430,7 +449,8 @@ function evrenHaritaBolumu(v) {
         cizim: "Kıta, göl ya da bölge sınırı için köşelere sırayla dokun; en az 3 nokta, sonra \"Alanı bitir\"." })[EVS.mod] +
       (e99 ? " Kesik çizgili olanlar senin katkın: yalnızca sende görünür." : "") + "</p>";
   }
-  return arac + '<div class="evh-kutu" data-evh-kutu>' + svg + "</div>" +
+  return (typeof evrenGezegenSeridi === "function" ? evrenGezegenSeridi(v) : "") +
+    arac + '<div class="evh-kutu" data-evh-kutu>' + svg + "</div>" +
     (yerSay ? "" : '<p class="oyun-not">' + (hv.duzen ? "Harita boş: bir yer ekleyerek başla." : "Bu evrenin haritası yok.") + "</p>") +
     evrenSeciliFormu(v, hv);
 }
@@ -473,8 +493,14 @@ function evrenHaritaDegistir(fn) {
   const l = fanEserlerim();
   const e = l.find(function (x) { return x.id === v.hedef; });
   if (!e) { return; }
-  if (!e.harita || !Array.isArray(e.harita.yerler)) { e.harita = { yerler: [] }; }
-  fn(e.harita);
+  const g = EVS.gezegen && EVS.kaynak === "benim" ? (e.gezegenler || []).find(function (x) { return x.id === EVS.gezegen; }) : null;
+  if (g) {
+    if (!g.harita || !Array.isArray(g.harita.yerler)) { g.harita = { yerler: [] }; }
+    fn(g.harita);
+  } else {
+    if (!e.harita || !Array.isArray(e.harita.yerler)) { e.harita = { yerler: [] }; }
+    fn(e.harita);
+  }
   e.guncelleme = new Date().toISOString();
   fanEserlerimYaz(l);
 }

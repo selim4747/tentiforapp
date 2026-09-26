@@ -768,11 +768,24 @@ function haritaCiz() {
   if (!haritaEvrenGorunur(h)) { haritaSeciliId = null; h = aktifHarita(); }
 
   const gorunen = haritaGorunenEvrenler();
+  /* aynı evrenin gezegenleri (ör. Tentiforverse: Tömye, Ax-24) bir arada, evren adıyla */
+  const dugme = function (hh) {
+    return '<button class="filtre-btn' + (hh.id === h.id ? " secili" : "") +
+           '" data-harita-sec="' + kacir(hh.id) + '">' + kacir(hh.ad) + "</button>";
+  };
+  const gruplar = [];
+  gorunen.forEach(function (hh) {
+    const ust = hh.ustEvren || hh.id;
+    let g = gruplar.find(function (x) { return x.ust === ust; });
+    if (!g) { g = { ust: ust, l: [] }; gruplar.push(g); }
+    g.l.push(hh);
+  });
   const secici = gorunen.length > 1
     ? '<div class="harita-secici">' +
-        gorunen.map(function (hh) {
-          return '<button class="filtre-btn' + (hh.id === h.id ? " secili" : "") +
-                 '" data-harita-sec="' + kacir(hh.id) + '">' + kacir(hh.ad) + "</button>";
+        gruplar.map(function (g) {
+          if (g.l.length === 1) { return dugme(g.l[0]); }
+          const ustH = (veri.haritalar || []).find(function (x) { return x.id === g.ust; }) || g.l[0];
+          return '<span class="harita-grup"><span class="harita-grup-ad">' + kacir(ustH.evrenAdi || ustH.ad) + "</span>" + g.l.map(dugme).join("") + "</span>";
         }).join("") +
       "</div>"
     : "";

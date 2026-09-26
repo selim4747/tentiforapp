@@ -758,8 +758,29 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await N.click('#evrenSayfa [data-evk-sablon="iki"]'); await bekle(N, 300);
     ok("hazır harita konur", await N.evaluate(function () { return evrenBenimBul(EVS.id).harita.yerler.length === 5; }) &&
       await N.locator('#evrenSayfa [data-evk-sablon]').count() === 0);
+    /* bir evrende birden fazla gezegen */
+    await N.click("#evrenSayfa [data-evg-ekle]"); await bekle(N, 300);
+    await N.fill("#evrenSayfa [data-evg-ad]", "Kızıl Ay"); await N.dispatchEvent("#evrenSayfa [data-evg-ad]", "change"); await bekle(N, 200);
+    await N.click('#evrenSayfa [data-evk-sablon="takimada"]'); await bekle(N, 300);
+    ok("ikinci gezegen kendi haritasıyla", await N.evaluate(function () {
+      const e = evrenBenimBul(EVS.id);
+      return e.harita.yerler.length === 5 && e.gezegenler.length === 1 && e.gezegenler[0].ad === "Kızıl Ay" && e.gezegenler[0].harita.yerler.length === 5 &&
+        e.gezegenler[0].harita.yerler[0].ad === "Büyük Ada";
+    }));
+    await N.click('#evrenSayfa [data-evg-sec=""]'); await bekle(N, 200);
+    ok("gezegenler arasında geçiş", /Batı Kıtası/.test(await N.textContent("#evrenSayfa .evh-kutu")) && !/Büyük Ada/.test(await N.textContent("#evrenSayfa .evh-kutu")));
+    ok("gezegenler dosyaya girer ve geri açılır", await N.evaluate(function () {
+      const x = fanMetindenEser(fanDosyaHtml(evrenBenimBul(EVS.id)));
+      return x.gezegenler.length === 1 && x.gezegenler[0].harita.yerler.length === 5;
+    }));
+    ok("kelime oyunu iki kelimelik adları birleştirmez", await N.evaluate(function () { return evoKelimeler(evrenBenimBul(EVS.id)).indexOf("büyükada") === -1; }));
     await N.click("#evrenSayfa [data-evk-gizle]"); await bekle(N, 200);
     ok("ilk adımlar gizlenebilir", await N.locator("#evrenSayfa .evk-kart").count() === 0);
+    ok("Ax-24, Tentiforverse'ün (Tömye'nin evreni) gezegeni", await N.evaluate(function () {
+      const l = evrenSeciciListesi().site;
+      const t = l.find(function (x) { return /Tentiforverse/.test(x.ad); });
+      return !l.some(function (x) { return x.ad === "Ax-24"; }) && !!t && t.alt.map(function (x) { return x.ad; }).join() === "Tömye,Ax-24" && kanonUstEvren("ax24") === "tomye";
+    }));
     ok("sekme şeridi tek satır", await N.evaluate(function () { const s = document.querySelector("#evrenSayfa .evs-sekmeler"); return getComputedStyle(s).flexWrap === "nowrap"; }));
     ok("dolu evrenden sonra yeni evren yeni taslak", await N.evaluate(function () { return evrenYeniKur() !== EVS.id; }));
 
