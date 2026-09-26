@@ -446,6 +446,55 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
         !!document.querySelector("[data-e99-indir]");
     }));
     await Z.evaluate(function () { const p = document.querySelector("#perde"); if (p) { p.hidden = true; } evrenSayfaKapat(); });
+    /* ---------- E25 kişileri: herkes ekler, kişilik yaratanın imzasında, başka evrene götürülür ---------- */
+    await Z.evaluate(function () { location.hash = "#/ev/site/e25"; }); await bekle(Z, 600);
+    ok("E25 kilitliyken de herkes kişi ekleyebilir", await Z.evaluate(function () {
+      return !!document.querySelector("#evrenSayfa [data-evs-kod]") && !!document.querySelector("#evrenSayfa .e25-kisiler #kisiAd");
+    }));
+    await Z.fill("#kisiAd", "Taşsız Mira");
+    await Z.fill("#kisiUnvan", "Kaçak gezgin");
+    await Z.fill("#kisiOzet", "Taşını kaybetmiş ama içgüdüsünü değil.");
+    await Z.fill("#kisiHaller", "Sakin: Tehlikede bile sesi titremez.\nÖfkeli: Evrenler çatırdar.");
+    await Z.fill("#kisiYazar", "Deneyen");
+    await Z.click('[data-kisi-kaydet=""]'); await bekle(Z, 700);
+    const kisiId = await Z.evaluate(function () { const k = fanEserlerim().find(function (x) { return x.tur === "kisi"; }); return k && k.id; });
+    ok("kişi eklenir ve yaratanın anahtarıyla imzalanır", !!kisiId && await Z.evaluate(function (id) {
+      const k = fanEserlerim().find(function (x) { return x.id === id; });
+      return k.kisilik.length === 2 && k.kisilik[1].ad === "Öfkeli" && !!k.imza && benimYaratigimMi(k) &&
+        /yaratıcısının imzası/.test(document.querySelector("#evrenSayfa .e25-kisiler .kisi-imza").textContent);
+    }, kisiId));
+    ok("kişilik başkasınca değiştirilirse imza tutmaz; yalnızca yaratıcı değiştirir", await Z.evaluate(async function (id) {
+      const k = fanEserlerim().find(function (x) { return x.id === id; });
+      const oynanmis = JSON.parse(JSON.stringify(k)); oynanmis.kisilik[0].aciklama = "Aslında hep bağırır.";
+      const l = fanEserlerim(); const z = l.find(function (x) { return x.id === id; }); const asil = z.imza.a;
+      z.imza.a = "BAAAAA"; fanEserlerimYaz(l);
+      const baskasi = await kisiKaydet(id, { ad: "Mira", haller: "Neşeli: hep güler" });
+      z.imza.a = asil; fanEserlerimYaz(l);
+      return (await kisiDogrula(k)) === "gecerli" && (await kisiDogrula(oynanmis)) === "degismis" && /yaratıcısı/.test(baskasi);
+    }, kisiId));
+    ok("kişi başka evrene konuk olarak götürülür, dosyada imzasıyla taşınır", await Z.evaluate(async function (a) {
+      const k = fanEserlerim().find(function (x) { return x.id === a[0]; });
+      const s = kisiGotur(k, "evren:" + a[1]);
+      const ev = evrenBenimBul(a[1]);
+      const dosya = fanMetindenEser(fanDosyaHtml(fanTemizle(ev)));
+      return s && s.id === a[1] && ev.konuklar[0].ad === "Taşsız Mira" && dosya.konuklar[0].kisilik.length === 2 &&
+        (await kisiDogrula(dosya.konuklar[0])) === "gecerli" && /Konuk kişiler/.test(fanDosyaHtml(fanTemizle(ev)));
+    }, [kisiId, evId]));
+    await Z.click('[data-kisi-gotur="benim:' + kisiId + '"]'); await bekle(Z, 200);
+    await Z.selectOption("#kisiHedef", "yeni-hikaye");
+    await Z.click("[data-kisi-gotur-onay]"); await bekle(Z, 700);
+    ok("kişiyle yeni hikâye yazılır, kişiliği hikâyede salt okunur", await Z.evaluate(function () {
+      const h = fanEserlerim().filter(function (x) { return x.tur === "hikaye"; }).pop();
+      return location.hash === "#/fan" && h.konuklar[0].ad === "Taşsız Mira" && /Taşsız Mira/.test(h.karakterler) &&
+        !!document.querySelector("#fanHikayeAlan .konuk-duzen") && !document.querySelector("#fanHikayeAlan .konuk-duzen textarea");
+    }));
+    ok("yönetici okur kişisini sitede yayımlar", await Z.evaluate(function (id) {
+      const eski = window.panelAcik; window.panelAcik = function () { return true; };
+      const k = fanTemizle(fanEserlerim().find(function (x) { return x.id === id; }));
+      const tamam = fanSiteyeEkle(k) && fanSiteListesi("kisi").length === 1 && e25Kisileri().length === 1;
+      veri.fanEserleri.kisiler = []; window.panelAcik = eski;
+      return tamam;
+    }, kisiId));
     ok("sayfa paylaş düğmesi", await Z.locator("#sayfaBasi [data-sayfa-paylas]").count() === 1);
     await Z.evaluate(function () { location.hash = "#/mektuplar"; }); await bekle(Z, 800);
     ok("uzun metinlerde Dinle düğmesi", await Z.locator(".sesli-dugme").count() > 0);
@@ -807,6 +856,37 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       veri.evrenParalari.e99.kur = 0.05; veri.cuzdan.genelTavan = 300;
       return tamam;
     }));
+
+    /* ---------- E25: Evrengezerler kendi evreninde, melezler ortak ---------- */
+    await A.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(A, 900);
+    await A.evaluate(function () { cizKarakterler(); evrenFiltre = "hepsi"; cizEvren(); });
+    ok("Tömye arşivinde Evrengezerler yok, melezler var", await A.evaluate(function () {
+      const k = Array.from(document.querySelectorAll("#karakterIzgara .kart-ad")).map(function (x) { return x.textContent; });
+      const e = Array.from(document.querySelectorAll("#evrenListe .madde-baslik")).map(function (x) { return x.textContent; }).join("|");
+      return k.indexOf("Gri") === -1 && k.indexOf("Yejen") === -1 && k.indexOf("Feil Luyot") !== -1 && k.indexOf("Kaelan Luyot") !== -1 &&
+        !/Beyaz Taşlar/.test(e) && /Sabıka Soyu/.test(e) && !!document.querySelector('#evrenListe [data-evren-git="#/ev/site/e25"]');
+    }));
+    await A.click('#evrenListe [data-evren-git="#/ev/site/e25"]'); await bekle(A, 700);
+    ok("E25 kendi sayfasında: Evrengezerler, ortak melezler, maddeler, sözlük", await A.evaluate(function () {
+      const s = document.querySelector("#evrenSayfa");
+      if (!s || location.hash !== "#/ev/site/e25") { return false; }
+      const t = s.textContent;
+      const gri = veri.karakterler.findIndex(function (k) { return k.id === "gri"; });
+      return !!s.querySelector('[data-karakter="' + gri + '"]') && !!s.querySelector('.kart-ortak [data-evren-git="#/karakter/feil"]') &&
+        /Beyaz Taşlar/.test(t) && /Sabıka Soyu/.test(t) && /Tömye ile ortak/.test(t) && !!s.querySelector(".evs-sozluk") &&
+        !!s.querySelector('.madde .buzul') && !/Yaşam Gücü Almadı/.test(t);
+    }));
+    await A.click('#evrenSayfa .kart-ortak [data-evren-git="#/karakter/feil"]'); await bekle(A, 900);
+    ok("melezin anıları Tömye'de açılır", await A.evaluate(function () { return !document.querySelector("#evrenSayfa") && /karakter\/feil/.test(location.hash); }));
+    await A.evaluate(function () { if (typeof perdeKapat === "function") { perdeKapat(); } location.hash = "#/sen"; }); await bekle(A, 500);
+    ok("E25 evren seçicide, kodsuz ziyaretçiye kilitli", await Z.evaluate(function () {
+      const e = evrenSeciciListesi().site.find(function (x) { return x.ad === "E25"; });
+      return !!e && e.kilitli && e.git === "#/ev/site/e25";
+    }));
+    ok("her evrenin kendi sayfası ve site haritası", /E25/.test(readFileSync(dizin + "/evren/e25/index.html", "utf8")) &&
+      /url=\/#\/ev\/site\/e25/.test(readFileSync(dizin + "/evren/e25/index.html", "utf8")) &&
+      /kodla açılır/.test(readFileSync(dizin + "/evren/e26/index.html", "utf8")) &&
+      /\/evren\/e25\//.test(readFileSync(dizin + "/sitemap.xml", "utf8")) && /Sitemap:/.test(readFileSync(dizin + "/robots.txt", "utf8")));
 
     /* ---------- elle yayın ---------- */
     await panel("bakim", "yayinla", 400);

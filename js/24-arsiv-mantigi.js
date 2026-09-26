@@ -271,6 +271,8 @@ function cizKarakterler() {
   }
 
   $("#karakterIzgara").innerHTML = liste.map(function (k, i) {
+    /* başka evrene ait kayıtlar (ör. E25'in Evrengezerleri) Tömye arşivinde çizilmez; ortak olanlar çizilir */
+    if (typeof evrendeMi === "function" && !evrendeMi(k, "tomye")) { return ""; }
     const rozet = kilitRozeti(k);
 
     return '<button class="kart" data-karakter="' + i + '">' +
@@ -293,7 +295,9 @@ function cizEvren() {
   }
 
   const bolumler = [];
-  liste.forEach(function (e) {
+  const tomye = liste.filter(function (e) { return typeof evrendeMi !== "function" || evrendeMi(e, "tomye"); });
+  const baska = liste.length - tomye.length;
+  tomye.forEach(function (e) {
     if (bolumler.indexOf(e.bolum) === -1) { bolumler.push(e.bolum); }
   });
 
@@ -304,11 +308,13 @@ function cizEvren() {
              kacir(b) + "</button>";
     }).join("");
 
-  const gosterilen = liste.filter(function (e) {
+  const gosterilen = tomye.filter(function (e) {
     return evrenFiltre === "hepsi" || e.bolum === evrenFiltre;
   });
 
-  $("#evrenListe").innerHTML = gosterilen.map(function (e) {
+  $("#evrenListe").innerHTML = (baska && (evrenFiltre === "hepsi" || evrenFiltre === "Evrengezer")
+    ? '<p class="oyun-not evren-tasindi">Evrengezerlere özgü ' + baska + ' madde kendi evrenlerinde: <button class="dugme dugme-sade" data-evren-git="#/ev/site/e25">E25\'e git →</button></p>'
+    : "") + gosterilen.map(function (e) {
     const i = liste.indexOf(e);
 
     return '<div class="madde" data-madde="' + i + '">' +

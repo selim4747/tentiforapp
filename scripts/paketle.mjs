@@ -124,5 +124,56 @@ for (const s of sayfalar) {
 `);
 }
 
-console.log("Paket hazır: " + sayfalar.length + " sayfa adresi, JS+CSS " +
+/* evren sayfaları: her evrenin kendi paylaşılabilir, arama motorlarınca bulunabilir adresi (/evren/e25/ gibi).
+   Kodla açılan kanon evrenlerin özeti yazılmaz. */
+const veriPaket = JSON.parse(readFileSync(join(HEDEF, "veri.json"), "utf8"));
+const evrenSayfalari = [];
+for (const [id, k] of Object.entries(veriPaket.kanonEvrenleri || {})) {
+  evrenSayfalari.push({ yol: id, ad: (k.ad || id.toUpperCase()) + (id === "e25" ? " · Evrengezerlerin evreni" : ""), hedef: "/#/ev/site/" + id,
+    aciklama: k.erisim ? (k.ozet || "") : "Tentiforverse'ün kanon evrenlerinden biri. İçeriği kodla açılır." });
+}
+if (veriPaket.e99) {
+  evrenSayfalari.push({ yol: "e99", ad: "E99 · herkesin evreni", hedef: "/#/ev/e99", aciklama: veriPaket.e99.ozet || "Herkesin yazabildiği boş evren." });
+}
+for (const e of ((veriPaket.fanEserleri || {}).evrenler || [])) {
+  const yol = String(e.id || "").replace(/[^A-Za-z0-9_-]/g, "");
+  if (!yol) { continue; }
+  evrenSayfalari.push({ yol: yol, ad: (e.ad || "Fan evreni") + " · fan evreni", hedef: "/#/ev/fan/" + yol,
+    aciklama: (e.ozet || "Tentiforverse okurlarının kurduğu bir evren.") + (e.yazar ? " Kuran: " + e.yazar + "." : "") });
+}
+for (const s of evrenSayfalari) {
+  const baslik = "TentiforApp — " + s.ad;
+  const aciklama = String(s.aciklama).replace(/\s+/g, " ").slice(0, 280);
+  mkdirSync(join(HEDEF, "evren", s.yol), { recursive: true });
+  writeFileSync(join(HEDEF, "evren", s.yol, "index.html"), `<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${kacir(baslik)}</title>
+<meta name="description" content="${kacir(aciklama)}">
+<link rel="canonical" href="${SITE}/evren/${s.yol}/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TentiforApp">
+<meta property="og:title" content="${kacir(baslik)}">
+<meta property="og:description" content="${kacir(aciklama)}">
+<meta property="og:url" content="${SITE}/evren/${s.yol}/">
+<meta property="og:image" content="${SITE}/paylasim.png">
+<meta property="og:locale" content="tr_TR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${kacir(baslik)}">
+<meta name="twitter:description" content="${kacir(aciklama)}">
+<meta name="twitter:image" content="${SITE}/paylasim.png">
+<meta http-equiv="refresh" content="0; url=${s.hedef}">
+<script>location.replace(${JSON.stringify(s.hedef)});</script>
+</head><body><h1>${kacir(baslik)}</h1><p>${kacir(aciklama)}</p><p><a href="${s.hedef}">Evrene git</a></p></body></html>
+`);
+}
+
+/* site haritası: sayfalar + evrenler */
+const adresler = [SITE + "/"].concat(sayfalar.map(function (s) { return SITE + "/" + s.id + "/"; }))
+  .concat(evrenSayfalari.map(function (s) { return SITE + "/evren/" + s.yol + "/"; }));
+writeFileSync(join(HEDEF, "sitemap.xml"), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+  adresler.map(function (u) { return "  <url><loc>" + kacir(u) + "</loc></url>"; }).join("\n") + "\n</urlset>\n");
+writeFileSync(join(HEDEF, "robots.txt"), readFileSync(join(HEDEF, "robots.txt"), "utf8").replace(/\s*$/, "\n") + "Sitemap: " + SITE + "/sitemap.xml\n");
+
+console.log("Paket hazır: " + sayfalar.length + " sayfa, " + evrenSayfalari.length + " evren adresi, JS+CSS " +
   Math.round(once / 1024) + " KB → " + Math.round(sonra / 1024) + " KB");

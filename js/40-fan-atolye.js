@@ -40,6 +40,7 @@ function fanMetin(x, sinir) { return String(x == null ? "" : x).slice(0, sinir |
 /** Dışarıdan gelen bir eseri doğrular ve yalnızca bilinen alanları, sınırlı uzunlukta bırakır. */
 function fanTemizle(ham) {
   if (!ham || typeof ham !== "object" || ham.bicim !== FAN_BICIM) { return null; }
+  if (ham.tur === "kisi") { return typeof kisiTemizle === "function" ? kisiTemizle(ham) : null; }
   const e = { bicim: FAN_BICIM, surum: 1, tur: ham.tur === "evren" ? "evren" : (ham.tur === "hikaye" ? "hikaye" : ""),
     id: fanMetin(ham.id, 40).replace(/[^\w-]/g, "") || fanId(),
     olusturma: fanMetin(ham.olusturma, 30), guncelleme: fanMetin(ham.guncelleme, 30) };
@@ -49,6 +50,8 @@ function fanTemizle(ham) {
     e.karakterler = fanMetin(ham.karakterler, 400); e.etiketler = fanMetin(ham.etiketler, 300); e.uyari = fanMetin(ham.uyari, 300);
     e.ozet = fanMetin(ham.ozet, 1500); e.metin = fanMetin(ham.metin, FAN_METIN_SINIR);
     if (!e.baslik.trim() && !e.metin.trim()) { return null; }
+    const konuk = typeof konukTemizle === "function" ? konukTemizle(ham.konuklar) : [];
+    if (konuk.length) { e.konuklar = konuk; }
   } else {
     e.ad = fanMetin(ham.ad, 160); e.yazar = fanMetin(ham.yazar, 80); e.ozet = fanMetin(ham.ozet, 6000);
     FAN_EVREN_GRUPLARI.forEach(function (g) {
@@ -60,6 +63,8 @@ function fanTemizle(ham) {
     });
     e.harita = fanHaritaTemizle(ham.harita);
     if (typeof evrenEkTemizle === "function") { evrenEkTemizle(ham, e); }
+    const konuk = typeof konukTemizle === "function" ? konukTemizle(ham.konuklar) : [];
+    if (konuk.length) { e.konuklar = konuk; }
     if (!e.ad.trim()) { return null; }
   }
   return e;
@@ -83,7 +88,7 @@ function fanHaritaTemizle(h) {
   return o;
 }
 
-function fanAd(e) { return (e.tur === "hikaye" ? e.baslik : e.ad) || "Adsız"; }
+function fanAd(e) { return (e.tur === "hikaye" ? e.baslik : e.ad) || "Adsız"; }   /* evren ve kişi: ad */
 
 function fanKelime(metin) { return (String(metin || "").match(/\S+/g) || []).length; }
 
@@ -99,7 +104,7 @@ function fanDosyaAdi(e) { return fanSlug(fanAd(e)) + ".tentifor.html"; }
 /** Eser dosyası: kendi başına okunabilen bir HTML sayfası + sitenin okuduğu veri bloğu. */
 function fanDosyaHtml(e) {
   const veriBlok = JSON.stringify(e).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
-  const baslik = kacir(fanAd(e)) + (e.tur === "hikaye" ? " — fan hikâyesi" : " — fan evreni");
+  const baslik = kacir(fanAd(e)) + (e.tur === "hikaye" ? " — fan hikâyesi" : (e.tur === "kisi" ? " — E25 Evrengezeri" : " — fan evreni"));
   return "<!DOCTYPE html>\n<html lang=\"tr\"><head><meta charset=\"utf-8\">\n" +
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n" +
     "<title>" + baslik + "</title>\n" +
@@ -119,6 +124,8 @@ function fanDosyaHtml(e) {
 /** Okuma görünümü (sitede ve dosyada aynı). Her alan kaçırılır. */
 function fanEserGovde(e, dosya) {
   const bilgi = function (etiket, deger) { return deger && String(deger).trim() ? "<div><b>" + kacir(etiket) + ":</b> " + kacir(deger) + "</div>" : ""; };
+  if (e.tur === "kisi") { return typeof kisiGovde === "function" ? kisiGovde(e, dosya) : "<h1>" + kacir(e.ad) + "</h1>"; }
+  const konuk = typeof konukGovde === "function" ? konukGovde(e, dosya) : "";
   if (e.tur === "hikaye") {
     const kelime = fanKelime(e.metin);
     return '<p class="ust">Fan hikâyesi · kanon dışı</p>' +
@@ -127,7 +134,7 @@ function fanEserGovde(e, dosya) {
         bilgi("Etiketler", e.etiketler) + "<div>" + kelime + " kelime · yaklaşık " + Math.max(1, Math.round(kelime / 200)) + " dk</div></div>" +
       (e.uyari ? '<p class="uyari">Uyarı: ' + kacir(e.uyari) + "</p>" : "") +
       (e.ozet ? "<p><i>" + kacir(e.ozet) + "</i></p>" : "") +
-      '<div class="' + (dosya ? "" : "okuma-metin fan-metin") + '">' + paragraf(e.metin) + "</div>";
+      '<div class="' + (dosya ? "" : "okuma-metin fan-metin") + '">' + paragraf(e.metin) + "</div>" + konuk;
   }
   return '<p class="ust">' + kacir(e.etiket || "Fan evreni · kanon dışı") + "</p>" +
     "<h1>" + kacir(e.ad || "Adsız evren") + "</h1>" +
@@ -146,7 +153,7 @@ function fanEserGovde(e, dosya) {
         return "<dt>" + kacir(bas || "—") + (ek ? ' <span class="bilgi">· ' + kacir(ek) + "</span>" : "") + "</dt>" +
           "<dd>" + paragraf(govde) + "</dd>";
       }).join("") + "</dl>";
-    }).join("");
+    }).join("") + konuk;
 }
 
 /* ==================== kendi eserlerin ==================== */
@@ -219,11 +226,11 @@ function fanSekmeler(tur) {
 
 function fanSiteListesi(tur) {
   const f = veri.fanEserleri || {};
-  return (tur === "hikaye" ? f.hikayeler : f.evrenler) || [];
+  return (tur === "hikaye" ? f.hikayeler : (tur === "kisi" ? f.kisiler : f.evrenler)) || [];
 }
 
 function fanKartHtml(e, kaynak) {
-  const alt = e.tur === "hikaye"
+  const alt = e.tur === "kisi" ? ["E25 Evrengezeri", e.yazar, (e.kisilik || []).length + " kişilik hali"].filter(Boolean).join(" · ") : e.tur === "hikaye"
     ? [e.yazar, e.evren, fanKelime(e.metin) + " kelime"].filter(Boolean).join(" · ")
     : [e.yazar, (e.kurallar || []).length + " kural", (e.kisiler || []).length + " kişi"].filter(Boolean).join(" · ");
   return '<button class="fan-kart" data-fan-ac="' + kaynak + ":" + kacir(e.tur) + ":" + kacir(e.id) + '">' +
@@ -307,6 +314,7 @@ function fanDuzenleyici(tur) {
   return ust +
     '<datalist id="fanEvrenOneri">' + fanEvrenOnerileri().map(function (a) { return '<option value="' + kacir(a) + '">'; }).join("") + "</datalist>" +
     '<div class="fan-form kutu-y" data-fan-form="' + tur + '">' + form + "</div>" +
+    (typeof konukDuzenleyiciHtml === "function" ? konukDuzenleyiciHtml(e) : "") +
     (tur === "evren" ? '<p class="oyun-not"><a href="#/ev/benim/' + kacir(e.id) + '">Evren sayfasını ve haritasını aç →</a></p>' : "") +
     '<p class="oyun-not" data-fan-kayit="' + tur + '">Taslak bu cihaza kaydediliyor</p>' +
     '<div class="oyun-sira">' +
@@ -466,7 +474,7 @@ function fanPDurum(m, iyi) {
 function fanSiteyeEkle(e) {
   if (!(typeof panelAcik === "function" && panelAcik())) { return false; }
   if (!veri.fanEserleri) { veri.fanEserleri = { hikayeler: [], evrenler: [] }; }
-  const k = e.tur === "hikaye" ? "hikayeler" : "evrenler";
+  const k = e.tur === "hikaye" ? "hikayeler" : (e.tur === "kisi" ? "kisiler" : "evrenler");
   if (!Array.isArray(veri.fanEserleri[k])) { veri.fanEserleri[k] = []; }
   const kopya = JSON.parse(JSON.stringify(e));
   kopya.eklenme = bugununAdi();
@@ -478,7 +486,7 @@ function fanSiteyeEkle(e) {
 
 function fanSitedenKaldir(e) {
   if (!(typeof panelAcik === "function" && panelAcik()) || !veri.fanEserleri) { return; }
-  const k = e.tur === "hikaye" ? "hikayeler" : "evrenler";
+  const k = e.tur === "hikaye" ? "hikayeler" : (e.tur === "kisi" ? "kisiler" : "evrenler");
   veri.fanEserleri[k] = (veri.fanEserleri[k] || []).filter(function (x) { return x.id !== e.id; });
   fanBolumleriCiz();
 }

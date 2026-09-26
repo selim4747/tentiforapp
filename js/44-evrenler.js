@@ -17,15 +17,77 @@ const EVH_TURLER = ["Kıta", "Bölge", "Şehir", "Küçük Yerleşim", "Ada", "S
 
 /* ==================== evren listesi ==================== */
 
+/** Kayıt (karakter, evren maddesi, sözlük terimi) bu evrende görünür mü? Alan yoksa yalnızca Tömye'dedir.
+    Birden çok evrende olan kayıt (ör. melezler) hepsinde ortaktır; kilitli katmanları aynı kodla açılır. */
+function evrendeMi(o, id) {
+  const l = o && Array.isArray(o.evrenler) && o.evrenler.length ? o.evrenler : ["tomye"];
+  return l.indexOf(id) !== -1;
+}
+
+/** Kanon evren sayfasına erişim: yönetici; evrenin "erisim" bölümüne erişimi olan (E25 → Tömye'nin evren bölümü:
+    maddeler Tömye'den taşındığı için görünürlükleri değişmez); ya da o evrene kodla erişimi olan. */
+function kanonSayfaErisimi(id) {
+  if (typeof panelAcik === "function" && panelAcik()) { return true; }
+  const k = (veri.kanonEvrenleri || {})[id];
+  if (k && k.erisim && typeof bolumErisimi === "function" && bolumErisimi(k.erisim)) { return true; }
+  return typeof kanonEvrenErisimi !== "function" || kanonEvrenErisimi(id);
+}
+
+function evrenSiraNo(x) {
+  const m = String(x.ad || "").match(/(\d+)/);
+  return m ? Number(m[1]) : 999;
+}
+
+/** Kanon evrenin kayıtları: bu evrene etiketli kişiler, evren maddeleri ve sözlük terimleri.
+    Tömye'yle ortak kişilerin (melezler) yalnızca özeti burada; anıları ve hikâyeleri Tömye arşivinde kalır.
+    Maddeler Tömye'dekiyle aynı biçimde (buz katmanları aynı kodlarla açılır). */
+function kanonEvrenIcerigi(id) {
+  const kisiler = (veri.karakterler || []).map(function (k, i) { return [k, i]; }).filter(function (x) { return evrendeMi(x[0], id); });
+  const maddeler = (veri.evren || []).map(function (e, i) { return [e, i]; }).filter(function (x) { return evrendeMi(x[0], id); });
+  const terimler = (veri.sozluk || []).filter(function (t) { return evrendeMi(t, id); });
+  if (!kisiler.length && !maddeler.length && !terimler.length) { return ""; }
+  const rozet = function (o) { return typeof kilitRozeti === "function" ? kilitRozeti(o) : ""; };
+  return '<div class="kanon-evren-icerik">' +
+    (kisiler.length ? '<h3 class="evs-ara-baslik">Kişiler</h3><div class="izgara evs-izgara">' + kisiler.map(function (x) {
+      const k = x[0];
+      if (evrendeMi(k, "tomye")) {
+        return '<div class="kart kart-ortak"><span class="kart-unvan">' + kacir(k.unvan) + " · Tömye ile ortak</span>" +
+          '<span class="kart-ad">' + kacir(k.ad) + '</span><span class="kart-ozet">' + kacir(k.ozet) + "</span>" +
+          '<button class="dugme dugme-sade" data-evren-git="#/karakter/' + kacir(k.id) + '">Anıları ve hikâyesi Tömye\'de →</button></div>';
+      }
+      return '<button class="kart" data-karakter="' + x[1] + '"><span class="kart-unvan">' + kacir(k.unvan) + "</span>" +
+        '<span class="kart-ad">' + kacir(k.ad) + '</span><span class="kart-ozet">' + kacir(k.ozet) + "</span>" + rozet(k) + "</button>";
+    }).join("") + "</div>" : "") +
+    (maddeler.length ? '<h3 class="evs-ara-baslik">Evren bilgisi</h3><div class="madde-liste">' + maddeler.map(function (x) {
+      const e = x[0];
+      return '<div class="madde" data-madde="' + x[1] + '"><button class="madde-bas" aria-expanded="false">' +
+        '<span class="madde-bolum">' + kacir(evrendeMi(e, "tomye") ? "Tömye ile ortak" : e.bolum) + "</span>" +
+        '<span class="madde-baslik">' + kacir(e.baslik) + rozet(e) + '</span><span class="madde-ok">›</span></button>' +
+        '<div class="madde-ozet">' + kacir(e.ozet) + "</div>" +
+        '<div class="madde-govde">' + paragraf(e.metin) + (typeof buzulListesi === "function" ? buzulListesi(e.gizli) : "") + "</div></div>";
+    }).join("") + "</div>" : "") +
+    (terimler.length ? '<h3 class="evs-ara-baslik">Sözlük</h3><dl class="evs-sozluk">' + terimler.map(function (t) {
+      return "<dt>" + kacir(t.terim) + "</dt><dd>" + kacir(t.tanim) + "</dd>";
+    }).join("") + "</dl>" : "") +
+    "</div>";
+}
+
 function evrenSeciciListesi() {
   const site = [];
   (veri.haritalar || []).forEach(function (h) {
-    const kilitli = typeof kanonEvrenErisimi === "function" && !kanonEvrenErisimi(h.id);
+    const kilitli = !kanonSayfaErisimi(h.id);
     const git = h.id === "claude" ? "#/claude" : (h.id === (veri.haritalar[0] || {}).id ? "#/arsiv"
       : ((veri.kanonEvrenleri || {})[h.id] ? "#/ev/site/" + h.id : "harita:" + h.id));
     site.push({ ad: h.id === (veri.haritalar[0] || {}).id ? h.ad + " · 24. Evren" : h.ad, git: git, kilitli: kilitli,
       not: h.id === "claude" ? "kanon dışı" : "" });
   });
+  /* haritası olmayan kanon evrenler (ör. E25) */
+  Object.keys(veri.kanonEvrenleri || {}).forEach(function (id) {
+    if ((veri.haritalar || []).some(function (h) { return h.id === id; })) { return; }
+    const k = veri.kanonEvrenleri[id];
+    site.push({ ad: k.ad || id.toUpperCase(), git: "#/ev/site/" + id, kilitli: !kanonSayfaErisimi(id), not: id === "e25" ? "Evrengezerler" : "" });
+  });
+  site.sort(function (a, b) { return evrenSiraNo(a) - evrenSiraNo(b); });
   if (veri.e99) { site.push({ ad: "E99", git: "#/ev/e99", not: "herkes yazabilir" }); }
   const fan = ((veri.fanEserleri || {}).evrenler || []).map(function (e) {
     return { ad: e.ad, git: "#/ev/fan/" + e.id, not: e.yazar || "" };
@@ -212,7 +274,9 @@ let evrenSonrakiSekme = null;   /* yeni evren kurulunca bilgi sekmesiyle açıls
 
 function evrenSayfaAc(kaynak, id) {
   if (kaynak === "e99") { e99Katki(); id = "e99"; }
-  EVS = { kaynak: kaynak, id: id, sekme: evrenSonrakiSekme || ((EVS && EVS.kaynak === kaynak && EVS.id === id) ? EVS.sekme : "harita"), secili: null, mod: "sec", cizim: [] };
+  /* haritası olmayan kanon evren bilgi sekmesiyle açılır */
+  const haritasiz = kaynak === "site" && !(veri.haritalar || []).some(function (h) { return h.id === id && (h.yerler || []).length; });
+  EVS = { kaynak: kaynak, id: id, sekme: evrenSonrakiSekme || ((EVS && EVS.kaynak === kaynak && EVS.id === id) ? EVS.sekme : (haritasiz ? "bilgi" : "harita")), secili: null, mod: "sec", cizim: [] };
   evrenSonrakiSekme = null;
   evrenSayfaCiz();
   if (EVS && typeof evrenZiyaretOdulu === "function") {
@@ -250,7 +314,7 @@ function evrenSayfaVerisi() {
     const k = (veri.kanonEvrenleri || {})[EVS.id];
     const h = (veri.haritalar || []).find(function (x) { return x.id === EVS.id; });
     if (!k) { return null; }
-    const acik = (typeof kanonEvrenErisimi !== "function" || kanonEvrenErisimi(EVS.id)) || (typeof panelAcik === "function" && panelAcik());
+    const acik = kanonSayfaErisimi(EVS.id);
     const yon = typeof yoneticiAcik === "function" && yoneticiAcik();
     const eser = Object.assign({}, k, { etiket: "Kanon evren", harita: { yerler: (h && h.yerler) || [], renk: h && h.renk } });
     return { eser: eser, duzenle: yon, site: h, kilitli: !acik,
@@ -293,7 +357,9 @@ function evrenSayfaCiz() {
     '<div class="evs-sekmeler" role="tablist">' + sekme("harita", "Harita") + sekme("bilgi", EVS.kaynak === "e99" ? "Evren ve katkın" : (v.duzenle ? "Evreni düzenle" : "Evren")) +
       ek.map(function (x) { return sekme(x[0], kacir(x[1])); }).join("") + "</div>" +
     '<div class="evs-govde">' + (v.kilitli
-      ? '<div class="kutu-y"><p class="oyun-giris">Bu evren kanonun parçası; kodla açılır.</p><button class="dugme" data-evs-kod>Kod gir</button></div>'
+      ? '<div class="kutu-y"><p class="oyun-giris">Bu evren kanonun parçası; kodla açılır.</p><button class="dugme" data-evs-kod>Kod gir</button></div>' +
+        /* E25'e kişi eklemek herkese açık: evren kilitliyken de */
+        (EVS.kaynak === "site" && EVS.id === "e25" && typeof e25KisilerHtml === "function" ? e25KisilerHtml() : "")
       : (ekGovde !== null ? ekGovde : (EVS.sekme === "harita" ? evrenHaritaBolumu(v) : evrenBilgiBolumu(v)))) + "</div>";
 }
 
@@ -478,6 +544,7 @@ function evrenBilgiBolumu(v) {
   if (EVS.kaynak === "benim") {
     fanSecili.evren = e.id;
     return '<div class="fan-form kutu-y" data-fan-form="evren" data-fan-hedef="' + kacir(e.id) + '">' + fanEvrenFormHtml(e, true) + "</div>" +
+      (typeof konukDuzenleyiciHtml === "function" ? konukDuzenleyiciHtml(e) : "") +
       '<p class="oyun-not" data-fan-kayit="evren">Her şey bu cihaza (hesabın varsa hesabına da) kaydediliyor.</p>' +
       '<div class="oyun-sira">' +
         '<button class="dugme" data-fan-indir="evren">Dosya olarak indir</button>' +
@@ -486,8 +553,10 @@ function evrenBilgiBolumu(v) {
       "</div><div data-fan-gonder-alan=\"evren\"></div>";
   }
   if (EVS.kaynak === "site") {
-    return '<div class="fan-oku">' + fanEserGovde(e, false) + "</div>" +
-      (v.duzenle ? '<p class="oyun-not">Bu bilgileri düzenlemek için: Sen → Yönetici → İçerik → Listeler → ' + kacir(e.ad) + ". Sonra Kaydet.</p>" : "");
+    return '<div class="fan-oku">' + fanEserGovde(e, false) + "</div>" + kanonEvrenIcerigi(EVS.id) +
+      (EVS.id === "e25" && typeof e25KisilerHtml === "function" ? e25KisilerHtml() : "") +
+      (v.duzenle ? '<p class="oyun-not">Bu bilgileri düzenlemek için: Sen → Yönetici → İçerik → Listeler → ' + kacir(e.ad) +
+        ". Karakterlerin ve evren maddelerinin hangi evrende görüneceği, panelde kaydın “Hangi evrende” alanından. Sonra Kaydet.</p>" : "");
   }
   if (EVS.kaynak === "fan" || EVS.kaynak === "acilan") {
     return '<div class="fan-oku">' + fanEserGovde(e, false) + "</div>" +

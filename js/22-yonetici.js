@@ -151,6 +151,13 @@ function yoneticiKaydet() {
 
   o.ozet = ozet;
   if (karakterMi) { o.detay = metin; } else { o.metin = metin; }
+  /* hangi evrende görünür: boş ya da yalnızca "tomye" ise alan hiç yazılmaz */
+  const ev = document.querySelector("#yEvrenler");
+  if (ev) {
+    const l = ev.value.toLocaleLowerCase("tr").split(/[,\s]+/).map(function (x) { return x.replace(/[^a-z0-9]/g, ""); })
+      .filter(function (x, i, d) { return x && d.indexOf(x) === i; });
+    if (!l.length || (l.length === 1 && l[0] === "tomye")) { delete o.evrenler; } else { o.evrenler = l; }
+  }
 
   yoneticiDurum("Ana metin kaydedildi", true);
   arsiviTazele();
@@ -395,6 +402,8 @@ function yoneticiForm() {
         kacir(karakterMi ? o.unvan : o.bolum) + '">' +
       "<label>Özet</label>" +
       '<textarea class="kod-giris arac-giris" id="yOzet" rows="2">' + kacir(o.ozet) + "</textarea>" +
+      '<label for="yEvrenler">Hangi evrende (virgülle: tomye, e25, e26…)</label>' +
+      '<input class="kod-giris arac-giris" id="yEvrenler" value="' + kacir((Array.isArray(o.evrenler) && o.evrenler.length ? o.evrenler : ["tomye"]).join(", ")) + '">' +
       "<label>Açık metin</label>" +
       '<textarea class="kod-giris arac-giris" id="yMetin" rows="10">' +
         kacir(karakterMi ? o.detay : o.metin) + "</textarea>" +
