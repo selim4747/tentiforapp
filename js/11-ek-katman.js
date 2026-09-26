@@ -223,7 +223,7 @@ function rastgeleKesif() {
   const secim = hedefler[Math.floor(Math.random() * hedefler.length)];
   const hedefHash = "#/" + secim.tur + "/" + secim.id;
 
-  if (location.hash === hedefHash) {
+  if (rota() === hedefHash) {
     baglantiyiUygula();
   } else {
     location.hash = hedefHash;

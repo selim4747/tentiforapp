@@ -70,7 +70,7 @@ async function hesapBaslat() {
   const q = new URLSearchParams(location.search);
   if (q.get("profil")) {
     const ad = q.get("profil");
-    try { history.replaceState(null, "", location.pathname + "#/u/" + encodeURIComponent(ad)); } catch (_) { /* yoksay */ }
+    try { history.replaceState(null, "", rotadanYol("#/u/" + encodeURIComponent(ad))); } catch (_) { /* yoksay */ }
     if (typeof hesapProfilAc === "function") { hesapProfilAc(ad); }
   }
 
@@ -241,7 +241,7 @@ function hesapDonusAdresi(tur) {
 /** Paylaşılan profil adresi: canlı sitede kısa /u/ad (_redirects yönlendirir), yerelde #/u/ad. */
 function hesapProfilAdresi(ad) {
   if (location.protocol === "https:") { return location.origin + "/u/" + encodeURIComponent(ad); }
-  return location.origin + location.pathname + "#/u/" + encodeURIComponent(ad);
+  return rotaAdresi("#/u/" + encodeURIComponent(ad));
 }
 
 /** Avatar: görünen adın ilk hecesi Kyldo yazısıyla, yuvarlak içinde. */

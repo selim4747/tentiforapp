@@ -774,7 +774,7 @@ veriKaynak
       ["sıfırlama", sifirlamaCiz],
       ["yazı tipi", function () { yaziTipiYukle(); yaziTipiCiz(); }],
       ["meydan bağlantısı", meydanUygula],
-      ["tur", function () { if (turGerekli() && location.hash.indexOf("#/meydan/") !== 0) { turBaslat(); } }],
+      ["tur", function () { if (turGerekli() && rota().indexOf("#/meydan/") !== 0) { turBaslat(); } }],
       ["saat", saatiBaslat],
       ["brifing", function () { if (typeof brifingCiz === "function") { brifingCiz(); } }],
       ["günlük özet", function () { if (typeof gunlukOzetCiz === "function") { gunlukOzetCiz(); } }],

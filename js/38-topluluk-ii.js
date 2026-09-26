@@ -357,7 +357,7 @@ document.addEventListener("click", async function (e) {
 /* Canlı veri gösteren bölümler: adresle gidildiğinde (#/kulup gibi) tazelenir; ilk çizim geç çizimde kalır. */
 const T2_BOLUMLER = { ortakDefter: "ortakDefterCiz", yazaraSor: "yazaraSorCiz", kulup: "kulupCiz", okurBulmaca: "okurBulmacaCiz", av: "avCiz" };
 window.addEventListener("hashchange", function () {
-  const ad = location.hash.replace(/^#\/?/, "").split("/")[0];
+  const ad = rota().replace(/^#\/?/, "").split("/")[0];
   const f = T2_BOLUMLER[ad];
   if (f && typeof window[f] === "function" && t2Hazir()) { window[f](); }
 });

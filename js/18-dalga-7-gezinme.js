@@ -375,7 +375,7 @@ function gecCizimKur() {
 
   /* Adresle ya da menüyle bir bölüme atlanırsa gözcüyü beklemeden çiz. */
   const hemen = function () {
-    const hedef = location.hash.replace("#", "").split("/")[0];
+    const hedef = rota().replace("#", "").split("/")[0];
     if (hedef) { bolumuCiz(hedef); }
   };
   window.addEventListener("hashchange", hemen);
@@ -479,7 +479,7 @@ function sayfaGoster(sayfa, kaydirma) {
 
 /** Adresi okur ve sayfayı açar. Bilinmeyen adres 404'e gider. */
 function sayfaYonlendir() {
-  const h = location.hash.replace(/^#\/?/, "");
+  const h = rota().replace(/^#\/?/, "");
 
   if (!h) { sayfaGoster(kayitOku(SAYFA_ANAHTARI) || "arsiv", false); return; }
 
@@ -538,7 +538,7 @@ function sayfaYonlendir() {
 
 /** Sayfaya git. Adres değişir, tarayıcı geçmişi çalışır. */
 function sayfayaGit(sayfa) {
-  if (location.hash === "#/" + sayfa) { sayfaGoster(sayfa); return; }
+  if (rota() === "#/" + sayfa) { sayfaGoster(sayfa); return; }
   location.hash = "#/" + sayfa;
 }
 

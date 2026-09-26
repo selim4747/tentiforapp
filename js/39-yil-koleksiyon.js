@@ -688,7 +688,7 @@ document.addEventListener("click", function (e) {
 
 /* Yerel bölümler adresle gidildiğinde tazelenir (koleksiyon başka sayfada büyümüş olabilir). */
 window.addEventListener("hashchange", function () {
-  const ad = location.hash.replace(/^#\/?/, "").split("/")[0];
+  const ad = rota().replace(/^#\/?/, "").split("/")[0];
   if (ad === "yilim" && document.querySelector("#yilimAlan").innerHTML) { yilimCiz(); }
   else if (ad === "koleksiyon" && document.querySelector("#koleksiyonAlan").innerHTML) { koleksiyonCiz(); }
   else if (ad === "takvim") { takvimEtkinlikCiz(); }
