@@ -88,7 +88,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     }
     await Zk.close();
     const sayfaIdleri = await Z.evaluate(function () { return GEZINME.map(function (g) { return g.id; }); });
-    ok("10 sayfa tanımlı", sayfaIdleri.length === 10, sayfaIdleri);
+    ok("12 sayfa tanımlı", sayfaIdleri.length === 12, sayfaIdleri);
     for (const s of sayfaIdleri) {
       await Z.evaluate(function (s) { location.hash = "#/" + s; }, s); await bekle(Z, 500);
       const gorunen = await Z.evaluate(function () {
@@ -98,6 +98,70 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     }
     await Z.evaluate(function () { location.hash = "#/gizlilik"; }); await bekle(Z, 600);
     ok("gizlilik sayfası yazılı", /KVKK/.test(await Z.textContent("#gizlilikAlan")));
+
+    /* ---------- evren sayfaları ve fan atölyesi ---------- */
+    console.log("fan atölyesi");
+    await Z.evaluate(function () { location.hash = "#/claude"; }); await bekle(Z, 700);
+    ok("Claude'un evreni kendi sayfasında", await Z.evaluate(function () {
+      const acik = Array.from(document.querySelectorAll("section.bolum:not([hidden])")).map(function (b) { return b.id; });
+      return acik.join() === "claudeEvren" && document.querySelector("#claudeEvrenAlan").textContent.length > 100;
+    }));
+    ok("Dünya sayfasında artık yok", await Z.evaluate(function () { return sayfaBolumleri("dunya").indexOf("claudeEvren") === -1; }));
+
+    await Z.evaluate(function () { location.hash = "#/fanHikaye"; }); await bekle(Z, 700);
+    await Z.evaluate(function () { document.querySelector('[data-fan-sekme="hikaye:yaz"]').click(); }); await bekle(Z, 200);
+    await Z.evaluate(function () { document.querySelector('[data-fan-yeni="hikaye"]').click(); }); await bekle(Z, 200);
+    const zararli = '<img src=x onerror="window.__xss=1">Buz </script> & "tırnak"';
+    await Z.fill("#fanA_baslik", zararli);
+    await Z.fill("#fanA_metin", "Birinci paragraf.\n\nİkinci paragraf, Tömye'de.");
+    await Z.fill("#fanA_evren", "Tömye");
+    await bekle(Z, 500);
+    ok("taslak kendiliğinden kaydolur", await Z.evaluate(function (z) { const l = fanEserlerim(); return l.length === 1 && l[0].baslik === z && /İkinci/.test(l[0].metin); }, zararli));
+    const [hInd] = await Promise.all([Z.waitForEvent("download"), Z.evaluate(function () { document.querySelector('[data-fan-indir="hikaye"]').click(); })]);
+    ok("hikâye dosyası iner", /\.tentifor\.html$/.test(hInd.suggestedFilename()), hInd.suggestedFilename());
+    const hYol = await hInd.path();
+    const hHtml = readFileSync(hYol, "utf8");
+    ok("dosya kendi başına okunur, veri bloğu kaçırılmış", /<h1>&lt;img/.test(hHtml) && !/<\/script> &/.test(hHtml.split("tentifor-eser")[1] || "") && /İkinci paragraf/.test(hHtml));
+
+    await Z.evaluate(function () { location.hash = "#/fanAc"; }); await bekle(Z, 700);
+    await Z.setInputFiles("[data-fan-dosya]", hYol); await bekle(Z, 600);
+    ok("yüklenen dosya açılır", await Z.evaluate(function (z) { const p = document.querySelector(".fan-pencere h1"); return !!p && p.textContent === z; }, zararli));
+    ok("dosyadaki kod çalışmaz", await Z.evaluate(function () { return window.__xss === undefined && !document.querySelector(".fan-pencere img"); }));
+    ok("son açılanlarda", await Z.evaluate(function () { return fanAcilanlar().length === 1; }));
+    ok("yanlış dosya reddedilir", await Z.evaluate(function () { try { fanMetindenEser("<html><body>merhaba</body></html>"); return false; } catch (e) { return /değil/.test(e.message); } }));
+    ok("uydurma alanlar temizlenir", await Z.evaluate(function () {
+      const e = fanTemizle({ bicim: "tentifor-eser", tur: "evren", id: "a b<>", ad: "X", kurallar: [{ ad: "k", tur: "renk", aciklama: "a", zarar: "<b>" }], gizli: 1 });
+      return e.id === "ab" && !("gizli" in e) && !("zarar" in e.kurallar[0]) && e.kurallar[0].tur === "renk";
+    }));
+
+    await Z.evaluate(function () { document.querySelector("#perde").hidden = true; location.hash = "#/fanEvren"; }); await bekle(Z, 700);
+    await Z.evaluate(function () { document.querySelector('[data-fan-sekme="evren:yaz"]').click(); }); await bekle(Z, 200);
+    await Z.evaluate(function () { document.querySelector('[data-fan-yeni="evren"]').click(); }); await bekle(Z, 200);
+    await Z.fill("#fanA_ad", "Tuz Evreni");
+    await Z.fill("#fanA_kurallar_0_ad", "Tuz hafızadır");
+    await Z.fill("#fanA_kurallar_0_tur", "hafıza-kimya");
+    await bekle(Z, 450);
+    await Z.evaluate(function () { document.querySelector('[data-fan-ekle="ozelAlanlar"]').click(); }); await bekle(Z, 200);
+    await Z.fill("#fanA_ozelAlanlar_0_ad", "Gökyüzünün rengi");
+    await Z.fill("#fanA_ozelAlanlar_0_deger", "Tuz beyazı");
+    await bekle(Z, 450);
+    const ev = await Z.evaluate(function () { return fanEserlerim().find(function (x) { return x.tur === "evren"; }); });
+    ok("evren kuralları ve kendi alanları kaydolur", ev.ad === "Tuz Evreni" && ev.kurallar[0].tur === "hafıza-kimya" && ev.ozelAlanlar[0].deger === "Tuz beyazı", ev);
+    await Z.evaluate(function () { document.querySelector('[data-fan-onizle="evren"]').click(); }); await bekle(Z, 300);
+    ok("evren önizlemesi", /Gökyüzünün rengi/.test(await Z.textContent(".fan-pencere")) && await Z.locator(".fan-pencere dt").count() === 2);
+
+    /* yönetici: fanmade olarak ekler */
+    await Z.evaluate(function () { window.__panelAcik = window.panelAcik; window.panelAcik = function () { return true; }; fanPencere(fanAcilanlar()[0], "acilan"); }); await bekle(Z, 200);
+    await Z.evaluate(function () { document.querySelector('[data-fan-p="siteye"]').click(); }); await bekle(Z, 200);
+    ok("yönetici siteye ekler", await Z.evaluate(function () { return veri.fanEserleri.hikayeler.length === 1; }));
+    const fid = await Z.evaluate(function () { return veri.fanEserleri.hikayeler[0].id; });
+    await Z.evaluate(function () { document.querySelector("#perde").hidden = true; fanSekme.hikaye = "oku"; fanHikayeCiz(); });
+    ok("fanmade listesinde görünür", await Z.locator("#fanHikayeAlan .fan-kart").count() === 1);
+    await Z.evaluate(function (id) { location.hash = "#/fan/hikaye/" + id; }, fid); await bekle(Z, 500);
+    ok("fanmade bağlantısı açılır", await Z.evaluate(function () { return !document.querySelector("#perde").hidden && !!document.querySelector(".fan-pencere"); }));
+    await Z.evaluate(function () { veri.fanEposta = "fan@ornek.test"; document.querySelector("#perde").hidden = true; fanAcCiz(); });
+    ok("gönderim adresi ve e-posta bağlantısı", await Z.evaluate(function () { const a = document.querySelector('#fanAcAlan a[href^="mailto:fan@ornek.test"]'); return !!a; }));
+    await Z.evaluate(function () { window.panelAcik = window.__panelAcik; });
     ok("sayfa paylaş düğmesi", await Z.locator("#sayfaBasi [data-sayfa-paylas]").count() === 1);
     await Z.evaluate(function () { location.hash = "#/mektuplar"; }); await bekle(Z, 800);
     ok("uzun metinlerde Dinle düğmesi", await Z.locator(".sesli-dugme").count() > 0);
@@ -269,7 +333,9 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     });
     ok("ortam sesi açılır, Şomdo bölümünde Şomdo sesi", ortamDurum.var && ortamDurum.mod === "somdo", ortamDurum);
     await B.evaluate(function () { window.scrollTo({ top: 0, behavior: "instant" }); }); await bekle(B, 500);
-    ok("bölümden çıkınca Tömye sesine geçer", await B.evaluate(function () { return ortamSesi.mod === "tomye"; }));
+    ok("Claude'un sayfasının başında da Şomdo sesi", await B.evaluate(function () { return ortamSesi.mod === "somdo"; }));
+    await B.evaluate(function () { location.hash = "#/okuma"; }); await bekle(B, 700);
+    ok("başka sayfaya geçince Tömye sesine döner", await B.evaluate(function () { return ortamSesi.mod === "tomye"; }));
     await B.evaluate(function () { document.querySelector("#ortamSes").click(); }); await bekle(B, 200);
     ok("ortam sesi kapanır", await B.evaluate(function () { return ortamSesi === null; }));
 

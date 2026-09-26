@@ -3513,3 +3513,37 @@ html[data-etkinlik="dogum"] .hero{box-shadow:inset 0 -6px 0 #9A4C7A}
 .ilk-hafta-adimlar .dugme{margin-left:auto;padding:4px 10px}
 .ih-gun{font-family:var(--mono);font-size:11px;min-width:40px;color:var(--deniz)}
 .ih-tik{margin-left:auto;color:var(--deniz)}
+
+/* ---------- Fan atölyesi ---------- */
+.fan-sekmeler{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.fan-liste{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:10px 0 18px}
+.fan-kart{display:flex;flex-direction:column;gap:6px;text-align:left;font:inherit;color:var(--murekkep);background:var(--beyaz);border:1px solid var(--sig);border-radius:3px;padding:14px;cursor:pointer;min-height:110px}
+.fan-kart:hover,.fan-kart:focus-visible{border-color:var(--deniz)}
+.fan-kart-ad{font-family:var(--display);font-size:22px;line-height:1.15}
+.fan-kart-ozet{font-size:14px;color:var(--murekkep-2)}
+.fan-eserlerim{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px}
+.fan-form label{display:block;margin-top:12px}
+.fan-form .arac-giris{width:100%;box-sizing:border-box}
+.fan-uzun{min-height:3.5em;resize:vertical;font-family:var(--govde);line-height:1.6}
+textarea#fanA_metin{min-height:320px}
+.fan-grup{border:1px solid var(--sig);border-radius:3px;padding:10px 14px 14px;margin:18px 0 0}
+.fan-grup legend{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--deniz);padding:0 6px}
+.fan-oge{border-left:3px solid var(--buz);padding:2px 0 10px 12px;margin:10px 0}
+.fan-oge .dugme{margin-top:8px}
+.fan-grup > .dugme{margin-top:8px}
+.fan-birak{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:130px;border:2px dashed var(--sig);border-radius:4px;background:var(--beyaz);cursor:pointer;text-align:center;padding:16px}
+.fan-birak.uzerinde,.fan-birak:hover,.fan-birak:focus-within{border-color:var(--deniz)}
+.fan-birak input{position:absolute;width:1px;height:1px;opacity:0}
+.fan-birak b{font-family:var(--display);font-weight:400;font-size:24px}
+.fan-birak span{font-family:var(--mono);font-size:12px;color:var(--murekkep-2)}
+.fan-gonder{margin-top:16px}
+.fan-adres{word-break:break-all}
+.fan-adimlar{margin:8px 0 12px;padding-left:20px}
+.fan-oku .ust{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--deniz);margin:0}
+.fan-oku h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,6vw,40px);line-height:1.15;margin:6px 0 10px}
+.fan-oku h2{font-family:var(--display);font-weight:400;font-size:24px;margin:26px 0 6px;border-bottom:1px solid var(--sig);padding-bottom:4px}
+.fan-oku .bilgi{font-size:14px;color:var(--murekkep-2)}
+.fan-oku .uyari{background:var(--buz);padding:8px 12px;font-size:14px}
+.fan-oku dt{font-weight:600;margin-top:14px}
+.fan-oku dd{margin:2px 0 0}
+.fan-pencere-eylem{margin-top:22px;padding-top:14px;border-top:1px solid var(--sig)}

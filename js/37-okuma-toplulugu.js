@@ -190,8 +190,9 @@ function ortamSesOlaylar() {
 function ortamSesModGuncelle() {
   if (!ortamSesi) { return; }
   const ce = document.querySelector("#claudeEvren");
-  let somdo = false;
-  if (ce && !ce.hidden) {
+  /* Claude'un evreninin kendi sayfası baştan sona Şomdo */
+  let somdo = typeof aktifSayfa !== "undefined" && aktifSayfa === "claude";
+  if (!somdo && ce && !ce.hidden) {
     const r = ce.getBoundingClientRect();
     somdo = r.top < window.innerHeight * 0.6 && r.bottom > window.innerHeight * 0.4;
   }

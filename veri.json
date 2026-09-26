@@ -1,5 +1,5 @@
 {
-  "surum": "1.3.0",
+  "surum": "1.4.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -6742,6 +6742,17 @@
   ],
   "degisiklik": [
     {
+      "surum": "1.4.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Claude'un evreni artık kendi sayfasında (üst menü → Claude'un Evreni)",
+        "Yeni Fan sayfası: fan hikâyesi yaz, kendi evrenini kur — kurallarını, kişilerini, yerlerini ve kendi alanlarını sen tanımla",
+        "Eserler telefona tek dosya olarak iner; dosya kendi başına okunur, siteye yüklenince de açılır",
+        "Yazara gönderilen eserler sitede fanmade olarak yayımlanabilir"
+      ],
+      "yeniler": []
+    },
+    {
       "surum": "1.3.0",
       "tarih": "2026-09-26",
       "maddeler": [
@@ -7742,5 +7753,9 @@
         "odul": 40
       }
     }
-  ]
+  ],
+  "fanEserleri": {
+    "hikayeler": [],
+    "evrenler": []
+  }
 }

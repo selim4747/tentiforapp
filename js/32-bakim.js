@@ -177,7 +177,9 @@ const OZET_LISTELERI = [
   ["kayitlar", "kayıt", null],
   ["claudeEvreni.maddeler", "Claude evreni maddesi", function (x) { return x.baslik; }],
   ["claudeEvreni.kisiler", "Claude evreni kişisi", function (x) { return x.ad; }],
-  ["claudeEvreni.hikayeler", "Claude evreni hikâyesi", function (x) { return x.baslik; }]
+  ["claudeEvreni.hikayeler", "Claude evreni hikâyesi", function (x) { return x.baslik; }],
+  ["fanEserleri.hikayeler", "fan hikâyesi", function (x) { return x.baslik; }],
+  ["fanEserleri.evrenler", "fan evreni", function (x) { return x.ad; }]
 ];
 
 function bakimAnahtar(x) {
@@ -268,6 +270,8 @@ const Y_LISTELER = {
   "claudeEvreni.mektuplar": { ad: "Claude evreni · mektuplar", ornek: { id: "", kimden: "", kime: "", not: "", metin: "" } },
   "claudeEvreni.sozluk":    { ad: "Claude evreni · sözlük", ornek: { terim: "", tanim: "" } },
   "claudeEvreni.sorular":   { ad: "Claude evreni · sorular", ornek: { soru: "", not: "" } },
+  "fanEserleri.hikayeler": { ad: "Fanmade · hikâyeler", ornek: { bicim: "tentifor-eser", surum: 1, tur: "hikaye", id: "", baslik: "", yazar: "", evren: "", karakterler: "", etiketler: "", uyari: "", ozet: "", metin: "" } },
+  "fanEserleri.evrenler":  { ad: "Fanmade · evrenler", ornek: { bicim: "tentifor-eser", surum: 1, tur: "evren", id: "", ad: "", yazar: "", ozet: "", kurallar: [], kisiler: [], yerler: [], tarih: [], sozluk: [], ozelAlanlar: [] } },
   takvimEtkinlikleri: { ad: "Tömye takvimi etkinlikleri", ornek: { id: "", ad: "", ay: "Leg", gun: 1, sure: 1, tema: "", metin: "", alinti: "", gorev: { id: "yazi4", adet: 1, ad: "", odul: 30 } } },
   degisiklik:         { ad: "Değişiklik günlüğü",  ozel: true },
   site:               { ad: "Site ayarları",       ozel: true }
@@ -292,7 +296,8 @@ const Y_LISTE_CIZICILER = {
   alintilar: "alintiCiz", zamanCizelgesi: "cizZaman", degisiklik: "degisiklikCiz", site: "gizlilikCiz",
   "claudeEvreni.maddeler": "claudeEvrenCiz", "claudeEvreni.kisiler": "claudeEvrenCiz", "claudeEvreni.hikayeler": "claudeEvrenCiz",
   "claudeEvreni.mektuplar": "claudeEvrenCiz", "claudeEvreni.sozluk": "claudeEvrenCiz", "claudeEvreni.sorular": "claudeEvrenCiz",
-  takvimEtkinlikleri: "takvimEtkinlikCiz"
+  takvimEtkinlikleri: "takvimEtkinlikCiz",
+  "fanEserleri.hikayeler": "fanBolumleriCiz", "fanEserleri.evrenler": "fanBolumleriCiz"
 };
 
 let yListe = "bulmacalar";
@@ -487,6 +492,10 @@ function yListeSite() {
     "<label>Gizlilik sayfasındaki iletişim adresi</label>" +
     '<p class="oyun-not">Bir e-posta ya da bağlantı yaz. Herkese açık görünür — kişisel adresin yerine bu site için açtığın bir adres önerilir. Boş bırakırsan GitHub sayfası gösterilir.</p>' +
     '<input class="kod-giris arac-giris" id="yIletisim" value="' + kacir(veri.iletisim || "") + '" placeholder="ornek: arsiv@alanadin.com">' +
+    "<label>Fan eserlerinin gönderileceği e-posta</label>" +
+    '<p class="oyun-not">Fan hikâyesi ya da evren yazan biri dosyasını bu adrese gönderebilsin diye Fan sayfasında görünür. Herkese açıktır: ' +
+      "bunun için ayrı bir adres açman önerilir. Boş bırakırsan yalnızca indirme ve paylaşma kalır.</p>" +
+    '<input class="kod-giris arac-giris" id="yFanEposta" type="email" value="' + kacir(veri.fanEposta || "") + '" placeholder="ornek: fan@alanadin.com">' +
     '<button class="dugme" data-y-site-kaydet>Kaydet</button></div>' +
     '<div class="kutu-y">' +
       "<label>Sınırlı yönetici kodu</label>" +
@@ -789,8 +798,12 @@ document.addEventListener("click", function (e) {
   }
   if (e.target.closest("[data-y-site-kaydet]")) {
     veri.iletisim = ((document.querySelector("#yIletisim") || {}).value || "").trim();
+    const fanE = ((document.querySelector("#yFanEposta") || {}).value || "").trim();
+    if (fanE && !/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(fanE)) { yoneticiDurum("Fan e-postası geçerli bir adres değil", false); return; }
+    veri.fanEposta = fanE;
     gizlilikCiz();
-    yoneticiDurum("İletişim adresi güncellendi", true);
+    if (typeof fanBolumleriCiz === "function") { fanBolumleriCiz(); }
+    yoneticiDurum("İletişim adresleri güncellendi — yayına almak için Kaydet", true);
     return;
   }
   if (e.target.closest("[data-y-hata-temizle]")) {
