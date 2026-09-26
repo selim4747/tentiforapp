@@ -593,8 +593,9 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("yönetici okur kişisini sitede yayımlar", await Z.evaluate(function (id) {
       const eski = window.panelAcik; window.panelAcik = function () { return true; };
       const k = fanTemizle(fanEserlerim().find(function (x) { return x.id === id; }));
-      const tamam = fanSiteyeEkle(k) && fanSiteListesi("kisi").length === 1 && e25Kisileri().length === 1;
-      veri.fanEserleri.kisiler = []; window.panelAcik = eski;
+      const eskiListe = (veri.fanEserleri.kisiler || []).slice(), onceSite = eskiListe.length, onceE25 = e25Kisileri().length;
+      const tamam = fanSiteyeEkle(k) && fanSiteListesi("kisi").length === onceSite + 1 && e25Kisileri().length === onceE25;
+      veri.fanEserleri.kisiler = eskiListe; window.panelAcik = eski;
       return tamam;
     }, kisiId));
     ok("sayfa paylaş düğmesi", await Z.locator("#sayfaBasi [data-sayfa-paylas]").count() === 1);
@@ -605,7 +606,13 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     console.log("kelime ve evren oyunları");
     const N = await cihaz("yenilikler");
     await N.goto(adres + "/"); await bekle(N, 1500);
-    ok("ana sayfada E25 vitrini (henüz kişi yoksa çağrı)", /Evrengezerini ekle/.test(await N.textContent("#e25VitrinAlan")));
+    await N.evaluate(function () { window.__ilkFanEvrenler = JSON.parse(JSON.stringify(veri.fanEserleri.evrenler)); });
+    ok("ana sayfada E25 vitrini: örnek kişi", /Orlan Ivo/.test(await N.textContent("#e25VitrinAlan")));
+    ok("kişi yoksa vitrin çağrısı", await N.evaluate(function () {
+      const eski = veri.fanEserleri.kisiler; veri.fanEserleri.kisiler = []; e25VitrinCiz();
+      const t = document.querySelector("#e25VitrinAlan").textContent; veri.fanEserleri.kisiler = eski; return /Evrengezerini ekle/.test(t);
+    }));
+    ok("örnek E25 kişisi imzalı ve geçerli", await N.evaluate(async function () { return await kisiDogrula(veri.fanEserleri.kisiler[0]) === "gecerli"; }));
     await N.evaluate(function () {
       veri.fanEserleri.kisiler = [{ bicim: FAN_BICIM, surum: 1, tur: "kisi", id: "vitrin1", evren: "e25", ad: "Orlan Gezgin", unvan: "haritacı", ozet: "Kıyıdan kıyıya.", yazar: "okur", kisilik: [] }];
       e25VitrinCiz();
@@ -815,9 +822,16 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     }));
     await N.click('[data-fan-p="siteye"]'); await bekle(N, 1500);
     ok("siteye eklenince çizim GitHub'a ayrı dosya olarak yüklenir", await N.evaluate(function () {
-      const e = veri.fanEserleri.evrenler.find(function (x) { return x.id === "fyayintest1"; });
+      const e = EVD_BELLEK["fyayintest1"];
       return !!e && /^ikon\/fan\/fyayintest1-/.test(e.cizimler[0].yol) && !e.cizimler[0].v && e.roman.bolumler.length === 1;
     }) && ghPut.some(function (p) { return /contents\/ikon\/fan\/fyayintest1-/.test(p.u); }));
+    const evPut = ghPut.find(function (p) { return /contents\/evrenler\/fyayintest1\.json/.test(p.u); });
+    ok("evrenin tamamı GitHub'a ayrı dosya, veri.json'da yalnızca özeti", !!evPut && await N.evaluate(function (icerik) {
+      const tam = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(icerik), function (c) { return c.charCodeAt(0); })));
+      const o = veri.fanEserleri.evrenler.find(function (x) { return x.id === "fyayintest1"; });
+      return tam.roman.bolumler.length === 1 && /^ikon\/fan\//.test(tam.cizimler[0].yol) && o.dosya === "evrenler/fyayintest1.json" && !o.roman && !o.kisiler &&
+        o.sayilar.bolum === 1 && o.sayilar.cizim === 1 && /^ikon\/fan\//.test(o.kapak);
+    }, evPut.govde.content));
     await N.evaluate(async function () {
       let d = document.querySelector("#yDurum"); if (!d) { d = document.createElement("p"); d.id = "yDurum"; document.body.appendChild(d); }
       document.querySelector("#perde").hidden = true;
@@ -830,6 +844,65 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       window.panelAcik = window.__panelAcik; window.yoneticiAcik = window.__yoneticiAcik;
       veri.fanEserleri.evrenler = veri.fanEserleri.evrenler.filter(function (x) { return x.id !== "fyayintest1"; });
     });
+
+    /* ---------- sitedeki evren dosyası, geçit, çevrimdışı, takip ---------- */
+    await N.evaluate(function () { veri.fanEserleri.evrenler = JSON.parse(JSON.stringify(window.__ilkFanEvrenler)); location.hash = "#/ev/fan/fornek-sis"; }); await bekle(N, 1500);
+    ok("sitedeki evren özetten açılır, dosyası inince tamamı görünür", await N.evaluate(function () {
+      return EVS.kaynak === "fan" && !!EVD_BELLEK["fornek-sis"] && !!document.querySelector('#evrenSayfa [data-evs-sekme="roman"]') &&
+        !!document.querySelector("#evrenSayfa .evg-serit") && document.querySelectorAll("#evrenSayfa .evh-cizgi").length === 2 && !!document.querySelector("#evrenSayfa .evh-olcek");
+    }));
+    await N.evaluate(function () { document.querySelector('#evrenSayfa .evh-svg [data-evh-yer="sisgecidi"]').dispatchEvent(new MouseEvent("click", { bubbles: true })); }); await bekle(N, 200);
+    ok("okur haritada yere dokununca anlatımı ve geçidi görür", /Sisin en koyu/.test(await N.textContent("#evrenSayfa .evh-bilgi")) && await N.locator("#evrenSayfa .evh-gecit-git").count() === 1);
+    await N.click("#evrenSayfa .evh-gecit-git"); await bekle(N, 1500);
+    ok("geçitten öbür evrene geçilir", await N.evaluate(function () { return EVS.kaynak === "fan" && EVS.id === "fornek-kul" && /Kül Ormanı/.test(document.querySelector("#evrenSayfa h2").textContent); }));
+    await N.evaluate(function () { location.hash = "#/ev/fan/fornek-sis"; }); await bekle(N, 800);
+    await N.click('#evrenSayfa [data-evs-sekme="bilgi"]'); await bekle(N, 200);
+    await N.click("#evrenSayfa [data-evd-indir]"); await bekle(N, 1500);
+    ok("evren telefona indirilir (kalıcı önbellek)", await N.evaluate(async function () {
+      const c = await caches.open("tf-evrenler");
+      return (await c.keys()).some(function (r) { return /\/evrenler\/fornek-sis\.json$/.test(r.url); }) && !!evdIndirilenler()["fornek-sis"];
+    }));
+    await N.click("#evrenSayfa [data-tkp]"); await bekle(N, 400);
+    ok("evren takip edilir", await N.evaluate(function () { return tkpListe()["fornek-sis"] === 2 && /Takibi bırak/.test(document.querySelector("#evrenSayfa .tkp-kutu").textContent); }));
+    ok("takip edilen evrende yeni bölüm ana sayfada", await N.evaluate(function () {
+      const l = tkpListe(); l["fornek-sis"] = 1; jsonYaz(TKP_ANAHTAR, l);
+      evrenSayfaKapat(); takipCiz();
+      return /Sis Denizi/.test(document.querySelector("#takipAlan").textContent) && /1 yeni bölüm/.test(document.querySelector("#takipAlan").textContent);
+    }));
+    ok("servis çalışanı ayarı takibi bilir", await N.evaluate(async function () {
+      await swAyarEsitle(); const c = await caches.open("tf-ayar"); const a = await (await c.match("/__tf-ayar")).json(); return a.takip["fornek-sis"] >= 1;
+    }));
+
+    /* ---------- tür şablonu, nehir/yol, ölçek, geçit, PNG ---------- */
+    const turEv = await N.evaluate(function () { return evrenYeniKur(); });
+    await N.evaluate(function (id) { evrenSonrakiSekme = "bilgi"; location.hash = "#/ev/benim/" + id; }, turEv); await bekle(N, 700);
+    await N.click('#evrenSayfa [data-evt-tur="su"]'); await bekle(N, 300);
+    ok("türle başla: kurallar, sözlük, para, stil ve harita dolar", await N.evaluate(function (id) {
+      const e = evrenBenimBul(id); return e.kurallar.length === 2 && e.sozluk.length === 2 && e.para.ad === "inci" && e.stil.ana === "#1D6FA5" && e.harita.yerler.length === 5;
+    }, turEv));
+    await N.click('#evrenSayfa [data-evs-sekme="harita"]'); await bekle(N, 200);
+    await N.click('#evrenSayfa [data-evh-mod="cizgi"]'); await bekle(N, 100);
+    await N.click('#evrenSayfa [data-evh-cizgi-tur="yol"]'); await bekle(N, 100);
+    const hk = await N.locator("#evrenSayfa .evh-svg").boundingBox();
+    await N.mouse.click(hk.x + hk.width * 0.1, hk.y + hk.height * 0.5); await N.mouse.click(hk.x + hk.width * 0.8, hk.y + hk.height * 0.3);
+    await N.click("#evrenSayfa [data-evh-cizgi-bitir]"); await bekle(N, 200);
+    await N.fill("#evhCizgiAd", "Kıyı Yolu"); await bekle(N, 150);
+    await N.fill('[data-evh-olcek="deger"]', "120"); await N.dispatchEvent('[data-evh-olcek="deger"]', "change"); await bekle(N, 200);
+    ok("yol çizilir, adlanır; ölçek konur", await N.evaluate(function (id) {
+      const h = evrenBenimBul(id).harita; return h.cizgiler.length === 1 && h.cizgiler[0].tur === "yol" && h.cizgiler[0].ad === "Kıyı Yolu" && h.olcek.deger === 120;
+    }, turEv) && await N.locator("#evrenSayfa .evh-olcek").count() === 1);
+    await N.evaluate(function (id) { EVS.secili = evrenBenimBul(id).harita.yerler[1].id; evrenSayfaCiz(); }, turEv);
+    await N.selectOption("#evhGecit", "#/ev/fan/fornek-kul"); await bekle(N, 200);
+    ok("yere geçit konur, dosyada kalır", await N.evaluate(function (id) {
+      const e = evrenBenimBul(id); const x = fanMetindenEser(fanDosyaHtml(e));
+      return e.harita.yerler[1].gecit === "#/ev/fan/fornek-kul" && x.harita.yerler[1].gecit === "#/ev/fan/fornek-kul" && x.harita.cizgiler.length === 1 && x.harita.olcek.deger === 120;
+    }, turEv));
+    ok("zararlı geçit ve çizgi temizlenir", await N.evaluate(function () {
+      const x = fanTemizle({ bicim: FAN_BICIM, tur: "evren", ad: "x", harita: { yerler: [{ ad: "a", gecit: "javascript:alert(1)" }], cizgiler: [{ tur: "<b>", noktalar: [[1, 2]] }] } });
+      return !x.harita.yerler[0].gecit && !x.harita.cizgiler;
+    }));
+    const [pngInd] = await Promise.all([N.waitForEvent("download"), N.click("#evrenSayfa [data-evh-png]")]);
+    ok("harita PNG olarak iner", /-harita\.png$/.test(pngInd.suggestedFilename()));
 
     ok("konuk haritası: kişinin gittiği yerler", await N.evaluate(function () {
       const l = fanEserlerim();

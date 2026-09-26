@@ -27,6 +27,9 @@ const FAN_EVREN_GRUPLARI = [
     alanlar: [["ad", "Alanın adı"], ["deger", "İçeriği", "uzun"]] }
 ];
 
+/* geçit hedefi: sitedeki evren adresleri (kanon, fanmade, E99, kişinin kendi evreni) */
+const FAN_GECIT = /^#\/ev\/(site|fan|benim)\/[\w-]{1,40}$|^#\/ev\/e99$|^#\/arsiv$/;
+
 const FAN_HIKAYE_ALANLARI = ["baslik", "yazar", "evren", "karakterler", "etiketler", "uyari", "ozet", "metin"];
 
 /* ==================== yardımcılar ==================== */
@@ -80,8 +83,24 @@ function fanHaritaTemizle(h) {
     if (y && Array.isArray(y.sekil) && y.sekil.length >= 3) {
       t.sekil = y.sekil.slice(0, 120).map(function (n) { return [sayi(n && n[0]), sayi(n && n[1])]; });
     }
+    /* geçit: başka bir evrene kapı (yalnızca sitenin kendi evren adresleri) */
+    if (y && typeof y.gecit === "string" && FAN_GECIT.test(y.gecit)) { t.gecit = y.gecit; }
     return t;
   }) };
+  /* nehir, yol, sınır çizgileri */
+  if (h && Array.isArray(h.cizgiler)) {
+    const c = h.cizgiler.slice(0, 100).map(function (x, i) {
+      if (!x || !Array.isArray(x.noktalar) || x.noktalar.length < 2) { return null; }
+      return { id: fanMetin(x.id, 40).replace(/[^\w-]/g, "") || ("c" + i), tur: ["nehir", "yol", "sinir"].indexOf(x.tur) !== -1 ? x.tur : "yol",
+        ad: fanMetin(x.ad, 80), noktalar: x.noktalar.slice(0, 200).map(function (n) { return [sayi(n && n[0]), sayi(n && n[1])]; }) };
+    }).filter(Boolean);
+    if (c.length) { o.cizgiler = c; }
+  }
+  /* ölçek: haritada 10 birim kaç km (ya da evrenin kendi birimi) */
+  if (h && h.olcek && typeof h.olcek === "object") {
+    const d = Number(h.olcek.deger);
+    if (isFinite(d) && d > 0) { o.olcek = { deger: Math.min(1e9, Math.round(d * 100) / 100), birim: fanMetin(h.olcek.birim, 12).trim() || "km" }; }
+  }
   if (h && /^#[0-9a-fA-F]{6}$/.test(h.renk || "")) { o.renk = h.renk; }
   const stil = h && typeof evrenHaritaStilTemizle === "function" ? evrenHaritaStilTemizle(h.stil) : null;
   if (stil) { o.stil = stil; }
