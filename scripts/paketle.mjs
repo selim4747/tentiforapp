@@ -46,6 +46,37 @@ for (const ad of readdirSync(join(HEDEF, "js"))) {
   ozet.update(code);
 }
 
+/* Tek paket: index.html'deki sırayla bütün betikler tek istekte (js/uygulama.js). Her dosya yine ayrı bir
+   betik olarak çalışır (sırayla eklenen satır içi <script>): üst düzey adlar, fonksiyonların ne zaman tanımlandığı
+   ve bir dosyadaki hatanın ötekileri durdurmaması eskisi gibi kalır. sourceURL: hata kayıtlarında dosya adı görünür. */
+const PAKET_AD = "js/uygulama.js";
+{
+  const anaKaynak = readFileSync(join(HEDEF, "index.html"), "utf8");
+  const sira = [...anaKaynak.matchAll(/<script src="(js\/(?!vendor\/)[^"]+\.js)"><\/script>/g)].map(function (m) { return m[1]; });
+  if (sira.length < 10) { throw new Error("Betik sırası okunamadı (" + sira.length + ")"); }
+  const parcalar = sira.map(function (yol) { return readFileSync(join(HEDEF, yol), "utf8") + "\n//# sourceURL=" + yol; });
+  const paketKod = "(function(){var p=" + JSON.stringify(parcalar) + ",b=document.head||document.documentElement;" +
+    "for(var i=0;i<p.length;i++){var s=document.createElement(\"script\");s.textContent=p[i];b.appendChild(s);b.removeChild(s);}})();";
+  writeFileSync(join(HEDEF, PAKET_AD), paketKod);
+  ozet.update(paketKod);
+  /* index.html: betik etiketleri tek etikete iner (ilki yerine paket, ötekiler silinir) */
+  let ilk = true;
+  const yeniAna = anaKaynak.replace(/<script src="js\/(?!vendor\/)[^"]+\.js"><\/script>\n?/g, function () {
+    if (ilk) { ilk = false; return '<script src="' + PAKET_AD + '"></script>\n'; }
+    return "";
+  });
+  writeFileSync(join(HEDEF, "index.html"), yeniAna);
+  /* servis çalışanı: tek tek dosyalar yerine paket */
+  const swYol = join(HEDEF, "sw.js");
+  const swKaynak = readFileSync(swYol, "utf8");
+  let swIlk = true;
+  writeFileSync(swYol, swKaynak.replace(/"js\/(?!vendor\/)[\w.-]+\.js",?\s*/g, function (m) {
+    if (swIlk) { swIlk = false; return '"' + PAKET_AD + '", '; }
+    return "";
+  }).replace(/,\s*\]/, "]"));
+  console.log("Tek paket: " + sira.length + " betik → " + PAKET_AD + " (" + Math.round(Buffer.byteLength(paketKod) / 1024) + " KB)");
+}
+
 for (const ad of readdirSync(join(HEDEF, "css"))) {
   if (!ad.endsWith(".css")) { continue; }
   const yol = join(HEDEF, "css", ad);

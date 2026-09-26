@@ -70,7 +70,14 @@ if (typeof evrenEkTemizle === "function") {
     (Array.isArray(ham.kisiler) ? ham.kisiler : []).slice(0, 120).forEach(function (k, i) {
       const y = yolTemizle(k && k.yol);
       if (y.length && e.kisiler && e.kisiler[i]) { e.kisiler[i].yol = y; }
+      const c = gzCanliTemizle(k && k.canli);
+      if (c && e.kisiler && e.kisiler[i]) { e.kisiler[i].canli = c; }
     });
+    const st = ham.saat && typeof ham.saat === "object" ? ham.saat : null;
+    if (st && Number(st.gunSaat) > 0) {
+      e.saat = { gunSaat: Math.min(10000, Math.max(0.1, Math.round(Number(st.gunSaat) * 100) / 100)) };
+      if (/^\d{4}-\d{2}-\d{2}$/.test(String(st.baslangic || ""))) { e.saat.baslangic = st.baslangic; }
+    }
   };
 }
 
@@ -427,6 +434,35 @@ document.addEventListener("click", function (ev) {
 
 const GZ = { gun: null, ayni: false, zaman: null, kimlik: "", bagla: null };
 
+/* ---------- canlı yolculuk: evren saatine göre "şu an nerede" ---------- */
+/* kisi.canli = { tur: "dongu" }              → yol bitince baştan (ulak, kervan…)
+                { tur: "baslangic", gun: D }   → yolun 1. günü evrenin D. günüydü */
+
+function gzCanliTemizle(c) {
+  if (!c || typeof c !== "object") { return null; }
+  if (c.tur === "dongu") { return { tur: "dongu" }; }
+  const g = Math.round(Number(c.gun));
+  return c.tur === "baslangic" && isFinite(g) && Math.abs(g) < 1e7 ? { tur: "baslangic", gun: g } : null;
+}
+
+/** Evrenin şu anki günü (sıfırdan sayılır): başlangıçtan beri geçen gerçek saat / bir evren gününün saati. */
+function gzEvrenGunu(baslangicMs, gunSaat) {
+  const gs = gunSaat > 0 ? gunSaat : 24;
+  return Math.floor((Date.now() - baslangicMs) / 3600000 / gs);
+}
+
+/** Yolun şu anki günü; { gun } ya da { once: kaç gün sonra başlıyor } ya da { bitti: true }. */
+function gzCanliGun(yol, canli, D) {
+  if (!canli || !yol.length || D === null || D === undefined) { return null; }
+  const g = gzGunler(yol);
+  const ilk = Math.min.apply(null, g), son = Math.max.apply(null, g);
+  if (canli.tur === "dongu") { const n = son - ilk + 1; return { gun: ilk + (((D % n) + n) % n) }; }
+  const gun = ilk + (D - canli.gun);
+  if (gun < ilk) { return { once: ilk - gun }; }
+  if (gun > son) { return { bitti: true }; }
+  return { gun: gun };
+}
+
 /** Her adımın günü: yazılmışsa o; yazılmamışsa bir öncekiyle aynı gün (hiçbirinde yoksa sıra numarası). */
 function gzGunler(yol) {
   const var_ = yol.some(function (a) { return a.gun >= 1; });
@@ -512,10 +548,28 @@ function gzGovde(b) {
     const yazi = GZ.gun === null
       ? "Bütün yol: " + yol.length + " adım, " + (sonGun - ilk + 1) + " gün"
       : GZ.gun + ". gün · " + (a ? (y ? y.ad || "Adsız yer" : "(yer yok)") + (b.gAd(a.g) ? " (" + b.gAd(a.g) + ")" : "") + (a.zaman ? " · " + a.zaman : "") + (a.not ? " — " + a.not : "") : "henüz yola çıkmadı");
-    oyn = '<div class="gz-oynatici">' +
+    const D = typeof b.simdiGun === "function" ? b.simdiGun() : null;
+    const cg = gzCanliGun(yol, k.canli, D);
+    let canliYazi = "";
+    if (cg && cg.gun !== undefined) {
+      const j = (function () { const g = gzGunler(yol); let s2 = -1; g.forEach(function (d, i) { if (d <= cg.gun) { s2 = i; } }); return s2; })();
+      const ya = j >= 0 ? yol[j] : null, yy = ya ? b.yerBul(ya) : null;
+      canliYazi = '<span class="gz-canli-nokta" aria-hidden="true"></span><b>Şu an:</b> ' + cg.gun + ". gün" + (yy ? " · " + kacir(yy.ad || "Adsız yer") : "") +
+        (ya && b.gAd(ya.g) ? " (" + kacir(b.gAd(ya.g)) + ")" : "") + ' <button type="button" class="ic-bag" data-gz-simdi="' + cg.gun + '">Şu ana git</button>';
+    } else if (cg && cg.once) { canliYazi = "Yolculuk " + cg.once + " gün sonra başlıyor."; }
+    else if (cg && cg.bitti) { canliYazi = "Yolculuk bitti."; }
+    oyn = (canliYazi ? '<p class="gz-canli" role="status">' + canliYazi + "</p>" : "") +
+      (b.duzenle && typeof b.canliYaz === "function" ? '<div class="gz-canli-ayar"><label>Canlı: <select class="kod-giris" data-gz-canli aria-label="Canlı yolculuk">' +
+        [["", "kapalı"], ["dongu", "döngü — bitince baştan"], ["baslangic", k.canli && k.canli.tur === "baslangic" ? "başladı (evren günü " + k.canli.gun + ")" : "bugün başlasın"]].map(function (o) {
+          return '<option value="' + o[0] + '"' + (((k.canli && k.canli.tur) || "") === o[0] ? " selected" : "") + ">" + o[1] + "</option>";
+        }).join("") + "</select></label>" +
+        (typeof b.saatYaz === "function" ? '<label>1 evren günü = <input class="kod-giris gz-saat" type="number" min="0.1" max="10000" step="any" data-gz-saat value="' + kacir(b.gunSaat()) + '" aria-label="Bir evren günü kaç gerçek saat"> gerçek saat</label>' : "") +
+        "</div>" : "") +
+      '<div class="gz-oynatici">' +
       '<button type="button" class="dugme" data-gz-oynat>' + (GZ.zaman ? "❚❚ Durdur" : "▶ Gün gün izle") + "</button>" +
       (sonGun > ilk ? '<input type="range" class="gz-kaydir" data-gz-gun min="' + ilk + '" max="' + sonGun + '" step="1" value="' + (GZ.gun === null ? sonGun : GZ.gun) + '" aria-label="Gün">' : "") +
       (GZ.gun !== null ? '<button type="button" class="ic-bag" data-gz-tumu>Bütün yol</button>' : "") +
+      '<button type="button" class="ic-bag" data-gz-kart>Paylaş (kart)</button>' +
       '<output class="gz-gun-yaz" role="status">' + kacir(yazi) + "</output></div>";
   }
 
@@ -558,7 +612,7 @@ function gzEkle(b, yer, g) {
 function gzBaglam() { return typeof GZ.bagla === "function" ? GZ.bagla() : null; }
 
 document.addEventListener("click", function (ev) {
-  const h = ev.target.closest(".gz-kutu [data-gz-yer], .gz-kutu [data-gz-bekle], .gz-kutu [data-gz-numarala], .gz-kutu [data-gz-temizle], .gz-kutu [data-gz-tasi], .gz-kutu [data-gz-sil], .gz-kutu [data-gz-oynat], .gz-kutu [data-gz-tumu]");
+  const h = ev.target.closest(".gz-kutu [data-gz-yer], .gz-kutu [data-gz-bekle], .gz-kutu [data-gz-numarala], .gz-kutu [data-gz-temizle], .gz-kutu [data-gz-tasi], .gz-kutu [data-gz-sil], .gz-kutu [data-gz-oynat], .gz-kutu [data-gz-tumu], .gz-kutu [data-gz-simdi]");
   if (!h) { return; }
   const b = gzBaglam();
   if (!b) { return; }
@@ -580,6 +634,7 @@ document.addEventListener("click", function (ev) {
     return;
   }
   if (h.hasAttribute("data-gz-tumu")) { gzOynatDurdur(); GZ.gun = null; b.ciz(); return; }
+  if (d.gzSimdi) { gzOynatDurdur(); GZ.gun = Number(d.gzSimdi); b.ciz(); return; }
   if (!b.duzenle) { return; }
   if (d.gzYer) { gzEkle(b, d.gzYer, d.gzG || ""); b.ciz(); return; }
   if (h.hasAttribute("data-gz-temizle")) {
@@ -621,6 +676,11 @@ document.addEventListener("change", function (ev) {
   if (t.matches("[data-gz-kisi]")) { b.sec(Number(t.value)); ciz(); return; }
   if (t.matches("[data-gz-ayni]")) { GZ.ayni = t.checked; ciz(); return; }
   if (t.matches("[data-gz-gun]")) { gzOynatDurdur(); GZ.gun = Number(t.value); ciz(); return; }
+  if (t.matches("[data-gz-canli]") && b.duzenle) {
+    b.canliYaz(t.value === "dongu" ? { tur: "dongu" } : (t.value === "baslangic" ? { tur: "baslangic", gun: b.simdiGun() } : null));
+    ciz(); return;
+  }
+  if (t.matches("[data-gz-saat]") && b.duzenle) { const n = Number(t.value); if (n > 0 && n <= 10000) { b.saatYaz(n); ciz(); } return; }
   if (t.matches("[data-gz-alan]") && b.duzenle) {
     const j = Number(t.dataset.gzI), alan = t.dataset.gzAlan;
     b.degistir(function (yol) {
@@ -708,7 +768,21 @@ function gzEvrenBaglami(v) {
   });
   const id = EVS.id;
   return {
-    kisiler: l.map(function (x) { return { i: x.i, ad: x.k.ad, yol: x.k.yol || [] }; }),
+    kisiler: l.map(function (x) { return { i: x.i, ad: x.k.ad, yol: x.k.yol || [], canli: x.k.canli || null }; }),
+    evrenAd: e.ad || "",
+    simdiGun: function () {
+      const st = e.saat || {};
+      const bas = Date.parse(st.baslangic || String(e.olusturma || "").slice(0, 10) || "2026-01-01");
+      return gzEvrenGunu(isFinite(bas) ? bas : Date.parse("2026-01-01"), st.gunSaat);
+    },
+    gunSaat: function () { return (e.saat && e.saat.gunSaat) || 24; },
+    canliYaz: function (c) {
+      const i = EVS.yolKisi;
+      evrenBenimDegistir(id, function (ee) { const k = (ee.kisiler || [])[i]; if (!k) { return; } if (c) { k.canli = c; } else { delete k.canli; } });
+    },
+    saatYaz: function (n) {
+      evrenBenimDegistir(id, function (ee) { ee.saat = Object.assign({}, ee.saat || {}, { gunSaat: n }); });
+    },
     secili: EVS.yolKisi, duzenle: sahip, yerler: yerler, gruplar: gruplar,
     yerBul: function (a) { return gzYer(e, a); },
     gAd: function (g) { return coklu ? gzGezegenAdi(e, g) : ""; },
@@ -793,3 +867,93 @@ if (typeof evrenSayfaKapat === "function") {
   const eskiKapat = evrenSayfaKapat;
   window.evrenSayfaKapat = function () { gzOynatDurdur(); GZ.gun = null; return eskiKapat.apply(this, arguments); };
 }
+
+/* ==================== yolculuk kartı (1080×1920, Instagram hikâyesi) ==================== */
+
+function gzSvgResmi(svg) {
+  return new Promise(function (coz) {
+    if (!svg) { coz(null); return; }
+    const k = svg.cloneNode(true);
+    k.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    k.setAttribute("width", "1000"); k.setAttribute("height", "700");
+    k.querySelectorAll(".gz-halka").forEach(function (x) { x.remove(); });
+    const img = new Image();
+    img.onload = function () { coz(img); };
+    img.onerror = function () { coz(null); };
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(k));
+  });
+}
+
+/** Kişinin bütün yolu: harita (rotayla), gün gün liste. */
+async function gzKartUret(b, kok) {
+  const k = b.kisiler.find(function (x) { return x.i === b.secili; });
+  if (!k || !(k.yol || []).length || typeof kartZemin !== "function") { return null; }
+  if (typeof kartFontlariHazir === "function") { await kartFontlariHazir(); }
+  /* kartta bütün yol görünsün */
+  const eski = GZ.gun;
+  gzOynatDurdur(); GZ.gun = null; b.ciz();
+  const svg = (kok && kok.isConnected ? kok : document).querySelector(".gzk-harita svg, .evh-kutu svg");
+  const resim = await gzSvgResmi(svg);
+  GZ.gun = eski; if (eski !== null) { b.ciz(); }
+  const EN = 1080, BOY = 1920, sol = 90, gen = EN - 180;
+  const t = document.createElement("canvas");
+  t.width = EN; t.height = BOY;
+  const c = t.getContext && t.getContext("2d");
+  if (!c) { return null; }
+  kartZemin(c, EN, BOY);
+  c.fillStyle = "#C0392B"; c.fillRect(sol, 150, 6, 60);
+  kartEtiket(c, "Yolculuk · " + (b.evrenAd || ""), sol + 24, 192, KART_RENK.murekkep2, 26);
+  c.fillStyle = KART_RENK.murekkep;
+  let px = 110;
+  c.font = KART_FONT.baslik(px);
+  while (c.measureText(k.ad).width > gen && px > 56) { px -= 6; c.font = KART_FONT.baslik(px); }
+  c.fillText(k.ad, sol, 320);
+  const gunler = gzGunler(k.yol);
+  const gunSay = Math.max.apply(null, gunler) - Math.min.apply(null, gunler) + 1;
+  c.font = KART_FONT.yazi(42, true); c.fillStyle = KART_RENK.deniz;
+  c.fillText(gunSay + " gün · " + k.yol.length + " durak", sol, 385);
+  let y = 440;
+  if (resim) {
+    const h = gen * 0.7;
+    c.save(); c.beginPath(); c.rect(sol, y, gen, h); c.clip();
+    c.drawImage(resim, sol, y, gen, h); c.restore();
+    c.strokeStyle = KART_RENK.sig; c.lineWidth = 3; c.strokeRect(sol, y, gen, h);
+    y += h + 70;
+  }
+  /* gün gün: sığdığı kadar, fazlası "…ve N durak daha" */
+  const satir = 62, sigan = Math.floor((BOY - 230 - y) / satir);
+  const l = k.yol.slice(0, k.yol.length > sigan ? sigan - 1 : sigan);
+  l.forEach(function (a, j) {
+    const yer = b.yerBul(a);
+    c.font = KART_FONT.mono(26, true); c.fillStyle = "#8A6A3E";
+    c.fillText(gunler[j] + ". gün", sol, y);
+    c.font = KART_FONT.yazi(40); c.fillStyle = KART_RENK.murekkep;
+    let ad = (yer ? yer.ad || "Adsız yer" : "—") + (b.gAd(a.g) ? " · " + b.gAd(a.g) : "");
+    while (c.measureText(ad).width > gen - 170 && ad.length > 4) { ad = ad.slice(0, -2) + "…"; }
+    c.fillText(ad, sol + 170, y);
+    y += satir;
+  });
+  if (l.length < k.yol.length) {
+    c.font = KART_FONT.yazi(36, true); c.fillStyle = KART_RENK.murekkep2;
+    c.fillText("…ve " + (k.yol.length - l.length) + " durak daha", sol + 170, y);
+  }
+  kartEtiket(c, "Gün gün izle · " + KART_ADRES, sol, BOY - 120, KART_RENK.yarik, 24);
+  return t;
+}
+
+document.addEventListener("click", async function (ev) {
+  const h = ev.target.closest && ev.target.closest(".gz-kutu [data-gz-kart]");
+  if (!h) { return; }
+  const b = gzBaglam();
+  if (!b) { return; }
+  h.disabled = true;
+  const kok = h.closest("#evrenSayfa, .gzk-kok");
+  const t = await gzKartUret(b, kok);
+  const k = b.kisiler.find(function (x) { return x.i === b.secili; });
+  const yeni = document.querySelector(".gz-kutu [data-gz-kart]");
+  if (!t) { if (yeni) { yeni.disabled = false; } return; }
+  const sonuc = await kartPaylas(t, (typeof fanSlug === "function" ? fanSlug(k.ad) : "yolculuk") + "-yolculuk.png", k.ad + " · " + (b.evrenAd || "") + " yolculuğu");
+  const d = document.querySelector(".gz-kutu [data-gz-kart]");
+  if (d) { d.disabled = false; if (sonuc) { d.textContent = sonuc; } }
+  if (typeof olaySay === "function") { olaySay("hikaye_yolculuk"); }
+});
