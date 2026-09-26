@@ -1240,7 +1240,7 @@ $$;
 -- Arşivci seviyesi: bütün ilerlemeden sunucuda hesaplanan XP.
 -- Aynı XP iki sistemi besler:
 --   seviye  : arşivci seviyesi (unvanlar), gereken XP = 40·(seviye−1)²
---   basamak : Tömye basamağı, gereken XP = 5·(basamak−1)·(basamak+4); Tömye rakamlarıyla yazılır (Neo, Vot, Rit, Rof, Yaf, Ilat)
+--   basamak : Tömye basamağı, gereken XP = 5·(basamak−1)·(basamak+4); Tömye rakamlarıyla yazılır (Neo … Net, sıfırsız onluk)
 -- dokum: XP'nin kaynaklara göre dağılımı (herkese açık; ayrıntı içermez)
 create or replace view public.arsivci_seviyeleri as
   with p as (

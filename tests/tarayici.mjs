@@ -196,7 +196,8 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
 
     /* ---------- 6. yönetici paneli ---------- */
     /* ---------- seviyeler ---------- */
-    ok("Tömye rakamları", await A.evaluate(function () { return [1, 6, 7, 13, 43].map(tomyeSayi).join(" "); }) === "Neo Ilat Neo·Neo Vot·Neo Neo·Neo·Neo");
+    ok("Tömye rakamları", await A.evaluate(function () { return [1, 7, 10, 11, 20, 21, 110, 111].map(tomyeSayi).join(" "); }) ===
+      "Neo İdey Net Neo·Neo Neo·Net Vot·Neo Net·Net Neo·Neo·Neo");
     await sahte.kokSorgu("update public.istatistikler set tamlik = 10 where id = (select id from auth.users where email = 'a@ornek.test')");
     await A.evaluate(function () { location.hash = "#/hesap"; }); await bekle(A, 300);
     const eckaOnce = await A.evaluate(function () { return cuzdan.kazanilan; });

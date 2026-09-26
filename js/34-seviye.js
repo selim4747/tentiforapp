@@ -1,29 +1,36 @@
 /* Seviyeler — aynı XP iki sistemi besler (XP sunucuda hesaplanır: arsivci_seviyeleri).
 
    1. Arşivci seviyesi: 1, 2, 3… ve unvanlar (Çırak → Sonsuz Raf). Gereken XP = 40·(s−1)².
-   2. Tömye basamağı: Tömye rakamlarıyla yazılır. Rakamlar haftanın günleridir:
-        Neo 1 · Vot 2 · Rit 3 · Rof 4 · Yaf 5 · Ilat 6
-      Tömye sayımında sıfır yoktur (takvim de 1 Leg 1'den başlar): 6'dan sonra Neo·Neo (7) gelir,
-      Neo·Ilat 12, Vot·Neo 13… Her altı basamak bir "hafta", her hafta bir ayın adını taşır
-      (Leg, Sop, Mut…); on bir ay bir Tömye yılı eder. Gereken XP = 5·(b−1)·(b+4). */
+   2. Tömye basamağı: Tömye rakamlarıyla yazılır (veri.takvim.rakamlar):
+        Neo 1 · Vot 2 · Rit 3 · Rof 4 · Yaf 5 · Ilat 6 · İdey 7 · Kiz 8 · İnen 9 · Net 10
+      İlk altısı haftanın günleridir. Tömye sayımında sıfır yoktur (takvim de 1 Leg 1'den başlar):
+      Net'ten (10) sonra Neo·Neo (11) gelir, Neo·Net 20, Vot·Neo 21… Her altı basamak bir "hafta",
+      her hafta bir ayın adını taşır (Leg, Sop, Mut…); on bir ay bir Tömye yılı eder.
+      Gereken XP = 5·(b−1)·(b+4). */
 
-const TOMYE_RAKAM_YEDEK = ["Neo", "Vot", "Rit", "Rof", "Yaf", "Ilat"];
+const TOMYE_RAKAM_YEDEK = ["Neo", "Vot", "Rit", "Rof", "Yaf", "Ilat", "İdey", "Kiz", "İnen", "Net"];
 
 function tomyeRakamlari() {
-  const g = typeof veri !== "undefined" && veri && veri.takvim && veri.takvim.gunler;
-  return Array.isArray(g) && g.length === 6 ? g : TOMYE_RAKAM_YEDEK;
+  const r = typeof veri !== "undefined" && veri && veri.takvim && veri.takvim.rakamlar;
+  return Array.isArray(r) && r.length >= 2 ? r : TOMYE_RAKAM_YEDEK;
 }
 
-/** Sayıyı Tömye rakamlarıyla yazar (sıfırsız altılık): 1 → Neo, 7 → Neo·Neo, 16 → Vot·Rof. */
+/** Haftanın günleri (ilk altı rakam): basamağın ay içindeki yeri için. */
+function tomyeGunleri() {
+  const g = typeof veri !== "undefined" && veri && veri.takvim && veri.takvim.gunler;
+  return Array.isArray(g) && g.length === 6 ? g : TOMYE_RAKAM_YEDEK.slice(0, 6);
+}
+
+/** Sayıyı Tömye rakamlarıyla yazar (sıfırsız onluk): 1 → Neo, 10 → Net, 11 → Neo·Neo, 21 → Vot·Neo. */
 function tomyeSayi(n) {
   n = Math.floor(Number(n));
   if (!(n >= 1)) { return "—"; }
   const r = tomyeRakamlari();
+  const taban = r.length;
   const parca = [];
   while (n > 0) {
-    const k = ((n - 1) % 6);
-    parca.unshift(r[k]);
-    n = Math.floor((n - 1) / 6);
+    parca.unshift(r[(n - 1) % taban]);
+    n = Math.floor((n - 1) / taban);
   }
   return parca.join("·");
 }
@@ -40,7 +47,7 @@ function basamakYeri(b) {
   const hafta = Math.floor((b - 1) / 6);
   const ay = aylar.length ? aylar[hafta % aylar.length] : { ad: "Ay " + (hafta + 1), koken: "" };
   return {
-    gun: tomyeRakamlari()[(b - 1) % 6],
+    gun: tomyeGunleri()[(b - 1) % 6],
     gunNo: ((b - 1) % 6) + 1,
     ay: ay.ad, koken: ay.koken || "",
     yil: Math.floor(hafta / Math.max(1, aylar.length || 11)) + 1
@@ -108,9 +115,10 @@ function seviyeKartiHtml(d, tam) {
       (satirlar ? "<ul>" + satirlar + "</ul>" : '<p class="oyun-not">Henüz XP yok. Oku, oyna, teori yaz.</p>') +
       '<p class="oyun-not">XP sunucuda hesaplanır; şüpheli yarış sonuçları ve gizlenen teoriler sayılmaz.</p></details>' +
       '<details class="xp-dokum"><summary>Tömye rakamları</summary>' +
-        '<p class="oyun-not">Tömye rakamları haftanın günleridir ve sıfır yoktur: ' +
+        '<p class="oyun-not">İlk altı rakam haftanın günleridir; sıfır yoktur: ' +
         tomyeRakamlari().map(function (r, i) { return "<b>" + kacir(r) + "</b> " + (i + 1); }).join(" · ") +
-        ". Altıdan sonra baştan: Neo·Neo 7, Neo·Ilat 12, Vot·Neo 13. Her altı basamak bir ay, on bir ay bir yıl.</p></details>";
+        ". " + kacir(tomyeRakamlari()[tomyeRakamlari().length - 1]) + "'ten sonra baştan: Neo·Neo 11, Neo·Net 20, Vot·Neo 21, Net·Net 110. " +
+        "Her altı basamak bir ay, on bir ay bir yıl.</p></details>";
   }
   return h;
 }

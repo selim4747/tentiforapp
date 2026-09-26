@@ -1142,7 +1142,19 @@
     ],
     "epokDunya": "2000-01-01",
     "epokYil": 1,
-    "not": "Yıl sayımı Gırı türünden kurtuluştan başlar — Kyldoların Gırı egemenliğinden kurtulduğu andan. Gerçek dünya tarihine kesin bir karşılık henüz verilmedi. Şimdilik 1 Leg 1 = 1 Ocak 2000 kabul edildi."
+    "not": "Yıl sayımı Gırı türünden kurtuluştan başlar — Kyldoların Gırı egemenliğinden kurtulduğu andan. Gerçek dünya tarihine kesin bir karşılık henüz verilmedi. Şimdilik 1 Leg 1 = 1 Ocak 2000 kabul edildi.",
+    "rakamlar": [
+      "Neo",
+      "Vot",
+      "Rit",
+      "Rof",
+      "Yaf",
+      "Ilat",
+      "İdey",
+      "Kiz",
+      "İnen",
+      "Net"
+    ]
   },
   "isimSozluk": [
     {
@@ -3016,6 +3028,10 @@
     {
       "terim": "GTBT",
       "tanim": "Good Times Bad Times — Tentiforverse'in üçüncü yapım kategorisi. Sonsuz dallanan olasılıklar değil, tek ve somut bir alternatif zaman çizgisi."
+    },
+    {
+      "terim": "Tömye rakamları",
+      "tanim": "Neo 1, Vot 2, Rit 3, Rof 4, Yaf 5, Ilat 6, İdey 7, Kiz 8, İnen 9, Net 10. İlk altısı haftanın günleridir. Sıfır yoktur: 11 Neo·Neo, 20 Neo·Net, 21 Vot·Neo."
     }
   ],
   "yankilar": [
