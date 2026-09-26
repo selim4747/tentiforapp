@@ -317,10 +317,11 @@ function fanDuzenleyici(tur) {
   }
 
   return ust +
+    (tur === "evren" ? '<a class="fan-tam-sayfa" href="#/ev/benim/' + kacir(e.id) + '"><span><b>Evren sayfasında aç</b>' +
+      "<small>Harita ve gezegenler, oyunlar, roman, çizimler, stil ve para</small></span><span aria-hidden=\"true\">→</span></a>" : "") +
     '<datalist id="fanEvrenOneri">' + fanEvrenOnerileri().map(function (a) { return '<option value="' + kacir(a) + '">'; }).join("") + "</datalist>" +
     '<div class="fan-form kutu-y" data-fan-form="' + tur + '">' + form + "</div>" +
     (typeof konukDuzenleyiciHtml === "function" ? konukDuzenleyiciHtml(e) : "") +
-    (tur === "evren" ? '<p class="oyun-not"><a href="#/ev/benim/' + kacir(e.id) + '">Evren sayfasını ve haritasını aç →</a></p>' : "") +
     '<p class="oyun-not" data-fan-kayit="' + tur + '">Taslak bu cihaza kaydediliyor</p>' +
     '<div class="oyun-sira">' +
       '<button class="dugme" data-fan-indir="' + tur + '">Dosya olarak indir</button>' +
@@ -451,7 +452,7 @@ function fanPencere(e, kaynak) {
   perde.innerHTML =
     '<div class="pencere pencere-genis fan-pencere" role="dialog" aria-modal="true" aria-label="' + kacir(fanAd(e)) + '">' +
       '<button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button>' +
-      '<div class="fan-oku">' + fanEserGovde(e, false) + "</div>" +
+      '<div class="fan-oku">' + fanEserGovde(e, false, { tam: true }) + "</div>" +
       '<div class="oyun-sira fan-pencere-eylem">' +
         '<button class="dugme" data-fan-p="indir">İndir</button>' +
         '<button class="dugme dugme-sade" data-fan-p="kapak">Kapak kartı</button>' +

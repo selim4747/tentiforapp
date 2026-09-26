@@ -768,9 +768,10 @@ function evcBuyut(id) {
 
 if (typeof fanEserGovde === "function") {
   const eskiGovde = fanEserGovde;
-  window.fanEserGovde = function (e, dosya) {
+  /* dosyada ve önizleme penceresinde (yönetici onaylamadan önce görsün) roman ve çizimler de; evren sayfasında kendi sekmelerinde */
+  window.fanEserGovde = function (e, dosya, secenek) {
     const h = eskiGovde.apply(this, arguments);
-    if (!dosya || !e || e.tur !== "evren") { return h; }
+    if (!(dosya || (secenek && secenek.tam)) || !e || e.tur !== "evren") { return h; }
     const r = e.roman;
     const bolumler = (r && r.bolumler) || [];
     const cizim = (e.cizimler || []).filter(function (c) { return cizimKaynak(c); });

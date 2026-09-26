@@ -784,6 +784,53 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("sekme şeridi tek satır", await N.evaluate(function () { const s = document.querySelector("#evrenSayfa .evs-sekmeler"); return getComputedStyle(s).flexWrap === "nowrap"; }));
     ok("dolu evrenden sonra yeni evren yeni taslak", await N.evaluate(function () { return evrenYeniKur() !== EVS.id; }));
 
+    /* ---------- yayın akışı: okurun dosyası → yönetici açar, siteye ekler, görsel GitHub'a, Kaydet ---------- */
+    const ghPut = [];
+    await N.route("https://api.github.com/**", function (r) {
+      const u = r.request().url();
+      if (r.request().method() === "GET") {
+        return /contents\/veri\.json/.test(u)
+          ? r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ sha: "abc", encoding: "base64", content: Buffer.from(readFileSync(dizin + "/veri.json")).toString("base64") }) })
+          : r.fulfill({ status: 404, contentType: "application/json", body: "{}" });
+      }
+      ghPut.push({ u: u, govde: JSON.parse(r.request().postData() || "{}") });
+      return r.fulfill({ status: 201, contentType: "application/json", body: "{}" });
+    });
+    await N.evaluate(async function (id) {
+      const e = evrenBenimBul(id);
+      await cizimleriIsit(e);
+      const k = JSON.parse(JSON.stringify(e)); k.id = "fyayintest1"; k.ad = "Yayın Evreni";
+      window.__yayinDosyasi = fanDosyaHtml(cizimGomulu(Object.assign(k, { cizimler: e.cizimler })));
+      window.__panelAcik = window.panelAcik; window.panelAcik = function () { return true; };
+      window.__yoneticiAcik = window.yoneticiAcik; window.yoneticiAcik = function () { return true; };
+      gh = { kullanici: "u", depo: "d", dal: "main", yol: "veri.json", jeton: "t" };
+      evrenSayfaKapat();
+      const x = fanMetindenEser(window.__yayinDosyasi);
+      fanAcilanEkle(x);
+      fanPencere(x, "acilan");
+    }, nEv); await bekle(N, 300);
+    ok("yönetici önizlemesinde roman ve çizim görünür", await N.evaluate(function () {
+      const t = document.querySelector(".fan-pencere").innerHTML;
+      return /Norak kıyısında/.test(t) && /<img[^>]+data:image\/jpeg/.test(t);
+    }));
+    await N.click('[data-fan-p="siteye"]'); await bekle(N, 1500);
+    ok("siteye eklenince çizim GitHub'a ayrı dosya olarak yüklenir", await N.evaluate(function () {
+      const e = veri.fanEserleri.evrenler.find(function (x) { return x.id === "fyayintest1"; });
+      return !!e && /^ikon\/fan\/fyayintest1-/.test(e.cizimler[0].yol) && !e.cizimler[0].v && e.roman.bolumler.length === 1;
+    }) && ghPut.some(function (p) { return /contents\/ikon\/fan\/fyayintest1-/.test(p.u); }));
+    await N.evaluate(async function () {
+      let d = document.querySelector("#yDurum"); if (!d) { d = document.createElement("p"); d.id = "yDurum"; document.body.appendChild(d); }
+      document.querySelector("#perde").hidden = true;
+      await githubGonder();
+    }); await bekle(N, 500);
+    const vPut = ghPut.find(function (p) { return /contents\/veri\.json/.test(p.u); });
+    const vYeni = vPut ? Buffer.from(vPut.govde.content, "base64").toString("utf8") : "";
+    ok("Kaydet: veri.json evreni taşır, gömülü görsel taşımaz", /Yayın Evreni/.test(vYeni) && vYeni.indexOf("data:image") === -1);
+    await N.evaluate(function () {
+      window.panelAcik = window.__panelAcik; window.yoneticiAcik = window.__yoneticiAcik;
+      veri.fanEserleri.evrenler = veri.fanEserleri.evrenler.filter(function (x) { return x.id !== "fyayintest1"; });
+    });
+
     ok("konuk haritası: kişinin gittiği yerler", await N.evaluate(function () {
       const l = fanEserlerim();
       l.push({ bicim: FAN_BICIM, surum: 1, tur: "hikaye", id: "hk1", baslik: "Orlan kıyıda", metin: "…", konuklar: [{ bicim: FAN_BICIM, tur: "kisi", id: "vitrin1", ad: "Orlan Gezgin", kisilik: [] }] });

@@ -355,7 +355,7 @@ if (typeof gunKelimesiYukle === "function") {
       return '<button class="dugme' + (mod === m ? "" : " dugme-sade") + '" role="tab" aria-selected="' + (mod === m) + '" data-gk-mod="' + m + '">' + ad + "</button>";
     };
     dis.innerHTML = '<div class="gk-modlar" role="tablist" aria-label="Günün kelimesi modu">' +
-      dugme("kolay", "Kolay · karakter ve yer adları") + dugme("zor", "Zor · herkesle aynı kelime") + "</div>" +
+      dugme("kolay", "Kolay · hesapsız") + dugme("zor", "Zor · herkesle yarış") + "</div>" +
       '<div id="gkIc"><div class="gk"><span class="oyun-etiket">Günün kelimesi</span><p class="oyun-not">Yükleniyor…</p></div></div>';
     if (mod === "kolay") { koCiz(document.querySelector("#gkIc"), gkKolayOyunu()); return; }
     return eskiGkYukle.apply(this, arguments);

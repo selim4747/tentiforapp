@@ -2011,19 +2011,21 @@ a.gez-btn{display:inline-block;flex-shrink:0;text-decoration:none}
 }
 
 /* ================= SAYFA BAŞI ================= */
-.sayfa-basi{max-width:var(--en);margin:0 auto;padding:46px 22px 10px}
+.sayfa-basi{max-width:var(--en);margin:0 auto;padding:36px 22px 16px}
 .sayfa-basi[hidden]{display:none}
 .sayfa-no{
   font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
   color:var(--deniz);margin-bottom:8px;
 }
 .sayfa-basi h1{font-family:var(--display);font-weight:400;font-size:clamp(38px,7vw,64px);line-height:1.05}
-.sayfa-icerik{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+.sayfa-icerik{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
 .sayfa-icerik-oge{
   cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.04em;
-  background:transparent;color:var(--murekkep-2);border:1px solid var(--buz);border-radius:2px;padding:6px 10px;
+  background:var(--beyaz);color:var(--murekkep-2);border:1px solid var(--buz);border-radius:999px;padding:7px 13px;
 }
 .sayfa-icerik-oge:hover{color:var(--deniz);border-color:var(--sig)}
+.sayfa-bas-ust{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.sayfa-bas-yazi{min-width:0}
 .sayfa-basi + .bolum,.sayfa-basi ~ .hero[hidden] + .bolum{border-top:1px solid var(--buz)}
 
 /* ================= SAYFALAMA ÇUBUĞU ================= */
@@ -3290,7 +3292,7 @@ html[data-hesap="acik"] .hesap-btn{padding:0;background:transparent;border-color
 .gizlilik-kutu ul{padding-left:18px;display:flex;flex-direction:column;gap:4px}
 .sesli-dugme{margin:0 0 8px;padding:4px 12px;font-size:13px}
 .sesli-dugme.okuyor{color:var(--deniz);border-color:var(--deniz)}
-.sayfa-paylas{margin:10px 0 4px;padding:4px 14px;font-size:13px}
+.sayfa-paylas{margin:0 0 8px;padding:4px 14px;font-size:13px;flex:0 0 auto;border-radius:999px}
 
 /* ---------- panel: listeler ---------- */
 .y-liste-secici{flex-wrap:wrap}
@@ -3828,8 +3830,10 @@ html.evren-acik{overflow:hidden}
 .kisi-kutu{border:1px solid var(--sig);border-radius:8px;padding:10px 14px;margin:8px 0;background:var(--beyaz)}
 
 /* ================= kelime oyunu: modlar, kelimenin kartı, istatistik, hesap hatırlatması ================= */
-.gk-modlar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-.gk-modlar .dugme{font-size:13px}
+.gk-modlar{display:flex;gap:0;margin-bottom:12px;border:1px solid var(--sig);border-radius:999px;padding:3px;background:var(--beyaz);width:max-content;max-width:100%}
+.gk-modlar .dugme{font-size:13px;border:0;border-radius:999px;min-height:38px;padding:6px 14px;white-space:nowrap}
+.gk-modlar .dugme.dugme-sade{background:transparent}
+@media (max-width:420px){ .gk-modlar{width:100%} .gk-modlar .dugme{flex:1;padding:6px 8px;font-size:12px} }
 .ko-bilgi{border:1px solid var(--buz);border-left:4px solid var(--deniz);background:var(--kar);padding:10px 14px;margin:8px 0 12px;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
 .ko-bilgi .oyun-etiket{margin:0}
 .ko-bilgi b{font-family:var(--display);font-weight:400;font-size:22px}
@@ -4002,3 +4006,20 @@ html.evren-acik{overflow:hidden}
 .evg-nokta{width:10px;height:10px;border-radius:50%;background:currentColor;opacity:.55}
 .evg-ayar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
 .evg-ayar input{flex:1 1 200px;min-width:0}
+
+/* ================= genel düzen: telefonda daha az boşluk, kaydırılabilir bölüm şeridi ================= */
+@media (max-width:760px){
+  .bolum{padding:42px 16px}
+  .sayfa-basi{padding:22px 16px 12px}
+  .sayfa-basi h1{font-size:clamp(34px,10vw,48px)}
+  .sayfa-icerik{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-right:-16px;padding-right:16px}
+  .sayfa-icerik::-webkit-scrollbar{display:none}
+  .sayfa-icerik-oge{flex:0 0 auto;min-height:38px}
+  .bolum-basi{margin-bottom:22px}
+}
+.fan-tam-sayfa{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 12px;padding:12px 16px;border:1px solid var(--sig);
+  border-left:4px solid var(--deniz);border-radius:10px;background:var(--beyaz);color:inherit;text-decoration:none}
+.fan-tam-sayfa:hover{border-color:var(--deniz)}
+.fan-tam-sayfa span:first-child{display:flex;flex-direction:column;gap:2px}
+.fan-tam-sayfa small{font-size:13px;color:var(--murekkep-2)}
+.fan-tam-sayfa > span:last-child{color:var(--deniz);font-size:20px}

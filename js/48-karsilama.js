@@ -65,7 +65,7 @@ function karsilamaAc() {
       (kod ? '<div class="kutu-y krs-kod"><div><span class="oyun-not">Başlangıç kodu</span><b class="krs-kod-yazi">' + kacir(kod) + "</b></div>" +
         '<button class="dugme" data-krs-kod>Kodu gir ve arşivi aç</button></div>' : "") +
       '<div class="krs-kartlar">' +
-        kart("#/arsiv", "Tömye · 24. Evren", "Karakterler, kozmoloji ve buz altındaki kayıtlar.") +
+        kart("#/arsiv", "Tentiforverse · 24. Evren", "Tömye ve Ax-24: karakterler, kozmoloji ve buz altındaki kayıtlar.") +
         kart("#/ev/site/e25", "E25", "Evrengezerlerin evreni. Kendi Evrengezerini de ekleyebilirsin.") +
         kart("#/ev/e99", "E99", "Bomboş bir evren: kuralını, kişisini, haritasını sen yaz.") +
         kart("#/oyunlar", "Oyunlar", "Nöbet, Şafak Yürüyüşü, Tanık Ayna ve daha fazlası.") +
