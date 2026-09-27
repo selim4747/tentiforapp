@@ -1752,6 +1752,13 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       await B.textContent("#gkIc"));
     ok("sunucudaki seri ve dağılım", /1\s*oynanan/.test(await B.textContent("#gkIc [data-gk-istat]")), await B.textContent("#gkIc"));
     await B.click('#gkAlan [data-gk-mod="kolay"]'); await bekle(B, 300);
+    ok("yarış en iyileri, aynı görünümdeki günlük oyun kartlarıyla karışmadan yüklenir", await B.evaluate(async function () {
+      if (typeof gunlukOyunlarCiz === "function") { gunlukOyunlarCiz(); }
+      const var_ = document.querySelectorAll(".yaris-kart.go-kart").length > 0 && document.querySelectorAll(".yaris-kart[data-yaris-id]").length === YARISLAR.length;
+      yarisEnIyi = { olmayan: 1 };
+      await yarisEnIyileriYukle();
+      return var_;
+    }));
     ok("kolay moda geçilir ve hatırlanır", await B.locator("#gkIc [data-ko-form], #gkIc .gk-son").count() === 1 && await B.evaluate(function () { return gkModu(); }) === "kolay");
 
     /* ---------- evren ziyaretçi defteri ---------- */
