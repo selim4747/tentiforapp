@@ -135,6 +135,26 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await Z.click('#mobilMenu .mm-sayfa[href="#/fan"]'); await bekle(Z, 600);
     ok("menüden sayfaya gidilir, menü kapanır", await Z.evaluate(function () { return aktifSayfa === "fan" && !document.querySelector("#mobilMenu"); }));
     ok("alt menüde Evren düğmesi", await Z.evaluate(function () { return !!document.querySelector("#altMenu [data-evren-sec]"); }));
+    /* telefonda arama paleti kapanır: ✕, geri hareketi; seçilen sonuç geri alınmaz */
+    const paletAcik = function () { return Z.evaluate(function () { const k = document.querySelector("#komutPaleti"); return !!k && getComputedStyle(k).display !== "none"; }); };
+    await Z.click("[data-mobil-menu]"); await bekle(Z, 300);
+    await Z.click("[data-mobil-ara]"); await bekle(Z, 300);
+    const paletMenudenAcildi = await paletAcik();
+    await Z.click("#komutPaleti [data-komut-kapat]"); await bekle(Z, 500);
+    ok("telefonda arama ✕ ile kapanır", paletMenudenAcildi && !(await paletAcik()) && await Z.evaluate(function () { return aktifSayfa === "fan"; }));
+    await Z.evaluate(function () { komutPaletiAc(); }); await bekle(Z, 200);
+    await Z.goBack(); await bekle(Z, 500);
+    ok("telefonda geri hareketi aramayı kapatır, sayfada kalınır", !(await paletAcik()) && await Z.evaluate(function () { return aktifSayfa === "fan"; }));
+    await Z.evaluate(function () { komutPaletiAc(); }); await bekle(Z, 200);
+    await Z.fill("#komutGiris", "oyunlar"); await bekle(Z, 150);
+    await Z.click("#komutPaleti [data-komut-index='0']"); await bekle(Z, 900);
+    ok("aramadan seçilen sayfaya gidilir (geri adımı onu bozmaz)", !(await paletAcik()) && await Z.evaluate(function () { return rota().indexOf("#/oyunlar") === 0; }));
+    await Z.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(Z, 500);
+    await Z.fill("#aramaGiris", "tö"); await bekle(Z, 300);
+    const aramaAcikti = await Z.evaluate(function () { return !document.querySelector("#aramaSonuc").hidden; });
+    await Z.evaluate(function () { document.querySelector("#heroSayac, .hero, main").dispatchEvent(new MouseEvent("click", { bubbles: true })); }); await bekle(Z, 200);
+    ok("arşiv arama sonuçları dışarı dokununca kapanır", aramaAcikti && await Z.evaluate(function () { return document.querySelector("#aramaSonuc").hidden && aktifSayfa === "arsiv"; }));
+    await Z.fill("#aramaGiris", ""); await bekle(Z, 100);
     const acikBaslik = await Z.evaluate(function () { return getComputedStyle(document.querySelector(".ust")).backgroundColor; });
     await Z.click("[data-mobil-menu]"); await bekle(Z, 300);
     await Z.click('[data-mobil-eylem="tema"]'); await bekle(Z, 200);

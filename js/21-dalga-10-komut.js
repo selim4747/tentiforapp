@@ -73,6 +73,8 @@ function komutPaletiAc() {
 
   komutPaletiCiz("");
   k.hidden = false;
+  /* telefonda geri hareketi/tuşu paleti kapatsın (sayfadan çıkmasın) */
+  if (!komutGecmis) { try { history.pushState({ komutPaleti: 1 }, ""); komutGecmis = true; } catch (_) { /* isteğe bağlı */ } }
 
   setTimeout(function () {
     const giris = document.querySelector("#komutGiris");
@@ -80,11 +82,35 @@ function komutPaletiAc() {
   }, 30);
 }
 
-function komutPaletiKapat() {
+let komutGecmis = false;      /* açılışta geçmişe bir adım eklendi mi */
+let komutSonra = null;        /* seçilen komut: geçmiş adımı geri alındıktan sonra çalışır */
+
+/** sonra: seçilen komutun eylemi. Geri adımı eşzamansızdır; eylem adres değiştirirse ondan sonra çalışmalı. */
+function komutPaletiKapat(sonra, geriTusuyla) {
   komutAcik = false;
   const k = document.querySelector("#komutPaleti");
   if (k) { k.hidden = true; }
+  if (komutGecmis && !geriTusuyla) {
+    komutGecmis = false;
+    komutSonra = typeof sonra === "function" ? sonra : null;
+    try { history.back(); } catch (_) { komutSonraCalistir(); }
+    if (komutSonra) { setTimeout(komutSonraCalistir, 400); }   /* geri olayı gelmezse yine çalışsın */
+    return;
+  }
+  komutGecmis = false;
+  if (typeof sonra === "function") { sonra(); }
 }
+
+function komutSonraCalistir() {
+  const f = komutSonra;
+  komutSonra = null;
+  if (f) { f(); }
+}
+
+window.addEventListener("popstate", function () {
+  if (komutAcik) { komutGecmis = false; komutPaletiKapat(null, true); return; }
+  if (komutSonra) { setTimeout(komutSonraCalistir, 0); }
+});
 
 function komutPaletiCiz(sorgu) {
   const k = document.querySelector("#komutPaleti");
@@ -95,8 +121,11 @@ function komutPaletiCiz(sorgu) {
 
   k.innerHTML =
     '<div class="komut-panel" role="dialog" aria-modal="true" aria-label="Komut paleti">' +
-      '<input class="komut-giris" id="komutGiris" type="text" autocomplete="off" spellcheck="false" ' +
-        'placeholder="karakter, evren maddesi, araç ara…" value="' + kacir(sorgu) + '">' +
+      '<div class="komut-ust">' +
+        '<input class="komut-giris" id="komutGiris" type="text" autocomplete="off" spellcheck="false" enterkeyhint="go" ' +
+          'placeholder="karakter, evren maddesi, araç ara…" value="' + kacir(sorgu) + '">' +
+        '<button class="komut-kapat" type="button" data-komut-kapat aria-label="Aramayı kapat">✕</button>' +
+      "</div>" +
       '<div class="komut-liste">' +
         (sonuclar.length
           ? sonuclar.map(function (s, i) {
@@ -144,7 +173,7 @@ document.addEventListener("keydown", function (e) {
     e.preventDefault();
     const sonuclar = komutAra(document.querySelector("#komutGiris").value);
     const secilen = sonuclar[komutSecili];
-    if (secilen) { komutPaletiKapat(); secilen.eylem(); }
+    if (secilen) { komutPaletiKapat(function () { secilen.eylem(); }); }
   }
 });
 
@@ -155,13 +184,13 @@ document.addEventListener("input", function (e) {
 document.addEventListener("click", function (e) {
   if (e.target.closest("#komutTetikBtn")) { komutAcik ? komutPaletiKapat() : komutPaletiAc(); return; }
 
-  if (e.target.id === "komutPaleti") { komutPaletiKapat(); return; }
+  if (e.target.id === "komutPaleti" || e.target.closest("[data-komut-kapat]")) { komutPaletiKapat(); return; }
 
   const oge = e.target.closest("[data-komut-index]");
   if (oge) {
     const sonuclar = komutAra((document.querySelector("#komutGiris") || {}).value || "");
     const secilen = sonuclar[parseInt(oge.dataset.komutIndex, 10)];
-    if (secilen) { komutPaletiKapat(); secilen.eylem(); }
+    if (secilen) { komutPaletiKapat(function () { secilen.eylem(); }); }
   }
 });
 

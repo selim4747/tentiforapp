@@ -4352,3 +4352,10 @@ html.ecka-yeni #cuzdanTutar{visibility:hidden}
 html.uygulama-modu{-webkit-tap-highlight-color:transparent}
 html.uygulama-modu body{overscroll-behavior-y:contain}
 html[data-ayar-tema="gece"] .y-uyari.kotu{background:#2A1413}
+/* hidden özelliği .ic-katman'ın display:flex'ine yenilmesin (komut paleti kapanmıyordu) */
+.ic-katman[hidden]{display:none}
+.komut-ust{display:flex;align-items:center;border-bottom:1px solid var(--buz)}
+.komut-ust .komut-giris{border-bottom:none;flex:1;min-width:0}
+.komut-kapat{flex-shrink:0;width:44px;height:44px;margin-right:6px;border:none;background:transparent;color:var(--murekkep-2);font-size:18px;cursor:pointer;border-radius:6px}
+.komut-kapat:hover,.komut-kapat:focus-visible{background:var(--buz);color:var(--murekkep)}
+@media (max-width:760px){.komut-katman{padding-top:calc(12px + env(safe-area-inset-top))}}
