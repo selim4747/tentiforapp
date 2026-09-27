@@ -4396,3 +4396,8 @@ html[data-ayar-tema="gece"] .y-uyari.kotu{background:#2A1413}
 .yk-onizle{min-height:56px;margin:8px 0;padding:8px;border:1px dashed var(--sig);border-radius:8px;overflow-x:auto}
 .yk-onizle svg{height:48px;width:auto;max-width:none}
 .evy-yetki{margin-top:10px;padding-top:10px;border-top:1px solid var(--buz)}
+/* 2.5: kutu bağları ve rozetleri */
+.rb-serit{margin-top:10px;padding-top:8px;border-top:1px dashed var(--sig);font-size:13.5px}
+.rb-serit summary{cursor:pointer;color:var(--murekkep-2);font-family:var(--mono);font-size:12px;min-height:28px}
+.rb-serit .rozet-liste{margin:6px 0 4px 0;padding:0;list-style:none;display:grid;gap:3px}
+.rb-serit li.okundu{color:var(--murekkep-2)}
