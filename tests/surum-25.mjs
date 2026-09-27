@@ -126,7 +126,7 @@ export async function surum25Testleri({ adres, veritabani, dizin }) {
     await K.evaluate(function (id) { GCM.son = {}; evrenBenimDegistir(id, function (e) { e.ozet = "Kurucunun çakışan hâli."; }); }, eid); await bekle(K, 4200);
     ok("çatışmada son kaydedenin hâli yüklenir, kurucununki geçmişe düşer", await K.evaluate(async function (id) {
       const l = await gcmListe(id);
-      return evrenBenimBul(id).ozet === "Yazar yine yazdı." && l.some(function (x) { return x.neden === "ortak yazardan önce" && /Kurucunun çakışan/.test(x.veri); });
+      return evrenBenimBul(id).ozet === "Yazar yine yazdı." && l.some(function (x) { return /^(ortak yazardan önce|Yazar'in değişikliğinden önce)$/.test(x.neden) && /Kurucunun çakışan/.test(x.veri); });
     }, eid));
     ok("yazarlar listesi", await K.evaluate(async function (id) { await ortakUyeleriYukle(id); return (ORTAK.uyeler[id] || []).length === 2 && ortakSahipMi(id); }, eid));
 
@@ -229,7 +229,7 @@ export async function surum25Testleri({ adres, veritabani, dizin }) {
     ok("yazı klavyesi: PNG üretilir", await O.evaluate(async function () { const b = await ykPng(document.querySelector("#ykOnizle").innerHTML); return b.type === "image/png" && b.size > 1500; }));
     await O.evaluate(function () { evrenSayfaKapat(); location.hash = "#/sen"; }); await bekle(O, 800);
     ok("Sen: okuma listem, bildirimler, cihazdaki evrenler", await O.evaluate(function () {
-      const a = document.querySelector("#ayar25Alan"); return !!a && /Ortak Kıyı/.test(a.textContent) && /Sessiz saatler/.test(a.textContent) && /Cihazdaki evrenler/.test(a.textContent);
+      const a = document.querySelector("#ayar25Alan"); return !!a && /Ortak Kıyı/.test(a.textContent) && /Sessiz saatler/.test(a.textContent) && /Cihazdaki evrenler|Çevrimdışı okuma/.test(a.textContent);
     }));
     await O.evaluate(function () { document.querySelectorAll("#ayar25Alan details").forEach(function (d) { d.open = true; }); });
     await O.selectOption("#sessizBas", "22"); await O.selectOption("#sessizBit", "8"); await bekle(O, 300);

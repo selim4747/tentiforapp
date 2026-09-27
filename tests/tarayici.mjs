@@ -2468,12 +2468,12 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     }, anahtar.acik);
     await bekle(Z, 700);
     await Z.evaluate(function () { bildirimKutusuCiz(); }); await bekle(Z, 100);
-    ok("bildirim düğmesi görünür", await Z.locator('[data-bildirim="ac"]').count() === 1, await Z.textContent("#bildirimAlan"));
-    await Z.evaluate(function () { document.querySelector('[data-bildirim="ac"]').click(); }); await bekle(Z, 1500);
+    ok("bildirim düğmesi görünür", await Z.locator('#bildirimAlan [data-bildirim="ac"]').count() === 1, await Z.textContent("#bildirimAlan"));
+    await Z.evaluate(function () { document.querySelector('#bildirimAlan [data-bildirim="ac"]').click(); }); await bekle(Z, 1500);
     ok("ziyaretçi bildirime abone olur", (await sahte.kokSorgu("select count(*)::int n from public.bildirim_abonelikleri where endpoint like '%test-cihaz'")).rows[0].n === 1,
       await Z.textContent("#bildirimAlan"));
-    ok("abone olunca kapatma düğmesi", await Z.locator('[data-bildirim="kapat"]').count() === 1);
-    await Z.evaluate(function () { document.querySelector('[data-bildirim="kapat"]').click(); }); await bekle(Z, 1200);
+    ok("abone olunca kapatma düğmesi", await Z.locator('#bildirimAlan [data-bildirim="kapat"]').count() === 1);
+    await Z.evaluate(function () { document.querySelector('#bildirimAlan [data-bildirim="kapat"]').click(); }); await bekle(Z, 1200);
     ok("bildirim kapatılınca abonelik silinir", (await sahte.kokSorgu("select count(*)::int n from public.bildirim_abonelikleri")).rows[0].n === 0);
 
     await panel("icerik", "listeler", 400);
