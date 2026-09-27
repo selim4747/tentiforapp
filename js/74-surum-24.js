@@ -546,7 +546,13 @@ const TentiforKopru = {
     if (v && v.url && typeof panoyaKopyala === "function") { panoyaKopyala(v.url); return true; }
     return false;
   },
-  titret: function (ms) { try { if (navigator.vibrate) { navigator.vibrate(ms || 15); } } catch (_) { /* yok */ } },
+  titret: function (ms) {
+    try {
+      const h = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
+      if (h && TentiforKopru.ortam() === "capacitor") { h.vibrate({ duration: ms || 15 }).catch(function () { /* yok */ }); return; }
+      if (navigator.vibrate) { navigator.vibrate(ms || 15); }
+    } catch (_) { /* yok */ }
+  },
   surum: function () { return (typeof veri !== "undefined" && veri && veri.surum) || ""; }
 };
 window.TentiforKopru = TentiforKopru;

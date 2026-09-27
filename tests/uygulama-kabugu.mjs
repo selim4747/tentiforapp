@@ -34,9 +34,18 @@ export async function uygulamaKabuguTestleri({ dizin }) {
         if (build === null) { return; }
         window.__acilan = []; window.__paylasilan = null;
         window.Capacitor = { isNativePlatform: function () { return true; }, Plugins: {
-          App: { getInfo: async function () { return { build: String(build), version: "2.5.0" }; } },
           Browser: { open: async function (o) { window.__acilan.push(o.url); } },
-          Share: { share: async function (x) { window.__paylasilan = x; } } } };
+          Share: { share: async function (x) { window.__paylasilan = x; } },
+          Filesystem: { writeFile: async function (o) { window.__yazilan = o; return { uri: "file:///cache/" + o.path }; } },
+          Haptics: { vibrate: async function (o) { window.__titrek = o; } },
+          TextToSpeech: { speak: async function (o) { (window.__konusulan = window.__konusulan || []).push(o); }, stop: async function () { window.__sustu = true; } },
+          LocalNotifications: {
+            checkPermissions: async function () { return { display: "granted" }; }, requestPermissions: async function () { return { display: "granted" }; },
+            schedule: async function (o) { window.__kurulan = o.notifications; }, cancel: async function (o) { window.__iptal = o.notifications; },
+            addListener: function () { return { remove: function () {} }; } },
+          App: { getInfo: async function () { return { build: String(build), version: "2.5.0" }; },
+            exitApp: function () { window.__cikti = true; },
+            addListener: function (ad, f) { (window.__dinle = window.__dinle || {})[ad] = f; return { remove: function () {} }; } } } };
       }, kurulu);
       const p = await ctx.newPage();
       p.on("pageerror", function (e) { hatalar.push(e.message); });
@@ -62,6 +71,50 @@ export async function uygulamaKabuguTestleri({ dizin }) {
       p.hidden = true; p.innerHTML = "";
       return /e-postayla/.test(t);
     }));
+    ok("sesli okuma telefonun sesiyle (sırayla, iptal edilebilir)", await P.evaluate(async function () {
+      sesliOku("Merhaba Tömye"); await new Promise(function (c) { setTimeout(c, 50); });
+      const k = window.__konusulan || [];
+      return sesliDestek() && k.length === 1 && k[0].text === "Merhaba Tömye" && k[0].lang === "tr-TR";
+    }));
+    ok("indirme: dosya kaydedilir, Kaydet/Paylaş menüsü açılır", await P.evaluate(async function () {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob(["deneme"], { type: "text/plain" })); a.download = "not.txt";
+      a.click(); URL.revokeObjectURL(a.href);
+      await new Promise(function (c) { setTimeout(c, 300); });
+      return !!window.__yazilan && window.__yazilan.path === "not.txt" && atob(window.__yazilan.data) === "deneme" &&
+        window.__paylasilan && (window.__paylasilan.files || [])[0] === "file:///cache/not.txt";
+    }));
+    const bg = await P.evaluate(function () {
+      window.__acilan = [];
+      const d = document.createElement("a"); d.href = "https://ornek.com/x"; d.target = "_blank"; d.textContent = "d"; document.body.appendChild(d);
+      d.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+      const i = document.createElement("a"); i.href = "#/sen"; i.target = "_blank"; document.body.appendChild(i);
+      i.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+      d.remove(); i.remove();
+      return window.__acilan.length === 1 && window.__acilan[0] === "https://ornek.com/x" || JSON.stringify([window.__acilan, location.hash]);
+    });
+    ok("başka siteye bağlantı telefonun tarayıcısında, aynı sitenin bağlantısı uygulamada kalır", bg === true, bg);
+    ok("titreşim telefonun motoruyla", await P.evaluate(function () { TentiforKopru.titret(20); return window.__titrek && window.__titrek.duration === 20; }));
+    ok("e-posta dönüşü uygulamayı açan adrese", await P.evaluate(function () { return /\/uygulama\/ac\/\?hesap=onay$/.test(hesapDonusAdresi("onay")); }));
+    const geri = await P.evaluate(async function () {
+      const r = [];
+      const pd = document.querySelector("#perde"); pd.innerHTML = '<div class="pencere"><p>x</p></div>'; pd.hidden = false; r.push(kabukGeri(true), !document.querySelector("#perde").hidden);
+      location.hash = "#/sen"; await new Promise(function (c) { setTimeout(c, 100); });
+      r.push(kabukGeri(false)); await new Promise(function (c) { setTimeout(c, 100); }); r.push(rota());
+      r.push(kabukGeri(false), kabukGeri(false), !!window.__cikti);
+      return r;
+    });
+    ok("geri tuşu: önce pencere, sonra sayfa, ana sayfada iki basışta çıkış", geri[0] === "kapat" && geri[1] === false && geri[2] === "geri" && (geri[3] === "" || geri[3] === "#/") && geri[4] === "uyar" && geri[5] === "cik" && geri[6] === true, geri);
+    ok("geri tuşu dinleniyor", await P.evaluate(function () { return typeof (window.__dinle || {}).backButton === "function" && typeof window.__dinle.appUrlOpen === "function"; }));
+    const hat = await P.evaluate(async function () {
+      const h = await gunlukKontrolKaydet(true);
+      const ilk = (window.__kurulan || []).length;
+      window.__kurulan = null;
+      await swAyarEsitle({ oynanan: koGun() }); await new Promise(function (c) { setTimeout(c, 100); });
+      const sonra = window.__kurulan;
+      return { h: h, ilk: ilk, bugunYok: !sonra || !sonra.some(function (n) { return n.id === 7100; }), saat: ((window.__kurulan || [])[0] || {}).schedule };
+    });
+    ok("günün kelimesi hatırlatması telefon bildirimiyle (7 gün, oynanınca o gün susar)", hat.h === "" && hat.ilk >= 6 && hat.bugunYok, hat);
     /* güncel APK kurulu: haber yok */
     const G = await sayfa(105);
     await G.evaluate(function () { return kabukGuncellemeBak(true); }); await G.waitForTimeout(300);

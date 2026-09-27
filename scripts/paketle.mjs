@@ -26,6 +26,10 @@ for (const ad of KOPYALA) {
 /* Android uygulaması: GitHub Actions'ın derlediği APK (uygulama/indir/) sitede /uygulama/indir/ adresinden iner */
 try { statSync(join(KOK, "uygulama/indir/apk.json")); mkdirSync(join(HEDEF, "uygulama"), { recursive: true }); cpSync(join(KOK, "uygulama/indir"), join(HEDEF, "uygulama/indir"), { recursive: true }); } catch { /* henüz APK yok */ }
 
+/* Android uygulamasının e-posta dönüş sayfası (/uygulama/ac/): bağlantı uygulamayı açar, yoksa siteye döner */
+mkdirSync(join(HEDEF, "uygulama/ac"), { recursive: true });
+cpSync(join(KOK, "uygulama/ac/index.html"), join(HEDEF, "uygulama/ac/index.html"));
+
 /* Yönlendirmeler: Cloudflare Pages (ve benzerleri) _redirects dosyasını okur. */
 writeFileSync(join(HEDEF, "_redirects"),
   "# Paylaşım hedefi: servis çalışanı yoksa sayfaya dön\n/paylasim-al  /#/fanAc  303\n");

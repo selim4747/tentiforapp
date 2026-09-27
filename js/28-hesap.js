@@ -277,6 +277,8 @@ function hesapHataMetni(hata) {
 }
 
 function hesapDonusAdresi(tur) {
+  /* Android uygulaması: e-postadaki bağlantı uygulamanın kendisini açsın (js/78, uygulama/ac/) */
+  if (typeof kabukMu === "function" && kabukMu()) { return location.origin + "/uygulama/ac/?hesap=" + tur; }
   return location.origin + location.pathname + "?hesap=" + tur;
 }
 

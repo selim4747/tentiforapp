@@ -4429,3 +4429,9 @@ html[data-ayar-tema="gece"] .y-uyari.kotu{background:#2A1413}
 .kabuk-guncelleme > div{flex:1;min-width:0}
 .kabuk-guncelleme p{margin:4px 0 0}
 .kabuk-kapat{border:none;background:transparent;color:var(--murekkep-2);font-size:16px;width:36px;height:36px;cursor:pointer}
+/* Android uygulaması: aşağı çekip yenileme göstergesi */
+.kabuk-cek{position:fixed;top:calc(env(safe-area-inset-top) + 4px);left:50%;z-index:90;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  background:var(--kart, #fff);color:var(--vurgu, #3A7CA5);box-shadow:0 2px 10px rgba(0,0,0,.18);font-size:20px;pointer-events:none;transform:translate(-50%,0)}
+.kabuk-cek.hazir{color:#fff;background:var(--vurgu, #3A7CA5)}
+.kabuk-cek.donuyor{animation:kabukDon .7s linear infinite}
+@keyframes kabukDon{to{transform:translate(-50%,56px) rotate(360deg)}}
