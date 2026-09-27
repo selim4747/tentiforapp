@@ -1,4 +1,36 @@
-# TentiforApp'i mağaza uygulaması yapmak (ileride)
+# TentiforApp Android uygulaması (APK, mağazasız)
+
+Uygulama ince bir Capacitor kabuğudur (`uygulama/kabuk/`): açılınca https://tentiforapp.pages.dev'i yükler.
+- **İçerik güncellemesi:** her Yayınla anında uygulamaya da gelir (site nasıl yenileniyorsa öyle).
+- **APK güncellemesi (kabuk değişince):** GitHub Actions derler, `uygulama/indir/` klasörüne koyar;
+  uygulama açılınca günde bir kez `/uygulama/indir/apk.json`'a bakar, yeni sürüm varsa "İndir" şeridi çıkar.
+- **Supabase:** aynı site, aynı istekler; hiçbir tablo/ayar değişmez. Yalnız Google ile giriş uygulamada açılmaz
+  (Google, uygulama içi tarayıcıyı engeller); e-posta ile giriş çalışır.
+
+## İlk kurulum (bir kez)
+
+1. GitHub → Actions → **Android imza anahtarı üret** → Run workflow.
+2. Bitince çalışmanın altındaki **imza-anahtari** dosyasını indir, aç:
+   - `ANDROID_KEYSTORE_B64.txt` içeriğini → Settings → Secrets and variables → Actions → New repository secret,
+     adı `ANDROID_KEYSTORE_B64`.
+   - `ANDROID_KEYSTORE_SIFRE.txt` içeriğini → aynı yerde `ANDROID_KEYSTORE_SIFRE`.
+   - `anahtar-yedek.jks` ve şifreyi güvenli bir yere yedekle (kaybolursa kurulu uygulamalar güncellenemez).
+   - Sonra Actions'taki o çalışmanın dosyasını **sil** (zaten 1 gün sonra kendiliğinden silinir).
+3. Actions → **Android APK** → Run workflow. APK derlenir ve depoya `uygulama/indir/tentiforapp.apk` olarak girer.
+4. Panel → Bakım → **Yayınla**. (İstersen `CLOUDFLARE_DEPLOY_HOOK` adlı bir secret eklersen bu adım kendiliğinden olur.)
+5. Telefonda https://tentiforapp.pages.dev/uygulama/indir/tentiforapp.apk aç, "bilinmeyen kaynaklara izin ver", kur.
+
+## Sonraki APK güncellemeleri
+
+Actions → Android APK → Run workflow (istersen "not" yaz) → Yayınla. Uygulamayı kullananlara "Yeni uygulama sürümü"
+şeridi çıkar; İndir'e basıp üstüne kurarlar, veriler (giriş, ilerleme) kaybolmaz. İmza anahtarı hep aynı kalmalıdır.
+
+Bilinen sınırlar: Google ile giriş yok; bazı "dosya indir" düğmeleri uygulama içinde çalışmayabilir
+(bunun yerine paylaşım düğmesi telefonun paylaşım menüsünü açar).
+
+---
+
+# Mağaza uygulaması yapmak (ileride)
 
 Site bugün zaten bir PWA: Chrome/Edge'de "Uygulamayı yükle" ile kurulur, internetsiz açılır (sw.js),
 kısayolları, paylaşım hedefi ve dosya açıcısı vardır (manifest.webmanifest). Mağazaya çıkmak için sitenin

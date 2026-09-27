@@ -37,3 +37,10 @@
 /.well-known/assetlinks.json
   Content-Type: application/json
   Cache-Control: no-cache
+
+/uygulama/indir/apk.json
+  Cache-Control: no-cache
+
+/uygulama/indir/*.apk
+  Content-Type: application/vnd.android.package-archive
+  Cache-Control: no-cache

@@ -1,0 +1,13 @@
+{
+  "name": "tentiforapp-kabuk",
+  "private": true,
+  "description": "TentiforApp Android kabuğu (Capacitor). Site internetten açılır; APK GitHub Actions'ta derlenir (.github/workflows/apk.yml).",
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/browser": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/share": "^7.0.0"
+  }
+}
