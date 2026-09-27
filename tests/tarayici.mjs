@@ -944,6 +944,14 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       const t = Array.from(document.querySelectorAll("#evrenSayfa [data-evs-sekme]")).map(function (x) { return x.dataset.evsSekme; });
       return t.indexOf("harita") === -1 && t.indexOf("defter") === -1 && EVS.sekme === "roman";
     }));
+    await N.click('#evrenSayfa [data-evs-sekme="bilgi"]'); await bekle(N, 200);
+    ok("ziyaretçi: yeniden çizimde seçtiği sekme kalır", await N.evaluate(function () { evrenSayfaAc("fan", "fsitedeki1"); evrenSayfaCiz(); return EVS.sekme === "bilgi"; }));
+    ok("ziyaretçi: ilk sekme bu evrende yoksa ve harita gizliyse bilgi açılır (harita çizilmez)", await N.evaluate(function () {
+      const e = veri.fanEserleri.evrenler.find(function (x) { return x.id === "fsitedeki1"; });
+      e.sekmeDuzen = { ilk: "alfabe", gizli: ["harita"] };
+      evrenSayfaKapat(); evrenSayfaAc("fan", "fsitedeki1");
+      return EVS.sekme === "bilgi" && !document.querySelector('#evrenSayfa [data-evs-sekme="harita"]');
+    }));
     await N.evaluate(function () { delete veri.fanEserleri.evrenler.find(function (x) { return x.id === "fsitedeki1"; }).sekmeDuzen; evrenSayfaKapat(); }); await bekle(N, 200);
 
     await N.evaluate(function () { evrenSayfaKapat(); location.hash = "#/oyunlar"; }); await bekle(N, 500);
@@ -2181,6 +2189,34 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("İstatistik'te ziyaret sayacı", /Giriş: \/deneme\//.test(await A.textContent("#yOlayAlan")));
     await panel("bakim", "hatalar");
     ok("hatalar listelenir", /test hatası/.test(await A.textContent("#yHataAlan")));
+    /* 2.4: panelin üstünde hata özeti ve kurulum sürümü uyarısı */
+    await A.evaluate(function () { YON24.soruldu = false; yoneticiCiz(); }); await bekle(A, 1200);
+    ok("panel: son 24 saatin hata özeti", /Son 24 saatte \d+ hata/.test(await A.textContent("#yoneticiAlan .y24-serit")));
+    ok("panel: kurulum güncelken sürüm uyarısı yok", await A.evaluate(function () { return YON24.surum === "2.4" && !document.querySelector("#yoneticiAlan .y-uyari.kotu"); }));
+    ok("panel: eski kurulumda sürüm uyarısı", await A.evaluate(function () {
+      YON24.surum = "yok"; yon24SeritKoy();
+      const var_ = /Supabase kurulumu güncel değil/.test(document.querySelector("#yoneticiAlan .y24-serit").textContent);
+      YON24.surum = "2.4"; yon24SeritKoy();
+      return var_ && !document.querySelector("#yoneticiAlan .y-uyari.kotu") && document.querySelectorAll("#yoneticiAlan .y24-serit").length === 1;
+    }));
+    await A.evaluate(function () { yoneticiGrup = "icerik"; yoneticiSekme = "karakterler"; yoneticiCiz(); }); await bekle(A, 300);
+    await A.click("#yoneticiAlan [data-y24-hatalar]"); await bekle(A, 1200);
+    ok("panel: hata özetinden hatalar sekmesine", await A.evaluate(function () { return yoneticiSekme === "hatalar"; }) && /test hatası/.test(await A.textContent("#yHataAlan")));
+
+    /* 2.4: uygulama puanı gerçek veritabanına yazılır, tablo okunur, seyreltilir */
+    ok("uygulama puanı yazılır ve tabloda görünür", await B.evaluate(async function () {
+      const c = { uygulama: { id: "u-test" }, cerceve: document.createElement("iframe") };
+      const d = [];
+      await evuSkorYaz(c, 55, function (m) { d.push(m.durum); });
+      await evuSkorYaz(c, 30, function (m) { d.push(m.durum); });   /* düşük: sunucuya gitmez */
+      const kap = document.createElement("div"); document.body.appendChild(kap);
+      await evuSkorTablosu(kap, { id: "u-test" });
+      const t = document.querySelector(".evu-skor").textContent;
+      document.querySelector(".evu-skor").remove(); kap.remove();
+      return d.join() === "rekor,tamam" && /Ayşe/.test(t) && /55/.test(t);
+    }));
+    ok("düşük puan sunucuya gönderilmez", (await sahte.kokSorgu("select count(*)::int n from public.uygulama_skor_denemeleri")).rows[0].n === 1 &&
+      (await sahte.kokSorgu("select puan from public.uygulama_skorlari where uygulama = 'u-test'")).rows[0].puan == 55);
     await panel("bakim", "yedek", 400);
     const [indirme] = await Promise.all([A.waitForEvent("download"), A.click("[data-y-yedek-al]")]);
     ok("yedek iner", /tentifor-yedek-/.test(indirme.suggestedFilename()));

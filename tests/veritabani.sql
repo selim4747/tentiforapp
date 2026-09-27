@@ -395,5 +395,14 @@ select test.ok('süresi dolan kod yeniden girilemez', public.tek_kod_kullan('SUR
 select test.ok('uygulama puanı yazılır', public.uygulama_skor_yaz('ev:kiyi', 'u1', 40) ->> 'durum' = 'rekor');
 select test.ok('düşük puan rekoru bozmaz', public.uygulama_skor_yaz('ev:kiyi', 'u1', 10) ->> 'durum' = 'tamam');
 select test.ok('puan tablosu', (select (x ->> 'puan')::int = 40 and x ->> 'kullanici_adi' = 'cem' from jsonb_array_elements(public.uygulama_skor_tablosu('ev:kiyi', 'u1')) x limit 1));
-select test.ok('geçersiz evren adı reddedilir', test.patlar($q$select public.uygulama_skor_yaz('ev kötü<', 'u1', 1)$q$));
+select test.ok('geçersiz evren adı reddedilir', public.uygulama_skor_yaz('ev kötü<', 'u1', 1) ->> 'durum' = 'gecersiz');
+select test.ok('sınır dışı puan reddedilir', public.uygulama_skor_yaz('ev:kiyi', 'u1', 5000000000) ->> 'durum' = 'gecersiz');
+reset role;
+insert into public.istatistikler (id, gizli) values ('33333333-3333-3333-3333-333333333333', true) on conflict (id) do update set gizli = true;
+set role anon;
+select test.ok('liderlikte gizlenen puan tablosunda görünmez', jsonb_array_length(public.uygulama_skor_tablosu('ev:kiyi', 'u1')) = 0);
+reset role;
+update public.istatistikler set gizli = false where id = '33333333-3333-3333-3333-333333333333';
+set role anon;
+select test.ok('herkes puan tablosunu okur', jsonb_array_length(public.uygulama_skor_tablosu('ev:kiyi', 'u1')) = 1);
 reset role;

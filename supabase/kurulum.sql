@@ -2412,6 +2412,10 @@ language plpgsql security definer set search_path = '' as $$
 declare uid uuid := auth.uid(); onceki bigint;
 begin
   if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if exists (select 1 from public.istatistikler where id = uid and engelli) then return jsonb_build_object('durum', 'engelli'); end if;
+  if p_evren !~ '^[\w:.-]{1,80}$' or p_uygulama !~ '^[\w-]{1,40}$' or p_puan is null or p_puan not between -1000000000 and 1000000000 then
+    return jsonb_build_object('durum', 'gecersiz');
+  end if;
   if (select count(*) from public.uygulama_skor_denemeleri where kullanici = uid and zaman > now() - interval '1 hour') >= 120 then
     return jsonb_build_object('durum', 'sinir');
   end if;
@@ -2430,8 +2434,10 @@ create or replace function public.uygulama_skor_tablosu(p_evren text, p_uygulama
 language sql stable security definer set search_path = '' as $$
   select coalesce(jsonb_agg(jsonb_build_object('ad', coalesce(p.gorunen_ad, p.kullanici_adi, 'okur'), 'kullanici_adi', p.kullanici_adi, 'puan', s.puan)
     order by s.puan desc, s.zaman), '[]'::jsonb)
-  from (select * from public.uygulama_skorlari where evren = p_evren and uygulama = p_uygulama order by puan desc, zaman limit 10) s
-  left join public.profiller p on p.id = s.kullanici;
+  -- yalnızca tablolarda görünebilenler (liderlikte gizlenen, askıya alınan, engellenen yok)
+  from (select u.* from public.uygulama_skorlari u join public.gorunur_kullanicilar g on g.id = u.kullanici
+        where u.evren = p_evren and u.uygulama = p_uygulama order by u.puan desc, u.zaman limit 10) s
+  join public.profiller p on p.id = s.kullanici;
 $$;
 
 revoke execute on function public.uygulama_skor_yaz(text, text, bigint), public.uygulama_skor_tablosu(text, text) from public, anon;

@@ -25,7 +25,17 @@ async function yon24Sor() {
     const r = await hesapIstemci.from("hata_kayitlari").select("mesaj,sayi,surum").gte("son", gun).order("sayi", { ascending: false }).limit(50);
     if (!r.error) { YON24.hata = r.data || []; }
   } catch (_) { /* yetki yok */ }
-  if (typeof yoneticiCiz === "function") { yoneticiCiz(); }
+  yon24SeritKoy();
+}
+
+/** Paneli yeniden çizmeden uyarı şeridini koyar (panelde yazılmakta olan alanlar kaybolmasın). */
+function yon24SeritKoy() {
+  const alan = document.querySelector("#yoneticiAlan");
+  if (!alan || typeof panelAcik !== "function" || !panelAcik()) { return; }
+  const eski = alan.querySelector(".y24-serit");
+  if (eski) { eski.remove(); }
+  const h = yon24Serit();
+  if (h) { alan.insertAdjacentHTML("afterbegin", '<div class="y24-serit">' + h + "</div>"); }
 }
 
 function yon24Serit() {
@@ -50,8 +60,7 @@ if (typeof yoneticiCiz === "function") {
     const alan = document.querySelector("#yoneticiAlan");
     if (alan && typeof panelAcik === "function" && panelAcik()) {
       yon24Sor();
-      const h = yon24Serit();
-      if (h && !alan.querySelector(".y24-serit")) { alan.insertAdjacentHTML("afterbegin", '<div class="y24-serit">' + h + "</div>"); }
+      yon24SeritKoy();
     }
     return r;
   };
@@ -88,6 +97,7 @@ function davetKoduDene() {
   const yerel = typeof tekYerelKodMu === "function" && tekYerelKodMu(kod);
   const hesap = typeof tekHesapVar === "function" && tekHesapVar();
   if (!yerel && !hesap) {
+    if (davetOturumBekleniyor()) { return; }   /* kayıtlı oturum açılıyor: hesapProfilYukle sonrası yeniden denenir */
     kodPenceresi();
     const g = document.querySelector("#kodGiris"); if (g) { g.value = kod; }
     const d = document.querySelector("#kodDurum");
@@ -99,6 +109,17 @@ function davetKoduDene() {
   const g = document.querySelector("#kodGiris"); if (g) { g.value = kod; }
   kodDene(kod);
 }
+
+/** Bu cihazda kayıtlı bir Supabase oturumu var ama henüz yüklenmedi mi? */
+function davetOturumBekleniyor() {
+  if (typeof hesapKullanici !== "undefined" && hesapKullanici) { return false; }
+  if (DAVET_OTURUM.bekle === false) { return false; }
+  try {
+    for (let i = 0; i < localStorage.length; i++) { if (/^sb-.*-auth-token$/.test(localStorage.key(i) || "")) { return true; } }
+  } catch (_) { /* yoksay */ }
+  return false;
+}
+const DAVET_OTURUM = { bekle: true };
 
 if (typeof hesapProfilYukle === "function") {
   const eskiPY24 = hesapProfilYukle;
@@ -165,22 +186,35 @@ if (typeof evrenEkSekmeler === "function") {
   };
 }
 
+let sekmeDuzenSon = null;   /* ilk sekme yalnızca evren açılırken bir kez (yeniden çizimlerde okurun seçtiği kalır) */
+
+function haritaGizliMi(d) { return !!(d && EVS && EVS.kaynak !== "benim" && (d.gizli || []).indexOf("harita") !== -1); }
+
 if (typeof evrenSayfaCiz === "function") {
   const eskiCiz24 = evrenSayfaCiz;
   window.evrenSayfaCiz = function () {
+    if (typeof EVS === "undefined" || !EVS) { sekmeDuzenSon = null; return eskiCiz24.apply(this, arguments); }
     const d = evrenDuzeni();
-    /* evren açıldığı ilk çizimde kurucunun seçtiği sekme */
-    if (typeof EVS !== "undefined" && EVS && !EVS.__duzenlendi) {
-      EVS.__duzenlendi = true;
-      if (d && d.ilk && EVS.sekme === "harita" && !(EVS.kaynak !== "benim" && (d.gizli || []).indexOf(d.ilk) !== -1)) { EVS.sekme = d.ilk; }
+    const anahtar = EVS.kaynak + ":" + EVS.id;
+    if (sekmeDuzenSon !== anahtar) {
+      sekmeDuzenSon = anahtar;
+      const gizli = EVS.kaynak !== "benim" ? ((d && d.gizli) || []) : [];
+      if (d && d.ilk && (EVS.sekme === "harita" || EVS.sekme === "bilgi") && gizli.indexOf(d.ilk) === -1) { EVS.sekme = d.ilk; }
     }
-    if (d && EVS && EVS.kaynak !== "benim" && (d.gizli || []).indexOf("harita") !== -1 && EVS.sekme === "harita") { EVS.sekme = "bilgi"; }
-    const r = eskiCiz24.apply(this, arguments);
-    if (d && EVS && EVS.kaynak !== "benim" && (d.gizli || []).indexOf("harita") !== -1) {
+    if (haritaGizliMi(d) && EVS.sekme === "harita") { EVS.sekme = "bilgi"; }
+    let r = eskiCiz24.apply(this, arguments);
+    /* seçilen sekme bu evrende yoksa çizim haritaya düşer; harita gizliyse bilgiye */
+    if (haritaGizliMi(d) && EVS && EVS.sekme === "harita") { EVS.sekme = "bilgi"; r = eskiCiz24.apply(this, arguments); }
+    if (haritaGizliMi(d)) {
       const b = document.querySelector('#evrenSayfa [data-evs-sekme="harita"]'); if (b) { b.remove(); }
     }
     return r;
   };
+}
+
+if (typeof evrenSayfaKapat === "function") {
+  const eskiKapat24 = evrenSayfaKapat;
+  window.evrenSayfaKapat = function () { sekmeDuzenSon = null; return eskiKapat24.apply(this, arguments); };
 }
 
 const EKS_SABLONLAR = [
@@ -276,7 +310,11 @@ document.addEventListener("click", function (ev) {
 
 /* ==================== okur: uygulama puan tabloları ==================== */
 
-function evuSkorAnahtari(u) { return { evren: (typeof evrenCuzdanAnahtari === "function" ? evrenCuzdanAnahtari() : "ev").slice(0, 80), uygulama: String(u.id).slice(0, 40) }; }
+function evuSkorAnahtari(u) {
+  const ev = String(typeof evrenCuzdanAnahtari === "function" ? evrenCuzdanAnahtari() : "ev").replace(/[^\w:.-]/g, "_").slice(0, 80);
+  return { evren: ev || "ev", uygulama: String(u.id || "u").replace(/[^\w-]/g, "_").slice(0, 40) || "u" };
+}
+const EVU_SKOR = { son: 0, enIyi: {} };   /* aynı oyundan saniyede onlarca puan gelirse sunucuyu yormasın */
 
 async function evuSkorTablosu(kap, u) {
   if (typeof hesapIstemci === "undefined" || !hesapIstemci) { return; }
@@ -295,10 +333,19 @@ async function evuSkorTablosu(kap, u) {
 async function evuSkorYaz(c, puan, cevap) {
   if (typeof hesapIstemci === "undefined" || !hesapIstemci || !hesapKullanici) { cevap({ tip: "skorlandi", durum: "giris" }); return; }
   const a = evuSkorAnahtari(c.uygulama);
+  const p = Math.max(-1e9, Math.min(1e9, Math.round(Number(puan) || 0)));
+  const k = a.evren + "|" + a.uygulama;
+  const simdi = Date.now();
+  if ((k in EVU_SKOR.enIyi && p <= EVU_SKOR.enIyi[k]) || simdi - EVU_SKOR.son < 3000) { cevap({ tip: "skorlandi", durum: "tamam" }); return; }
+  EVU_SKOR.son = simdi;
   try {
-    const r = await hesapIstemci.rpc("uygulama_skor_yaz", { p_evren: a.evren, p_uygulama: a.uygulama, p_puan: Math.round(Number(puan) || 0) });
-    cevap({ tip: "skorlandi", durum: (r.data && r.data.durum) || "hata" });
-    evuSkorTablosu(c.cerceve.parentNode, c.uygulama);
+    const r = await hesapIstemci.rpc("uygulama_skor_yaz", { p_evren: a.evren, p_uygulama: a.uygulama, p_puan: p });
+    const durum = (!r.error && r.data && r.data.durum) || "hata";
+    if (durum === "rekor") { EVU_SKOR.enIyi[k] = p; } else if (durum === "tamam" && r.data.enIyi != null) { EVU_SKOR.enIyi[k] = Number(r.data.enIyi); }
+    cevap({ tip: "skorlandi", durum: durum });
+    const d = document.querySelector("#evuDurum");
+    if (d && durum === "rekor") { d.textContent = "Yeni en iyi puanın: " + p; }
+    if (c.cerceve.isConnected) { evuSkorTablosu(c.cerceve.parentNode, c.uygulama); }
   } catch (_) { cevap({ tip: "skorlandi", durum: "hata" }); }
 }
 
@@ -322,6 +369,8 @@ function kesifCiz() {
   const alan = document.querySelector("#fanEvrenAlan");
   if (!alan || !veri) { return; }
   let k = document.querySelector("#evrenKesif");
+  const hepsi = ((veri.fanEserleri || {}).evrenler || []);
+  if (!hepsi.length) { if (k) { k.remove(); } return; }
   if (!k) {
     k = document.createElement("div");
     k.id = "evrenKesif";
@@ -435,12 +484,13 @@ window.addEventListener("online", function () {
 
 function cevrimdisiHazirBildir() {
   if (!("serviceWorker" in navigator)) { return; }
+  if (TentiforKopru.ortam() === "web") { return; }
   navigator.serviceWorker.ready.then(function () {
     try {
       if (localStorage.getItem("tentiforapp_cevrimdisi_hazir")) { return; }
       localStorage.setItem("tentiforapp_cevrimdisi_hazir", "1");
     } catch (_) { return; }
-    if (TentiforKopru.ortam() !== "web" && typeof eckaBildir === "function") { eckaBildir("Uygulama hazır · internetsiz de açılır"); }
+    if (typeof eckaBildir === "function") { eckaBildir("Uygulama hazır · internetsiz de açılır"); }
   }).catch(function () { /* yok */ });
 }
 
@@ -451,7 +501,10 @@ function cevrimdisiHazirBildir() {
 const TentiforKopru = {
   ortam: function () {
     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) { return "capacitor"; }
-    if (document.referrer && document.referrer.indexOf("android-app://") === 0) { return "twa"; }
+    try {
+      if (document.referrer && document.referrer.indexOf("android-app://") === 0) { sessionStorage.setItem("tf-ortam", "twa"); }
+      if (sessionStorage.getItem("tf-ortam") === "twa") { return "twa"; }
+    } catch (_) { /* yoksay */ }
     if ((window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true) { return "pwa"; }
     return "web";
   },
@@ -475,5 +528,11 @@ document.addEventListener("DOMContentLoaded", function () {
   cevrimdisiSerit();
   cevrimdisiHazirBildir();
   const bekle = typeof veriHazirOlunca === "function" ? veriHazirOlunca : function (f) { setTimeout(f, 1500); };
-  bekle(function () { kesifCiz(); setTimeout(davetKoduDene, 900); });
+  bekle(function () {
+    kesifCiz();
+    const oturumVardi = davetOturumBekleniyor();
+    setTimeout(davetKoduDene, 900);
+    /* kayıtlı oturum açılamadıysa (süresi dolmuş) davet yine de sorulsun */
+    if (oturumVardi) { setTimeout(function () { DAVET_OTURUM.bekle = false; davetKoduDene(); }, 8000); }
+  });
 });

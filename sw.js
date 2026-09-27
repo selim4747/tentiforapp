@@ -108,9 +108,12 @@ self.addEventListener("fetch", function (e) {
      gelince önbellek yine tazelenir, bir sonraki açılış günceldir.
    - Geri kalanı: önce ağ, yoksa son kopya. */
 const AG_BEKLEME = 3500;
+const AG_BEKLEME_YAVAS = 800;   /* az önce bir sayfa ağı bekleyip kopyaya düştüyse: ağ yavaş, veri için yine bekletme */
+let yavasAgZamani = 0;
 
 function onbellegeKoy(istek, yanit, sorguyla) {
-  if (!yanit || !yanit.ok || yanit.type === "opaque") { return; }
+  /* yönlendirilmiş yanıt önbellekten sayfa olarak verilemez (tarayıcı reddeder) */
+  if (!yanit || !yanit.ok || yanit.type === "opaque" || yanit.redirected) { return; }
   const kopya = yanit.clone();
   const anahtar = new URL(istek.url);
   if (!sorguyla) { anahtar.search = ""; }   /* veri.json?v=... kopyayı şişirmesin */
@@ -148,10 +151,11 @@ self.addEventListener("fetch", function (e) {
   e.waitUntil(ag.catch(function () { /* çevrimdışı */ }));
   e.respondWith(new Promise(function (coz) {
     let bitti = false;
+    const yavas = Date.now() - yavasAgZamani < 30000;
     const sure = setTimeout(function () {
-      yedekKopya(istek).then(function (k) { if (k && !bitti) { bitti = true; coz(k); } });
-    }, AG_BEKLEME);
-    ag.then(function (y) { if (!bitti) { bitti = true; clearTimeout(sure); coz(y); } })
+      yedekKopya(istek).then(function (k) { if (k && !bitti) { bitti = true; yavasAgZamani = Date.now(); coz(k); } });
+    }, yavas ? AG_BEKLEME_YAVAS : AG_BEKLEME);
+    ag.then(function (y) { if (!bitti) { bitti = true; clearTimeout(sure); yavasAgZamani = 0; coz(y); } })
       .catch(function () {
         clearTimeout(sure);
         yedekKopya(istek).then(function (k) {
