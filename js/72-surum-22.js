@@ -141,6 +141,7 @@ if (typeof evrenBilgiBolumu === "function") {
     return '<div class="kutu-y evg-kisisel"><span class="oyun-etiket">Evrenini kişiselleştir</span>' +
       '<p class="oyun-not">Evreninin sayfası senin: rengini, desenini ve yazı tipini değiştir, kendi yazını harf harf çiz, kodla oyun ekle.</p>' +
       '<div class="oyun-sira"><button class="dugme" data-evs-sekme="stil">🎨 Görünümü değiştir</button>' +
+      '<button class="dugme dugme-sade" data-evs-sekme="kodstil">{ } Stil ve görünüm kodu</button>' +
       '<button class="dugme dugme-sade" data-evs-sekme="yazi">✎ Yazını çiz</button>' +
       '<button class="dugme dugme-sade" data-evs-sekme="uygulama">⌨ Uygulama ekle</button></div></div>' + h;
   };
