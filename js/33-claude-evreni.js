@@ -86,7 +86,7 @@ function ceHikayeler() {
 function ceBelgeler() {
   const c = ceVeri();
   return '<div class="mektup-liste">' + (c.mektuplar || []).map(function (m) {
-      return '<div class="mektup">' +
+      return '<div class="mektup" id="ce-' + kacir(m.id) + '">' +
         '<div class="mektup-ust">' + kacir(m.kimden) + " → " + kacir(m.kime) + "</div>" +
         '<div class="mektup-not">' + kacir(m.not || "") + "</div>" +
         '<div class="mektup-metin okuma-metin">' + paragraf(m.metin) + "</div></div>";
@@ -94,15 +94,15 @@ function ceBelgeler() {
     '<div class="alinti-izgara">' + (c.alintilar || []).map(function (a) {
       return '<figure class="alinti"><blockquote>' + kacir(a.metin) + "</blockquote><figcaption>" + kacir(a.kim) + "</figcaption></figure>";
     }).join("") + "</div>" +
-    (c.yankilar || []).map(function (y) {
-      return '<div class="kutu-y ce-yanki"><span class="oyun-etiket">Yankı</span><h3>' + kacir(y.baslik) + "</h3><p>" + kacir(y.metin) + "</p>" +
+    (c.yankilar || []).map(function (y, i) {
+      return '<div class="kutu-y ce-yanki" id="ce-yanki-' + i + '"><span class="oyun-etiket">Yankı</span><h3>' + kacir(y.baslik) + "</h3><p>" + kacir(y.metin) + "</p>" +
         "<ul>" + (y.ornekler || []).map(function (o) { return "<li>" + kacir(o) + "</li>"; }).join("") + "</ul></div>";
     }).join("");
 }
 
 function ceSozluk() {
   const liste = (ceVeri().sozluk || []).slice().sort(function (a, b) { return a.terim.localeCompare(b.terim, "tr"); });
-  return '<dl class="sozluk-liste">' + liste.map(function (s) {
+  return '<dl class="sozluk-liste" id="ce-sozluk">' + liste.map(function (s) {
     return '<div class="sozluk-madde"><dt>' + kacir(s.terim) + "</dt><dd>" + kacir(s.tanim) + "</dd></div>";
   }).join("") + "</dl>";
 }

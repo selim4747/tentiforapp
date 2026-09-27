@@ -1224,6 +1224,63 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await N.evaluate(function () { ceSekme = "tarih"; claudeEvrenCiz(); }); await bekle(N, 200);
     ok("Claude'un evreni: kronolojiden zaman çizelgesi (notu ayrı)", await N.locator("#claudeEvrenAlan .zc-olay").count() === 10 &&
       /Aynacılar bu tarihin/.test(await N.textContent("#claudeEvrenAlan .zc")) && /Bugün/.test(await N.textContent("#claudeEvrenAlan .zc-olay:last-child")));
+    /* Claude'un Evreni II: roman, ilerleme, arama, kişi bağlantıları ve rozet, günlük oyunlar */
+    await N.evaluate(function () { ceSekme = "genel"; claudeEvrenCiz(); }); await bekle(N, 200);
+    ok("Claude'un Evreni: okuma ilerlemesi bütün kutuları sayar", await N.evaluate(function () {
+      const c = veri.claudeEvreni;
+      const n = c.maddeler.length + c.kisiler.length + c.hikayeler.length + c.mektuplar.length + c.yankilar.length + 1 + c.roman.bolumler.length;
+      return ceKutular().length === n && new RegExp("/ " + n).test(document.querySelector("#claudeEvrenAlan .ce-ilerleme").textContent) &&
+        !!document.querySelector('#claudeEvrenAlan .ce-ilerleme [data-ce-kutu]');
+    }));
+    await N.fill("#ceAra", "mühürlü"); await bekle(N, 150);
+    ok("evrende arama: roman, hikâye ve sorudaki kelimeyi bulur", await N.evaluate(function () {
+      const t = document.querySelector("#ceAraSonuc").textContent;
+      return /Sebir'in Aynaları/.test(t) && /Dünün Ulağı/.test(t);
+    }));
+    await N.click('#ceAraSonuc [data-ce-kutu="madde:ce-roman-r2"]'); await bekle(N, 200);
+    ok("arama sonucundan roman bölümüne gidilir; bölüm okuma kutusu", await N.evaluate(function () {
+      okuEtiketle();
+      return ceSekme === "roman" && /Sebir'in Aynaları/.test(document.querySelector("#claudeEvrenAlan .evr-bolum-baslik").textContent) &&
+        !!document.querySelector('#claudeEvrenAlan [data-oku="madde:ce-roman-r2"]');
+    }));
+    await N.click('#claudeEvrenAlan .evr-gez [data-ce-roman="r3"]'); await bekle(N, 150);
+    ok("roman: sonraki bölüm, içindekiler", /Sessiz Güverte/.test(await N.textContent("#claudeEvrenAlan .evr-bolum-baslik")) &&
+      await N.locator("#claudeEvrenAlan .evr-icindekiler li").count() === 3);
+    await N.evaluate(function () { ceSekme = "belgeler"; claudeEvrenCiz(); okuEtiketle(); }); await bekle(N, 150);
+    ok("Claude'un Evreni: mektup ve yankılar okuma kutusu", await N.evaluate(function () {
+      return !!document.querySelector('#claudeEvrenAlan [data-oku="madde:ce-cl_m5"]') && document.querySelectorAll('#claudeEvrenAlan [data-oku^="madde:ce-yanki-"]').length === veri.claudeEvreni.yankilar.length;
+    }));
+    await N.evaluate(function () { ceSekme = "kisiler"; claudeEvrenCiz(); }); await bekle(N, 150);
+    ok("kişi kartı: geçtiği hikâyeler ve mektuplar", await N.evaluate(function () {
+      const t = document.querySelector("#ce-cl_sessiz .ce-kisi-kutular").textContent;
+      return /Yüz Kırk Birinci/.test(t) && /Tıkırtı/.test(t) && /Sıssoz → İşik/.test(t);
+    }));
+    ok("kişinin her şeyi okununca rozet ve bir kez eçka", await N.evaluate(function () {
+      const k = veri.claudeEvreni.kisiler.find(function (x) { return x.id === "cl_haber"; });
+      const e0 = cuzdan.ecka;
+      ceKisiKutulari(k).forEach(function (x) { okunduIsaretle(x.anahtar); });
+      claudeEvrenCiz();
+      const e1 = cuzdan.ecka;
+      claudeEvrenCiz();
+      return !!document.querySelector("#ce-cl_haber .ce-rozet") && e1 - e0 === 15 && cuzdan.ecka === e1;
+    }));
+    await N.evaluate(function () { ceSekme = "oyunlar"; claudeEvrenCiz(); }); await bekle(N, 200);
+    ok("Claude'un Evreni'nde günlük oyunlar", await N.locator("#ceGunlukAlan .go-kart").count() === 3 && await N.locator("#claudeEvrenAlan .so-secici").count() === 1);
+    ok("Hangisi önce?: kronolojiden, cevap daha eski olay", await N.evaluate(function () {
+      const l = ceKronolojiOlaylari();
+      const q = goSorular("ce_once", "claude");
+      return l.length >= 6 && q.length === 5 && q.every(function (x) {
+        const a = l.find(function (o) { return o.metin === x.secenekler[0]; }), b = l.find(function (o) { return o.metin === x.secenekler[1]; });
+        return a && b && x.dogru === (a.sira < b.sira ? a.metin : b.metin);
+      });
+    }));
+    await N.click('#ceGunlukAlan [data-go-basla="ce_sozluk"]');
+    for (let i = 0; i < 5; i++) {
+      await N.evaluate(function () { const q = GO.sorular[GO.i]; document.querySelector('#ceGunlukAlan [data-go-sec="' + q.secenekler.indexOf(q.dogru) + '"]').click(); });
+      await N.click("#ceGunlukAlan [data-go-sonraki]");
+    }
+    ok("Claude sözlük bilmecesi kazanınca XP (claude|ce_sozluk)", await N.evaluate(function () { return oyunXpAlindi("claude|ce_sozluk") && /5 \/ 5/.test(document.querySelector("#ceGunlukAlan").textContent); }));
+    await N.click("#ceGunlukAlan [data-go-kapat]");
     await N.evaluate(function () { ceSekme = "gezi"; claudeEvrenCiz(); }); await bekle(N, 200);
     await N.selectOption("#ceGezi [data-gz-kisi]", { label: "Hıbır (8)" }); await bekle(N, 200);
     const hibirGun = await N.evaluate(function () { const b = gzBaglam(); return gzCanliGun(b.kisiler.find(function (x) { return x.i === b.secili; }).yol, { tur: "dongu" }, b.simdiGun()).gun; });

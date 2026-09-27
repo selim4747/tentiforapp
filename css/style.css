@@ -4252,3 +4252,18 @@ html.ecka-yeni #cuzdanTutar{visibility:hidden}
 .evo-zaman-liste li{margin:4px 0}
 .kadi-uyari{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:60;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;
   max-width:min(560px,calc(100vw - 32px));padding:10px 14px;background:var(--kar);border:1px solid var(--deniz);border-radius:4px;box-shadow:0 4px 18px rgba(0,0,0,.15)}
+
+/* Claude'un Evreni II (67-claude-evreni-ii.js) */
+.ce-ara{margin:0 0 10px}
+.ce-ara input{width:100%}
+.ce-ara-liste{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.ce-ara-liste li{padding:8px 10px;border:1px solid var(--sig);border-radius:3px;background:var(--kar)}
+.ce-ara-tur{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--deniz)}
+.ce-ara-parca{display:block;font-size:14px;opacity:.8;margin-top:2px;overflow-wrap:anywhere}
+.ce-ilerleme{margin-bottom:14px}
+.ce-ilerleme-ust{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ce-cubuk{display:block;width:100%;margin:6px 0}
+.ce-kisi-kutular{margin-top:10px}
+.ce-kisi-baglar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.ce-rozet,.ce-okundu{color:var(--deniz);font-weight:700}
+.ce-gunluk{margin-bottom:14px}
