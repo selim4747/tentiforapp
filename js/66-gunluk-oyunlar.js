@@ -241,3 +241,22 @@ document.addEventListener("click", function (ev) {
   if (!ev.target.closest("[data-kadi-sec]")) { return; }
   setTimeout(function () { const i = document.querySelector("#hpKadi"); if (i) { i.focus(); i.scrollIntoView({ block: "center" }); } }, 300);
 });
+
+/* ==================== bağlantıyla açılan bölüm yerinde kalsın ====================
+   /gizlilik/ gibi bir bölüm adresiyle gelince üstteki bölümler sonradan çizilip sayfayı itebiliyor;
+   ziyaretçi kendisi kaydırmadıysa bölüme yeniden hizalanır. */
+(function () {
+  let dokundu = false;
+  ["wheel", "touchstart", "keydown", "mousedown"].forEach(function (o) {
+    window.addEventListener(o, function () { dokundu = true; }, { passive: true, once: true });
+  });
+  const hizala = function () {
+    if (dokundu || typeof rota !== "function") { return; }
+    const p = rota().replace(/^#\//, "").split("/");
+    if (p.length !== 1 || !p[0]) { return; }
+    const el = document.getElementById(p[0]);
+    if (!el || !el.classList.contains("bolum") || el.offsetParent === null) { return; }
+    if (Math.abs(el.getBoundingClientRect().top) > 40) { el.scrollIntoView({ block: "start" }); }
+  };
+  window.addEventListener("load", function () { setTimeout(hizala, 1200); setTimeout(hizala, 2600); });
+})();

@@ -26,6 +26,11 @@ function gizlilikCiz() {
       "Yarış skorların, liderlik sayıların, teorilerin, oyların ve takip ettiklerin — liderlikten çıkmayı seçmediysen herkese açıktır.",
       "Güvenlik için: yarış süreleri ve şüpheli sonuç işaretleri (hile önleme)."
     ]) +
+    bolum("Google ile girersen", [
+      "Google yalnızca adını, e-posta adresini ve profil fotoğrafının adresini paylaşır; Google şifren bu siteye hiç gelmez.",
+      "Bu bilgiler yalnızca hesabını açmak ve seni tanımak için kullanılır; e-posta adresin kimseye gösterilmez.",
+      "Bağlantıyı Google hesabının “Üçüncü taraf uygulamalar” sayfasından istediğin an kaldırabilirsin; hesabını silmek için aşağıdaki Hesabımı sil düğmesi yeter."
+    ]) +
     bolum("Yeni bölüm bildirimi (açarsan)", [
       "Tarayıcının sana verdiği bildirim adresi ve iki şifreleme anahtarı sunucuda saklanır; hesabın açıksa hangi hesaba ait olduğu da.",
       "Yalnızca yeni bölüm ve duyuru göndermek için kullanılır. Roman bölümündeki <b>Bildirimleri kapat</b> ile ya da tarayıcı ayarından izni kaldırarak silinir."
