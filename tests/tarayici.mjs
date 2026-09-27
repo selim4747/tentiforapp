@@ -1828,6 +1828,45 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("bilgisayar da telefondakini alır", await PC.evaluate(function (e) { return kilitAcik("esit_tel") && kilitAcik("esit_pc") && cuzdan.ecka === e; }, beklenen));
     ok("değişiklik yokken yalnızca zaman sorulur (tam veri inmez)", await PC.evaluate(async function () { return (await hesapUzakDegistiMi()) === false; }));
     await PC.close(); await TEL.close();
+
+    /* ---------- 2.1: tek kullanımlık kodlar ---------- */
+    const tekKodlar = await A.evaluate(async function () {
+      return {
+        eg: (await tekKodlariOlustur("evrengezer", "Ayşe", 1, {}))[0],
+        kisi: (await tekKodlariOlustur("kisi", "Cemile", 1, { bolumler: ["roman"], evrenler: ["tomye"] }))[0],
+        yon: (await tekKodlariOlustur("yonetici", "Cemile", 1, {}))[0]
+      };
+    });
+    ok("yönetici tek kullanımlık kod üretir; sunucuda yalnızca özeti", /^[A-Z2-9]{10}$/.test(tekKodlar.eg) &&
+      (await sahte.kokSorgu("select count(*)::int n from public.tek_kodlar where ozet = '" + tekKodlar.eg + "'")).rows[0].n === 0 &&
+      (await sahte.kokSorgu("select count(*)::int n from public.tek_kodlar")).rows[0].n === 3);
+    await B.evaluate(function (k) { kodPenceresi(); kodDene(k.toLowerCase()); }, tekKodlar.eg); await bekle(B, 700);
+    const bDurum = await B.textContent("#kodDurum");
+    ok("tek kod girilince hesaba bağlanır ve hakkı verir", await B.evaluate(function () { return tekHakVar("evrengezer") && seviyeKoduSeviyesi() >= 10; }) &&
+      /bağlandı/.test(bDurum), bDurum);
+    await B.evaluate(function () { perdeKapat(); });
+    const TK = await cihaz("tek-kod");
+    await kayitOl(TK, "Cemile", "cemile", "cemile@ornek.test");
+    await TK.evaluate(function (k) { kodPenceresi(); kodDene(k); }, tekKodlar.eg); await bekle(TK, 1500);
+    ok("başkasının kodunu giremez", /başka bir hesaba bağlı/.test(await TK.textContent("#kodDurum")) && await TK.evaluate(function () { return !tekHakVar("evrengezer"); }));
+    const romanOnce = await TK.evaluate(function () { return bolumErisimi("roman"); });
+    await TK.evaluate(function (k) { kodDene(k); }, tekKodlar.kisi); await bekle(TK, 1500);
+    await TK.evaluate(function () { perdeKapat(); kodPenceresi(); });
+    await TK.evaluate(function (k) { kodDene(k); }, tekKodlar.yon); await bekle(TK, 1500);
+    ok("kişi kodu bölüm açar, yönetici kodu sınırlı paneli açar", !romanOnce && await TK.evaluate(function () {
+      return bolumErisimi("roman") && panelAcik() && !yoneticiAcik();
+    }));
+    await TK.reload(); await bekle(TK, 3500);
+    ok("sayfa yeniden açılınca (çıkıp girince) haklar hesaptan geri gelir", await TK.evaluate(function () {
+      return bolumErisimi("roman") && panelAcik() && tekHakVar("kisi") && tekHakVar("yonetici");
+    }));
+    await A.evaluate(async function (k) { await hesapIstemci.rpc("tek_kod_bag_sil", { p_ozet: tekOzet(k.kisi) }); await hesapIstemci.rpc("tek_kod_bag_sil", { p_ozet: tekOzet(k.yon) }); }, tekKodlar);
+    ok("yönetici listede kimde olduğunu görür", await A.evaluate(async function () {
+      const r = await hesapIstemci.rpc("tek_kod_listesi"); return r.data.some(function (x) { return x.kullanici_adi === "ayse" && x.bagli; });
+    }));
+    await TK.reload(); await bekle(TK, 3500);
+    ok("bağ silinince hak gider", await TK.evaluate(function () { return !bolumErisimi("roman") && !panelAcik() && !tekHakVar("kisi"); }));
+    await TK.close();
     await B.click("#evrenSayfa [data-evs-kapat]"); await bekle(B, 300);
 
     /* ---------- kartpostal ---------- */
