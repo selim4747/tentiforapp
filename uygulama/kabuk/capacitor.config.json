@@ -9,6 +9,12 @@
   },
   "android": {
     "allowMixedContent": false,
-    "backgroundColor": "#F4F9FD"
+    "backgroundColor": "#F4F9FD",
+    "adjustMarginsForEdgeToEdge": "auto"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "iconColor": "#3A7CA5"
+    }
   }
 }

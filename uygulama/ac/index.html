@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>TentiforApp</title>
+<style>
+  :root { color-scheme: light dark; --z: #F4F9FD; --y: #16324A; --v: #3A7CA5; }
+  @media (prefers-color-scheme: dark) { :root { --z: #0F1B26; --y: #E3EEF7; } }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--z); color: var(--y); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 420px; padding: 24px 16px; text-align: center; }
+  a { display: block; margin: 12px 0; padding: 14px; border-radius: 12px; text-decoration: none; font-weight: 600; }
+  .ana { background: var(--v); color: #fff; }
+  .ikincil { border: 1px solid var(--v); color: var(--v); }
+  p { opacity: .8; }
+</style>
+</head>
+<body>
+<main>
+  <h1>TentiforApp</h1>
+  <p>Bu bağlantı Android uygulamasından istendi. Uygulamada açarsan giriş orada tamamlanır.</p>
+  <a class="ana" id="uygulamada" href="/">Uygulamada aç</a>
+  <a class="ikincil" id="tarayicida" href="/">Tarayıcıda devam et</a>
+  <p>Tarayıcıda devam edersen onay tamamlanır; sonra uygulamaya e-posta ve şifrenle girebilirsin.</p>
+</main>
+<script>
+  /* Uygulamanın içinde açıldıysa (ya da uygulama bağlantıyı yakaladıysa) doğrudan siteye */
+  var ara = location.search + location.hash;
+  if (window.Capacitor) { location.replace("/" + ara); }
+  document.getElementById("tarayicida").href = "/" + ara;
+  document.getElementById("uygulamada").href = "intent://" + location.host + "/uygulama/ac/" + location.search +
+    "#Intent;scheme=https;package=dev.pages.tentiforapp;S.browser_fallback_url=" + encodeURIComponent(location.origin + "/" + ara) + ";end";
+</script>
+</body>
+</html>

@@ -25,8 +25,17 @@ Uygulama ince bir Capacitor kabuğudur (`uygulama/kabuk/`): açılınca https://
 Actions → Android APK → Run workflow (istersen "not" yaz) → Yayınla. Uygulamayı kullananlara "Yeni uygulama sürümü"
 şeridi çıkar; İndir'e basıp üstüne kurarlar, veriler (giriş, ilerleme) kaybolmaz. İmza anahtarı hep aynı kalmalıdır.
 
-Bilinen sınırlar: Google ile giriş yok; bazı "dosya indir" düğmeleri uygulama içinde çalışmayabilir
-(bunun yerine paylaşım düğmesi telefonun paylaşım menüsünü açar).
+Uygulamaya özel (js/78-uygulama-kabugu.js): geri tuşu önce açık pencereyi kapatır, ana sayfada iki basışta çıkar;
+"İndir" düğmeleri dosyayı kaydedip telefonun Kaydet/Paylaş menüsünü açar; başka sitelere giden bağlantılar telefonun
+tarayıcısında açılır; sesli okuma telefonun sesiyle; günün kelimesi hatırlatması telefon bildirimiyle (19:00, uygulama
+her açılışta 7 günlüğünü kurar); aşağı çekince yenilenir; titreşim telefonun motoruyla.
+
+E-posta bağlantıları (kayıt onayı, şifre sıfırlama) uygulamada kayıt olunduysa `/uygulama/ac/` adresine döner ve
+uygulamayı açar. Bunun için Supabase → Authentication → URL Configuration → Redirect URLs'e
+`https://tentiforapp.pages.dev/**` ekli olmalı. APK iş akışı imzanın parmak izini `.well-known/assetlinks.json`
+olarak kendisi yazar.
+
+Bilinen sınır: Google ile giriş uygulamada yok (Google'ın kuralı).
 
 ---
 

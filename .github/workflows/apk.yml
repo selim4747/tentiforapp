@@ -48,9 +48,28 @@ jobs:
       - name: Capacitor
         working-directory: uygulama/kabuk
         run: |
-          npm install --no-audit --no-fund
+          npm install --no-audit --no-fund --legacy-peer-deps
           npx cap add android
           npx cap sync android
+
+      - name: E-posta bağlantıları uygulamayı açsın
+        working-directory: uygulama/kabuk/android
+        run: |
+          python3 - <<'PY'
+          p = "app/src/main/AndroidManifest.xml"
+          s = open(p).read()
+          f = """
+                      <intent-filter android:autoVerify="true">
+                          <action android:name="android.intent.action.VIEW" />
+                          <category android:name="android.intent.category.DEFAULT" />
+                          <category android:name="android.intent.category.BROWSABLE" />
+                          <data android:scheme="https" android:host="tentiforapp.pages.dev" android:pathPrefix="/uygulama/ac" />
+                      </intent-filter>
+          """
+          assert "</activity>" in s
+          open(p, "w").write(s.replace("</activity>", f + "        </activity>", 1))
+          PY
+          grep -n "uygulama/ac" app/src/main/AndroidManifest.xml
 
       - name: Sürüm ve simge
         working-directory: uygulama/kabuk/android
@@ -90,6 +109,8 @@ jobs:
 
       - name: Siteye koy
         env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          SIFRE: ${{ secrets.ANDROID_KEYSTORE_SIFRE }}
           NOT: ${{ github.event.inputs.not }}
         run: |
           mkdir -p uygulama/indir
@@ -98,8 +119,16 @@ jobs:
           node -e "require('fs').writeFileSync('uygulama/indir/apk.json', JSON.stringify({ kod: Number(process.env.KOD), surum: process.env.AD, boyut: $BOYUT, tarih: new Date().toISOString(), not: String(process.env.NOT || '').slice(0, 300) }, null, 2) + '\n')"
           git config user.name "github-actions[bot]"
           git config user.email "41898733+github-actions[bot]@users.noreply.github.com"
-          git add uygulama/indir
+          # site ile uygulama birbirini tanısın (e-posta bağlantıları doğrudan uygulamada açılır); parmak izi gizli değildir
+          echo "$KS" | base64 -d > $RUNNER_TEMP/anahtar.jks
+          PARMAK=$(keytool -list -v -keystore $RUNNER_TEMP/anahtar.jks -storepass:env SIFRE -alias tentiforapp | grep -m1 "SHA256:" | awk '{print $2}')
+          rm -f $RUNNER_TEMP/anahtar.jks
+          [ -n "$PARMAK" ] || { echo "::error::İmza parmak izi okunamadı"; exit 1; }
+          mkdir -p .well-known
+          node -e "require('fs').writeFileSync('.well-known/assetlinks.json', JSON.stringify([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: 'dev.pages.tentiforapp', sha256_cert_fingerprints: [process.argv[1]] } }], null, 2) + '\\n')" "$PARMAK"
+          git add uygulama/indir .well-known/assetlinks.json
           git commit -m "Android APK $AD ($KOD) [skip ci]"
+          git pull --rebase origin ${{ github.ref_name }}   # derleme sürerken main ilerlediyse
           git push
 
       - name: Siteyi yayınla (isteğe bağlı)
