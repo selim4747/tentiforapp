@@ -245,6 +245,43 @@ export async function surum25Testleri({ adres, veritabani, dizin }) {
     await K.click('#evrenSayfa [data-evs-sekme="bilgi"]'); await bekle(K, 1500);
     ok("kurucu evren istatistiğini görür", /ziyaret/.test(await K.textContent("#eviAlan")), await K.textContent("#eviAlan"));
 
+    /* ---------- kutu bağları ve kutu rozetleri ---------- */
+    console.log("2.5 kutu rozetleri");
+    ok("bütün evrenlerde kutular bağlanır, gizli karakter bağ olmaz", await O.evaluate(function () {
+      RB.ag = null;
+      const ag = rbAg();
+      const gizli = veri.karakterler.filter(function (k) { return k.kart === false; }).map(function (k) { return "kar:" + k.id; });
+      const alanlar = {}; ag.forEach(function (d) { alanlar[d.kutu.alan] = true; });
+      const m = veri.mektuplar.find(function (x) { return veri.karakterler.some(function (k) { return k.ad === x.kimden && k.kart !== false; }); });
+      const kimden = veri.karakterler.find(function (k) { return k.ad === m.kimden; });
+      return ag.size > 150 && alanlar.tomye && alanlar.claude && !gizli.some(function (g) { return ag.has(g); }) &&
+        rbBaglar("mektup:" + (m.id || veri.mektuplar.indexOf(m))).some(function (b) { return b.anahtar === "kar:" + kimden.id; });
+    }));
+    ok("karakter rozetine evren maddeleri de girer", await O.evaluate(function () {
+      return veri.karakterler.some(function (k) { return k.kart !== false && karakterKutulari(k).some(function (x) { return /^evren:/.test(x.anahtar); }); });
+    }));
+    const rb = await O.evaluate(function () {
+      let hedef = null;
+      rbAg().forEach(function (d, k) { if (!hedef && /^madde:ce-/.test(k) && rbBaglar(k).length >= 2 && rbKonu(k).length) { hedef = k; } });
+      const once = rbDurum(hedef);
+      okunduIsaretle(hedef); rozetleriDenetle();
+      const yarim = rbDurum(hedef);
+      rbBaglar(hedef).forEach(function (b) { okunduIsaretle(b.anahtar); });
+      rozetleriDenetle();
+      const gumus = rbDurum(hedef);
+      const l = fanEserlerim();
+      l.push({ bicim: FAN_BICIM, surum: 1, tur: "hikaye", id: "rbtest", baslik: "Deneme", karakterler: "", metin: rbKonu(hedef)[0] + " üzerine uzun bir hikâye. " + "Kıyıda rüzgâr esiyordu ve herkes bekliyordu. ".repeat(10) });
+      fanEserlerimYaz(l);
+      rozetleriDenetle();
+      return { hedef: hedef, once: once, yarim: yarim, gumus: gumus, altin: rbDurum(hedef) };
+    });
+    ok("kutu ve bağlı kutuları okununca gümüş, yarım okununca yok", rb.hedef && rb.once === "" && rb.yarim === "" && rb.gumus === "gumus", rb);
+    ok("konusuna fan hikâyesi yazınca altın kutu rozeti", rb.altin === "altin", rb);
+    ok("kutunun altında bağlı kutular ve rozet durumu", await O.evaluate(function (k) { const h = rbSeritHtml(k); return /🥇/.test(h) && /bağlı kutu/.test(h) && /✓/.test(h); }, rb.hedef));
+    await O.evaluate(function () { evrenSayfaKapat(); location.hash = "#/claude"; }); await bekle(O, 1200);
+    await O.evaluate(function () { document.querySelectorAll("#claudeEvrenAlan details.ce-kisi").forEach(function (d) { d.open = true; }); if (typeof okuEtiketle === "function") { okuEtiketle(); } okuTara(); }); await bekle(O, 500);
+    ok("sayfadaki kutuların altında bağ şeridi", await O.locator(".rb-serit").count() >= 1, await O.evaluate(function () { return document.querySelectorAll("[data-oku]").length; }));
+
     ok("2.5 testlerinde sayfa hatası yok", hatalar.length === 0, hatalar);
   } finally {
     await tarayici.close();
