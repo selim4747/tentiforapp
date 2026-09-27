@@ -377,3 +377,23 @@ update public.tek_kodlar set kullanici = '44444444-4444-4444-4444-444444444444' 
 insert into public.yoneticiler (id, duzey, tek_kod) values ('44444444-4444-4444-4444-444444444444', 'sinirli', public.tek_kod_ozet('YONET12345')) on conflict (id) do nothing;
 update public.tek_kodlar set kullanici = null where ozet = public.tek_kod_ozet('YONET12345');
 select test.ok('elle NULL yapılınca yöneticilik gider', (select count(*) = 0 from public.yoneticiler where id = '44444444-4444-4444-4444-444444444444'));
+
+-- ---------- 2.4: kurulum sürümü, süreli kodlar, uygulama puanları ----------
+select test.ok('kurulum sürümü sorulabilir', public.kurulum_surumu() = '2.4');
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select public.tek_kod_olustur(jsonb_build_array(jsonb_build_object('ozet', public.tek_kod_ozet('SURELI1234'), 'tur', 'evrengezer', 'sure_gun', 7)));
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('süreli kod bağlanır', public.tek_kod_kullan('SURELI1234') ->> 'durum' = 'tamam');
+select test.ok('süreli kodun bitişi görünür', (select bool_or(x ? 'bitis' and x ->> 'bitis' is not null) from jsonb_array_elements(public.tek_kodlarim()) x));
+reset role;
+update public.tek_kodlar set baglanma = now() - interval '8 days' where ozet = public.tek_kod_ozet('SURELI1234');
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('süresi dolan kod hak vermez', not (public.tek_kodlarim() @> '[{"tur":"evrengezer"}]'::jsonb));
+select test.ok('süresi dolan kod yeniden girilemez', public.tek_kod_kullan('SURELI1234') ->> 'durum' = 'sure_doldu');
+select test.ok('uygulama puanı yazılır', public.uygulama_skor_yaz('ev:kiyi', 'u1', 40) ->> 'durum' = 'rekor');
+select test.ok('düşük puan rekoru bozmaz', public.uygulama_skor_yaz('ev:kiyi', 'u1', 10) ->> 'durum' = 'tamam');
+select test.ok('puan tablosu', (select (x ->> 'puan')::int = 40 and x ->> 'kullanici_adi' = 'cem' from jsonb_array_elements(public.uygulama_skor_tablosu('ev:kiyi', 'u1')) x limit 1));
+select test.ok('geçersiz evren adı reddedilir', test.patlar($q$select public.uygulama_skor_yaz('ev kötü<', 'u1', 1)$q$));
+reset role;

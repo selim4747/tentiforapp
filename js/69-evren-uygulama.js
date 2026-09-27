@@ -65,6 +65,7 @@ function evuSrcdoc(e, u) {
     "window.evren=JSON.parse(" + evuJsonGom(evuEvrenVerisi(e)) + ");" +
     "evren.kazandim=function(){g({tip:'kazandi'});};" +
     "evren.kaydet=function(v){g({tip:'kaydet',veri:v});};" +
+    "evren.skor=function(p){g({tip:'skor',puan:Number(p)||0});};" +
     "evren.yukle=function(){return new Promise(function(c){var i=++n;b[i]=c;g({tip:'yukle',id:i});});};" +
     "evren.odulOlunca=null;" +
     "addEventListener('message',function(e){var d=e.data||{};if(d.tip==='yuklendi'&&b[d.id]){b[d.id](d.veri);delete b[d.id];}" +
@@ -91,6 +92,7 @@ function evuCalistir(kap, e, u) {
   f.srcdoc = evuSrcdoc(e, u);
   kap.appendChild(f);
   evuCerceve = { pencere: f.contentWindow, cerceve: f, evren: e, uygulama: u };
+  if (typeof evuSkorTablosu === "function") { evuSkorTablosu(kap, u); }
 }
 
 window.addEventListener("message", function (ev) {
@@ -115,6 +117,8 @@ window.addEventListener("message", function (ev) {
     const t = jsonOku(EVU_DEPO, {}) || {};
     t[evuDepoAnahtari(c.uygulama)] = metin;
     jsonYaz(EVU_DEPO, t);
+  } else if (d.tip === "skor") {
+    if (typeof evuSkorYaz === "function") { evuSkorYaz(c, d.puan, cevap); }
   } else if (d.tip === "yukle") {
     const t = jsonOku(EVU_DEPO, {}) || {};
     let v = null;
@@ -135,7 +139,7 @@ const EVU_ORNEK = {
     "function soru() {",
     "  if (k.length < 4) { document.getElementById('soru').textContent = 'Bu oyun için evrende en az 4 kişi olmalı.'; return; }",
     "  if (tur === 5) { document.getElementById('soru').textContent = dogru + ' / 5'; document.getElementById('secenek').innerHTML = '';",
-    "    if (dogru >= 4) { evren.kazandim(); } return; }",
+    "    evren.skor(dogru); if (dogru >= 4) { evren.kazandim(); } return; }",
     "  var cevap = k[Math.floor(Math.random() * k.length)];",
     "  document.getElementById('soru').textContent = '“' + (cevap.rol || cevap.aciklama) + '” — bu kim?';",
     "  var s = document.getElementById('secenek'); s.innerHTML = '';",
@@ -181,6 +185,7 @@ function evuBolum(v) {
         "<li><code>evren.kisiler</code>, <code>evren.yerler</code>, <code>evren.sozluk</code>, <code>evren.tarih</code>, <code>evren.kurallar</code>, <code>evren.haritaYerleri</code>: evreninin verisi (salt okunur)</li>" +
         "<li><code>evren.kazandim()</code>: oyunu kazanan günde bir kez XP alır (başkaları oynayınca; kendi evreninde XP yok)</li>" +
         "<li><code>evren.kaydet(v)</code> ve <code>evren.yukle()</code>: uygulamanın küçük kaydı (en çok 4 KB)</li>" +
+        "<li><code>evren.skor(puan)</code>: oyunun puan tablosuna yaz (hesabı olan okurlar; en iyi puan kalır)</li>" +
         "<li>Güvenlik gereği internete çıkamaz, dış dosya yükleyemez, sitenin kayıtlarına erişemez.</li></ul></details>" +
       '<div class="oyun-sira"><button class="dugme" data-evu-kaydet="' + kacir(d.id) + '">Kaydet ve çalıştır</button>' +
         '<button class="dugme dugme-sade" data-evu-kapat>Listeye dön</button>' +

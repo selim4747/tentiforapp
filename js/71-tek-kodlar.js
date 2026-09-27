@@ -17,6 +17,11 @@ function tekOzet(kod) {
 
 function tekHesapVar() { return typeof hesapIstemci !== "undefined" && hesapIstemci && typeof hesapKullanici !== "undefined" && hesapKullanici; }
 
+function tekDavetBaglantisi(kod) {
+  const kok = /^https?:$/.test(location.protocol) ? location.origin + "/" : "https://tentiforapp.pages.dev/";
+  return kok + "?kod=" + encodeURIComponent(kod);
+}
+
 function tekHakVar(tur) { return TEK.haklar.some(function (h) { return h.tur === tur; }); }
 
 /** Haklar değişince: seviye kapıları, kanon kilidi, yönetici paneli yeniden */
@@ -98,7 +103,8 @@ async function tekKodDene(kod, durum) {
   const d = (r && r.data) || {};
   if (r.error || d.durum !== "tamam") {
     yaz(({ yok: "Bu kod hiçbir kaydı açmıyor", dolu: "Bu kod başka bir hesaba bağlı. Tek kullanımlık kodlar yalnızca ilk girenindir.",
-      sinir: "Çok fazla deneme yaptın; bir saat sonra yeniden dene.", giris: "Önce giriş yap" })[d.durum] || "Kod denetlenemedi", false);
+      sinir: "Çok fazla deneme yaptın; bir saat sonra yeniden dene.", giris: "Önce giriş yap",
+      sure_doldu: "Bu kodun süresi doldu." })[d.durum] || "Kod denetlenemedi", false);
     return;
   }
   if (!TEK.haklar.some(function (h) { return h.tur === d.tur && h.ad === d.ad; })) { TEK.haklar.push({ tur: d.tur, ad: d.ad, veri: d.veri || {} }); }
@@ -145,7 +151,7 @@ if (typeof hesapProfilYukle === "function") {
 
 /* ==================== panel: Tek kodlar (tam yönetici) ==================== */
 
-const TEK_PANEL = { tur: "kisi", ad: "", adet: 1, bolumler: {}, evrenler: {}, katman: false, yeni: null, liste: null, durum: "" };
+const TEK_PANEL = { tur: "kisi", ad: "", adet: 1, sure: "", bolumler: {}, evrenler: {}, katman: false, yeni: null, liste: null, durum: "" };
 
 function tekPanelListeYukle() {
   if (!tekHesapVar()) { return; }
@@ -176,7 +182,7 @@ function yoneticiTekKodlar() {
   const liste = t.liste && t.liste.hata ? '<p class="pencere-durum kotu">' + kacir(t.liste.hata) + "</p>" :
     (t.liste && t.liste.length ? '<div class="y-blok-liste">' + t.liste.map(function (x) {
       return '<div class="y-kisi-satir"><div class="y-kisi-ust"><span class="y-blok-baslik">' + kacir(TEK_TURLER[x.tur] || x.tur) + (x.ad ? " · " + kacir(x.ad) : "") + "</span>" +
-        '<span class="oyun-not">' + (x.iptal ? "iptal edildi" : (x.bagli ? "bağlı: @" + kacir(x.kullanici_adi || "?") + (x.baglanma ? " · " + kacir(new Date(x.baglanma).toLocaleDateString("tr-TR")) : "") : "henüz kullanılmadı")) +
+        '<span class="oyun-not">' + (x.sure_gun ? x.sure_gun + " gün · " : "") + (x.bitis ? "bitiş " + kacir(new Date(x.bitis).toLocaleDateString("tr-TR")) + " · " : "") + (x.iptal ? "iptal edildi" : (x.bagli ? "bağlı: @" + kacir(x.kullanici_adi || "?") + (x.baglanma ? " · " + kacir(new Date(x.baglanma).toLocaleDateString("tr-TR")) : "") : "henüz kullanılmadı")) +
         " · …" + kacir(String(x.ozet).slice(0, 6)) + "</span></div>" +
         '<div class="y-kisi-dugmeler">' + (x.bagli ? '<button class="dugme dugme-sade" data-tek-bagsil="' + kacir(x.ozet) + '">Bağı sil</button>' : "") +
         '<button class="dugme dugme-sade' + (x.iptal ? "" : " y-sil") + '" data-tek-iptal="' + kacir(x.ozet) + '" data-deger="' + (x.iptal ? "0" : "1") + '">' + (x.iptal ? "Yeniden aç" : "İptal et") + "</button></div></div>";
@@ -188,12 +194,16 @@ function yoneticiTekKodlar() {
       }).join("") + "</select>" +
       '<label for="tekAd">Kimin için (not)</label><input class="kod-giris arac-giris" id="tekAd" maxlength="80" value="' + kacir(t.ad) + '">' +
       '<label for="tekAdet">Kaç kod (her biri ayrı kişi için)</label><input class="kod-giris arac-giris" id="tekAdet" type="number" min="1" max="20" value="' + t.adet + '">' +
+      '<label for="tekSure">Geçerlilik (bağlandıktan sonra kaç gün; boşsa süresiz)</label><input class="kod-giris arac-giris" id="tekSure" type="number" min="1" max="3650" value="' + kacir(t.sure) + '" placeholder="süresiz">' +
       kisiAlanlari +
       '<div class="y-kisi-dugmeler"><button class="dugme" data-tek-uret>Kodları üret</button></div>' +
       (t.durum ? '<p class="pencere-durum">' + kacir(t.durum) + "</p>" : "") +
       (t.yeni ? '<div class="y-kod-kutu"><p class="oyun-not"><b>Kodlar yalnızca şimdi görünür; kopyala ve sakla.</b></p>' +
         '<textarea class="kod-giris arac-giris" rows="' + Math.min(10, t.yeni.length + 1) + '" readonly id="tekYeniKodlar">' + kacir(t.yeni.join("\n")) + "</textarea>" +
-        '<button class="dugme dugme-sade" data-tek-kopyala>Kopyala</button></div>' : "") +
+        '<button class="dugme dugme-sade" data-tek-kopyala>Kopyala</button>' +
+        '<p class="oyun-not">Davet bağlantısı: kişi tıklar, giriş yapar, kod kendiliğinden hesabına bağlanır.</p>' +
+        '<textarea class="kod-giris arac-giris" rows="' + Math.min(10, t.yeni.length + 1) + '" readonly id="tekYeniBaglantilar">' + kacir(t.yeni.map(tekDavetBaglantisi).join("\n")) + "</textarea>" +
+        '<button class="dugme dugme-sade" data-tek-kopyala="baglanti">Bağlantıları kopyala</button></div>' : "") +
     "</div>" +
     '<div class="gk-ust"><span class="oyun-etiket">Kodlar</span><button class="dugme dugme-sade" data-tek-yenile>Yenile</button></div>' + liste;
 }
@@ -204,6 +214,7 @@ function tekPanelOku() {
   if (al("#tekTur")) { t.tur = al("#tekTur").value; }
   if (al("#tekAd")) { t.ad = al("#tekAd").value; }
   if (al("#tekAdet")) { t.adet = Math.max(1, Math.min(20, Math.round(Number(al("#tekAdet").value) || 1))); }
+  if (al("#tekSure")) { const n = Math.round(Number(al("#tekSure").value)); t.sure = n > 0 ? String(Math.min(3650, n)) : ""; }
   if (al("#tekKatman")) { t.katman = al("#tekKatman").checked; }
   const topla = function (attr) { const o = {}; document.querySelectorAll("[" + attr + "]").forEach(function (c) { if (c.checked) { o[c.getAttribute(attr)] = true; } }); return o; };
   if (document.querySelector("[data-tek-bolum]")) { t.bolumler = topla("data-tek-bolum"); t.evrenler = topla("data-tek-evren"); }
@@ -223,7 +234,7 @@ async function tekKodlariOlustur(tur, ad, adet, secim) {
       }
     }
     kodlar.push(kod);
-    satirlar.push({ ozet: tekOzet(kod), tur: tur, ad: ad, veri: veriK });
+    satirlar.push({ ozet: tekOzet(kod), tur: tur, ad: ad, veri: veriK, sure_gun: Number(secim.sure) || null });
   }
   const r = await hesapIstemci.rpc("tek_kod_olustur", { p_kodlar: satirlar });
   if (r.error) { throw r.error; }
@@ -240,14 +251,14 @@ document.addEventListener("click", function (e) {
   const t = TEK_PANEL;
   if (h.hasAttribute("data-tek-uret")) {
     tekPanelOku();
-    const secim = { bolumler: Object.keys(t.bolumler), evrenler: Object.keys(t.evrenler), katman: t.katman };
+    const secim = { bolumler: Object.keys(t.bolumler), evrenler: Object.keys(t.evrenler), katman: t.katman, sure: t.sure };
     if (t.tur === "kisi" && !secim.bolumler.length) { t.durum = "Kişi kodu için en az bir bölüm seç."; yoneticiCiz(); return; }
     t.durum = "Üretiliyor…"; yoneticiCiz();
     tekKodlariOlustur(t.tur, t.ad.trim(), t.adet, secim).then(function (k) {
       t.yeni = k; t.durum = k.length + " kod üretildi."; t.liste = null; yoneticiCiz();
     }).catch(function (er) { t.durum = "Üretilemedi: " + ((typeof hesapHataMetni === "function" && hesapHataMetni(er)) || er.message || er); yoneticiCiz(); });
   } else if (h.hasAttribute("data-tek-kopyala")) {
-    if (typeof panoyaKopyala === "function") { panoyaKopyala((t.yeni || []).join("\n")); }
+    if (typeof panoyaKopyala === "function") { panoyaKopyala((t.yeni || []).map(h.dataset.tekKopyala === "baglanti" ? tekDavetBaglantisi : function (x) { return x; }).join("\n")); }
   } else if (h.hasAttribute("data-tek-yenile")) {
     t.liste = null; yoneticiCiz();
   } else if (h.dataset.tekBagsil) {

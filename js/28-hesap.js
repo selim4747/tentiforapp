@@ -24,7 +24,8 @@ const HESAP_ESIT_ANAHTAR = "sb-tentiforapp-esitleme";   /* { [kullanıcıId]: { 
 const ESITLEME_DISI = [
   "tentiforapp_github", "tentiforapp_yonetici", "tentiforapp_katman_kodlari", "tentiforapp_duzenleme",
   "tentiforapp_konum", "tentiforapp_sayfa", "tentiforapp_tur",
-  "tentiforapp_ziyaret_izleri", "tentiforapp_ziyaret_fark", "tentiforapp_fan_acilan", "tentiforapp_bildirim", "tentiforapp_yayin_kancasi"
+  "tentiforapp_ziyaret_izleri", "tentiforapp_ziyaret_fark", "tentiforapp_fan_acilan", "tentiforapp_bildirim", "tentiforapp_yayin_kancasi",
+  "tentiforapp_cihaz_id"
 ];
 
 /* Bu anahtarlardan biri varsa cihazda "gerçek" ilerleme var sayılır. (rol_gecmis ilk
@@ -483,7 +484,7 @@ const ESIT_ARALIK = 45000;
 const ESIT_BIRLESIM = [
   "tentiforapp_erisim", "tentiforapp_cozulen", "tentiforapp_madalyalar", "tentiforapp_madalya", "tentiforapp_kart_koleksiyon",
   "tentiforapp_kesif", "tentiforapp_usta_acilan", "tentiforapp_supheli_cozulen", "tentiforapp_evren_lore",
-  "tentiforapp_kanon_profiller", "tentiforapp_terimler_goruldu", "tentiforapp_rekorlar", "tentiforapp_gorulen"
+  "tentiforapp_kanon_profiller", "tentiforapp_terimler_goruldu", "tentiforapp_rekorlar", "tentiforapp_gorulen", "tentiforapp_cihazlar"
 ];
 
 let esitZaman = null;

@@ -521,7 +521,7 @@ function evoSinavHtml(e) {
   const q = EVO.sorular[EVO.i];
   const cevaplandi = EVO.secim !== null;
   return '<div class="evo-oyun"><div class="gk-ust"><span class="oyun-etiket">' + kacir(ad) + '</span><span class="oyun-not">' + (EVO.i + 1) + " / " + n + " · " + EVO.dogru + " doğru</span></div>" +
-    '<p class="evo-soru">' + kacir(q.soru) + "</p>" +
+    '<p class="evo-soru">' + (q.soruHtml || kacir(q.soru)) + "</p>" +
     '<div class="evo-secenekler">' + q.secenekler.map(function (s, j) {
       const sinif = cevaplandi ? (s === q.dogru ? " dogru" : (j === EVO.secim ? " yanlis" : "")) : "";
       return '<button class="evo-secenek' + sinif + '" data-evo-sec="' + j + '"' + (cevaplandi ? " disabled" : "") + ">" + kacir(s) + "</button>";
