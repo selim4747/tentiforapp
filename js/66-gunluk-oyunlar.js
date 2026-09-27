@@ -47,13 +47,17 @@ function oyunXpDurumMetni() {
 
 /* ==================== Tömye'nin günlük oyunları ==================== */
 
+/* evren: XP anahtarının öneki ("tomye|kim", "claude|kim") ve oyunun çizildiği alan */
 const GO_OYUNLAR = [
-  { id: "kim", ad: "Kim bu?", ozet: "Kısa tanımdan karakteri bul. 5 soru, 4 doğru yeter.", bolum: "arsiv", n: 5, esik: 4 },
-  { id: "madde", ad: "Madde bilmecesi", ozet: "Özetten evren maddesini bul. 5 soru, 4 doğru yeter.", bolum: "evren", n: 5, esik: 4 },
-  { id: "dogru", ad: "Doğru mu?", ozet: "8 iddia: karakter ve unvanı eşleşiyor mu? 7 doğru yeter.", bolum: "arsiv", n: 8, esik: 7 }
+  { id: "kim", evren: "tomye", ad: "Kim bu?", ozet: "Kısa tanımdan karakteri bul. 5 soru, 4 doğru yeter.", bolum: "arsiv", n: 5, esik: 4 },
+  { id: "madde", evren: "tomye", ad: "Madde bilmecesi", ozet: "Özetten evren maddesini bul. 5 soru, 4 doğru yeter.", bolum: "evren", n: 5, esik: 4 },
+  { id: "dogru", evren: "tomye", ad: "Doğru mu?", ozet: "8 iddia: karakter ve unvanı eşleşiyor mu? 7 doğru yeter.", bolum: "arsiv", n: 8, esik: 7 }
 ];
+const GO_ALANLAR = { tomye: "#gunlukOyunAlan", claude: "#ceGunlukAlan" };
 
-let GO = null;   /* açık oyun: { id, i, dogru, secim, sorular } */
+let GO = null;   /* açık oyun: { id, evren, i, dogru, secim, sorular } */
+
+function goTanim(evren, id) { return GO_OYUNLAR.find(function (x) { return x.evren === evren && x.id === id; }); }
 
 /** Güne ve oyuna bağlı tekrarlanabilir rastgele sayı üreteci (mulberry32). */
 function goRastgele(tohum) {
@@ -90,7 +94,14 @@ function goMaddeler() {
   });
 }
 
-function goSorular(id) {
+/** Başka evrenlerin soru üreticileri: GO_URETICI[evren](id, r, kisa) → sorular */
+const GO_URETICI = {};
+
+function goSorular(id, evren) {
+  if (evren && evren !== "tomye" && GO_URETICI[evren]) {
+    const rc = goRastgele(oyunXpGunu() + "|" + evren + "|" + id);
+    return GO_URETICI[evren](id, rc, function (s, n) { s = String(s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; });
+  }
   const r = goRastgele(oyunXpGunu() + "|" + id);
   const kisa = function (s, n) { s = String(s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
   if (id === "kim" || id === "madde") {
@@ -111,16 +122,16 @@ function goSorular(id) {
   });
 }
 
-function goAcikMi(o) { return typeof bolumErisimi !== "function" || bolumErisimi(o.bolum); }
+function goAcikMi(o) { return !o.bolum || typeof bolumErisimi !== "function" || bolumErisimi(o.bolum); }
 
 function goOyunHtml() {
-  const o = GO_OYUNLAR.find(function (x) { return x.id === GO.id; });
+  const o = goTanim(GO.evren, GO.id);
   const n = GO.sorular.length;
   if (GO.i >= n) {
     return '<div class="evo-oyun"><span class="oyun-etiket">' + kacir(o.ad) + "</span>" +
       '<p class="evo-skor">' + GO.dogru + " / " + n + "</p>" +
       '<p class="oyun-not">' + (GO.dogru >= o.esik ? "Geçtin! " : "Geçmek için en az " + o.esik + " doğru gerekiyor. ") + kacir(GO.mesaj || "") + "</p>" +
-      '<div class="oyun-sira"><button class="dugme" data-go-basla="' + o.id + '">Tekrar</button><button class="dugme dugme-sade" data-go-kapat>Oyunlara dön</button></div></div>';
+      '<div class="oyun-sira"><button class="dugme" data-go-basla="' + o.id + '" data-go-evren="' + o.evren + '">Tekrar</button><button class="dugme dugme-sade" data-go-kapat>Oyunlara dön</button></div></div>';
   }
   const q = GO.sorular[GO.i];
   const cevaplandi = GO.secim !== null;
@@ -134,19 +145,37 @@ function goOyunHtml() {
     '<div class="oyun-sira"><button class="dugme dugme-sade" data-go-kapat>Bırak</button></div></div>';
 }
 
+/** Bir evrenin günlük oyun kartları (Tömye dışındakiler: Claude'un Evreni) */
+function goKartlarHtml(evren) {
+  return GO_OYUNLAR.filter(function (o) { return o.evren === evren; }).map(function (o) {
+    const alindi = oyunXpAlindi(evren + "|" + o.id);
+    return '<div class="yaris-kart evo-kart go-kart" data-go-kart="' + o.id + '"><h4>' + kacir(o.ad) + (alindi ? " · bugün ✓" : "") + "</h4>" +
+      '<p class="oyun-not">' + kacir(o.ozet) + "</p>" +
+      '<div class="yaris-kart-alt"><span></span><button class="dugme" data-go-basla="' + o.id + '" data-go-evren="' + evren + '">Başla</button></div></div>';
+  }).join("");
+}
+
+function goEvrenCiz(evren) {
+  if (evren === "tomye") { gunlukOyunlarCiz(); return; }
+  const alan = document.querySelector(GO_ALANLAR[evren] || "#yok");
+  if (!alan) { return; }
+  if (GO && GO.evren === evren) { alan.innerHTML = goOyunHtml(); return; }
+  alan.innerHTML = '<p class="oyun-not go-durum">' + kacir(oyunXpDurumMetni()) + "</p>" + goKartlarHtml(evren);
+}
+
 function gunlukOyunlarCiz() {
   const alan = document.querySelector("#gunlukOyunAlan");
   if (!alan) { return; }
-  if (GO) { alan.innerHTML = goOyunHtml(); return; }
+  if (GO && GO.evren === "tomye") { alan.innerHTML = goOyunHtml(); return; }
   alan.innerHTML = '<p class="oyun-giris">Her gün yeni sorular. Kazandığın her oyun günde bir kez ' + OYUN_XP + " XP verir; " +
       "başka evrenlerin oyunları da aynı havuzdan sayılır.</p>" +
     '<p class="oyun-not go-durum">' + kacir(oyunXpDurumMetni()) + "</p>" +
-    GO_OYUNLAR.map(function (o) {
+    GO_OYUNLAR.filter(function (o) { return o.evren === "tomye"; }).map(function (o) {
       const acik = goAcikMi(o);
       const alindi = oyunXpAlindi("tomye|" + o.id);
       return '<div class="yaris-kart evo-kart go-kart" data-go-kart="' + o.id + '"><h4>' + kacir(o.ad) + (alindi ? " · bugün ✓" : "") + "</h4>" +
         '<p class="oyun-not">' + kacir(acik ? o.ozet : "Başlangıç koduyla açılan içerikten kurulur.") + "</p>" +
-        '<div class="yaris-kart-alt"><span></span>' + (acik ? '<button class="dugme" data-go-basla="' + o.id + '">Başla</button>'
+        '<div class="yaris-kart-alt"><span></span>' + (acik ? '<button class="dugme" data-go-basla="' + o.id + '" data-go-evren="tomye">Başla</button>'
           : '<a class="dugme dugme-sade" href="#/basla">Kodu al</a>') + "</div></div>";
     }).join("") +
     '<div class="yaris-kart evo-kart go-kart"><h4>Günün kelimesi · kolay' + (oyunXpAlindi("tomye|kelime") ? " · bugün ✓" : "") + "</h4>" +
@@ -155,21 +184,23 @@ function gunlukOyunlarCiz() {
 }
 
 function goBitir() {
-  const o = GO_OYUNLAR.find(function (x) { return x.id === GO.id; });
+  const o = goTanim(GO.evren, GO.id);
   if (GO.dogru < o.esik) { GO.mesaj = ""; return; }
-  const xp = oyunXpVer("tomye|" + o.id);
-  GO.mesaj = xp ? "+" + xp + " XP." : (oyunXpAlindi("tomye|" + o.id) ? "Bugünün XP'sini aldın; yarın yeni sorular." : "Bugünkü oyun XP'si doldu.");
-  if (typeof olaySay === "function") { olaySay("gunluk_oyun:" + o.id); }
+  const xp = oyunXpVer(o.evren + "|" + o.id);
+  GO.mesaj = xp ? "+" + xp + " XP." : (oyunXpAlindi(o.evren + "|" + o.id) ? "Bugünün XP'sini aldın; yarın yeni sorular." : "Bugünkü oyun XP'si doldu.");
+  if (typeof olaySay === "function") { olaySay("gunluk_oyun:" + o.evren + ":" + o.id); }
 }
 
 document.addEventListener("click", function (ev) {
   const h = ev.target.closest("[data-go-basla], [data-go-sec], [data-go-sonraki], [data-go-kapat]");
   if (!h) { return; }
   const d = h.dataset;
+  let evren = GO ? GO.evren : "tomye";
   if (d.goBasla) {
-    const o = GO_OYUNLAR.find(function (x) { return x.id === d.goBasla; });
+    const o = goTanim(d.goEvren || "tomye", d.goBasla);
     if (!o || !goAcikMi(o)) { return; }
-    GO = { id: o.id, i: 0, dogru: 0, secim: null, sorular: goSorular(o.id) };
+    evren = o.evren;
+    GO = { id: o.id, evren: o.evren, i: 0, dogru: 0, secim: null, sorular: goSorular(o.id, o.evren) };
   } else if (h.hasAttribute("data-go-kapat")) {
     GO = null;
   } else if (d.goSec !== undefined && GO && GO.secim === null) {
@@ -180,7 +211,7 @@ document.addEventListener("click", function (ev) {
     GO.i++; GO.secim = null;
     if (GO.i >= GO.sorular.length) { goBitir(); }
   }
-  gunlukOyunlarCiz();
+  goEvrenCiz(evren);
 });
 
 /* sekmeye geçince güncel durum */

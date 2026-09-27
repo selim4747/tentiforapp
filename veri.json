@@ -1,5 +1,5 @@
 {
-  "surum": "1.17.0",
+  "surum": "1.18.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -7161,6 +7161,7 @@
     }
   ],
   "degisiklik": [
+    {"surum": "1.18.0", "tarih": "2026-09-27", "maddeler": ["Claude'un Evreni'nin ilk romanı: Işık Postası — ulak Hıbır'ın yolculuğu, üç bölüm", "İki yeni hikâye (Dünün Ulağı, Tıkırtı), Sıssoz'un İşik'e mektubu, yeni terimler ve bir açık soru", "Evrende arama ve okuma ilerlemesi: kaç kutuyu okudun, sıradaki hangisi", "Kişi kartlarında geçtiği hikâyeler ve mektuplar; hepsini okuyana rozet", "Günlük oyunlar: Kim bu?, Sözlük bilmecesi, Hangisi önce? — kazanınca XP"], "yeniler": []},
     {"surum": "1.17.0", "tarih": "2026-09-27", "maddeler": ["Günlük oyunlar (Oyunlar → Günlük · XP): Kim bu?, Madde bilmecesi, Doğru mu? — her gün yeni sorular, kazanınca 10 XP", "Her evrende iki yeni oyun: Doğru mu? ve Zaman sırası", "Bütün evrenlerden XP: oyunlar (günde en çok 80) ve okunan bölümler, roman bölümleri", "Yarışlarda günün ilk 3 puanlı oyunu XP verir", "Google ile girenlere kullanıcı adı hatırlatması"], "yeniler": []},
     {"surum": "1.16.2", "tarih": "2026-09-27", "maddeler": ["Seviyeler daha uzun: her seviye için gereken XP arttı", "Okunan kutu 10 XP; her kutu bir kez sayılır (iki sayfada görünen madde tek kutu)", "Yazar notları da okuma kutusu"], "yeniler": []},
     {"surum": "1.16.1", "tarih": "2026-09-27", "maddeler": ["Sonuna kadar okuduğun her kutu 15 XP (hesapta da sayılır)", "Evren maddeleri ve Claude'un Evreni hikâyeleri de okuma kutusu oldu"], "yeniler": []},
@@ -7840,6 +7841,26 @@
         "a": "cl_unca",
         "b": "cl_tovbe",
         "etiket": "sırtını gördü"
+      },
+      {
+        "a": "cl_haber",
+        "b": "cl_yilkin",
+        "etiket": "gemisinde sessizce tekrar eder"
+      },
+      {
+        "a": "cl_haber",
+        "b": "cl_bekle",
+        "etiket": "mühürlü mektubunu taşıyor"
+      },
+      {
+        "a": "cl_sessiz",
+        "b": "cl_isik",
+        "etiket": "üç gece birlikte dinlediler"
+      },
+      {
+        "a": "cl_sessiz",
+        "b": "cl_ene",
+        "etiket": "sorusunu aldı"
       }
     ],
     "hikayeler": [
@@ -7923,6 +7944,26 @@
           "cl_ene"
         ],
         "metin": "İşik defteri büyükannesine gösterdiğinde Ene hiçbir şey demedi. Lambanın altına oturdu, defteri şimdi adasının tam ortasına koydu ve sayfaları tek tek çevirdi.\n\n\"Loncadakiler bunu kimseye gösterme dedi,\" dedi İşik. \"Neden? Bir yıldızın parlaklaşması kimin umurunda?\"\n\nEne defteri kapattı. \"Bir yıldız neden parlaklaşır?\"\n\n\"Büyüyordur.\"\n\n\"Ya da?\"\n\nİşik düşündü. Sonra yüzü değişti; Ene bunu hemen gördü, çünkü lambanın altında yüz beklemeye gerek yoktu.\n\n\"Yaklaşıyordur.\"\n\n\"Işık saatte beş kilometre gidiyor,\" dedi Ene. \"Gelen'in ışığı bize ulaştığında, Gelen o ışığı çok uzun zaman önce göndermişti. Eğer yaklaşıyorsa, gördüğümüz yer onun çoktan terk ettiği yerdir. Gerçekte nerede olduğunu hiç kimse göremez.\"\n\n\"O zaman ne zaman geleceğini de bilemeyiz.\"\n\n\"Hayır. Onu gördüğümüz an, çoktan gelmiş olacak.\"\n\nİşik uzun süre sustu. Sonra sordu: \"Sen ne zamandır biliyorsun?\"\n\nEne gülümsedi ve lambayı biraz daha yakına çekti. \"Kırk bir yıldır. Bir bebek doğurturken pencereden baktım. O bebek annendi, İşik. Hıçkırık gecesi doğdu. Senin adını da o gece gördüğüm şeyden aldık: karanlığın ortasında yanan tek ışıktan.\""
+      },
+      {
+        "id": "cl_h9",
+        "baslik": "Dünün Ulağı",
+        "eklendi": "2026-09-27",
+        "karakterler": [
+          "cl_haber",
+          "cl_yilkin"
+        ],
+        "metin": "Sabah Kenarı limandan ayrılırken Hıbır iskelenin ucunda hâlâ koşuyordu. Yılkın onu görmüştü; görmesi gereken şey de buydu. Işık yelkenlisinde bir ulak beklenmez, çünkü ulak çoktan güvertededir.\n\nGerçekten de öyleydi. Hıbır halatın dibine oturmuş, nefes nefese, dudaklarını kıpırdatıyordu. Sesi yoktu. Güvertede kimse konuşmazdı.\n\nYılkın yanına çömeldi ve yalnızca dudaklarıyla sordu: \"Ne taşıyorsun?\"\n\nHıbır göğsündeki çantaya dokundu. İçinde mühürlü bir mektup vardı. Mühür Ayna Adaları'nındı.\n\n\"Kime?\"\n\nHıbır cevap vermedi. Ulaklar kime gittiklerini söylemezdi; söylerlerse haber, ulaktan önce varırdı.\n\nDan'a yanaştıklarında Yılkın ilk kez sesli konuştu: \"Burada sana dünün ulağı diyorlar. Kızmıyor musun?\"\n\nHıbır iskeleye atladı ve arkasına bakmadan cevap verdi. \"Neden kızayım? Dan'a gelen her haber dünündür. Ben yalnızca onu en taze getirenim.\"\n\nYılkın onun koşan görüntüsünü tepeye kadar izledi. Görüntü tepeye vardığında, Hıbır çoktan Dan'ın kapısını çalmıştı."
+      },
+      {
+        "id": "cl_h10",
+        "baslik": "Tıkırtı",
+        "eklendi": "2026-09-27",
+        "karakterler": [
+          "cl_sessiz",
+          "cl_isik"
+        ],
+        "metin": "İşik, Sıssoz'u Sebir'in avcı okulunun avlusunda buldu. Kör avcı taş bir sekiye oturmuş, gözlerini kapalı tutan öğrencilere adım saydırıyordu.\n\n\"Büyükannem selam söyledi,\" dedi İşik. \"Ve bir soru.\"\n\nSıssoz başını çevirdi. İşik'in sesini hiç duymamıştı ama Ene'nin konuşma biçimini tanıdı: soruyu en sona saklamak.\n\n\"Bir yıldız tıkırdar mı?\"\n\nAvlu sustu. Öğrenciler bile adım saymayı bıraktı.\n\nSıssoz uzun süre cevap vermedi. Sonra ayağa kalktı ve İşik'in omzuna dokundu. \"Gelen'in Tepesi'ne kaç gecede gidilir?\"\n\n\"Üç.\"\n\n\"Işık oraya yürüyerek gider,\" dedi Sıssoz. \"Ses koşar. Bir şey yaklaşıyorsa, onu görmeden önce duyarsın. Yeveşlerde böyledir. Kervanlarda böyledir. Ben hayatım boyunca hiçbir şeyi görmeden duydum.\"\n\n\"Yani?\"\n\n\"Yani büyükannen bana bir yıldızın ne olduğunu sormuyor, İşik. Bana onu dinleyip dinlemediğimi soruyor.\" Yayını omzuna aldı. \"Üç gece. Lambanı getir. Sen bakarsın, ben dinlerim.\""
       }
     ],
     "mektuplar": [
@@ -7953,6 +7994,14 @@
         "kime": "Seyir defteri",
         "not": "Sabah Kenarı'nın seyir defterinden, dönüş yolculuğu.",
         "metin": "Dönüşün üçüncü günü. Rüzgâr karşıdan. Gün, gece, gün, gece; saymayı bıraktım.\n\nMürettebattan ikisi hasta. Biri, gece geçerken güvertede ağladı ve ben onu durdurmadım. İnsan geceye alışık değilse, geceyi bir kayıp gibi yaşar.\n\nBu sabah — ya da bu sabahlardan birinde — gökte Gelen'i gördüm. Daha önce görmüştüm, ama bu kez farklıydı. Yanında, çok sönük, ikinci bir nokta vardı. Birkaç saniye. Sonra gün geldi.\n\nKimseye söylemedim. Kaptan gördüğüne değil, duyduğuna güvenir. Ben hiçbir şey duymadım.\n\nAma bir şey gördüm."
+      },
+      {
+        "id": "cl_m5",
+        "kimden": "Sıssoz",
+        "kime": "İşik",
+        "eklendi": "2026-09-27",
+        "not": "Gelen'in Tepesi'nden dönerken, avcı okulunun kapısına bırakıldı. Kör bir elin yazısı: harfler birbirine değmiyor.",
+        "metin": "Üç gece dinledim. İlk gece rüzgârdan başka bir şey yoktu. İkinci gece Gelişçiler şarkı söyledi; onları susturmak bir gece daha aldı.\n\nÜçüncü gece rüzgâr dindi. Sen lambanın altında uyuyordun. Ben toprağa kulağımı koydum, Yeveş beklerken yaptığım gibi.\n\nBir şey duydum mu, bilmiyorum. Yeveş pençesi değildi. Kervan değildi. Çok uzaktan, çok düzenli bir şeydi: sanki birisi ağır bir kapıyı, yıllardır, aynı hızla itiyordu.\n\nBüyükannene söyle: evet demiyorum. Hayır da demiyorum. Dinlemeye devam edeceğim.\n\nVe ona teşekkür et. Kırk yıldır bana bir şey görmem gerektiğini söyleyen çok oldu. Dinlemem gerektiğini söyleyen ilk o."
       }
     ],
     "sozluk": [
@@ -8043,6 +8092,16 @@
       {
         "terim": "Gölge bırakmak",
         "tanim": "Işığı geçerek kaçıp gözcülere yalnızca geç düşen gölgesini göstermek. Hırsız argosu."
+      },
+      {
+        "terim": "Dünün ulağı",
+        "tanim": "Danlıların Hıbır'a taktığı ad. Dan haberi dünyada en son duyar; oraya gelen her haber, bir başka yerin dünüdür.",
+        "eklendi": "2026-09-27"
+      },
+      {
+        "terim": "Toprak dinlemek",
+        "tanim": "Kulağı toprağa koyup ışıktan önce gelen sesi beklemek. Avcı okullarında Yeveş için öğretilir; Sıssoz onu bir yıldız için denedi.",
+        "eklendi": "2026-09-27"
       }
     ],
     "alintilar": [
@@ -8135,6 +8194,11 @@
       {
         "soru": "Bir yıldız tıkırdar mı?",
         "not": "Ene'nin Sıssoz'a sorulmasını istediği soru."
+      },
+      {
+        "soru": "Hıbır'ın taşıdığı mühürlü mektupta ne yazıyor?",
+        "not": "Mühür Ayna Adaları'nın; adada tek başına yaşayan tek kişi Bıklı. Hıbır mektubun kime gittiğini kimseye söylemedi.",
+        "eklendi": "2026-09-27"
       }
     ],
     "yankilar": [
@@ -8178,7 +8242,31 @@
           "Sebeh'in ilk ve tek gecesi"
         ]
       }
-    ]
+    ],
+    "roman": {
+      "baslik": "Işık Postası",
+      "ozet": "Ulak Hıbır'ın yolculuğu: Yerin'den denize, görüntüsünden önce. Claude'un Evreni'nin ilk romanı; her bölüm bir gün.",
+      "bolumler": [
+        {
+          "id": "r1",
+          "baslik": "Şafaktan Önce",
+          "eklendi": "2026-09-27",
+          "metin": "Yerin'de ulaklar şafaktan önce yola çıkar, çünkü şafak onları yakalarsa yüzleri de yakalanır.\n\nHıbır çantasını kapattı, kapının eşiğinde durdu ve Ene'nin sesini bekledi. Yaşlı ebe her sabah aynı şeyi söylerdi, ve Hıbır o sözü duymadan hiçbir yere koşmazdı.\n\n\"Görüntünü arkanda bırak.\"\n\nBu Yerin'de bir veda sözüydü. Ama Hıbır için bir talimattı. Bir ulak, gideceği yere görüntüsünden önce varmalıdır; yoksa kapıdaki kişi onu yolun başında görür, bekler, sıkılır ve haberi kendisi uydurur.\n\nKoşmaya başladığında Kor henüz sönüktü. Yolun iki yanındaki fınır ağaçları geceden kalan ışıklarını yavaş yavaş bırakıyordu. Hıbır onları saymazdı. Ulakların saydığı tek şey adımlardı, ve adımlar da haber gibi, sayıldıkça eskirdi.\n\nArkasında, Yerin'in kapısında, Ene hâlâ onun durduğu yere bakıyordu. Hıbır bunu bilmiyordu. Bilseydi de dönmezdi.\n\nGörüntüsü oradaydı. O, çoktan yoldaydı."
+        },
+        {
+          "id": "r2",
+          "baslik": "Sebir'in Aynaları",
+          "eklendi": "2026-09-27",
+          "metin": "Sebir'de haber okunmaz, yankılanır.\n\nHıbır Aynacılar Loncası'nın avlusuna girdiğinde sesi kapıdan önce içeri düştü. Aynacılar başlarını çevirdi, ama yüzü henüz gelmemişti; birkaç saniye boyunca konuşan bir boşluğa baktılar. Sebirliler buna alışkındı. Hıbır'ın alışık olmadığı şey, avlunun ortasında onu bekleyen adamdı.\n\nAdam bir aynacıydı, ama cüppesinin yakası tuzluydu: adalardan gelmişti. Hıbır'a tek kelime etmeden mühürlü bir zarf uzattı.\n\nMühür Ayna Adaları'nındı. Zincirin ortasındaki adanın. Orada tek bir kişi yaşardı.\n\n\"Kime?\" diye sordu Hıbır, ulakların sormaması gereken tek soruyu.\n\nAynacı zarfın arkasını gösterdi. Tek bir kelime yazıyordu: Hetire.\n\nHıbır zarfı çantasına koydu ve avludan çıktı. Kapıda durup geriye baktı. Aynacı hâlâ oradaydı, ama bu onun görüntüsüydü; kendisi çoktan gitmişti. Sebir'de herkes biraz geçmişteydi.\n\nErtesi gün Hetire'ye vardığında mahkemenin kapısı kapalıydı. Hıbır zarfı eşiğe bıraktı. Ulaklar kapı çalmazdı: haber, kapıyı kendisi çalardı."
+        },
+        {
+          "id": "r3",
+          "baslik": "Sessiz Güverte",
+          "eklendi": "2026-09-27",
+          "metin": "Sabah Limanı'nda şafak duvarı kıyıya vardığında, Sabah Kenarı'nın yelkenleri çoktan şişmişti. Hıbır iskelenin son tahtasından atladı ve güvertenin tam ortasına düştü.\n\nKimse şaşırmadı. Yılkın'ın gemisinde kimse hiçbir şeye şaşırmazdı, çünkü burada her şey tam şimdiydi. Görüntüler geminin hızıyla gelir; güvertede biri gülümserse, o gülümseme bekletmeden görülür.\n\nHıbır bunu sevmezdi. Karada insanlar ona hep biraz geç bakardı, ve bu gecikme bir tür saygıydı: ulak, gözden hızlıdır. Burada ise sıradan bir yolcuydu.\n\nHalatın dibine oturdu ve taşıdığı haberleri tekrar etmeye başladı. Sessizce, yalnızca dudaklarıyla. Yerin'de bir doğum. Sebir'de bir ayna tartışması. Hetire'de, eşiğe bırakılmış bir zarf.\n\nYılkın yanına çömeldi. Uzun süre bir şey sormadı. Sonra dudaklarıyla tek bir kelime söyledi, ve Hıbır o kelimeyi hayatı boyunca unutmadı.\n\n\"Gelen.\"\n\nKaptan göğün bir noktasını gösteriyordu. Hıbır baktı. Orada iki ışık vardı.\n\nBir saniye sonra, yalnızca bir tane."
+        }
+      ]
+    }
   },
   "av": {
     "sezon": 1,

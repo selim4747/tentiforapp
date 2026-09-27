@@ -179,6 +179,11 @@ function okuEtiketle() {
   esle(".madde[id] > .madde-govde", function (el) { return "madde:" + el.parentNode.id; });
   esle(".ce-kisi[id] > .detay-metin", function (el) { return "madde:" + el.parentNode.id; });
   esle(".ce-hikaye[id] > .detay-metin", function (el) { return "madde:" + el.parentNode.id; });
+  /* Claude'un Evreni: mektuplar, yankılar, sözlüğün tamamı, roman bölümleri */
+  esle("#claudeEvrenAlan .mektup[id] > .mektup-metin", function (el) { return "madde:" + el.parentNode.id; });
+  esle("#claudeEvrenAlan .ce-yanki[id]", function (el) { return "madde:" + el.id; });
+  esle("#claudeEvrenAlan #ce-sozluk", function () { return "madde:ce-sozluk"; });
+  esle("#claudeEvrenAlan .ce-roman-metin[data-bolum]", function (el) { return "madde:ce-roman-" + el.getAttribute("data-bolum"); });
   /* evren maddeleri (data-madde: veri.evren sırası). Tömye listesinde de E25 gibi kanon evren sayfalarında da
      aynı anahtar: iki yerde görünen madde tek kutudur, XP'si bir kez gelir */
   esle(".madde[data-madde] > .madde-govde", function (el) {
