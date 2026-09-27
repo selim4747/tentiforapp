@@ -1281,6 +1281,17 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("okuma süresi: kelime başına çeyrek saniye (veri.cuzdan.okumaSaniye)", await YZ.evaluate(function () {
       const e = document.querySelector('#perde [data-oku^="kar:"]'); return Number(e.getAttribute("data-oku-kelime")) > 5 && veri.cuzdan.okumaSaniye === 0.25 && okuSaniyeKelime() * 60 === 0.25;
     }));
+    ok("tam okunan her kutu yerel XP'ye 15 ekler, liderlik ölçüsüne gider", await YZ.evaluate(function () {
+      const x0 = yerelXp(); okunduIsaretle("kar:__xpdeneme"); const x1 = yerelXp();
+      const n = liderlikOlculeri().okunan_kutu;
+      cuzdan.acilan = cuzdan.acilan.filter(function (x) { return x !== "oku___xpdeneme" && x !== "oku_kar:__xpdeneme"; });
+      return x1 - x0 === 15 && n >= 1;
+    }));
+    ok("Tömye evren maddeleri ve Claude hikâyeleri okuma kutusu olarak etiketlenir", await YZ.evaluate(function () {
+      cizEvren(); okuEtiketle();
+      const m = document.querySelectorAll('#evrenListe [data-oku^="evren:"]').length;
+      return m > 0 && m === document.querySelectorAll("#evrenListe .madde[data-madde]").length;
+    }));
     await YZ.evaluate(function () { perdeKapat(); bugunKartiCiz(); }); await bekle(YZ, 150);
     ok("“Kaldığın yer” kartı son okunanı gösterir", await YZ.locator("#bugunKartAlan .devam-kart [data-devam-kar]").count() === 1);
     ok("altın rozet: önce hepsini oku, sonra ona hikâye yaz", await YZ.evaluate(function () {
@@ -1319,6 +1330,8 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("kilitli düğme seviye yolunu anlatır", /Seviye 5/.test(await YZ.textContent("#perde .svk-pencere")) && /Seviye 15/.test(await YZ.textContent("#perde .svk-pencere")));
     await YZ.evaluate(function () { perdeKapat(); });
     ok("yan bölümler seviyeyle açılır", await YZ.evaluate(function () {
+      /* okunan kutular XP verdiği için seviye testin akışına göre değişir: XP'siz bir cüzdanla bak */
+      window.__acilan = cuzdan.acilan; cuzdan.acilan = cuzdan.acilan.filter(function (x) { return !/^oku_/.test(x); }); SVK.onbellek = null;
       kanonKilitUygula();
       const sv = seviyeDurumu().seviye;
       const ust = Object.keys(SEVIYE_BOLUMLER).find(function (id) { return SEVIYE_BOLUMLER[id] > sv && document.getElementById(id) && !document.getElementById(id).classList.contains("kanon-kilitli") && !document.getElementById(id).classList.contains("bos-bolum"); });
@@ -1326,6 +1339,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       return !!ust && document.getElementById(ust).classList.contains("svk-bolum-kilitli") && /Seviye/.test(document.getElementById(ust).querySelector(".svk-yer").textContent) &&
         (!alt || !document.getElementById(alt).classList.contains("svk-bolum-kilitli"));
     }));
+    await YZ.evaluate(function () { cuzdan.acilan = window.__acilan; SVK.onbellek = null; kanonKilitUygula(); });
     ok("seviye 6: hikâye açılır, evren hâlâ kilitli; 15: evren de", await YZ.evaluate(function () {
       localStorage.setItem("tentiforapp_seviye_test", "6"); SVK.onbellek = null;
       const h = fanYeni("hikaye"); const e1 = evrenYeniKur();

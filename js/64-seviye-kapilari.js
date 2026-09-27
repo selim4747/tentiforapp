@@ -4,7 +4,7 @@
    - İkincil bilgiler: ana hikâye ve arşiv her zaman açık; yan bölümler (basın kiti, moodboard, yankılar…) seviye
      geldikçe açılır.
    Seviye: hesabın varsa sunucudaki XP (arsivci_seviyeleri); yoksa bu cihazdaki ilerlemeden aynı formülle
-   tahmin (arşiv tamlığı, gelinen günler, madalyalar, buz katmanları). İkisinden büyük olanı geçerli. */
+   tahmin (arşiv tamlığı, gelinen günler, madalyalar, buz katmanları, tam okunan kutular). İkisinden büyük olanı geçerli. */
 
 const SEVIYE_URETIM = {
   hikaye: { seviye: 5, ad: "Fan hikâyesi yazmak" },
@@ -31,6 +31,8 @@ function yerelXp() {
     xp += 5 * (o.gun || 0) + 40 * (o.katman || 0);
   } catch (_) { /* yok */ }
   try { xp += 30 * ((typeof arsivciMadalyalari === "function" && arsivciMadalyalari().length) || 0); } catch (_) { /* yok */ }
+  /* tam okunan her kutu (okuma süresi dolmuş) 15 XP */
+  try { xp += 15 * (cuzdan.acilan || []).filter(function (x) { return /^oku_/.test(x); }).length; } catch (_) { /* yok */ }
   return Math.round(xp);
 }
 
@@ -75,7 +77,7 @@ function seviyeCubukHtml(gereken) {
   return '<span class="svk-cubuk" aria-hidden="true"><i style="width:' + oran + '%"></i></span>';
 }
 
-const SVK_NASIL = "XP; okuyarak (arşiv tamlığı), her gün gelerek, madalya ve buz katmanlarıyla birikir. Hesabın varsa yarışlar, " +
+const SVK_NASIL = "XP; kutuları sonuna kadar okuyarak (kutu başına 15), her gün gelerek, madalya ve buz katmanlarıyla birikir. Hesabın varsa yarışlar, " +
   "günün kelimesi, teoriler ve keşifler de sayılır.";
 
 /** Kapıya takılınca açılan küçük pencere. */

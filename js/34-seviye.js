@@ -66,7 +66,7 @@ function sonrakiUnvan(s) {
 }
 
 const XP_KAYNAKLARI = [
-  ["tamlik", "Arşiv tamlığı", "tamlık yüzdesi başına 20"], ["gun", "Gelinen günler", "gün başına 5"],
+  ["tamlik", "Arşiv tamlığı", "tamlık yüzdesi başına 20"], ["okuma", "Tam okunan kutular", "kutu başına 15"], ["gun", "Gelinen günler", "gün başına 5"],
   ["madalya", "Madalyalar", "madalya başına 30"], ["katman", "Buz katmanları", "katman başına 40"],
   ["yaris", "Yarışlar", "geçerli oyun başına 10"], ["gk", "Günün Kelimesi", "çözüm başına 25"],
   ["kesif", "Keşifler", "keşif başına 15"], ["ilk_kasif", "İlk Kâşif", "ilk bulduğun her şey için 25"],
