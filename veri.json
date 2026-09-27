@@ -1,5 +1,5 @@
 {
-  "surum": "1.18.0",
+  "surum": "2.0.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -1154,6 +1154,7 @@
   ],
   "yoneticiOzet": "7b3b156ace4f030d8473274ec0e1555d7775a7251f9554bffc218123536696a4",
   "sinirliYoneticiOzet": "d3d18d3cdd5c548c640019f4de6c32fb75abb3d51931c62ba233869dc81c0f70",
+  "seviyeKodlari": [{"ozet": "e9d43529482468c1c15bfa4d405a4911e413327912c0f14f2c2d82a4f8825fb6", "ad": "Evrengezer kurma", "seviye": 10}, {"ozet": "8f6b1cc4e4b1df8b4a8d5c87b599600893f51fa0af94b25e46e571b13f3e3103", "ad": "Evren kurma", "seviye": 15}],
   "oduller": {
     "birOyun": "Pf8tRdrLk9ObqGIw",
     "tumOyunlar": "H6v/FCnpcuXjMzuP"
@@ -7161,6 +7162,7 @@
     }
   ],
   "degisiklik": [
+    {"surum": "2.0.0", "tarih": "2026-09-27", "maddeler": ["TentiforApp 2.0 — Çoklu Evren: başlangıç evreni Tentiforverse; başlıkta hangi evrende olduğun, E tuşu ya da ◎ ile hızlı geçiş, arama ve son girdiğin evrenler", "Ana sayfada evren şeridi; fan evrenleri üstüne gelince önceden iner", "Hesap eşitleme yenilendi: bilgisayarda kazandığın telefonda da görünür; iki cihazdaki ilerleme birleşir, eçka toplanır; bulutta daha az yer ve trafik", "Seviye kodları: Evrengezer ve evren kurmayı seviyeyi beklemeden açar", "Altın rozet kazandığın karakterin buz katmanları açılır", "Evrenine kodla oyun ve özellik yaz: Uygulamalar sekmesi, korumalı çerçeve, kazanana XP", "Evrenine yazı çiz: alfabe, hece yazısı ya da ünsüz ve ünlüsü ayrı çizilip birleşen yazı (24. Evren gibi)"], "yeniler": []},
     {"surum": "1.18.0", "tarih": "2026-09-27", "maddeler": ["Claude'un Evreni'nin ilk romanı: Işık Postası — ulak Hıbır'ın yolculuğu, üç bölüm", "İki yeni hikâye (Dünün Ulağı, Tıkırtı), Sıssoz'un İşik'e mektubu, yeni terimler ve bir açık soru", "Evrende arama ve okuma ilerlemesi: kaç kutuyu okudun, sıradaki hangisi", "Kişi kartlarında geçtiği hikâyeler ve mektuplar; hepsini okuyana rozet", "Günlük oyunlar: Kim bu?, Sözlük bilmecesi, Hangisi önce? — kazanınca XP"], "yeniler": []},
     {"surum": "1.17.0", "tarih": "2026-09-27", "maddeler": ["Günlük oyunlar (Oyunlar → Günlük · XP): Kim bu?, Madde bilmecesi, Doğru mu? — her gün yeni sorular, kazanınca 10 XP", "Her evrende iki yeni oyun: Doğru mu? ve Zaman sırası", "Bütün evrenlerden XP: oyunlar (günde en çok 80) ve okunan bölümler, roman bölümleri", "Yarışlarda günün ilk 3 puanlı oyunu XP verir", "Google ile girenlere kullanıcı adı hatırlatması"], "yeniler": []},
     {"surum": "1.16.2", "tarih": "2026-09-27", "maddeler": ["Seviyeler daha uzun: her seviye için gereken XP arttı", "Okunan kutu 10 XP; her kutu bir kez sayılır (iki sayfada görünen madde tek kutu)", "Yazar notları da okuma kutusu"], "yeniler": []},

@@ -4267,3 +4267,48 @@ html.ecka-yeni #cuzdanTutar{visibility:hidden}
 .ce-kisi-baglar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 .ce-rozet,.ce-okundu{color:var(--deniz);font-weight:700}
 .ce-gunluk{margin-bottom:14px}
+
+/* 2.0: çoklu evren (68-surum-2.js) */
+.es-simdiki{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:bottom}
+.es-ara{padding:0 0 8px}
+.es-ara input{width:100%}
+.evren-serit{padding:10px 16px 4px;max-width:1100px;margin:0 auto}
+.evren-serit-liste{display:flex;gap:8px;overflow-x:auto;padding:6px 0 10px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.es-serit-oge{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:44px;padding:8px 12px;border:1px solid var(--sig);border-radius:4px;background:var(--kar);color:inherit;font:inherit;cursor:pointer;text-align:left;max-width:220px}
+.es-serit-oge .es-ad{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:196px}
+.es-serit-oge .es-not{font-size:12px;opacity:.75;white-space:nowrap}
+.es-serit-oge.bu{border-color:var(--deniz);box-shadow:inset 0 0 0 1px var(--deniz)}
+.es-serit-oge.kilitli{opacity:.7}
+.es-serit-tum{justify-content:center;font-family:var(--mono);font-size:13px}
+.esit-bildirim{bottom:calc(136px + env(safe-area-inset-bottom))}
+
+/* evren uygulamaları (69) */
+.evu-cerceve{width:100%;height:420px;border:1px solid var(--sig);border-radius:4px;background:#fff;display:block}
+.evu-sahne{margin-top:10px}
+.evu-tur{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--deniz);font-weight:400}
+.evu-api code{font-family:var(--mono);font-size:13px}
+.evu-liste{display:grid;gap:10px;margin:10px 0}
+
+/* evren yazısı (70) */
+.ey-turler{display:grid;gap:6px;margin:8px 0 12px}
+.ey-tur{display:block;padding:8px 10px;border:1px solid var(--sig);border-radius:4px;cursor:pointer}
+.ey-tur span{opacity:.75;font-size:14px}
+.ey-anahtarlar{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.ey-anahtar{position:relative;width:52px;height:60px;padding:4px;border:1px solid var(--sig);border-radius:4px;background:var(--kar);color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.ey-anahtar.secili{border-color:var(--deniz);box-shadow:inset 0 0 0 1px var(--deniz)}
+.ey-anahtar .ey-tek{width:34px;height:34px;position:absolute;top:4px;left:50%;transform:translateX(-50%)}
+.ey-anahtar .ey-harf{font-family:var(--mono);font-size:12px;opacity:.7}
+.ey-okur .ey-anahtar{cursor:default}
+.ey-cizim{margin:8px 0}
+.ey-cizim-ust{display:flex;gap:10px;align-items:baseline}
+.ey-simdi{font-family:var(--mono);font-size:20px}
+.ey-pad{width:min(280px,100%);aspect-ratio:1;display:block;margin:6px 0;background:var(--kar);border:1px solid var(--sig);border-radius:4px;touch-action:none;cursor:crosshair}
+.ey-izgara path{stroke:var(--sig);stroke-width:.6;fill:none}
+.ey-yol,.ey-kilavuz{fill:none;stroke:currentColor;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.ey-kilavuz{opacity:.2}
+.ey-onizle{min-height:48px;padding:8px 0;overflow-x:auto}
+.ey-yazi{max-width:100%;display:block}
+.evs-yazi-ad{margin-top:2px;opacity:.85}
+.ey-baslik{display:block;margin:10px 0}
+.ey-tur,.ey-tur b,.ey-tur span,.ey-baslik{text-transform:none;letter-spacing:normal;font-family:inherit;font-size:15px}
+.ey-tur b{font-weight:700}

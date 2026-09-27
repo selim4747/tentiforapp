@@ -179,7 +179,7 @@ async function hesapOturumAyarla(kullanici, olay) {
     await hesapProfilYukle();
     await hesapIlkEsitleme();
     clearInterval(hesapEsitZamanlayici);
-    hesapEsitZamanlayici = setInterval(hesapEsitle, 20000);
+    hesapEsitZamanlayici = setInterval(hesapEsitle, ESIT_ARALIK);
   }
 
   hesapHazir = true;
@@ -450,15 +450,15 @@ function hesapYerelIlerlemeyiTemizle() {
 }
 
 async function hesapCikis() {
-  await hesapEsitle(true);             /* çıkmadan son hâli hesaba kaydet */
-  const kaydedildi = hesapEsitDurum === "kaydedildi";
+  await hesapEsitle(true, false);      /* çıkmadan son hâli hesaba kaydet (başka cihazdakiyle birleştirerek) */
+  const kaydedildi = hesapEsitDurum === "kaydedildi" || hesapEsitDurum === "güncel";
   const eskiId = hesapKullanici && hesapKullanici.id;
   hesapKullanici = null;               /* bundan sonra boş hâli hesaba yazmasın */
   hesapProfil = null;
   clearInterval(hesapEsitZamanlayici);
   try { await hesapIstemci.auth.signOut(); } catch (_) { /* yoksay */ }
   /* hesaba yazılamadıysa (çevrimdışı) bu cihazdaki ilerleme silinmez: evrenler, eçka kaybolmasın */
-  if (kaydedildi) { hesapYerelIlerlemeyiTemizle(); }
+  if (kaydedildi) { hesapYerelIlerlemeyiTemizle(); esitZamanSifirla(); }
   else {
     try {
       window.sessionStorage.setItem("tentiforapp_cikis_uyari", "1");
@@ -469,9 +469,76 @@ async function hesapCikis() {
   location.reload();                   /* bellek (cüzdan, kodlar, UI) misafire dönsün */
 }
 
-/* ==================== ilerleme eşitleme ==================== */
+/* ==================== ilerleme eşitleme (2.0) ====================
+   - Her kaydın ne zaman değiştiği "tentiforapp_esit_zaman"da tutulur (localStorage yazımları izlenir).
+   - İki cihaz birleştirilir, biri seçilmez: açılanlar, çözülenler, madalyalar, kartlar birleşir; eçka iki
+     cihazdaki kazanç ve harcamayla hesaplanır (son eşitlemedeki cüzdan taban alınır); öteki kayıtlarda son
+     değişen kazanır. Fan eserleri kimliğe göre birleşir.
+   - Bulutta tek satır, sıkıştırılmış (gzip). Başka cihazın yazıp yazmadığı yalnızca zaman sütunu okunarak
+     anlaşılır; tam veri yalnızca gerektiğinde iner. Yazım en sık 45 saniyede bir, değişiklik varsa. */
+
+const ESIT_ZAMAN_ANAHTAR = "tentiforapp_esit_zaman";
+const ESIT_ARALIK = 45000;
+/* yalnızca büyüyen kazanımlar: iki cihazdakiler birleşir */
+const ESIT_BIRLESIM = [
+  "tentiforapp_erisim", "tentiforapp_cozulen", "tentiforapp_madalyalar", "tentiforapp_madalya", "tentiforapp_kart_koleksiyon",
+  "tentiforapp_kesif", "tentiforapp_usta_acilan", "tentiforapp_supheli_cozulen", "tentiforapp_evren_lore",
+  "tentiforapp_kanon_profiller", "tentiforapp_terimler_goruldu", "tentiforapp_rekorlar", "tentiforapp_gorulen"
+];
+
+let esitZaman = null;
+let esitZamanBekle = 0;
+let esitDamgaKapali = false;
+let esitYazOrijinal = null;
+let esitCekBekliyor = false;     /* başka cihazda yeni ilerleme var; sekme gizlenince uygulanır */
+let esitSonKontrol = 0;
+
+function esitIzlenir(k) {
+  return !!k && k.indexOf("tentiforapp_") === 0 && k !== ESIT_ZAMAN_ANAHTAR && ESITLEME_DISI.indexOf(k) === -1;
+}
+
+function esitZamanOku() {
+  if (!esitZaman) {
+    try { esitZaman = JSON.parse(window.localStorage.getItem(ESIT_ZAMAN_ANAHTAR) || "{}") || {}; } catch (_) { esitZaman = {}; }
+  }
+  return esitZaman;
+}
+
+function esitZamanYaz() {
+  esitZamanBekle = 0;
+  if (esitDamgaKapali || !esitYazOrijinal) { return; }
+  try { esitYazOrijinal.call(window.localStorage, ESIT_ZAMAN_ANAHTAR, JSON.stringify(esitZamanOku())); } catch (_) { /* dolu */ }
+}
+
+function esitDamgala(k) {
+  if (esitDamgaKapali || !esitIzlenir(k)) { return; }
+  esitZamanOku()[k] = Date.now();
+  if (!esitZamanBekle) { esitZamanBekle = setTimeout(esitZamanYaz, 400); }
+}
+
+/** Çıkışta / başka hesabın ilerlemesi silinirken: damgalar da silinir (silme işaretleri başka hesaba taşınmasın). */
+function esitZamanSifirla() {
+  clearTimeout(esitZamanBekle); esitZamanBekle = 0;
+  esitZaman = {};
+  try { window.localStorage.removeItem(ESIT_ZAMAN_ANAHTAR); } catch (_) { /* yoksay */ }
+  esitZaman = {};
+}
+
+(function () {
+  try {
+    const P = window.Storage && window.Storage.prototype;
+    if (!P || P.__esitSarili) { return; }
+    const yaz = P.setItem, sil = P.removeItem;
+    esitYazOrijinal = yaz;
+    P.setItem = function (k, v) { const r = yaz.call(this, k, v); if (this === window.localStorage) { esitDamgala(String(k)); } return r; };
+    P.removeItem = function (k) { const r = sil.call(this, k); if (this === window.localStorage) { esitDamgala(String(k)); } return r; };
+    P.__esitSarili = true;
+  } catch (_) { /* depolama yok */ }
+  window.addEventListener("pagehide", function () { if (esitZamanBekle) { clearTimeout(esitZamanBekle); esitZamanYaz(); } });
+})();
 
 function hesapAnlikGoruntu() {
+  if (esitZamanBekle) { clearTimeout(esitZamanBekle); esitZamanYaz(); }
   const g = {};
   try {
     for (let i = 0; i < window.localStorage.length; i++) {
@@ -482,8 +549,10 @@ function hesapAnlikGoruntu() {
   return g;
 }
 
+/** Değişim izi: zaman damgaları dışındaki kayıtlardan (damga her yazımda değişir). */
 function hesapGoruntuIzi(g) {
-  return typeof ziyaretIz === "function" ? ziyaretIz(Object.keys(g).sort().map(function (k) { return [k, g[k]]; })) : JSON.stringify(g).length;
+  const l = Object.keys(g).filter(function (k) { return k !== ESIT_ZAMAN_ANAHTAR; }).sort().map(function (k) { return [k, g[k]]; });
+  return typeof ziyaretIz === "function" ? ziyaretIz(l) : JSON.stringify(l).length;
 }
 
 function hesapCihazAnlamli(g) {
@@ -495,16 +564,142 @@ function hesapEsitKaydi() {
   return (hesapKullanici && t[hesapKullanici.id]) || null;
 }
 
-function hesapEsitKaydiYaz(iz) {
+/** ek: { uzak: buluttaki satırın zamanı, cuzdan: birleşmenin tabanı, ozet: profile yazılan özetin izi } */
+function hesapEsitKaydiYaz(iz, ek) {
   const t = jsonOku(HESAP_ESIT_ANAHTAR, {}) || {};
-  t[hesapKullanici.id] = { iz: iz, zaman: new Date().toISOString() };
+  t[hesapKullanici.id] = Object.assign({}, t[hesapKullanici.id] || {}, ek || {}, { iz: iz, zaman: new Date().toISOString() });
   jsonYaz(HESAP_ESIT_ANAHTAR, t);
+}
+
+/* ---------- sıkıştırma ---------- */
+
+async function esitSikistir(g) {
+  if (!window.CompressionStream || !window.DecompressionStream || typeof bayttanBase64 !== "function") { return g; }
+  try {
+    const s = new Blob([JSON.stringify(g)]).stream().pipeThrough(new CompressionStream("gzip"));
+    return { _v: 2, _z: bayttanBase64(new Uint8Array(await new Response(s).arrayBuffer())) };
+  } catch (_) { return g; }
+}
+
+async function esitAc(v) {
+  if (!v || typeof v._z !== "string") { return v || {}; }
+  if (!window.DecompressionStream) { throw new Error("bu tarayıcı eşitlemeyi açamıyor"); }
+  const s = new Blob([base64tenBayt(v._z)]).stream().pipeThrough(new DecompressionStream("gzip"));
+  return JSON.parse(await new Response(s).text());
 }
 
 async function hesapUzakIlerleme() {
   const { data, error } = await hesapIstemci.from("ilerlemeler").select("veri, guncelleme").eq("id", hesapKullanici.id).maybeSingle();
   if (error) { throw error; }
-  return data;
+  if (!data) { return null; }
+  return { veri: await esitAc(data.veri), guncelleme: data.guncelleme };
+}
+
+/** Yalnızca zaman sütunu: başka cihaz son gördüğümüzden sonra yazdı mı? */
+async function hesapUzakDegistiMi() {
+  const k = hesapEsitKaydi();
+  const { data, error } = await hesapIstemci.from("ilerlemeler").select("guncelleme").eq("id", hesapKullanici.id).maybeSingle();
+  if (error || !data || !data.guncelleme) { return false; }
+  return !k || !k.uzak || new Date(data.guncelleme).getTime() !== new Date(k.uzak).getTime();
+}
+
+/* ---------- birleştirme ---------- */
+
+function esitJson(s) { try { return JSON.parse(s); } catch (_) { return undefined; } }
+function esitDuzMu(x) { return x !== null && typeof x === "object" && !Array.isArray(x); }
+function esitIlkelDizi(x) { return Array.isArray(x) && x.every(function (y) { return y === null || typeof y !== "object"; }); }
+
+/** Yalnızca büyüyen kayıtlar: ilkel diziler birleşir, nesneler iç içe birleşir; sayılarda rekorlar büyüğü, öteki değerlerde yeni olan. */
+function esitDerinBirlestir(yeni, eski, enBuyuk) {
+  if (esitIlkelDizi(yeni) && esitIlkelDizi(eski)) {
+    const l = yeni.slice();
+    eski.forEach(function (x) { if (l.indexOf(x) === -1) { l.push(x); } });
+    return l;
+  }
+  if (esitDuzMu(yeni) && esitDuzMu(eski)) {
+    const o = Object.assign({}, eski);
+    Object.keys(yeni).forEach(function (k) { o[k] = k in eski ? esitDerinBirlestir(yeni[k], eski[k], enBuyuk) : yeni[k]; });
+    return o;
+  }
+  if (enBuyuk && typeof yeni === "number" && typeof eski === "number") { return Math.max(yeni, eski); }
+  return yeni;
+}
+
+/** Cüzdan: açılanların birleşimi; eçka = iki cihazın tabandan bu yana kazanç ve harcamaları. */
+function esitCuzdanBirlestir(a, b, taban, aYeni) {
+  const yeni = aYeni ? a : b, eski = aYeni ? b : a;
+  const c = Object.assign({}, eski, yeni);
+  const t = taban || { ecka: (typeof veri !== "undefined" && veri && veri.cuzdan ? veri.cuzdan.baslangic : 30), kazanilan: 0, harcanan: 0 };
+  ["ecka", "kazanilan", "harcanan"].forEach(function (k) {
+    const x = Number(a[k]) || 0, y = Number(b[k]) || 0, z = Number(t[k]) || 0;
+    c[k] = Math.max(0, Math.round(x + y - z));
+  });
+  const l = (Array.isArray(a.acilan) ? a.acilan : []).slice();
+  (Array.isArray(b.acilan) ? b.acilan : []).forEach(function (x) { if (l.indexOf(x) === -1) { l.push(x); } });
+  c.acilan = l;
+  return c;
+}
+
+/** Fan eserleri: kimliğe göre; aynı eserin son güncelleneni. */
+function esitFanBirlestir(a, b) {
+  const m = {}, sira = [];
+  a.concat(b).forEach(function (x) {
+    if (!x || !x.id) { return; }
+    if (!m[x.id]) { sira.push(x.id); m[x.id] = x; return; }
+    if (String(x.guncelleme || x.olusturma || "") > String(m[x.id].guncelleme || m[x.id].olusturma || "")) { m[x.id] = x; }
+  });
+  return sira.map(function (id) { return m[id]; }).filter(function (x) { return !(typeof evrenBosMu === "function" && evrenBosMu(x) && x.tur === "evren" && a.indexOf(x) === -1 && b.indexOf(x) === -1); });
+}
+
+/** Bu cihaz (y) ile buluttaki (u) görüntüyü birleştirir. taban: son eşitlemedeki cüzdan sayıları.
+    uzakOnce: bu cihaz bu hesapla ilk kez buluşuyor; sıradan kayıtlarda hesaptaki kazanır (kazanımlar yine birleşir). */
+function esitBirlestir(y, u, taban, uzakOnce) {
+  const zy = uzakOnce ? {} : (esitJson(y[ESIT_ZAMAN_ANAHTAR] || "{}") || {}), zu = esitJson(u[ESIT_ZAMAN_ANAHTAR] || "{}") || {};
+  const s = {}, z = {};
+  const anahtarlar = {};
+  Object.keys(y).concat(Object.keys(u), Object.keys(zy), Object.keys(zu)).forEach(function (k) { if (esitIzlenir(k)) { anahtarlar[k] = true; } });
+  Object.keys(anahtarlar).forEach(function (k) {
+    const ty = Number(zy[k]) || 0, tu = Number(zu[k]) || 0;
+    const varY = k in y, varU = k in u;
+    z[k] = Math.max(ty, tu) || undefined;
+    if (varY && varU && y[k] !== u[k]) {
+      const a = esitJson(y[k]), b = esitJson(u[k]);
+      if (k === "tentiforapp_cuzdan" && esitDuzMu(a) && esitDuzMu(b)) { s[k] = JSON.stringify(esitCuzdanBirlestir(a, b, taban, ty >= tu)); return; }
+      if (k === "tentiforapp_fan_eserlerim" && Array.isArray(a) && Array.isArray(b)) { s[k] = JSON.stringify(esitFanBirlestir(a, b)); return; }
+      if (ESIT_BIRLESIM.indexOf(k) !== -1 && a !== undefined && b !== undefined) {
+        s[k] = JSON.stringify(ty >= tu ? esitDerinBirlestir(a, b, k === "tentiforapp_rekorlar") : esitDerinBirlestir(b, a, k === "tentiforapp_rekorlar"));
+        return;
+      }
+      s[k] = (tu > ty || (uzakOnce && tu === ty)) ? u[k] : y[k];
+      return;
+    }
+    if (varY && varU) { s[k] = y[k]; return; }
+    /* yalnızca bir tarafta: öbür taraf onu sonradan sildiyse silinir */
+    if (varY) { if (!(tu > ty && !varU && zu[k])) { s[k] = y[k]; } return; }
+    if (varU) { if (!(ty > tu && !varY && zy[k])) { s[k] = u[k]; } }
+  });
+  Object.keys(z).forEach(function (k) { if (z[k] === undefined) { delete z[k]; } });
+  s[ESIT_ZAMAN_ANAHTAR] = JSON.stringify(z);
+  return s;
+}
+
+function esitCuzdanTaban(g) {
+  const c = esitJson(g["tentiforapp_cuzdan"] || "null");
+  return esitDuzMu(c) ? { ecka: Number(c.ecka) || 0, kazanilan: Number(c.kazanilan) || 0, harcanan: Number(c.harcanan) || 0 } : null;
+}
+
+/** Birleşmiş görüntüyü bu cihaza yazar (damgalamadan). */
+function esitYerelYaz(g) {
+  esitDamgaKapali = true;
+  try {
+    Object.keys(hesapAnlikGoruntu()).forEach(function (k) { if (!(k in g)) { window.localStorage.removeItem(k); } });
+    Object.keys(g).forEach(function (k) {
+      if (k.indexOf("tentiforapp_") === 0 && ESITLEME_DISI.indexOf(k) === -1) { window.localStorage.setItem(k, g[k]); }
+    });
+  } finally {
+    esitDamgaKapali = false;
+    esitZaman = esitJson(g[ESIT_ZAMAN_ANAHTAR] || "{}") || {};
+  }
 }
 
 /** Profildeki herkese açık özet: rol, kişilik, tamlık, madalyalar. */
@@ -523,8 +718,23 @@ function hesapOzet() {
 
 let hesapEsitSuruyor = false;
 
-/** Değişiklik varsa buluta yazar. zorla: değişmemiş olsa da (çıkışta) yazar. */
-async function hesapEsitle(zorla) {
+/** Görüntüyü buluta yazar. Profil özeti yalnızca değiştiyse yazılır. */
+async function esitBulutaYaz(g) {
+  const simdi = new Date().toISOString();
+  const { error } = await hesapIstemci.from("ilerlemeler").upsert({ id: hesapKullanici.id, veri: await esitSikistir(g), guncelleme: simdi });
+  if (error) { throw error; }
+  const ozet = hesapOzet();
+  const ozetIz = JSON.stringify(ozet);
+  const k = hesapEsitKaydi();
+  if (!k || k.ozet !== ozetIz) {
+    await hesapIstemci.from("profiller").update({ ozet: ozet, guncelleme: simdi }).eq("id", hesapKullanici.id);
+  }
+  hesapEsitKaydiYaz(hesapGoruntuIzi(g), { uzak: simdi, cuzdan: esitCuzdanTaban(g), ozet: ozetIz });
+}
+
+/** Değişiklik varsa buluta yazar. zorla: değişmemiş olsa da (çıkışta) yazar.
+    Başka cihaz bu arada yazdıysa önce birleştirir: kimsenin ilerlemesi ezilmez. */
+async function hesapEsitle(zorla, yenileme) {
   if (!hesapIstemci || !hesapKullanici || hesapEsitSuruyor) { return; }
   const g = hesapAnlikGoruntu();
   const iz = hesapGoruntuIzi(g);
@@ -533,11 +743,12 @@ async function hesapEsitle(zorla) {
 
   hesapEsitSuruyor = true;
   try {
-    const simdi = new Date().toISOString();
-    const { error } = await hesapIstemci.from("ilerlemeler").upsert({ id: hesapKullanici.id, veri: g, guncelleme: simdi });
-    if (error) { throw error; }
-    await hesapIstemci.from("profiller").update({ ozet: hesapOzet(), guncelleme: simdi }).eq("id", hesapKullanici.id);
-    hesapEsitKaydiYaz(iz);
+    if (k && k.uzak && await hesapUzakDegistiMi()) {
+      hesapEsitSuruyor = false;
+      await hesapUzaktanCek(zorla || document.visibilityState === "hidden", yenileme);
+      return;
+    }
+    await esitBulutaYaz(g);
     hesapEsitDurum = "kaydedildi";
     if (typeof liderlikGonder === "function") { liderlikGonder(); }
   } catch (e) {
@@ -548,37 +759,67 @@ async function hesapEsitle(zorla) {
   }
 }
 
-/** Hesaptaki görüntüye bu cihazda kurulup hesapta olmayan evrenleri, hikâyeleri ve kişileri ekler:
-    hesapsız kurulan bir evren, var olan bir hesaba girince kaybolmasın. Eklenen varsa true döner. */
-function hesapFanBirlestir(g) {
-  const k = "tentiforapp_fan_eserlerim";
-  let yerel = [], uzak = [];
-  try { yerel = JSON.parse(window.localStorage.getItem(k) || "[]"); } catch (_) { yerel = []; }
-  try { uzak = JSON.parse(g[k] || "[]"); } catch (_) { uzak = []; }
-  if (!Array.isArray(yerel) || !yerel.length) { return false; }
-  if (!Array.isArray(uzak)) { uzak = []; }
-  const var_ = {};
-  uzak.forEach(function (x) { if (x && x.id) { var_[x.id] = true; } });
-  const ek = yerel.filter(function (x) {
-    return x && x.id && !var_[x.id] && !(typeof evrenBosMu === "function" && evrenBosMu(x));
-  });
-  if (!ek.length) { return false; }
-  g[k] = JSON.stringify(uzak.concat(ek));
-  return true;
+/** Buluttakini alır ve bu cihazla birleştirir. uygula: bu cihaz değişecekse hemen yaz ve sayfayı yenile
+    (sekme yeni görünür olduysa ya da gizliyse); değilse "yenile" bildirimi gösterilir ve sekme gizlenince uygulanır. */
+async function hesapUzaktanCek(uygula, yenileme) {
+  if (!hesapIstemci || !hesapKullanici || hesapEsitSuruyor) { return; }
+  hesapEsitSuruyor = true;
+  try {
+    const u = await hesapUzakIlerleme();
+    const yerel = hesapAnlikGoruntu();
+    if (!u || !u.veri || !Object.keys(u.veri).length) { await esitBulutaYaz(yerel); return; }
+    const k = hesapEsitKaydi();
+    const b = esitBirlestir(yerel, u.veri, k && k.cuzdan);
+    const bIz = hesapGoruntuIzi(b);
+    const yerelDegisir = bIz !== hesapGoruntuIzi(yerel);
+    if (yerelDegisir && !uygula) {
+      esitCekBekliyor = true;
+      esitBildirimGoster();
+      return;
+    }
+    esitCekBekliyor = false;
+    if (bIz !== hesapGoruntuIzi(u.veri)) { await esitBulutaYaz(b); hesapEsitDurum = "kaydedildi"; }
+    else { hesapEsitKaydiYaz(bIz, { uzak: u.guncelleme, cuzdan: esitCuzdanTaban(b) }); hesapEsitDurum = "güncel"; }
+    if (yerelDegisir) { esitYerelYaz(b); if (yenileme !== false) { location.reload(); } }
+  } catch (e) {
+    hesapEsitDurum = "okunamadı — " + hesapHataMetni(e);
+  } finally {
+    hesapEsitSuruyor = false;
+    hesapEsitDurumCiz();
+  }
 }
 
-/** Buluttaki görüntüyü bu cihaza yazar ve sayfayı yeniler. */
+function esitBildirimGoster() {
+  if (document.querySelector("#esitBildirim")) { return; }
+  const el = document.createElement("div");
+  el.id = "esitBildirim";
+  el.className = "kadi-uyari esit-bildirim";
+  el.setAttribute("role", "status");
+  el.innerHTML = "<span>Başka cihazdaki ilerlemen geldi.</span>" +
+    '<button class="dugme" data-esit-yenile>Yenile</button>';
+  document.body.appendChild(el);
+}
+
+document.addEventListener("click", function (e) {
+  if (e.target.closest && e.target.closest("[data-esit-yenile]")) { hesapUzaktanCek(true); }
+});
+
+/** Hesapsız kurulan evrenler var olan hesaba girince kaybolmasın (birleştirme bunu da yapar; eski çağrılar için). */
+function hesapFanBirlestir(g) {
+  const k = "tentiforapp_fan_eserlerim";
+  const yerel = esitJson(window.localStorage.getItem(k) || "[]"), uzak = esitJson(g[k] || "[]");
+  if (!Array.isArray(yerel) || !yerel.length) { return false; }
+  const once = g[k];
+  g[k] = JSON.stringify(esitFanBirlestir(Array.isArray(uzak) ? uzak : [], yerel));
+  return g[k] !== once;
+}
+
+/** Buluttaki görüntüyü bu cihaza yazar ve sayfayı yeniler (eski çağrılar için; birleştirerek). */
 function hesapUzagiUygula(veriUzak) {
-  const g = Object.assign({}, veriUzak || {});
-  const birlesti = hesapFanBirlestir(g);
-  try {
-    Object.keys(hesapAnlikGoruntu()).forEach(function (k) { if (!(k in g)) { window.localStorage.removeItem(k); } });
-    Object.keys(g).forEach(function (k) {
-      if (k.indexOf("tentiforapp_") === 0 && ESITLEME_DISI.indexOf(k) === -1) { window.localStorage.setItem(k, g[k]); }
-    });
-  } catch (_) { hesapBildir("Bu tarayıcı kayıt yapmaya izin vermiyor"); return; }
-  /* birleştirildiyse cihaz hesaptan ileride: bir sonraki eşitleme birleşik hâli hesaba yazsın */
-  hesapEsitKaydiYaz(birlesti ? "birlesik" : hesapGoruntuIzi(hesapAnlikGoruntu()));
+  const k = hesapEsitKaydi();
+  const b = esitBirlestir(hesapAnlikGoruntu(), veriUzak || {}, k && k.cuzdan);
+  try { esitYerelYaz(b); } catch (_) { hesapBildir("Bu tarayıcı kayıt yapmaya izin vermiyor"); return; }
+  hesapEsitKaydiYaz("birlesik", { cuzdan: esitCuzdanTaban(b) });
   location.reload();
 }
 
@@ -598,20 +839,20 @@ function hesapSifirlandi() {
   } catch (_) { /* yoksay */ }
 }
 
-/** Girişte ya da açılışta: bulut ile bu cihazı buluşturur. */
+/** Girişte ya da açılışta: bulut ile bu cihazı birleştirir. */
 async function hesapIlkEsitleme() {
   /* çıkışta hesaba yazılamayıp cihazda kalan ilerleme başka bir hesabınsa bu hesaba karışmasın */
   let sahip = null;
   try { sahip = window.localStorage.getItem(HESAP_SAHIP_ANAHTAR); } catch (_) { sahip = null; }
   if (sahip) {
     try { window.localStorage.removeItem(HESAP_SAHIP_ANAHTAR); } catch (_) { /* yoksay */ }
-    if (sahip !== hesapKullanici.id) { hesapYerelIlerlemeyiTemizle(); }
+    if (sahip !== hesapKullanici.id) { hesapYerelIlerlemeyiTemizle(); esitZamanSifirla(); }
   }
   let sifir = null;
   try { sifir = window.localStorage.getItem(HESAP_SIFIR_ANAHTAR); } catch (_) { sifir = null; }
   if (sifir && sifir === hesapKullanici.id) {
     try { window.localStorage.removeItem(HESAP_SIFIR_ANAHTAR); } catch (_) { /* yoksay */ }
-    await hesapEsitle(true);        /* sıfırlanmış hâli hesaba da yaz */
+    try { await esitBulutaYaz(hesapAnlikGoruntu()); } catch (_) { /* sonra */ }   /* sıfırlanmış hâli hesaba da yaz */
     if (typeof liderlikSifirla === "function") { await liderlikSifirla(); }
     return;
   }
@@ -620,28 +861,21 @@ async function hesapIlkEsitleme() {
   try { uzak = await hesapUzakIlerleme(); } catch (e) { hesapEsitDurum = "okunamadı — " + hesapHataMetni(e); return; }
 
   const yerel = hesapAnlikGoruntu();
-  const yerelIz = hesapGoruntuIzi(yerel);
   const kayit = hesapEsitKaydi();
   const uzakVar = uzak && uzak.veri && Object.keys(uzak.veri).length > 0;
 
-  if (!uzakVar) { await hesapEsitle(true); return; }                     /* ilk kez: bu cihazdakini yükle */
-
-  const uzakIz = hesapGoruntuIzi(uzak.veri);
-  if (uzakIz === yerelIz) { hesapEsitKaydiYaz(yerelIz); hesapEsitDurum = "güncel"; return; }
-
-  if (kayit) {
-    const yerelDegisti = kayit.iz !== yerelIz;
-    const uzakYeni = new Date(uzak.guncelleme) > new Date(kayit.zaman);
-    if (!yerelDegisti && uzakYeni) { hesapUzagiUygula(uzak.veri); return; }    /* başka cihazda ilerlendi */
-    if (yerelDegisti && !uzakYeni) { await hesapEsitle(true); return; }          /* bu cihazda ilerlendi */
-    if (!yerelDegisti && !uzakYeni) { hesapEsitDurum = "güncel"; return; }
-  } else if (!hesapCihazAnlamli(yerel)) {
-    hesapUzagiUygula(uzak.veri); return;                                          /* boş cihaz: hesaptakini al */
+  try {
+    if (!uzakVar) { await esitBulutaYaz(yerel); return; }                         /* ilk kez: bu cihazdakini yükle */
+    /* boş cihaz: hesaptakini olduğu gibi al */
+    const b = esitBirlestir(yerel, uzak.veri, kayit && kayit.cuzdan, !kayit);
+    const bIz = hesapGoruntuIzi(b);
+    if (bIz !== hesapGoruntuIzi(uzak.veri)) { await esitBulutaYaz(b); }
+    else { hesapEsitKaydiYaz(bIz, { uzak: uzak.guncelleme, cuzdan: esitCuzdanTaban(b) }); }
+    hesapEsitDurum = "güncel";
+    if (bIz !== hesapGoruntuIzi(yerel)) { esitYerelYaz(b); location.reload(); }
+  } catch (e) {
+    hesapEsitDurum = "kaydedilemedi — " + hesapHataMetni(e);
   }
-
-  /* İki tarafta da farklı ilerleme var: kullanıcı seçsin. */
-  hesapCatismaUzak = uzak;
-  hesapPencere("catisma");
 }
 
 function hesapCatismaGovde() {
@@ -656,9 +890,17 @@ function hesapCatismaGovde() {
     "</div>";
 }
 
-/* Sekme kapanırken ya da arka plana geçerken son hâli kaydet. */
+/* Sekme gizlenirken son hâli kaydet (başka cihazdan bekleyen varsa önce birleştir);
+   görünür olunca başka cihazda ilerlendi mi diye yalnızca zaman sütununa bak. */
 document.addEventListener("visibilitychange", function () {
-  if (document.visibilityState === "hidden") { hesapEsitle(); }
+  if (!hesapKullanici) { return; }
+  if (document.visibilityState === "hidden") {
+    if (esitCekBekliyor) { hesapUzaktanCek(true); } else { hesapEsitle(); }
+    return;
+  }
+  if (Date.now() - esitSonKontrol < 15000) { return; }
+  esitSonKontrol = Date.now();
+  hesapUzakDegistiMi().then(function (d) { if (d) { hesapUzaktanCek(true); } }).catch(function () { /* çevrimdışı */ });
 });
 
 /* ==================== "Sen" sayfasındaki Hesabın bölümü ==================== */

@@ -22,7 +22,7 @@ function gizlilikCiz() {
     bolum("Hesap açarsan sunucuda (Supabase)", [
       "E-posta adresin ve şifrenin güvenli özeti — yalnızca giriş için kullanılır, hiçbir yerde gösterilmez.",
       "Kullanıcı adın, görünen adın, hakkında yazın ve vitrinin — <b>herkese açıktır</b>.",
-      "İlerlemen — yalnızca sana görünür; cihazlar arası eşitleme içindir.",
+      "İlerlemen — yalnızca sana görünür; cihazlar arası eşitleme içindir (sıkıştırılmış tek kayıt olarak durur).",
       "Yarış skorların, liderlik sayıların, teorilerin, oyların ve takip ettiklerin — liderlikten çıkmayı seçmediysen herkese açıktır.",
       "Güvenlik için: yarış süreleri ve şüpheli sonuç işaretleri (hile önleme)."
     ]) +
@@ -37,7 +37,8 @@ function gizlilikCiz() {
     ]) +
     bolum("Fan hikâyeleri ve evrenleri", [
       "Yazdıkların cihazında (hesabın varsa onunla eşitlenerek) durur; açtığın dosyalar sunucuya gönderilmez, yalnızca tarayıcında okunur.",
-      "Bir dosyayı yazara e-postayla gönderirsen, sitede yayımlanması yazarın onayıyla olur."
+      "Bir dosyayı yazara e-postayla gönderirsen, sitede yayımlanması yazarın onayıyla olur.",
+      "Evren uygulamaları (kurucuların kodla yazdığı oyunlar) korumalı bir çerçevede çalışır: sitedeki kayıtlarına, hesabına ve internete erişemez."
     ]) +
     bolum("Hata bildirimleri", [
       "Sitede bir hata olursa hata metni, hatanın olduğu dosya, sayfa adresi (sorgu kısmı atılarak), tarayıcı bilgisi ve site sürümü kaydedilir.",
