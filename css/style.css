@@ -4318,3 +4318,9 @@ html.ecka-yeni #cuzdanTutar{visibility:hidden}
 .evg-hazir-oge{min-height:52px;border:2px solid;font:inherit;cursor:pointer;padding:8px}
 .evs-baslik{text-align:var(--evs-hiza,left)}
 .evg-kisisel{margin-bottom:14px}
+
+/* 2.3: evren stil ve görünüm kodu (73) */
+.eks-kod code{font-family:var(--mono);font-size:13px}
+.eks-vitrin{overflow-wrap:anywhere}
+.eks-vitrin img{max-width:100%;height:auto}
+.eks-vitrin table{border-collapse:collapse;max-width:100%}
