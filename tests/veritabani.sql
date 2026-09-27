@@ -94,6 +94,10 @@ select test.ok('dev vitrin reddedilir', test.patlar($q$update public.profiller s
 -- seviye, haftalık
 select test.ok('seviye görünümü', (select count(*) >= 1 from public.arsivci_seviyeleri));
 select test.ok('XP dökümü toplamı XP''ye eşit', (select bool_and(xp = (select sum(v::bigint) from jsonb_each_text(dokum) e(k, v))) from public.arsivci_seviyeleri));
+select public.istatistik_gonder('{"okunan_kutu": 4}'::jsonb);
+select test.ok('tam okunan kutu başına 15 XP', (select (dokum->>'okuma')::int = 60 from public.arsivci_seviyeleri where kullanici_adi = 'cem'));
+select public.istatistik_gonder('{"okunan_kutu": 2}'::jsonb);
+select test.ok('okunan kutu azalmaz', (select okunan_kutu = 4 from public.istatistikler where id = auth.uid()));
 select test.ok('oy ve teori XP verir', (select (dokum->>'oy')::int = 15 from public.arsivci_seviyeleri where kullanici_adi = 'cem'));
 select test.ok('Tömye basamağı formülü', (select bool_and(basamak >= 1 and 5 * (basamak - 1) * (basamak + 4) <= xp and 5 * basamak * (basamak + 5) > xp) from public.arsivci_seviyeleri));
 select test.ok('haftalık ilerleme', public.haftalik_ilerleme() ? 'hafta');

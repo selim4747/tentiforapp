@@ -178,6 +178,12 @@ function okuEtiketle() {
   /* açılır maddeler (evren maddeleri, Claude'un evreni, yazar notları): gövde açıkken görünür */
   esle(".madde[id] > .madde-govde", function (el) { return "madde:" + el.parentNode.id; });
   esle(".ce-kisi[id] > .detay-metin", function (el) { return "madde:" + el.parentNode.id; });
+  esle(".ce-hikaye[id] > .detay-metin", function (el) { return "madde:" + el.parentNode.id; });
+  /* Tömye evren maddeleri (data-madde: veri.evren sırası) */
+  esle("#evrenListe .madde[data-madde] > .madde-govde", function (el) {
+    const m = (veri.evren || [])[Number(el.parentNode.getAttribute("data-madde"))];
+    return m && m.id ? "evren:" + m.id : null;
+  });
 }
 
 function okuAlintiGorunur() {

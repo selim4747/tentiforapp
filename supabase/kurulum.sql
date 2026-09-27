@@ -157,6 +157,8 @@ create table if not exists public.istatistikler (
   guncelleme timestamptz not null default now(),
   olusturma timestamptz not null default now()
 );
+-- tam okunan kutular (okuma süresi dolmuş kayıt, madde, mektup…): kutu başına 15 XP
+alter table public.istatistikler add column if not exists okunan_kutu int not null default 0;
 alter table public.istatistikler enable row level security;
 drop policy if exists "kendi istatistiğini okur" on public.istatistikler;
 create policy "kendi istatistiğini okur" on public.istatistikler
@@ -233,7 +235,7 @@ declare
   site_gun int;
   n_okunan int; n_katman int; n_oyun int; n_galeri int; n_gun int; n_seri int; n_madalya int;
   n_ecka int; n_nobet int; n_cevirmen int; n_vardiya int; n_yazi int; n_boyut int; n_baloncuk int;
-  n_tamlik int;
+  n_tamlik int; n_kutu int;
 begin
   if uid is null then raise exception 'giriş gerekli'; end if;
   -- aynı kullanıcının eşzamanlı gönderimleri sıraya girsin (ilk kayıt iki kez yazılmasın)
@@ -259,7 +261,10 @@ begin
   into n_okunan, n_katman, n_oyun, n_galeri, n_gun, n_seri, n_madalya,
        n_ecka, n_nobet, n_cevirmen, n_vardiya, n_yazi, n_boyut, n_baloncuk;
 
+  n_kutu := greatest(coalesce((g->>'okunan_kutu')::int, 0), 0);
+
   -- 1) mutlak sınırlar: aşan değer imkânsızdır → sınıra çekilir ve kayıt askıya alınır
+  if n_kutu > 600 then sebepler := array_append(sebepler, 'okunan kutu > 600'); n_kutu := 600; end if;
   site_gun := (current_date - a.baslangic) + 1;
   if n_okunan > a.karakter then sebepler := array_append(sebepler, 'okunan karakter > karakter sayısı'); n_okunan := a.karakter; end if;
   if n_katman > a.katman then sebepler := array_append(sebepler, 'katman > katman sayısı'); n_katman := a.katman; end if;
@@ -299,6 +304,7 @@ begin
     n_cevirmen := greatest(n_cevirmen, o.cevirmen);    n_vardiya := greatest(n_vardiya, o.vardiya);
     n_yazi := greatest(n_yazi, o.yazi);                n_boyut := greatest(n_boyut, o.boyut);
     n_baloncuk := greatest(n_baloncuk, o.baloncuk);
+    n_kutu := greatest(n_kutu, o.okunan_kutu);
   end if;
 
   -- 4) tamlık sunucuda hesaplanır (sitedeki formülün aynısı)
@@ -311,11 +317,11 @@ begin
 
   insert into public.istatistikler as i (
     id, okunan_karakter, katman, oyun, galeri, gun, seri, madalya, ecka_toplam,
-    nobet, cevirmen, vardiya, yazi, boyut, baloncuk, tamlik, rol, kisilik,
+    nobet, cevirmen, vardiya, yazi, boyut, baloncuk, tamlik, okunan_kutu, rol, kisilik,
     hafta, hafta_taban, sezon, sezon_taban, askida, askida_neden, son_gonderim, guncelleme)
   values (
     uid, n_okunan, n_katman, n_oyun, n_galeri, n_gun, n_seri, n_madalya, n_ecka,
-    n_nobet, n_cevirmen, n_vardiya, n_yazi, n_boyut, n_baloncuk, n_tamlik,
+    n_nobet, n_cevirmen, n_vardiya, n_yazi, n_boyut, n_baloncuk, n_tamlik, n_kutu,
     left(g->>'rol', 40), left(g->>'kisilik', 40),
     -- ilk gönderimde haftalık/aylık puan sıfırdan başlar (eski ilerleme bu haftaya yazılmaz)
     bu_hafta, n_ecka, bu_sezon, n_ecka,
@@ -325,7 +331,7 @@ begin
     galeri = excluded.galeri, gun = excluded.gun, seri = excluded.seri, madalya = excluded.madalya,
     ecka_toplam = excluded.ecka_toplam, nobet = excluded.nobet, cevirmen = excluded.cevirmen,
     vardiya = excluded.vardiya, yazi = excluded.yazi, boyut = excluded.boyut, baloncuk = excluded.baloncuk,
-    tamlik = excluded.tamlik, rol = excluded.rol, kisilik = excluded.kisilik,
+    tamlik = excluded.tamlik, okunan_kutu = excluded.okunan_kutu, rol = excluded.rol, kisilik = excluded.kisilik,
     -- yeni hafta/ay başladıysa taban, önceki toplam olur
     hafta_taban = case when i.hafta is distinct from bu_hafta then i.ecka_toplam else i.hafta_taban end,
     hafta = bu_hafta,
@@ -1668,7 +1674,7 @@ $$;
 -- dokum: XP'nin kaynaklara göre dağılımı (herkese açık; ayrıntı içermez)
 create or replace view public.arsivci_seviyeleri as
   with p as (
-    select p.id, p.kullanici_adi, p.gorunen_ad, s.tamlik, s.gun, s.madalya, s.katman
+    select p.id, p.kullanici_adi, p.gorunen_ad, s.tamlik, s.gun, s.madalya, s.katman, s.okunan_kutu
     from public.profiller p left join public.istatistikler s on s.id = p.id
     where p.kullanici_adi is not null and not coalesce(s.engelli or s.askida, false)),
   x as (
@@ -1677,6 +1683,7 @@ create or replace view public.arsivci_seviyeleri as
       coalesce(p.gun, 0) * 5 as x_gun,
       coalesce(p.madalya, 0) * 30 as x_madalya,
       coalesce(p.katman, 0) * 40 as x_katman,
+      coalesce(p.okunan_kutu, 0) * 15 as x_okuma,
       10 * (select count(*) from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli) as x_yaris,
       15 * (select count(*) from public.kesifler k where k.kullanici = p.id) as x_kesif,
       25 * (select count(*) from public.kesifler k where k.kullanici = p.id
@@ -1702,7 +1709,7 @@ create or replace view public.arsivci_seviyeleri as
       + 15 * (select count(*) from public.kesifler k where k.kullanici = p.id and public.tomye_ay(k.zaman) / 100 = public.tomye_ay(now()) / 100) as yil_xp
     from p),
   t as (
-    select x.*, x_tamlik + x_gun + x_madalya + x_katman + x_yaris + x_kesif + x_ilk_kasif + x_gk + x_teori + x_begeni + x_isaret + x_oy + x_hickirik + x_av + x_defter + x_soru + x_okur_bulmaca + x_davet as xp
+    select x.*, x_tamlik + x_gun + x_madalya + x_katman + x_yaris + x_kesif + x_ilk_kasif + x_gk + x_teori + x_begeni + x_isaret + x_oy + x_hickirik + x_av + x_defter + x_soru + x_okur_bulmaca + x_davet + x_okuma as xp
     from x)
   select kullanici_adi, gorunen_ad, xp, yil_xp,
     (floor(sqrt(xp / 40.0)) + 1)::int as seviye,
@@ -1710,7 +1717,7 @@ create or replace view public.arsivci_seviyeleri as
     jsonb_build_object('tamlik', x_tamlik, 'gun', x_gun, 'madalya', x_madalya, 'katman', x_katman, 'yaris', x_yaris,
       'kesif', x_kesif, 'ilk_kasif', x_ilk_kasif, 'gk', x_gk, 'teori', x_teori, 'begeni', x_begeni,
       'isaret', x_isaret, 'oy', x_oy, 'hickirik', x_hickirik, 'av', x_av,
-      'defter', x_defter, 'soru', x_soru, 'okur_bulmaca', x_okur_bulmaca, 'davet', x_davet) as dokum
+      'defter', x_defter, 'soru', x_soru, 'okur_bulmaca', x_okur_bulmaca, 'davet', x_davet, 'okuma', x_okuma) as dokum
   from t;
 
 -- Yönetici istatistikleri
