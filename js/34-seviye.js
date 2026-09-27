@@ -1,6 +1,6 @@
 /* Seviyeler — aynı XP iki sistemi besler (XP sunucuda hesaplanır: arsivci_seviyeleri).
 
-   1. Arşivci seviyesi: 1, 2, 3… ve unvanlar (Çırak → Sonsuz Raf). Gereken XP = 40·(s−1)².
+   1. Arşivci seviyesi: 1, 2, 3… ve unvanlar (Çırak → Sonsuz Raf). Gereken XP = 60·(s−1)².
    2. Tömye basamağı: Tömye rakamlarıyla yazılır (veri.takvim.rakamlar):
         Neo 1 · Vot 2 · Rit 3 · Rof 4 · Yaf 5 · Ilat 6 · İdey 7 · Kiz 8 · İnen 9 · Net 10
       İlk altısı haftanın günleridir. Tömye sayımında sıfır yoktur (takvim de 1 Leg 1'den başlar):
@@ -66,7 +66,7 @@ function sonrakiUnvan(s) {
 }
 
 const XP_KAYNAKLARI = [
-  ["tamlik", "Arşiv tamlığı", "tamlık yüzdesi başına 20"], ["okuma", "Tam okunan kutular", "kutu başına 15"], ["gun", "Gelinen günler", "gün başına 5"],
+  ["tamlik", "Arşiv tamlığı", "tamlık yüzdesi başına 20"], ["okuma", "Tam okunan kutular", "kutu başına 10 (her kutu bir kez)"], ["gun", "Gelinen günler", "gün başına 5"],
   ["madalya", "Madalyalar", "madalya başına 30"], ["katman", "Buz katmanları", "katman başına 40"],
   ["yaris", "Yarışlar", "geçerli oyun başına 10"], ["gk", "Günün Kelimesi", "çözüm başına 25"],
   ["kesif", "Keşifler", "keşif başına 15"], ["ilk_kasif", "İlk Kâşif", "ilk bulduğun her şey için 25"],

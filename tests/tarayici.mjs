@@ -1281,11 +1281,11 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("okuma süresi: kelime başına çeyrek saniye (veri.cuzdan.okumaSaniye)", await YZ.evaluate(function () {
       const e = document.querySelector('#perde [data-oku^="kar:"]'); return Number(e.getAttribute("data-oku-kelime")) > 5 && veri.cuzdan.okumaSaniye === 0.25 && okuSaniyeKelime() * 60 === 0.25;
     }));
-    ok("tam okunan her kutu yerel XP'ye 15 ekler, liderlik ölçüsüne gider", await YZ.evaluate(function () {
-      const x0 = yerelXp(); okunduIsaretle("kar:__xpdeneme"); const x1 = yerelXp();
+    ok("tam okunan her kutu yerel XP'ye bir kez 10 ekler, liderlik ölçüsüne gider", await YZ.evaluate(function () {
+      const x0 = yerelXp(); okunduIsaretle("kar:__xpdeneme"); const x1 = yerelXp(); okunduIsaretle("kar:__xpdeneme"); const x2 = yerelXp();
       const n = liderlikOlculeri().okunan_kutu;
       cuzdan.acilan = cuzdan.acilan.filter(function (x) { return x !== "oku___xpdeneme" && x !== "oku_kar:__xpdeneme"; });
-      return x1 - x0 === 15 && n >= 1;
+      return x1 - x0 === 10 && x2 === x1 && n >= 1;
     }));
     ok("Tömye evren maddeleri ve Claude hikâyeleri okuma kutusu olarak etiketlenir", await YZ.evaluate(function () {
       cizEvren(); okuEtiketle();
