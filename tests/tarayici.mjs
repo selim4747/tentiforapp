@@ -868,6 +868,39 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       /\+10 XP/.test(await N.textContent("#evuDurum")));
     await N.evaluate(function () { evrenSayfaKapat(); }); await bekle(N, 200);
 
+    /* ---------- 2.2 / 2.3: evren görünümü, stil kodu ve görünüm kodu ---------- */
+    await N.evaluate(function (id) { location.hash = "#/ev/benim/" + id; }, nEv); await bekle(N, 800);
+    ok("kendi evreninde Görünüm ve Kod ile stil sekmeleri öne", await N.evaluate(function () {
+      const t = Array.from(document.querySelectorAll("#evrenSayfa [data-evs-sekme]")).map(function (x) { return x.dataset.evsSekme; });
+      return t.indexOf("stil") !== -1 && t.indexOf("kodstil") !== -1 && t.indexOf("yazi") !== -1 && t.indexOf("stil") < t.indexOf("roman");
+    }));
+    await N.click('#evrenSayfa [data-evs-sekme="stil"]'); await bekle(N, 200);
+    await N.click('#evrenSayfa [data-evg-hazir="0"]'); await bekle(N, 200);
+    ok("hazır görünüm uygulanır (renk ve desen)", await N.evaluate(function (id) {
+      const st = evrenBenimBul(id).stil; return st.zemin === "#0E1522" && st.desen === "yildiz" && /background-image/.test(document.querySelector("#evrenSayfa").getAttribute("style"));
+    }, nEv));
+    await N.click('#evrenSayfa [data-evs-sekme="kodstil"]'); await bekle(N, 200);
+    await N.fill("#eksStil", "h2 { letter-spacing: 3px } .x { background: url(https://kotu.example/iz.png) } @import url(https://kotu.example/a.css);");
+    await N.click('#evrenSayfa [data-eks-kaydet="stilKodu"]'); await bekle(N, 200);
+    ok("stil kodu yalnızca evren sayfasına uygulanır, dış adres ve @import temizlenir", await N.evaluate(function () {
+      const st = document.querySelector("#evrenSayfa #evsKodStil"); const c = st ? st.textContent : "";
+      return /^#evrenSayfa\{/.test(c) && /letter-spacing/.test(c) && !/kotu\.example/.test(c) && !/@import/.test(c) &&
+        getComputedStyle(document.querySelector("#evrenSayfa h2")).letterSpacing === "3px";
+    }));
+    await N.fill("#eksGorunum", '<h1>{{ad}}</h1><img src="x" onerror="window.__xss=1"><script>window.__xss=2<\/script><a href="javascript:alert(1)">b</a><p class="k" onclick="window.__xss=3">Merhaba</p>{{kisiler}}');
+    await N.click('#evrenSayfa [data-eks-kaydet="gorunumKodu"]'); await bekle(N, 200);
+    await N.click('#evrenSayfa [data-evs-sekme="vitrin"]'); await bekle(N, 300);
+    ok("görünüm kodu: vitrin kurulur, betik ve olaylar temizlenir", await N.evaluate(function () {
+      const v = document.querySelector("#evrenSayfa .eks-vitrin"); const h = v ? v.innerHTML : "";
+      return !!v && /Kıyı Evreni/.test(v.textContent) && /Arvel/.test(v.textContent) && !window.__xss &&
+        !/onerror|onclick|<script|javascript:/i.test(h) && !!v.querySelector("p.k");
+    }));
+    await N.evaluate(function () { evrenSayfaKapat(); location.hash = "#/oyunlar"; }); await bekle(N, 500);
+    ok("sayfalar apayrı: sayfa numarası ve sayfalama çubuğu yok", await N.evaluate(function () {
+      const s = document.querySelector("#sayfalama");
+      return !document.querySelector("#sayfaBasi .sayfa-no") && (!s || s.hidden || !s.textContent.trim());
+    }));
+
     /* ---------- 2.0: çoklu evren, hızlı geçiş ---------- */
     await N.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(N, 500);
     ok("başlıkta şu anki evren: başlangıç evreni", /Tentiforverse/.test(await N.textContent("#evrenSecBtn")) && await N.locator("#evrenSerit .es-serit-oge").count() >= 3);
