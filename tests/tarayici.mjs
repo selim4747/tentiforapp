@@ -15,8 +15,7 @@ function b64urlBaytUzunluk(s) { return Buffer.from(String(s).replace(/-/g, "+").
 
 export async function tarayiciTestleri({ adres, veritabani, dizin }) {
   const sahte = yeniSahte(veritabani);
-  /* yayın paketi tek dosya (js/uygulama.js): hesabın Supabase adresi test sunucusuna çevrilir */
-  const hesapKod = readFileSync(dizin + "/js/uygulama.js", "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL);
+  const hesapKod = readFileSync(dizin + "/js/28-hesap.js", "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL);
   const hatalar = [];
   let gecen = 0;
   const ok = function (ad, kosul, ek) {
@@ -29,13 +28,19 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
   const tarayici = await chromium.launch(process.env.CHROMIUM_YOLU ? { executablePath: process.env.CHROMIUM_YOLU } : {});
 
   async function cihaz(ad, secenek) {
-    const ctx = await tarayici.newContext(Object.assign({ viewport: { width: 420, height: 1000 }, serviceWorkers: "block", acceptDownloads: true }, secenek || {}));
-    await ctx.addInitScript(function () { try { localStorage.setItem("tentiforapp_tur", "bitti"); } catch (e) { /* yok */ } });
+    const pw = Object.assign({}, secenek || {});
+    delete pw.yeniZiyaretci;
+    const ctx = await tarayici.newContext(Object.assign({ viewport: { width: 420, height: 1000 }, serviceWorkers: "block", acceptDownloads: true }, pw));
+    if (!(secenek && secenek.yeniZiyaretci)) { await ctx.addInitScript(function () { try { localStorage.setItem("tentiforapp_tur", "bitti"); } catch (e) { /* yok */ } }); }
+    /* eski testler: başlangıç kodu kendiliğinden girilmesin, seviye kapıları açık, okuma süresi hızlı (yeni davranışların kendi testleri var) */
+    if (!(secenek && secenek.yeniZiyaretci)) {
+      await ctx.addInitScript(function () { try { localStorage.setItem("tentiforapp_baslangic_oto", "kapali"); localStorage.setItem("tentiforapp_seviye_test", "20"); localStorage.setItem("tentiforapp_okuma_hiz", "60"); } catch (e) { /* yok */ } });
+    }
     /* hesap hatırlatması yalnızca kendi testinde: öbür testlerde alttaki düğmelerin üstüne binmesin */
     if (ad !== "yenilikler") {
       await ctx.addInitScript(function () { try { localStorage.setItem("tentiforapp_hesap_hatirlat", JSON.stringify({ kapat: true })); } catch (e) { /* yok */ } });
     }
-    await ctx.route(/\/js\/uygulama\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: hesapKod }); });
+    await ctx.route(/\/js\/28-hesap\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: hesapKod }); });
     await ctx.route(TEST_URL + "/**", function (r) { return sahte.isle(r); });
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, function (r) { return r.abort(); });
     const p = await ctx.newPage();
@@ -1229,11 +1234,134 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("E25'te “Nerelere gitti?” haritası", await N.locator("#evrenSayfa .konuk-harita").count() === 1 && /Orlan kıyıda/.test(await N.textContent("#evrenSayfa .konuk-harita-kutu")));
     await N.close();
 
+    /* ---------- 1.16: yeni ziyaretçi, okuyarak kazanmak, rozetler, seviye kapıları ---------- */
+    const YZ = await cihaz("yeni-ziyaretci", { yeniZiyaretci: true });
+    await YZ.goto(adres + "/"); await bekle(YZ, 1500);
+    ok("yeni ziyaretçi: başlangıç kodu kendiliğinden, arşiv açık", await YZ.evaluate(function () {
+      return kanonProfilIdleri().indexOf(veri.baslangicProfil) !== -1 && bolumErisimi("arsiv") && !document.querySelector("#kanonSayfaKilit");
+    }));
+    ok("tanıtım turu ekranı kapatmaz (altta ipucu)", await YZ.locator("#turIpucu").count() === 1 && await YZ.locator("#turKatman").count() === 0 &&
+      /Yedi oyun/.test(JSON.stringify(await YZ.evaluate(function () { return veri.tur; }))));
+    await YZ.click("#turIpucu [data-tur=atla]"); await bekle(YZ, 200);
+    ok("eçka göstergesi ilk kazanca kadar gizli", await YZ.evaluate(function () { return document.documentElement.classList.contains("ecka-yeni"); }));
+    ok("ana sayfada “Bugün” kartı: arşivin ne kadarı açık, sıradaki kilit", /arşivinin %\d+/.test(await YZ.textContent("#bugunKartAlan")) && /Sıradaki kilit/.test(await YZ.textContent("#bugunKartAlan")));
+    await bekle(YZ, 900);
+    const terim = await YZ.evaluate(function () { const t = document.querySelector("main .terim"); return t ? t.dataset.terim : ""; });
+    ok("terimler işaretli", !!terim);
+    await YZ.locator("main .terim").first().click(); await bekle(YZ, 150);
+    ok("terime dokununca açıklama", await YZ.locator(".terim-balon").count() === 1 && (await YZ.textContent(".terim-balon")).length > 30);
+    await YZ.click("[data-terim-kapat]"); await bekle(YZ, 100);
+    await YZ.click('.hero-eylem [data-gez-git="sira"]'); await bekle(YZ, 700);
+    ok("“Okumaya başla” açık olan ilk adıma gider (Tömye ve takvim → Evren)", await YZ.evaluate(function () { return /evren/.test(location.hash + location.pathname) && bolumErisimi("evren"); }));
+    await YZ.evaluate(function () { location.hash = "#/okuma"; }); await bekle(YZ, 900);
+    ok("okuma sırası: açık adımlarda “Oku →”, kilitlilerde nasıl açıldığı", await YZ.locator("#siraAlan .sira-acik").count() >= 3 && await YZ.locator("#siraAlan .sira-kilitli").count() >= 2 &&
+      /kod ister/.test(await YZ.textContent("#siraAlan")));
+    ok("kilitli bölüm tek satır; açınca önizleme ve nasıl açılır", await YZ.evaluate(function () {
+      const d = document.querySelector("#roman .kanon-kompakt");
+      return !!d && !d.open && !!d.querySelector(".kanon-onizleme") && /yazardan gelir/.test(d.querySelector(".kanon-nasil").textContent);
+    }));
+    ok("içeriği olmayan bölüm (kısa hikâyeler) gizli, menüde yok", await YZ.evaluate(function () {
+      return getComputedStyle(document.getElementById("kisaHikayeler")).display === "none" &&
+        !GEZINME.some(function (g) { return g.bolumler.some(function (b) { return b[0] === "kisaHikayeler"; }); });
+    }));
+
+    /* okuyarak kazanmak */
+    await YZ.evaluate(function () { localStorage.setItem("tentiforapp_okuma_hiz", "60"); location.hash = "#/arsiv"; }); await bekle(YZ, 500);
+    const tekKutu = await YZ.evaluate(function () {
+      const i = veri.karakterler.findIndex(function (k) { return k.id && !k.gizli && k.kart !== false && karakterKutulari(k).length === 1 && !karakterKutulari(k)[0].kilitli; });
+      window.__e0 = cuzdan.ecka; karakterAc(i); return i;
+    }); await bekle(YZ, 300);
+    ok("karaktere dokunmak eçka vermez", await YZ.evaluate(function () { return cuzdan.ecka === window.__e0 && !!document.querySelector('#perde [data-oku^="kar:"]'); }));
+    for (let i = 0; i < 4; i++) { await YZ.mouse.wheel(0, 5); await bekle(YZ, 1000); }
+    ok("kutuda okuması kadar durunca kart, eçka ve (tek kutulu karakterde) gümüş rozet", await YZ.evaluate(function (i) {
+      const k = veri.karakterler[i];
+      return cuzdan.ecka > window.__e0 && okunduMu("kar:" + k.id) && kartSahip(k.id) && rozetDurumu(k) === "gumus" &&
+        !document.documentElement.classList.contains("ecka-yeni") && /Gümüş rozet/.test(document.querySelector("#perde .rozet-kutu").textContent);
+    }, tekKutu));
+    ok("okuma süresi: her kelime bir saniye", await YZ.evaluate(function () {
+      const e = document.querySelector('#perde [data-oku^="kar:"]'); return Number(e.getAttribute("data-oku-kelime")) > 5 && okuSaniyeKelime() * 60 === 1;
+    }));
+    await YZ.evaluate(function () { perdeKapat(); bugunKartiCiz(); }); await bekle(YZ, 150);
+    ok("“Kaldığın yer” kartı son okunanı gösterir", await YZ.locator("#bugunKartAlan .devam-kart [data-devam-kar]").count() === 1);
+    ok("altın rozet: önce hepsini oku, sonra ona hikâye yaz", await YZ.evaluate(function () {
+      const k = veri.karakterler.find(function (x) { return x.id && !x.gizli && x.kart !== false && karakterKutulari(x).length > 1; });
+      if (!k) { return false; }
+      const l = fanEserlerim();
+      l.push({ bicim: FAN_BICIM, surum: 1, tur: "hikaye", id: "rozetH", baslik: "Deneme", karakterler: k.ad, metin: "Uzun bir hikâye. ".repeat(30) });
+      fanEserlerimYaz(l); rozetleriDenetle();
+      const once = rozetDurumu(k) === "" && /altın rozet için hakkındaki her şeyi oku/.test(rozetKutusuHtml(k));
+      karakterKutulari(k).forEach(function (x) { okunduIsaretle(x.anahtar); });
+      rozetleriDenetle();
+      const sonra = rozetDurumu(k) === "altin";
+      fanEserlerimYaz(fanEserlerim().filter(function (x) { return x.id !== "rozetH"; }));
+      return once && sonra;
+    }));
+    ok("kodla kilitli bölümdeki kutular da rozete sayılır (buz altındakiler sayılmaz)", await YZ.evaluate(function () {
+      const t = veri.karakterler.find(function (k) { return k.ad === "Tarı"; });
+      const l = t ? karakterKutulari(t) : [];
+      return l.length > 1 && l.some(function (x) { return x.kilitli; }) && /bölümü kodla açılır/.test(rozetKutusuHtml(t));
+    }));
+    ok("kutular karakterlerle eşleşir (mektup, günlük, alıntı, zaman)", await YZ.evaluate(function () {
+      const hepsi = veri.karakterler.reduce(function (t, k) { return t.concat(karakterKutulari(k).map(function (x) { return x.anahtar.split(":")[0]; })); }, []);
+      return hepsi.indexOf("kar") !== -1 && hepsi.indexOf("mektup") !== -1 && hepsi.indexOf("zaman") !== -1;
+    }));
+    await YZ.evaluate(function () { koleksiyonCiz && (location.hash = "#/sen"); }); await bekle(YZ, 600);
+    await YZ.evaluate(function () { if (typeof koleksiyonCiz === "function") { koleksiyonCiz(); } });
+    ok("koleksiyonda karakter rozetleri", await YZ.locator("#koleksiyonAlan .rozet-oge.gumus, #koleksiyonAlan .rozet-oge.altin").count() >= 1);
+
+    /* seviye kapıları */
+    await YZ.evaluate(function () { location.hash = "#/fan"; }); await bekle(YZ, 700);
+    ok("seviye 1: fan hikâyesi, Evrengezer ve fan evreni kilitli", await YZ.evaluate(function () {
+      return seviyeDurumu().seviye < 5 && fanYeni("hikaye") === null && evrenYeniKur() === null && /svk-kapi/.test(e25KisilerHtml());
+    }));
+    await YZ.evaluate(function () { perdeKapat(); fanSekme.hikaye = "yaz"; fanCiz("hikaye"); }); await bekle(YZ, 300);
+    await YZ.click('[data-fan-yeni="hikaye"]'); await bekle(YZ, 200);
+    ok("kilitli düğme seviye yolunu anlatır", /Seviye 5/.test(await YZ.textContent("#perde .svk-pencere")) && /Seviye 15/.test(await YZ.textContent("#perde .svk-pencere")));
+    await YZ.evaluate(function () { perdeKapat(); });
+    ok("yan bölümler seviyeyle açılır", await YZ.evaluate(function () {
+      kanonKilitUygula();
+      const sv = seviyeDurumu().seviye;
+      const ust = Object.keys(SEVIYE_BOLUMLER).find(function (id) { return SEVIYE_BOLUMLER[id] > sv && document.getElementById(id) && !document.getElementById(id).classList.contains("kanon-kilitli") && !document.getElementById(id).classList.contains("bos-bolum"); });
+      const alt = Object.keys(SEVIYE_BOLUMLER).find(function (id) { return SEVIYE_BOLUMLER[id] <= sv && document.getElementById(id); });
+      return !!ust && document.getElementById(ust).classList.contains("svk-bolum-kilitli") && /Seviye/.test(document.getElementById(ust).querySelector(".svk-yer").textContent) &&
+        (!alt || !document.getElementById(alt).classList.contains("svk-bolum-kilitli"));
+    }));
+    ok("seviye 6: hikâye açılır, evren hâlâ kilitli; 15: evren de", await YZ.evaluate(function () {
+      localStorage.setItem("tentiforapp_seviye_test", "6"); SVK.onbellek = null;
+      const h = fanYeni("hikaye"); const e1 = evrenYeniKur();
+      localStorage.setItem("tentiforapp_seviye_test", "15"); SVK.onbellek = null;
+      const e2 = evrenYeniKur();
+      localStorage.removeItem("tentiforapp_seviye_test"); SVK.onbellek = null;
+      return !!h && e1 === null && !!e2;
+    }));
+
+    /* eçka penceresi, hesap, geri bildirim */
+    await YZ.evaluate(function () { cuzdanPenceresi(); }); await bekle(YZ, 150);
+    ok("eçka penceresi: önce neler alınır, yedek kodu düğmenin arkasında, oyun adları düzgün", await YZ.evaluate(function () {
+      const p = document.querySelector("#perde .pencere");
+      return !!p.querySelector(".ecka-neler") && !!p.querySelector("details.ecka-yedek:not([open])") && !/\bsupheli\b/.test(p.textContent) && /Şüpheli Tahtası/.test(p.textContent);
+    }));
+    await YZ.evaluate(function () { perdeKapat(); hesapPencere("giris"); }); await bekle(YZ, 800);
+    ok("giriş penceresi: hesabın faydaları ve Google ile giriş", await YZ.locator("#perde .hesap-fayda li").count() === 3 && await YZ.locator("#perde [data-google-giris]").count() === 1);
+    await YZ.evaluate(function () { perdeKapat(); });
+    let gbGovde = null;
+    await YZ.route(/\/rest\/v1\/rpc\/hata_kaydet/, function (r) { gbGovde = r.request().postDataJSON(); return r.fulfill({ status: 204, body: "" }); });
+    await YZ.click("footer [data-geri-bildirim]"); await bekle(YZ, 200);
+    await YZ.fill("#gbMetin", "Harita sayfasında bir düğme çalışmıyor"); await YZ.click("[data-gb-gonder]"); await bekle(YZ, 500);
+    ok("geri bildirim panele (hata kayıtlarına) gider", !!gbGovde && gbGovde.p_kaynak === "geri-bildirim" && /Harita sayfasında/.test(gbGovde.p_mesaj) && /teşekkürler/.test(await YZ.textContent("#gbDurum")));
+    await YZ.evaluate(function () { perdeKapat(); });
+    ok("yönetici betikleri ziyaretçiye inmez, panel açılınca yüklenir", await YZ.evaluate(async function () {
+      const once = typeof yoneticiKurulum === "undefined" && !document.querySelector('script[src*="43-kurulum"]');
+      await yoneticiBetikleriYukle();
+      return once && typeof yoneticiKurulum === "function" && typeof yoneticiRoman === "function";
+    }));
+    await YZ.close();
+
     /* ---------- 2. paylaşım adresi ve PWA ---------- */
     const kisa = await (await fetch(adres + "/dunya/")).text();
     ok("/dunya/ kendi başlığıyla ayrı sayfa", /<title>Dünya — TentiforApp<\/title>/.test(kisa) && /og:title" content="Dünya — TentiforApp"/.test(kisa) &&
       /rel="canonical" href="[^"]*\/dunya\/"/.test(kisa));
-    ok("/dunya/ yönlendirmez, uygulamanın kendisi", !/location\.replace|http-equiv="refresh"/.test(kisa) && /<base href="\/">/.test(kisa) && /js\/uygulama\.js/.test(kisa) && !/js\/00-rota\.js/.test(kisa));
+    ok("/dunya/ yönlendirmez, uygulamanın kendisi", !/location\.replace|http-equiv="refresh"/.test(kisa) && /<base href="\/">/.test(kisa) && /js\/00-rota\.js/.test(kisa) && !/js\/43-kurulum\.js/.test(kisa));
     const man = await (await fetch(adres + "/manifest.webmanifest")).json();
     ok("manifest simgeleri", man.icons.length >= 2 && (await fetch(adres + "/" + man.icons[0].src)).ok);
 

@@ -391,7 +391,8 @@ function karakterAc(i) {
 function cuzdanPenceresi() {
   const t = (veri.cuzdan && veri.cuzdan.gunlukTavan) || {};
   const adlar = { cevirmen: "Gırı Çevirmeni", vardiya: "Gündüz Vardiyası",
-                  boyut: "Boyut Sürüklenmesi", yazi: "Yazı Çözme", baloncuk: "Baloncuk Evren" };
+                  boyut: "Boyut Sürüklenmesi", yazi: "Yazı Çözme", baloncuk: "Baloncuk Evren",
+                  supheli: "Şüpheli Tahtası", okuma: "Okuma" };
 
   const satirlar = Object.keys(t).map(function (k) {
     const kalan = gunlukKalan(k);
