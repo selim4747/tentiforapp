@@ -4398,3 +4398,28 @@ html[data-ayar-tema="gece"] .y-uyari.kotu{background:#2A1413}
 .rb-serit summary{cursor:pointer;color:var(--murekkep-2);font-family:var(--mono);font-size:12px;min-height:28px}
 .rb-serit .rozet-liste{margin:6px 0 4px 0;padding:0;list-style:none;display:grid;gap:3px}
 .rb-serit li.okundu{color:var(--murekkep-2)}
+
+/* ==================== 2.6 ==================== */
+.yol-liste{list-style:none;margin:6px 0;padding:0;display:grid;gap:4px}
+.yol-liste li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 10px;padding:7px 0;border-bottom:1px solid var(--buz)}
+.yol-liste li.bitti{opacity:.65}
+.yol-liste li.secili{border-left:3px solid var(--deniz);padding-left:8px}
+.yol-cubugu{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:55;display:flex;align-items:stretch;max-width:min(420px,calc(100vw - 24px));
+  background:var(--beyaz);border:1px solid var(--sig);border-radius:10px;box-shadow:0 6px 20px rgba(13,53,96,.18);overflow:hidden}
+@media (max-width:760px){.yol-cubugu{bottom:calc(var(--alt-h, 60px) + 10px + env(safe-area-inset-bottom))}}
+.yol-cubugu-git{display:grid;gap:2px;text-align:left;padding:8px 12px;border:none;background:transparent;color:var(--murekkep);font:inherit;font-size:13.5px;cursor:pointer;min-height:44px;min-width:0}
+.yol-cubugu-git b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.yol-cubugu-kapat{border:none;border-left:1px solid var(--buz);background:transparent;color:var(--murekkep-2);width:40px;cursor:pointer;font-size:15px}
+.paket-kutu{margin:4px 0 10px;padding-bottom:10px;border-bottom:1px solid var(--buz)}
+.oi-serit{margin-bottom:10px;padding:8px 12px;border-radius:8px;background:var(--buz);font-size:14px}
+.oi-gunluk{margin:8px 0}
+.oi-gunluk summary{cursor:pointer;font-size:13.5px;color:var(--murekkep-2)}
+.oi-gunluk ul{margin:6px 0;padding-left:18px;display:grid;gap:3px;font-size:13.5px}
+.saglik-kutu summary{cursor:pointer}
+.sg-izgara{display:grid;gap:4px;margin-top:8px}
+.sg-satir{display:grid;grid-template-columns:14px 1fr auto;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--buz);font-size:14px}
+.sg-satir b{font-family:var(--mono);font-size:12.5px;font-weight:500;text-align:right}
+.sg-nokta{width:10px;height:10px;border-radius:50%;background:var(--sig)}
+.sg-iyi .sg-nokta{background:#2E7D32}
+.sg-uyari .sg-nokta{background:#B26A00}
+.sg-kotu .sg-nokta{background:#B3261E}
