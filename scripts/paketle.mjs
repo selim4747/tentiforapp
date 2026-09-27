@@ -160,6 +160,24 @@ for (const s of sayfalar) {
   sayfaYaz("/" + s.id + "/", s.ad + " — TentiforApp", s.bolumler.join(", ") + ". Tentiforverse evren arşivi.", !kisisel);
   if (!kisisel) { adresler.push("/" + s.id + "/"); }
 }
+/* gizlilik: Google giriş ekranının istediği kalıcı adres. Metin betik çalışmadan da okunur (site açılınca tam hâli çizilir). */
+{
+  const dizin = join(HEDEF, "gizlilik");
+  mkdirSync(dizin, { recursive: true });
+  const statik = "<h3>Gizlilik politikası</h3>" +
+    "<p>TentiforApp reklam göstermez, izleme çerezi ve üçüncü taraf analiz aracı kullanmaz.</p>" +
+    "<p><b>Hesapsız:</b> okuma ilerlemen, cüzdanın ve tercihlerin yalnızca tarayıcının yerel deposunda durur; hiçbir sunucuya gitmez.</p>" +
+    "<p><b>Hesap açarsan (Supabase):</b> e-posta adresin ve şifrenin güvenli özeti yalnızca giriş için kullanılır ve gösterilmez. " +
+    "Kullanıcı adın, görünen adın ve profil vitrinin herkese açıktır; ilerlemen yalnızca sana görünür.</p>" +
+    "<p><b>Google ile girersen:</b> Google yalnızca adını, e-posta adresini ve profil fotoğrafının adresini paylaşır; Google şifren bu siteye gelmez. " +
+    "Bu bilgiler yalnızca hesabını açmak için kullanılır ve kimseyle paylaşılmaz.</p>" +
+    "<p><b>Hata bildirimleri:</b> bir hata olursa hata metni, sayfa adresi ve tarayıcı bilgisi yalnızca hatayı düzeltmek için kaydedilir.</p>" +
+    "<p><b>Silmek:</b> Sen → Hesabın → Hesabımı sil, hesabını ve bütün verilerini kalıcı olarak siler.</p>";
+  writeFileSync(join(dizin, "index.html"), sayfaHtml("/gizlilik/", "Gizlilik — TentiforApp",
+    "TentiforApp hangi bilgiyi nerede tutar: hesapsız kullanım, hesap, Google ile giriş, hata bildirimleri ve verilerini silme.")
+    .replace('<div id="gizlilikAlan"></div>', '<div id="gizlilikAlan">' + statik + "</div>"));
+  adresler.push("/gizlilik/");
+}
 /* karşılama: Instagram gibi dışarıdan gelenler için */
 sayfaYaz("/basla/", "Tentiforverse'e hoş geldin — TentiforApp",
   "Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker. Başlangıç koduyla arşivi aç; evrenleri, kilitli kayıtları ve oyunları keşfet.");
