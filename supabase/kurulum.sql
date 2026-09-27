@@ -159,6 +159,8 @@ create table if not exists public.istatistikler (
 );
 -- tam okunan kutular (okuma süresi dolmuş kayıt, madde, mektup…): kutu başına 10 XP (her kutu bir kez)
 alter table public.istatistikler add column if not exists okunan_kutu int not null default 0;
+-- günlük oyunlardan XP (kazanılan oyun başına 10, günde en çok 80; bütün evrenler)
+alter table public.istatistikler add column if not exists oyun_xp int not null default 0;
 alter table public.istatistikler enable row level security;
 drop policy if exists "kendi istatistiğini okur" on public.istatistikler;
 create policy "kendi istatistiğini okur" on public.istatistikler
@@ -235,7 +237,7 @@ declare
   site_gun int;
   n_okunan int; n_katman int; n_oyun int; n_galeri int; n_gun int; n_seri int; n_madalya int;
   n_ecka int; n_nobet int; n_cevirmen int; n_vardiya int; n_yazi int; n_boyut int; n_baloncuk int;
-  n_tamlik int; n_kutu int;
+  n_tamlik int; n_kutu int; n_oyun_xp int;
 begin
   if uid is null then raise exception 'giriş gerekli'; end if;
   -- aynı kullanıcının eşzamanlı gönderimleri sıraya girsin (ilk kayıt iki kez yazılmasın)
@@ -262,9 +264,10 @@ begin
        n_ecka, n_nobet, n_cevirmen, n_vardiya, n_yazi, n_boyut, n_baloncuk;
 
   n_kutu := greatest(coalesce((g->>'okunan_kutu')::int, 0), 0);
+  n_oyun_xp := greatest(coalesce((g->>'oyun_xp')::int, 0), 0);
 
   -- 1) mutlak sınırlar: aşan değer imkânsızdır → sınıra çekilir ve kayıt askıya alınır
-  if n_kutu > 600 then sebepler := array_append(sebepler, 'okunan kutu > 600'); n_kutu := 600; end if;
+  if n_kutu > 1500 then sebepler := array_append(sebepler, 'okunan kutu > 1500'); n_kutu := 1500; end if;
   site_gun := (current_date - a.baslangic) + 1;
   if n_okunan > a.karakter then sebepler := array_append(sebepler, 'okunan karakter > karakter sayısı'); n_okunan := a.karakter; end if;
   if n_katman > a.katman then sebepler := array_append(sebepler, 'katman > katman sayısı'); n_katman := a.katman; end if;
@@ -273,6 +276,8 @@ begin
   if n_madalya > a.madalya then sebepler := array_append(sebepler, 'madalya > madalya sayısı'); n_madalya := a.madalya; end if;
   if n_gun > site_gun then sebepler := array_append(sebepler, 'gün > sitenin yaşı'); n_gun := site_gun; end if;
   if n_seri > n_gun then sebepler := array_append(sebepler, 'seri > gün'); n_seri := n_gun; end if;
+  -- oyun XP'si gelinen günle sınırlı (günde en çok 80; cihaz saati farkı için bir gün pay). Askıya almaz, yalnızca kırpar.
+  n_oyun_xp := least(n_oyun_xp, 80 * (n_gun + 1));
   if n_cevirmen > 8 then sebepler := array_append(sebepler, 'çevirmen > 8'); n_cevirmen := 8; end if;
   if n_vardiya > 10 then sebepler := array_append(sebepler, 'vardiya > 10'); n_vardiya := 10; end if;
   if n_yazi > 6 then sebepler := array_append(sebepler, 'yazı > 6'); n_yazi := 6; end if;
@@ -305,6 +310,7 @@ begin
     n_yazi := greatest(n_yazi, o.yazi);                n_boyut := greatest(n_boyut, o.boyut);
     n_baloncuk := greatest(n_baloncuk, o.baloncuk);
     n_kutu := greatest(n_kutu, o.okunan_kutu);
+    n_oyun_xp := greatest(n_oyun_xp, o.oyun_xp);
   end if;
 
   -- 4) tamlık sunucuda hesaplanır (sitedeki formülün aynısı)
@@ -317,11 +323,11 @@ begin
 
   insert into public.istatistikler as i (
     id, okunan_karakter, katman, oyun, galeri, gun, seri, madalya, ecka_toplam,
-    nobet, cevirmen, vardiya, yazi, boyut, baloncuk, tamlik, okunan_kutu, rol, kisilik,
+    nobet, cevirmen, vardiya, yazi, boyut, baloncuk, tamlik, okunan_kutu, oyun_xp, rol, kisilik,
     hafta, hafta_taban, sezon, sezon_taban, askida, askida_neden, son_gonderim, guncelleme)
   values (
     uid, n_okunan, n_katman, n_oyun, n_galeri, n_gun, n_seri, n_madalya, n_ecka,
-    n_nobet, n_cevirmen, n_vardiya, n_yazi, n_boyut, n_baloncuk, n_tamlik, n_kutu,
+    n_nobet, n_cevirmen, n_vardiya, n_yazi, n_boyut, n_baloncuk, n_tamlik, n_kutu, n_oyun_xp,
     left(g->>'rol', 40), left(g->>'kisilik', 40),
     -- ilk gönderimde haftalık/aylık puan sıfırdan başlar (eski ilerleme bu haftaya yazılmaz)
     bu_hafta, n_ecka, bu_sezon, n_ecka,
@@ -331,7 +337,7 @@ begin
     galeri = excluded.galeri, gun = excluded.gun, seri = excluded.seri, madalya = excluded.madalya,
     ecka_toplam = excluded.ecka_toplam, nobet = excluded.nobet, cevirmen = excluded.cevirmen,
     vardiya = excluded.vardiya, yazi = excluded.yazi, boyut = excluded.boyut, baloncuk = excluded.baloncuk,
-    tamlik = excluded.tamlik, okunan_kutu = excluded.okunan_kutu, rol = excluded.rol, kisilik = excluded.kisilik,
+    tamlik = excluded.tamlik, okunan_kutu = excluded.okunan_kutu, oyun_xp = excluded.oyun_xp, rol = excluded.rol, kisilik = excluded.kisilik,
     -- yeni hafta/ay başladıysa taban, önceki toplam olur
     hafta_taban = case when i.hafta is distinct from bu_hafta then i.ecka_toplam else i.hafta_taban end,
     hafta = bu_hafta,
@@ -1674,7 +1680,7 @@ $$;
 -- dokum: XP'nin kaynaklara göre dağılımı (herkese açık; ayrıntı içermez)
 create or replace view public.arsivci_seviyeleri as
   with p as (
-    select p.id, p.kullanici_adi, p.gorunen_ad, s.tamlik, s.gun, s.madalya, s.katman, s.okunan_kutu
+    select p.id, p.kullanici_adi, p.gorunen_ad, s.tamlik, s.gun, s.madalya, s.katman, s.okunan_kutu, s.oyun_xp
     from public.profiller p left join public.istatistikler s on s.id = p.id
     where p.kullanici_adi is not null and not coalesce(s.engelli or s.askida, false)),
   x as (
@@ -1684,7 +1690,10 @@ create or replace view public.arsivci_seviyeleri as
       coalesce(p.madalya, 0) * 30 as x_madalya,
       coalesce(p.katman, 0) * 40 as x_katman,
       coalesce(p.okunan_kutu, 0) * 10 as x_okuma,
-      10 * (select count(*) from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli) as x_yaris,
+      coalesce(p.oyun_xp, 0) as x_oyun,
+      -- yarış: günde (UTC) yalnızca ilk 3 geçerli oyun XP verir; puansız (cevapsız) oyun sayılmaz
+      10 * (select count(*) from (select row_number() over (partition by (y.zaman at time zone 'utc')::date order by y.zaman) as sira
+              from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli and y.puan > 0) q where q.sira <= 3) as x_yaris,
       15 * (select count(*) from public.kesifler k where k.kullanici = p.id) as x_kesif,
       25 * (select count(*) from public.kesifler k where k.kullanici = p.id
               and not exists (select 1 from public.kesifler k2 where k2.anahtar = k.anahtar and k2.zaman < k.zaman)) as x_ilk_kasif,
@@ -1704,12 +1713,14 @@ create or replace view public.arsivci_seviyeleri as
       + least(100, 2 * (select count(*) from public.okur_bulmaca_cozumleri z join public.okur_bulmacalari b on b.id = z.bulmaca where b.kullanici = p.id)) as x_okur_bulmaca,
       least(500, 50 * (select count(*) from public.davetler d join public.istatistikler s2 on s2.id = d.davetli where d.davet_eden = p.id and coalesce(s2.gun, 0) >= 3))
       + 30 * (select count(*) from public.davetler d join public.istatistikler s2 on s2.id = d.davetli where d.davetli = p.id and coalesce(s2.gun, 0) >= 3) as x_davet,
-      10 * (select count(*) from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli and y.sezon / 100 = public.tomye_ay(now()) / 100)
+      10 * (select count(*) from (select y.sezon, row_number() over (partition by (y.zaman at time zone 'utc')::date order by y.zaman) as sira
+              from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli and y.puan > 0) q
+            where q.sira <= 3 and q.sezon / 100 = public.tomye_ay(now()) / 100)
       + 25 * (select count(*) from public.gk_tahminler g where g.kullanici = p.id and g.cozuldu and public.tomye_ay(g.gun::timestamptz) / 100 = public.tomye_ay(now()) / 100)
       + 15 * (select count(*) from public.kesifler k where k.kullanici = p.id and public.tomye_ay(k.zaman) / 100 = public.tomye_ay(now()) / 100) as yil_xp
     from p),
   t as (
-    select x.*, x_tamlik + x_gun + x_madalya + x_katman + x_yaris + x_kesif + x_ilk_kasif + x_gk + x_teori + x_begeni + x_isaret + x_oy + x_hickirik + x_av + x_defter + x_soru + x_okur_bulmaca + x_davet + x_okuma as xp
+    select x.*, x_tamlik + x_gun + x_madalya + x_katman + x_yaris + x_kesif + x_ilk_kasif + x_gk + x_teori + x_begeni + x_isaret + x_oy + x_hickirik + x_av + x_defter + x_soru + x_okur_bulmaca + x_davet + x_okuma + x_oyun as xp
     from x)
   select kullanici_adi, gorunen_ad, xp, yil_xp,
     (floor(sqrt(xp / 60.0)) + 1)::int as seviye,
@@ -1717,7 +1728,7 @@ create or replace view public.arsivci_seviyeleri as
     jsonb_build_object('tamlik', x_tamlik, 'gun', x_gun, 'madalya', x_madalya, 'katman', x_katman, 'yaris', x_yaris,
       'kesif', x_kesif, 'ilk_kasif', x_ilk_kasif, 'gk', x_gk, 'teori', x_teori, 'begeni', x_begeni,
       'isaret', x_isaret, 'oy', x_oy, 'hickirik', x_hickirik, 'av', x_av,
-      'defter', x_defter, 'soru', x_soru, 'okur_bulmaca', x_okur_bulmaca, 'davet', x_davet, 'okuma', x_okuma) as dokum
+      'defter', x_defter, 'soru', x_soru, 'okur_bulmaca', x_okur_bulmaca, 'davet', x_davet, 'okuma', x_okuma, 'oyun', x_oyun) as dokum
   from t;
 
 -- Yönetici istatistikleri

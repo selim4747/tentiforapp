@@ -73,7 +73,8 @@ function liderlikOlculeri() {
   } catch (_) { okunan = 0; }
   const r = (typeof REKOR_ANAHTAR !== "undefined" ? jsonOku(REKOR_ANAHTAR, {}) : {}) || {};
   return {
-    okunan_karakter: okunan, okunan_kutu: (cuzdan.acilan || []).filter(function (x) { return /^oku_/.test(x); }).length, katman: o.katman, oyun: o.oyun, galeri: o.galeri, gun: o.gun,
+    okunan_karakter: okunan, okunan_kutu: (cuzdan.acilan || []).filter(function (x) { return /^oku_/.test(x); }).length,
+    oyun_xp: typeof oyunXpToplam === "function" ? oyunXpToplam() : 0, katman: o.katman, oyun: o.oyun, galeri: o.galeri, gun: o.gun,
     seri: (typeof seriHesapla === "function") ? seriHesapla() : 0,
     madalya: (typeof arsivciMadalyalari === "function") ? arsivciMadalyalari().length : 0,
     ecka_toplam: Math.round(cuzdan.kazanilan || 0),

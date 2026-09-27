@@ -4244,3 +4244,11 @@ html.ecka-yeni #cuzdanTutar{visibility:hidden}
 .svk-yol li{padding:6px 0;border-top:1px solid var(--buz);color:var(--murekkep-2)}
 .svk-yol li.acik{color:#2E8B57}
 .svk-kapi{margin-top:10px}
+
+/* günlük oyunlar, kullanıcı adı uyarısı (66-gunluk-oyunlar.js) */
+.go-durum{font-weight:600}
+.evo-secenek.secili{border-color:var(--deniz);background:var(--sig)}
+.evo-zaman-liste{margin:0 0 10px 1.2em;padding:0}
+.evo-zaman-liste li{margin:4px 0}
+.kadi-uyari{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:60;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;
+  max-width:min(560px,calc(100vw - 32px));padding:10px 14px;background:var(--kar);border:1px solid var(--deniz);border-radius:4px;box-shadow:0 4px 18px rgba(0,0,0,.15)}

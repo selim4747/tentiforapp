@@ -161,7 +161,7 @@ function fanEserGovde(e, dosya) {
   return '<p class="ust">' + kacir(e.etiket || "Fan evreni · kanon dışı") + "</p>" +
     "<h1>" + kacir(e.ad || "Adsız evren") + "</h1>" +
     '<div class="bilgi">' + bilgi("Kuran", e.yazar) + "</div>" +
-    (e.ozet ? paragraf(e.ozet) : "") +
+    (e.ozet ? '<section class="fan-grup" data-grup="ozet">' + paragraf(e.ozet) + "</section>" : "") +
     (e.harita && e.harita.yerler && e.harita.yerler.length && typeof evrenHaritaSvg === "function"
       ? "<h2>Harita</h2>" + evrenHaritaSvg(e.harita, { alfabe: e.alfabe }) : "") +
     ((e.lorlar || []).length ? "<h2>Kilitli lore</h2><ul>" + e.lorlar.map(function (l) { return "<li>" + kacir(l.baslik) + " · kodla açılır</li>"; }).join("") + "</ul>" : "") +
@@ -171,7 +171,8 @@ function fanEserGovde(e, dosya) {
       /* "kutu" kişi: isim satırı yok, yalnızca anlatım */
       const kutular = liste.filter(function (x) { return x.kutu; });
       const satirlar = liste.filter(function (x) { return !x.kutu; });
-      return "<h2>" + kacir(g.ad) + "</h2>" +
+      /* fan-grup: evren sayfasında okuma kutusu (63-okuma-rozet.js) */
+      return '<section class="fan-grup" data-grup="' + g.k + '"><h2>' + kacir(g.ad) + "</h2>" +
         kutular.map(function (x) { return '<div class="kisi-kutu">' + paragraf(x.aciklama) + "</div>"; }).join("") +
         (satirlar.length ? "<dl>" + satirlar.map(function (x) {
         const bas = g.k === "tarih" ? x.zaman : (g.k === "sozluk" ? x.terim : x.ad);
@@ -179,7 +180,7 @@ function fanEserGovde(e, dosya) {
         const govde = g.k === "tarih" ? x.olay : (g.k === "sozluk" ? x.tanim : (g.k === "ozelAlanlar" ? x.deger : x.aciklama));
         return "<dt>" + kacir(bas || "—") + (ek ? ' <span class="bilgi">· ' + kacir(ek) + "</span>" : "") + "</dt>" +
           "<dd>" + paragraf(govde) + "</dd>";
-      }).join("") + "</dl>" : "");
+      }).join("") + "</dl>" : "") + "</section>";
     }).join("") + konuk;
 }
 
