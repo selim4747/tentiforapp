@@ -288,7 +288,7 @@ function yarislarCiz() {
     (Y2 && Y2.sonuc ? '<div id="yarisSonucAlan">' + yarisSonucHtml() + "</div>" : "") +
     '<div class="yaris-izgara">' + YARISLAR.map(function (y) {
       const one = e && e.yaris === y.id;
-      return '<div class="yaris-kart' + (one ? " one" : "") + '">' +
+      return '<div class="yaris-kart' + (one ? " one" : "") + '" data-yaris-id="' + y.id + '">' +
           (one ? '<span class="yaris-rozet">bu ayın yarışı</span>' : "") +
           "<h4>" + kacir(y.ad) + "</h4>" +
           '<p class="oyun-not">' + kacir(y.ozet) + "</p>" +
@@ -313,8 +313,9 @@ async function yarisEnIyileriYukle() {
   yarisEnIyi = {};
   (data || []).forEach(function (r) { yarisEnIyi[r.yaris] = Number(r.puan); });
   if (JSON.stringify(yarisEnIyi) !== onceki && !(Y2 && !Y2.sonuc)) {
-    document.querySelectorAll(".yaris-kart").forEach(function (k, i) {
-      const el = k.querySelector(".yaris-eniyi"); const id = YARISLAR[i].id;
+    /* yalnızca yarış kartları: aynı görünümü paylaşan günlük oyun ve evren oyunu kartları sıraya karışmasın */
+    document.querySelectorAll(".yaris-kart[data-yaris-id]").forEach(function (k) {
+      const el = k.querySelector(".yaris-eniyi"); const id = k.getAttribute("data-yaris-id");
       if (el) { el.innerHTML = yarisEnIyi[id] !== undefined ? "en iyin: <b>" + yarisEnIyi[id] + "</b>" : ""; }
     });
   }
