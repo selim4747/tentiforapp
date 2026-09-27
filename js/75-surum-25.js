@@ -774,11 +774,7 @@ function evrenSay(ad) {
     const evren = "ev:" + EVS.id;
     const k = evren + "|" + ad;
     try { if (sessionStorage.getItem("tf-evi|" + k)) { return; } sessionStorage.setItem("tf-evi|" + k, "1"); } catch (_) { if (EVI.sayilan[k]) { return; } EVI.sayilan[k] = true; }
-    fetch(HESAP_AYAR.url + "/rest/v1/rpc/evren_say", {
-      method: "POST", keepalive: true,
-      headers: { "Content-Type": "application/json", apikey: HESAP_AYAR.anahtar, Authorization: "Bearer " + HESAP_AYAR.anahtar },
-      body: JSON.stringify({ p_evren: evren, p_ad: ad })
-    }).catch(function () { /* kurulmamış */ });
+    if (typeof sayacEkle === "function") { sayacEkle({ tur: "evren", evren: evren, ad: ad }); }
   } catch (_) { /* sayaç hiçbir şeyi bozmasın */ }
 }
 

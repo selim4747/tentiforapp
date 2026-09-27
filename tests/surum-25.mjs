@@ -29,7 +29,7 @@ export async function surum25Testleri({ adres, veritabani, dizin }) {
         localStorage.setItem("tentiforapp_tur", "bitti"); localStorage.setItem("tentiforapp_baslangic_oto", "kapali");
         localStorage.setItem("tentiforapp_seviye_test", "20"); localStorage.setItem("tentiforapp_hesap_hatirlat", JSON.stringify({ kapat: true }));
       } catch (e) { /* yok */ }
-      window.__olayTest = true;
+      window.__olayTest = true; window.__okumaOnbellegiKapali = true;
     });
     await ctx.route(/\/js\/28-hesap\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: hesapKod }); });
     await ctx.route(TEST_URL + "/**", function (r) { return sahte.isle(r); });

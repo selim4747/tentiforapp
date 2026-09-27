@@ -57,6 +57,46 @@ function hesapKutuphaneYukle() {
   });
 }
 
+/* Okuma önbelleği: tablolar, liderlik, listeler 90 saniye cihazda tutulur; sayfalar arasında gidip gelince
+   sunucu yeniden sorulmaz. Herhangi bir yazma (oy, teori, kayıt…) önbelleği boşaltır, yazdığın hemen görünür.
+   İlerleme (ilerlemeler) ve giriş işleri hiç önbelleğe girmez. */
+const OKUMA_ONBELLEK = new Map();
+const OKUMA_SURE = 90000;
+const OKUMA_RPC = ["uygulama_skor_tablosu", "gk_istatistik", "evren_defter_oku", "takip_ettiklerim", "tepkilerim", "oylarim", "haftalik_ilerleme", "evren_istatistik"];
+
+function hesapOnbellekliFetch(girdi, secenek) {
+  const url = typeof girdi === "string" ? girdi : (girdi && girdi.url) || "";
+  const yontem = String((secenek && secenek.method) || (girdi && girdi.method) || "GET").toUpperCase();
+  const rest = url.indexOf("/rest/v1/") !== -1;
+  const rpc = (/\/rest\/v1\/rpc\/([a-z0-9_]+)/.exec(url) || [])[1];
+  const okuma = rest && !window.__okumaOnbellegiKapali && !/\/rest\/v1\/ilerlemeler/.test(url) &&
+    ((yontem === "GET" || yontem === "HEAD") ? !rpc : (yontem === "POST" && OKUMA_RPC.indexOf(rpc) !== -1));
+  if (rest && !okuma && yontem !== "GET" && yontem !== "HEAD") { OKUMA_ONBELLEK.clear(); }   /* yazma: önbellek boşalır */
+  if (!okuma) { return fetch(girdi, secenek); }
+  let yetki = "";
+  try { yetki = new Headers((secenek && secenek.headers) || {}).get("Authorization") || ""; } catch (_) { yetki = ""; }
+  const anahtar = yontem + " " + url + " " + ((secenek && typeof secenek.body === "string") ? secenek.body : "") + " " + yetki.slice(-24);
+  const k = OKUMA_ONBELLEK.get(anahtar);
+  const yanit = function (r) { return new Response(r.govde, { status: r.durum, headers: r.basliklar }); };
+  if (k && Date.now() - k.zaman < OKUMA_SURE) {
+    /* yoldaki istek de paylaşılır: aynı anda iki okuma tek istek olur */
+    return k.soz.then(function (r) { return r ? yanit(r) : fetch(girdi, secenek); });
+  }
+  let coz;
+  const kayit = { zaman: Date.now(), soz: new Promise(function (c) { coz = c; }) };
+  OKUMA_ONBELLEK.set(anahtar, kayit);
+  if (OKUMA_ONBELLEK.size > 200) { OKUMA_ONBELLEK.delete(OKUMA_ONBELLEK.keys().next().value); }
+  return fetch(girdi, secenek).then(function (y) {
+    if (!y.ok) { OKUMA_ONBELLEK.delete(anahtar); coz(null); return y; }
+    return y.text().then(function (govde) {
+      const b = {}; y.headers.forEach(function (v, a) { b[a] = v; });
+      const r = { govde: govde, durum: y.status, basliklar: b };
+      coz(r);
+      return yanit(r);
+    });
+  }, function (e) { OKUMA_ONBELLEK.delete(anahtar); coz(null); throw e; });
+}
+
 let hesapKuruluyor = null;   /* hesapIstemciKur sözü: kütüphane bir kez yüklenir */
 
 /** 24-arsiv-mantigi.js çizimden sonra bir kez çağırır.
@@ -120,7 +160,8 @@ async function hesapIstemciKur() {
         persistSession: true,
         autoRefreshToken: true,
         storageKey: HESAP_OTURUM_ANAHTAR
-      }
+      },
+      global: { fetch: hesapOnbellekliFetch }
     });
   } catch (e) {
     console.error("[TentiforApp] hesap:", e);
@@ -180,7 +221,7 @@ async function hesapOturumAyarla(kullanici, olay) {
     await hesapProfilYukle();
     await hesapIlkEsitleme();
     clearInterval(hesapEsitZamanlayici);
-    hesapEsitZamanlayici = setInterval(hesapEsitle, ESIT_ARALIK);
+    hesapEsitZamanlayici = setInterval(function () { if (document.visibilityState === "visible") { hesapEsitle(); } }, ESIT_ARALIK);
   }
 
   hesapHazir = true;
@@ -479,7 +520,8 @@ async function hesapCikis() {
      anlaşılır; tam veri yalnızca gerektiğinde iner. Yazım en sık 45 saniyede bir, değişiklik varsa. */
 
 const ESIT_ZAMAN_ANAHTAR = "tentiforapp_esit_zaman";
-const ESIT_ARALIK = 45000;
+/* 5 dakikada bir (sekme görünürken). Asıl kayıt sekme gizlenirken/kapanırken yapılır; ilerleme her an cihazda durur. */
+const ESIT_ARALIK = 300000;
 /* yalnızca büyüyen kazanımlar: iki cihazdakiler birleşir */
 const ESIT_BIRLESIM = [
   "tentiforapp_erisim", "tentiforapp_cozulen", "tentiforapp_madalyalar", "tentiforapp_madalya", "tentiforapp_kart_koleksiyon",

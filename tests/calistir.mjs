@@ -12,6 +12,7 @@ import { tarayiciTestleri } from "./tarayici.mjs";
 import { bildirimFonksiyonTestleri } from "./bildirim-fonksiyonu.mjs";
 import { cevrimdisiTestleri } from "./cevrimdisi.mjs";
 import { surum25Testleri } from "./surum-25.mjs";
+import { sunucuYukuTestleri } from "./sunucu-yuku.mjs";
 
 const KOK = new URL("..", import.meta.url).pathname;
 const DB = process.env.TEST_DB || "tentifor_test";
@@ -100,7 +101,9 @@ try {
   const c = await cevrimdisiTestleri({ dizin: DIZIN });
   console.log("• sürüm 2.5");
   const s25 = await surum25Testleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
-  console.log("\nHepsi geçti: " + sqlSayisi + " veritabanı + " + f + " fonksiyon + " + (n + s25) + " tarayıcı + " + c + " çevrimdışı kontrolü.");
+  console.log("• sunucu yükü");
+  const yk = await sunucuYukuTestleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
+  console.log("\nHepsi geçti: " + sqlSayisi + " veritabanı + " + f + " fonksiyon + " + (n + s25 + yk) + " tarayıcı + " + c + " çevrimdışı kontrolü.");
 } catch (e) {
   console.error("\n" + (e.stack || e.message || e));
   process.exitCode = 1;

@@ -2703,5 +2703,23 @@ $$;
 revoke execute on function public.evren_say(text, text), public.evren_istatistik(text, int) from public;
 grant execute on function public.evren_say(text, text), public.evren_istatistik(text, int) to anon, authenticated;
 
+-- Sayaçlar tek istekte: site olay ve evren sayaçlarını biriktirip sayfadan çıkarken bir kez gönderir (en çok 50)
+create or replace function public.sayac_toplu(p jsonb) returns void
+language plpgsql security definer set search_path = '' as $$
+declare x jsonb; n int := 0;
+begin
+  if jsonb_typeof(p) <> 'array' then return; end if;
+  for x in select value from jsonb_array_elements(p) loop
+    n := n + 1;
+    exit when n > 50;
+    if x ->> 'tur' = 'olay' then perform public.olay_say(x ->> 'ad');
+    elsif x ->> 'tur' = 'evren' then perform public.evren_say(x ->> 'evren', x ->> 'ad');
+    end if;
+  end loop;
+end;
+$$;
+revoke execute on function public.sayac_toplu(jsonb) from public;
+grant execute on function public.sayac_toplu(jsonb) to anon, authenticated;
+
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';
