@@ -186,7 +186,28 @@ function okuEtiketle() {
     return m && m.id ? "evren:" + m.id : null;
   });
   esle("#notlarAlan .madde[data-not] > .madde-govde", function (el) { return "not:" + el.parentNode.getAttribute("data-not"); });
+  /* diğer evrenler (sitedeki fan evrenleri, kanon evren sayfaları, E99): bilgi bölümleri ve roman bölümleri.
+     Kendi evrenin ve dosyadan açtıkların sayılmaz (oyun ödülleriyle aynı kural); 30 kelimeden kısa bölüm kutu değildir. */
+  const evs = okuEvrenOnEki();
+  if (evs) {
+    const yeter = function (el) { return okuKelimeSay(el.textContent) >= 30; };
+    esle("#evrenSayfa .fan-grup[data-grup]", function (el) { return yeter(el) ? evs + el.getAttribute("data-grup") : null; });
+    esle("#evrenSayfa .evr-oku .okuma-metin", function (el) {
+      const b = typeof evrDurum === "function" ? evrDurum().secili : null;
+      return b && yeter(el) ? evs + "roman:" + b : null;
+    });
+  }
 }
+
+/** "ev:fan:<id>:" gibi önek; okuma XP'si vermeyen evrende (kendi evrenin, dosyadan açılan) null. */
+function okuEvrenOnEki() {
+  if (typeof EVS === "undefined" || !EVS || !document.querySelector("#evrenSayfa")) { return null; }
+  if (EVS.kaynak === "benim" || EVS.kaynak === "acilan") { return null; }
+  if (EVS.kaynak === "fan" && typeof evrenKendisininMi === "function" && evrenKendisininMi(EVS.id)) { return null; }
+  return "ev:" + EVS.kaynak + ":" + EVS.id + ":";
+}
+
+function okuKelimeSay(t) { return String(t || "").split(/\s+/).filter(Boolean).length; }
 
 function okuAlintiGorunur() {
   const yon = typeof yoneticiAcik === "function" && yoneticiAcik();

@@ -727,6 +727,10 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     const fanOdul = await N.evaluate(function (id) {
       const e = JSON.parse(JSON.stringify(evrenBenimBul(id)));
       e.id = "fsitedeki1"; e.ad = "Sitedeki Kıyı"; e.para = { ad: "kavuk", simge: "", kur: 0.5 };
+      e.tarih = [{ zaman: "Birinci çağ", olay: "Norak kıyısına ilk gemi yanaştı ve kaptan Arvel limanı kurdu, halk ilk kez denizden gelen tuzu gördü." },
+        { zaman: "İkinci çağ", olay: "Bosra mutfağı açtı; kıyı rüzgârı kavra ilk kez adını aldı ve gemiciler onu şarkılarında andı." },
+        { zaman: "Üçüncü çağ", olay: "Cimen kıyının haritasını çizdi, Pelin ile Rusta arasındaki yol açıldı." },
+        { zaman: "Dördüncü çağ", olay: "Dolun gözcü kulesine çıktı ve ufukta ikinci filoyu gördü." }];
       veri.fanEserleri.evrenler = [e];
       return true;
     }, nEv);
@@ -735,7 +739,8 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     const bakiye0 = await N.evaluate(function () { return egBakiye("ev:fsitedeki1"); });
     const sinavOyna = async function () {
       await N.click('#evrenSayfa [data-evo-basla="sinav"]');
-      for (let i = 0; i < 5; i++) {
+      const n = await N.evaluate(function () { return EVO.sorular.length; });
+      for (let i = 0; i < n; i++) {
         await N.evaluate(function () { const q = EVO.sorular[EVO.i]; document.querySelector('#evrenSayfa [data-evo-sec="' + q.secenekler.indexOf(q.dogru) + '"]').click(); });
         await N.click("#evrenSayfa [data-evo-sonraki]");
       }
@@ -743,17 +748,85 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await sinavOyna();
     ok("fanmade evrende kazanınca o evrenin parası (kurucunun ödülü, tavanla)", fanOdul && await N.evaluate(function () { return egBakiye("ev:fsitedeki1"); }) === bakiye0 + 6 &&
       /kavuk/.test(await N.textContent("#evrenSayfa .evo-oyun")));
-    await N.click('#evrenSayfa [data-evo-basla="sinav"]');
-    for (let i = 0; i < 5; i++) {
+    await sinavOyna();
+    ok("aynı oyun günde bir kez ödül verir", await N.evaluate(function () { return egBakiye("ev:fsitedeki1"); }) === bakiye0 + 6 && /bugünkü ödülünü aldın/.test(await N.textContent("#evrenSayfa .evo-oyun")));
+    await N.click("#evrenSayfa [data-evo-kapat]");
+    ok("başka evrendeki oyun da günlük oyun XP'si verir (günde bir kez)", await N.evaluate(function () {
+      return oyunXpAlindi("ev:fsitedeki1|sinav") && oyunXpKayitlari().filter(function (x) { return /fsitedeki1\|sinav/.test(x); }).length === 1;
+    }));
+    ok("yeni oyunlar her evrende: Doğru mu? ve Zaman sırası", await N.locator('#evrenSayfa [data-evo-basla="dogru"]').count() === 1 &&
+      await N.locator('#evrenSayfa [data-evo-basla="zaman"]').count() === 1);
+    await N.click('#evrenSayfa [data-evo-basla="dogru"]');
+    const dogruN = await N.evaluate(function () { return EVO.sorular.length; });
+    for (let i = 0; i < dogruN; i++) {
       await N.evaluate(function () { const q = EVO.sorular[EVO.i]; document.querySelector('#evrenSayfa [data-evo-sec="' + q.secenekler.indexOf(q.dogru) + '"]').click(); });
       await N.click("#evrenSayfa [data-evo-sonraki]");
     }
-    ok("aynı oyun günde bir kez ödül verir", await N.evaluate(function () { return egBakiye("ev:fsitedeki1"); }) === bakiye0 + 6 && /bugünkü ödülünü aldın/.test(await N.textContent("#evrenSayfa .evo-oyun")));
+    ok("Doğru mu? biter ve XP verir", dogruN >= 4 && await N.evaluate(function () { return oyunXpAlindi("ev:fsitedeki1|dogru"); }));
     await N.click("#evrenSayfa [data-evo-kapat]");
+    await N.click('#evrenSayfa [data-evo-basla="zaman"]');
+    for (let t = 0; t < 3; t++) {
+      await N.evaluate(function () {
+        const tur = EVO.turlar[EVO.i];
+        tur.map(function (x, j) { return [x.i, j]; }).sort(function (a, b) { return a[0] - b[0]; }).forEach(function (x) {
+          document.querySelector('#evrenSayfa [data-evo-zaman="' + x[1] + '"]').click();
+        });
+      });
+      await N.click("#evrenSayfa [data-evo-sonraki]");
+    }
+    ok("Zaman sırası: doğru sıra sayılır, XP verir", await N.evaluate(function () { return EVO.dogru === 3 && oyunXpAlindi("ev:fsitedeki1|zaman"); }));
+    await N.click("#evrenSayfa [data-evo-kapat]");
+    await N.click('#evrenSayfa [data-evs-sekme="bilgi"]'); await bekle(N, 500);
+    ok("başka evrenin bilgi bölümleri okuma kutusu (kısa bölüm sayılmaz)", await N.evaluate(function () {
+      okuEtiketle();
+      return !!document.querySelector('#evrenSayfa [data-oku="ev:fan:fsitedeki1:tarih"]') && !document.querySelector('#evrenSayfa [data-oku="ev:fan:fsitedeki1:sozluk"]');
+    }));
+    ok("kendi evreninde okuma kutusu yok", await N.evaluate(function () { const k = EVS.kaynak; EVS.kaynak = "benim"; const r = okuEvrenOnEki() === null; EVS.kaynak = k; return r; }));
+    await N.click('#evrenSayfa [data-evs-sekme="oyunlar"]');
     ok("okur romanı ve çizimleri okur", await N.evaluate(function () {
       const t = Array.from(document.querySelectorAll("#evrenSayfa [data-evs-sekme]")).map(function (x) { return x.dataset.evsSekme; });
       return t.indexOf("roman") !== -1 && t.indexOf("cizim") !== -1 && t.indexOf("defter") !== -1 && t.indexOf("stil") === -1;
     }));
+
+    /* Tömye'nin günlük oyunları: güne göre sorular, kazanınca günde bir kez 10 XP */
+    await N.evaluate(function () { evrenSayfaKapat(); location.hash = "#/oyunlar"; }); await bekle(N, 700);
+    await N.click('[data-oyun-sekme="gunluk"]'); await bekle(N, 200);
+    ok("Günlük sekmesinde üç Tömye oyunu ve kolay kelime", await N.locator("#gunlukOyunAlan .go-kart").count() === 4 && /\/ 80 XP/.test(await N.textContent("#gunlukOyunAlan")));
+    const goKilit = await N.evaluate(function () { return bolumErisimi("arsiv"); });
+    if (!goKilit) {
+      ok("kodsuz: günlük oyunlar başlangıç koduna yönlendirir", await N.locator('#gunlukOyunAlan a[href="#/basla"]').count() >= 1);
+      await N.evaluate(async function () { kodPenceresi(); await kodDene("TNTF-BASLA"); perdeKapat(); gunlukOyunlarCiz(); }); await bekle(N, 300);
+    }
+    ok("günlük sorular gün içinde aynı", await N.evaluate(function () { return JSON.stringify(goSorular("kim")) === JSON.stringify(goSorular("kim")) && goSorular("dogru").length === 8; }));
+    const xpOnce = await N.evaluate(function () { SVK.onbellek = null; return yerelXp(); });
+    const goOyna = async function () {
+      await N.click('#gunlukOyunAlan [data-go-basla="kim"]');
+      for (let i = 0; i < 5; i++) {
+        await N.evaluate(function () { const q = GO.sorular[GO.i]; document.querySelector('#gunlukOyunAlan [data-go-sec="' + q.secenekler.indexOf(q.dogru) + '"]').click(); });
+        await N.click("#gunlukOyunAlan [data-go-sonraki]");
+      }
+    };
+    await goOyna();
+    ok("“Kim bu?” kazanınca 10 XP", /\+10 XP/.test(await N.textContent("#gunlukOyunAlan .evo-oyun")) && await N.evaluate(function () { return yerelXp(); }) - xpOnce === 10);
+    await N.click("#gunlukOyunAlan [data-go-kapat]");
+    await goOyna();
+    ok("aynı gün tekrar oynanır ama XP bir kez", /yarın yeni sorular/.test(await N.textContent("#gunlukOyunAlan .evo-oyun")) && await N.evaluate(function () { return yerelXp(); }) - xpOnce === 10);
+    ok("günlük tavan 80 XP", await N.evaluate(function () {
+      let n = 0; for (let i = 0; i < 20; i++) { n += oyunXpVer("deneme|" + i); }
+      const r = oyunXpBugun() === OYUN_XP_GUNLUK && oyunXpVer("deneme|son") === 0;
+      cuzdan.acilan = cuzdan.acilan.filter(function (x) { return !/_deneme\|/.test(x); }); cuzdanKaydet();
+      return r && n > 0;
+    }));
+    ok("Google ile giren, kullanıcı adı yoksa uyarı görür", await N.evaluate(function () {
+      const k = hesapKullanici, p = hesapProfil;
+      hesapKullanici = { id: "g1" }; hesapProfil = { id: "g1" }; kadiUyarisiCiz();
+      const var1 = !!document.querySelector("#kadiUyari [data-kadi-sec]");
+      hesapProfil = { id: "g1", kullanici_adi: "gezgin" }; kadiUyarisiCiz();
+      const yok = !document.querySelector("#kadiUyari");
+      hesapKullanici = k; hesapProfil = p;
+      return var1 && yok;
+    }));
+    ok("liderliğe oyun XP'si gider", await N.evaluate(function () { return liderlikOlculeri().oyun_xp === oyunXpToplam() && oyunXpToplam() >= 40; }));
 
     /* ---------- evren kurma: boş taslak birikmez, ilk adımlar, hazır harita ---------- */
     const bosEv = await N.evaluate(function () { evrenSayfaKapat(); return evrenYeniKur(); });

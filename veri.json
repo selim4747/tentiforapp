@@ -1,5 +1,5 @@
 {
-  "surum": "1.16.2",
+  "surum": "1.17.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -7161,6 +7161,7 @@
     }
   ],
   "degisiklik": [
+    {"surum": "1.17.0", "tarih": "2026-09-27", "maddeler": ["Günlük oyunlar (Oyunlar → Günlük · XP): Kim bu?, Madde bilmecesi, Doğru mu? — her gün yeni sorular, kazanınca 10 XP", "Her evrende iki yeni oyun: Doğru mu? ve Zaman sırası", "Bütün evrenlerden XP: oyunlar (günde en çok 80) ve okunan bölümler, roman bölümleri", "Yarışlarda günün ilk 3 puanlı oyunu XP verir", "Google ile girenlere kullanıcı adı hatırlatması"], "yeniler": []},
     {"surum": "1.16.2", "tarih": "2026-09-27", "maddeler": ["Seviyeler daha uzun: her seviye için gereken XP arttı", "Okunan kutu 10 XP; her kutu bir kez sayılır (iki sayfada görünen madde tek kutu)", "Yazar notları da okuma kutusu"], "yeniler": []},
     {"surum": "1.16.1", "tarih": "2026-09-27", "maddeler": ["Sonuna kadar okuduğun her kutu 15 XP (hesapta da sayılır)", "Evren maddeleri ve Claude'un Evreni hikâyeleri de okuma kutusu oldu"], "yeniler": []},
     {"surum": "1.16.0", "tarih": "2026-09-27", "maddeler": ["Yeni gelenler için: başlangıç kodu kendiliğinden girilir, tanıtım ekranı kapatmaz, “Okumaya başla” okunabilir ilk adıma götürür", "Kilitli bölümlerde önizleme ve nasıl açıldığı; içeriği olmayan bölümler gizli", "Okuyarak kazan: kutuda okuması kadar dur (kelime başına çeyrek saniye), eçka ve kart öyle gelir", "Karakter rozetleri: hakkındaki her şeyi oku → gümüş; ona fan hikâyesi yaz → altın", "Seviye yolu: 5’te fan hikâyesi, 10’da Evrengezer, 15’te fan evreni; yan bölümler seviye geldikçe açılır", "Ana sayfada “Bugün”: kaldığın yer ve arşivin ne kadarı açık", "Terimler dokununca açıklanır; eçka penceresi sadeleşti", "Google ile giriş; “Bir sorun mu var?” geri bildirimi"], "yeniler": []},

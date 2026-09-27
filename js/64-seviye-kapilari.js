@@ -33,6 +33,8 @@ function yerelXp() {
   try { xp += 30 * ((typeof arsivciMadalyalari === "function" && arsivciMadalyalari().length) || 0); } catch (_) { /* yok */ }
   /* tam okunan her kutu (okuma süresi dolmuş) 10 XP (her kutu bir kez: anahtar başına tek kayıt) */
   try { xp += 10 * (cuzdan.acilan || []).filter(function (x) { return /^oku_/.test(x); }).length; } catch (_) { /* yok */ }
+  /* günlük oyunlar: kazanılan oyun başına 10, günde en çok 80 (66-gunluk-oyunlar.js) */
+  try { if (typeof oyunXpToplam === "function") { xp += oyunXpToplam(); } } catch (_) { /* yok */ }
   return Math.round(xp);
 }
 
@@ -77,7 +79,7 @@ function seviyeCubukHtml(gereken) {
   return '<span class="svk-cubuk" aria-hidden="true"><i style="width:' + oran + '%"></i></span>';
 }
 
-const SVK_NASIL = "XP; kutuları sonuna kadar okuyarak (kutu başına 10, her kutu bir kez), her gün gelerek, madalya ve buz katmanlarıyla birikir. Hesabın varsa yarışlar, " +
+const SVK_NASIL = "XP; kutuları sonuna kadar okuyarak (kutu başına 10, her kutu bir kez), her gün gelerek, günlük oyunlarla (Tömye ve bütün evrenler, günde en çok 80), madalya ve buz katmanlarıyla birikir. Hesabın varsa yarışlar, " +
   "günün kelimesi, teoriler ve keşifler de sayılır.";
 
 /** Kapıya takılınca açılan küçük pencere. */

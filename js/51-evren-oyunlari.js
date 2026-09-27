@@ -14,9 +14,12 @@
 const EVO_OYUNLAR = [
   { id: "kelime", ad: "Günün kelimesi", ozet: "Her gün evrenin adlarından biri, 6 hak." },
   { id: "sinav", ad: "Evren sınavı", ozet: "Kişiler, yerler, sözlük ve tarihten 10 soru." },
-  { id: "harita", ad: "Harita bulmacası", ozet: "Adı verilen yeri etiketsiz haritada bul." }
+  { id: "harita", ad: "Harita bulmacası", ozet: "Adı verilen yeri etiketsiz haritada bul." },
+  { id: "dogru", ad: "Doğru mu?", ozet: "8 iddia: evrenin kişileri, yerleri, sözlüğü. Doğru mu, yanlış mı?" },
+  { id: "zaman", ad: "Zaman sırası", ozet: "Tarihten 4 olayı sıraya koy; üç turun ikisini bil." }
 ];
-const EVO_EN_AZ = { kelime: 5, sinav: 4, harita: 4 };
+const EVO_EN_AZ = { kelime: 5, sinav: 4, harita: 4, dogru: 4, zaman: 4 };
+const EVO_SORU_OYUNU = { sinav: true, dogru: true };
 const EVO_ODUL_EG = 1;            /* varsayılan ödül: 1 EG değerinde evren parası */
 const EVO_ODUL_TAVAN_EG = 3;      /* kurucu en fazla 3 EG değerinde ödül koyabilir */
 const EVO_GUNLUK = 10;            /* günde en fazla bu kadar oyun ödülü (bütün evrenler) */
@@ -366,7 +369,8 @@ function evoSoruHavuzu(e) {
 /** Hangi oyun oynanabilir: açık mı, yeterli içerik var mı? */
 function evoDurumlari(e) {
   return EVO_OYUNLAR.map(function (g) {
-    const sayi = g.id === "kelime" ? evoKelimeler(e).length : (g.id === "sinav" ? evoSoruHavuzu(e).length : evoHaritaYerleri(e).length);
+    const sayi = g.id === "kelime" ? evoKelimeler(e).length : (EVO_SORU_OYUNU[g.id] ? evoSoruHavuzu(e).length
+      : (g.id === "zaman" ? evoZamanOlaylari(e).length : evoHaritaYerleri(e).length));
     return { id: g.id, ad: evoAd(e, g.id), ozet: g.ozet, acik: evoAyar(e, g.id).acik !== false, sayi: sayi, yeter: sayi >= EVO_EN_AZ[g.id] };
   });
 }
@@ -404,12 +408,13 @@ function evoOdulVer(oyunId, oyunAd) {
   if (egCuzdan.oyun.l.length >= EVO_GUNLUK) { return "Bugünlük oyun ödüllerin doldu."; }
   const n = evoOdulMiktari(v.eser, p);
   egCuzdan.oyun.l.push(k);
+  const xp = typeof oyunXpVer === "function" ? oyunXpVer(k) : 0;
   egParaHatirla(a, p);
   egKaydet();
   egBakiyeDegistir(a, n, "Evren oyunu: " + oyunAd);
   if (typeof eckaBildir === "function") { eckaBildir("+" + n + " " + p.ad + " · " + oyunAd); }
   if (typeof hesapHatirlat === "function") { hesapHatirlat("evren"); }
-  return "Kazandın: " + egTutar(n, p) + ".";
+  return "Kazandın: " + egTutar(n, p) + (xp ? " ve " + xp + " XP" : "") + ".";
 }
 
 /* ==================== oyunlar: oynanış ==================== */
@@ -468,6 +473,32 @@ function evoHaritaBaslat(e) {
   EVO = { oyun: "harita", evren: EVS.kaynak + ":" + EVS.id, i: 0, dogru: 0, hedefler: yerler.map(function (y) { return y.id; }), cevap: null, mesaj: "" };
 }
 
+/** Doğru mu?: soru havuzundan 8 iddia; yarısı kadarı yanlış cevapla kurulur. */
+function evoDogruBaslat(e) {
+  const havuz = evoKaristir(evoSoruHavuzu(e)).slice(0, 8);
+  EVO = { oyun: "dogru", evren: EVS.kaynak + ":" + EVS.id, i: 0, dogru: 0, secim: null, mesaj: "",
+    sorular: havuz.map(function (q) {
+      const yanlis = q.havuz.length && Math.random() < 0.5;
+      const cevap = yanlis ? evoKaristir(q.havuz)[0] : q.dogru;
+      return { soru: q.soru + " → " + cevap, dogru: yanlis ? "Yanlış" : "Doğru", secenekler: ["Doğru", "Yanlış"] };
+    }) };
+}
+
+/** Tarih olayları, evrenin yazıldığı sırayla (yazar tarihi eskiden yeniye dizer). */
+function evoZamanOlaylari(e) {
+  return (e.tarih || []).filter(function (x) { return evoDolu(x.olay); });
+}
+
+/** Zaman sırası: üç tur, her turda 4 olay; ikisini tam sırasıyla bilen geçer. */
+function evoZamanBaslat(e) {
+  const l = evoZamanOlaylari(e).map(function (x, i) { return { i: i, olay: evoKisa(x.olay, 140), zaman: x.zaman || "" }; });
+  const turlar = [];
+  for (let t = 0; t < 3; t++) {
+    turlar.push(evoKaristir(evoKaristir(l).slice(0, 4)));
+  }
+  EVO = { oyun: "zaman", evren: EVS.kaynak + ":" + EVS.id, i: 0, dogru: 0, turlar: turlar, secilen: [], cevap: null, mesaj: "" };
+}
+
 /** Aynı adı taşıyan yerlerden yalnızca biri sorulur (hangisi olduğu belirsiz kalmasın). */
 function evoTekilYerler(e) {
   const say = {};
@@ -478,14 +509,14 @@ function evoTekilYerler(e) {
 function evoGecerli() { return EVO && EVS && EVO.evren === EVS.kaynak + ":" + EVS.id; }
 
 function evoSinavHtml(e) {
-  const ad = evoAd(e, "sinav");
+  const ad = evoAd(e, EVO.oyun);
   const n = EVO.sorular.length;
   if (EVO.i >= n) {
-    const esik = Math.ceil(n * 0.7);
+    const esik = evoEsik(n);
     return '<div class="evo-oyun"><span class="oyun-etiket">' + kacir(ad) + "</span>" +
       '<p class="evo-skor">' + EVO.dogru + " / " + n + "</p>" +
       '<p class="oyun-not">' + (EVO.dogru >= esik ? "Geçtin! " : "Geçmek için en az " + esik + " doğru gerekiyor. ") + kacir(EVO.mesaj) + "</p>" +
-      '<div class="oyun-sira"><button class="dugme" data-evo-basla="sinav">Tekrar</button><button class="dugme dugme-sade" data-evo-kapat>Oyunlara dön</button></div></div>';
+      '<div class="oyun-sira"><button class="dugme" data-evo-basla="' + EVO.oyun + '">Tekrar</button><button class="dugme dugme-sade" data-evo-kapat>Oyunlara dön</button></div></div>';
   }
   const q = EVO.sorular[EVO.i];
   const cevaplandi = EVO.secim !== null;
@@ -519,9 +550,37 @@ function evoHaritaHtml(e) {
     '<div class="oyun-sira"><button class="dugme dugme-sade" data-evo-kapat>Bırak</button></div></div>';
 }
 
+function evoZamanHtml(e) {
+  const ad = evoAd(e, "zaman");
+  const n = EVO.turlar.length;
+  if (EVO.i >= n) {
+    return '<div class="evo-oyun"><span class="oyun-etiket">' + kacir(ad) + "</span>" +
+      '<p class="evo-skor">' + EVO.dogru + " / " + n + "</p>" +
+      '<p class="oyun-not">' + (EVO.dogru >= 2 ? "Tarihi biliyorsun! " : "Geçmek için iki turu tam bilmelisin. ") + kacir(EVO.mesaj) + "</p>" +
+      '<div class="oyun-sira"><button class="dugme" data-evo-basla="zaman">Tekrar</button><button class="dugme dugme-sade" data-evo-kapat>Oyunlara dön</button></div></div>';
+  }
+  const tur = EVO.turlar[EVO.i];
+  const dogruSira = tur.slice().sort(function (a, b) { return a.i - b.i; });
+  return '<div class="evo-oyun"><div class="gk-ust"><span class="oyun-etiket">' + kacir(ad) + '</span><span class="oyun-not">Tur ' + (EVO.i + 1) + " / " + n + " · " + EVO.dogru + " doğru</span></div>" +
+    '<p class="evo-soru">' + (EVO.cevap ? (EVO.cevap === "d" ? "Doğru sıra! " : "Olmadı. Doğrusu:") : "En eskiden en yeniye dokun.") + "</p>" +
+    (EVO.cevap
+      ? '<ol class="evo-zaman-liste">' + dogruSira.map(function (x) { return "<li>" + (x.zaman ? "<b>" + kacir(x.zaman) + "</b> · " : "") + kacir(x.olay) + "</li>"; }).join("") + "</ol>"
+      : '<div class="evo-secenekler">' + tur.map(function (x, j) {
+          const s = EVO.secilen.indexOf(j);
+          return '<button class="evo-secenek' + (s !== -1 ? " secili" : "") + '" data-evo-zaman="' + j + '"' + (s !== -1 ? " disabled" : "") + ">" +
+            (s !== -1 ? "<b>" + (s + 1) + ".</b> " : "") + kacir(x.olay) + "</button>";
+        }).join("") + "</div>") +
+    (EVO.cevap ? '<div class="oyun-sira"><button class="dugme" data-evo-sonraki>' + (EVO.i + 1 < n ? "Sonraki tur" : "Bitir") + "</button></div>" : "") +
+    '<div class="oyun-sira"><button class="dugme dugme-sade" data-evo-kapat>Bırak</button></div></div>';
+}
+
+function evoEsik(n) { return EVO.oyun === "dogru" ? n - 1 : Math.ceil(n * 0.7); }
+
+function evoTurSayisi() { return EVO_SORU_OYUNU[EVO.oyun] ? EVO.sorular.length : (EVO.oyun === "zaman" ? EVO.turlar.length : EVO.hedefler.length); }
+
 function evoBitir(e) {
-  const n = EVO.oyun === "sinav" ? EVO.sorular.length : EVO.hedefler.length;
-  const esik = EVO.oyun === "sinav" ? Math.ceil(n * 0.7) : 3;
+  const n = evoTurSayisi();
+  const esik = EVO_SORU_OYUNU[EVO.oyun] ? evoEsik(n) : (EVO.oyun === "zaman" ? 2 : 3);
   if (EVO.dogru >= esik) { EVO.mesaj = evoOdulVer(EVO.oyun, evoAd(e, EVO.oyun)); }
   if (typeof olaySay === "function") { olaySay("evren_oyun:" + EVO.oyun); }
 }
@@ -530,7 +589,8 @@ function evoBitir(e) {
 
 function evrenOyunlarBolumu(v) {
   const e = v.eser;
-  if (evoGecerli() && EVO.oyun === "sinav") { return evoSinavHtml(e); }
+  if (evoGecerli() && EVO_SORU_OYUNU[EVO.oyun]) { return evoSinavHtml(e); }
+  if (evoGecerli() && EVO.oyun === "zaman") { return evoZamanHtml(e); }
   if (evoGecerli() && EVO.oyun === "harita") { return evoHaritaHtml(e); }
   const durum = evoDurumlari(e);
   const a = evrenCuzdanAnahtari();
@@ -560,7 +620,7 @@ function evoAyarHtml(e, durum) {
     durum.map(function (d) {
       return '<div class="evo-ayar-oyun"><label class="evo-onay"><input type="checkbox" data-evo-ayar="acik" data-evo-oyun="' + d.id + '"' + (d.acik ? " checked" : "") + "> " +
           "<b>" + kacir(d.ad) + "</b></label>" +
-        '<span class="oyun-not">' + d.sayi + (d.id === "kelime" ? " uygun kelime" : (d.id === "sinav" ? " soru" : " adlandırılmış yer")) +
+        '<span class="oyun-not">' + d.sayi + (d.id === "kelime" ? " uygun kelime" : (EVO_SORU_OYUNU[d.id] ? " soru" : (d.id === "zaman" ? " tarih olayı" : " adlandırılmış yer"))) +
           (d.yeter ? "" : " · en az " + EVO_EN_AZ[d.id] + " gerekiyor") + "</span>" +
         '<input class="kod-giris arac-giris" maxlength="60" data-evo-ayar="ad" data-evo-oyun="' + d.id + '" aria-label="' + kacir(d.ad) + ' adı" placeholder="Oyunun adı: ' +
           kacir(EVO_OYUNLAR.find(function (g) { return g.id === d.id; }).ad) + '" value="' + kacir(evoAyar(e, d.id).ad || "") + '"></div>';
@@ -824,7 +884,7 @@ if (typeof evrenEkSekmeler === "function") {
 /* ==================== olaylar ==================== */
 
 document.addEventListener("click", function (ev) {
-  const h = ev.target.closest("[data-evo-basla], [data-evo-sec], [data-evo-sonraki], [data-evo-kapat], [data-evo-yer], " +
+  const h = ev.target.closest("[data-evo-basla], [data-evo-sec], [data-evo-sonraki], [data-evo-kapat], [data-evo-yer], [data-evo-zaman], " +
     "[data-evr-sec], [data-evr-ekle], [data-evr-sil], [data-evr-tasi], [data-evr-onizle], [data-evc-sil], [data-evc-buyut]");
   if (!h || !EVS) { return; }
   const d = h.dataset;
@@ -834,11 +894,12 @@ document.addEventListener("click", function (ev) {
 
   if (d.evoBasla) {
     if (d.evoBasla === "sinav") { evoSinavBaslat(e); } else if (d.evoBasla === "harita") { evoHaritaBaslat(e); }
+    else if (d.evoBasla === "dogru") { evoDogruBaslat(e); } else if (d.evoBasla === "zaman") { evoZamanBaslat(e); }
     evrenSayfaCiz();
     return;
   }
   if (h.hasAttribute("data-evo-kapat")) { EVO = null; evrenSayfaCiz(); return; }
-  if (d.evoSec !== undefined && evoGecerli() && EVO.oyun === "sinav" && EVO.secim === null) {
+  if (d.evoSec !== undefined && evoGecerli() && EVO_SORU_OYUNU[EVO.oyun] && EVO.secim === null) {
     EVO.secim = Number(d.evoSec);
     const q = EVO.sorular[EVO.i];
     if (q.secenekler[EVO.secim] === q.dogru) { EVO.dogru++; }
@@ -847,8 +908,20 @@ document.addEventListener("click", function (ev) {
   }
   if (h.hasAttribute("data-evo-sonraki") && evoGecerli()) {
     EVO.i++; EVO.secim = null; EVO.cevap = null;
-    const n = EVO.oyun === "sinav" ? EVO.sorular.length : EVO.hedefler.length;
-    if (EVO.i >= n) { evoBitir(e); }
+    EVO.secilen = [];
+    if (EVO.i >= evoTurSayisi()) { evoBitir(e); }
+    evrenSayfaCiz();
+    return;
+  }
+  if (d.evoZaman !== undefined && evoGecerli() && EVO.oyun === "zaman" && !EVO.cevap) {
+    const j = Number(d.evoZaman);
+    if (EVO.secilen.indexOf(j) === -1) { EVO.secilen.push(j); }
+    const tur = EVO.turlar[EVO.i];
+    if (EVO.secilen.length === tur.length) {
+      const dogru = EVO.secilen.every(function (x, k) { return k === 0 || tur[EVO.secilen[k - 1]].i < tur[x].i; });
+      EVO.cevap = dogru ? "d" : "y";
+      if (dogru) { EVO.dogru++; }
+    }
     evrenSayfaCiz();
     return;
   }

@@ -96,8 +96,15 @@ select test.ok('seviye görünümü', (select count(*) >= 1 from public.arsivci_
 select test.ok('XP dökümü toplamı XP''ye eşit', (select bool_and(xp = (select sum(v::bigint) from jsonb_each_text(dokum) e(k, v))) from public.arsivci_seviyeleri));
 select public.istatistik_gonder('{"okunan_kutu": 4}'::jsonb);
 select test.ok('tam okunan kutu başına 10 XP', (select (dokum->>'okuma')::int = 40 from public.arsivci_seviyeleri where kullanici_adi = 'cem'));
+reset role; update public.istatistikler set son_gonderim = null where id = '33333333-3333-3333-3333-333333333333'; set role authenticated;
 select public.istatistik_gonder('{"okunan_kutu": 2}'::jsonb);
 select test.ok('okunan kutu azalmaz', (select okunan_kutu = 4 from public.istatistikler where id = auth.uid()));
+reset role; update public.istatistikler set son_gonderim = null where id = '33333333-3333-3333-3333-333333333333'; set role authenticated;
+select public.istatistik_gonder('{"oyun_xp": 30}'::jsonb);
+select test.ok('günlük oyun XP''si dökümde', (select (dokum->>'oyun')::int = 30 from public.arsivci_seviyeleri where kullanici_adi = 'cem'));
+reset role; update public.istatistikler set son_gonderim = null where id = '33333333-3333-3333-3333-333333333333'; set role authenticated;
+select public.istatistik_gonder('{"oyun_xp": 99999}'::jsonb);
+select test.ok('oyun XP''si gün sayısıyla sınırlı, askıya almaz', (select oyun_xp = 80 and not askida from public.istatistikler where id = auth.uid()));
 select test.ok('oy ve teori XP verir', (select (dokum->>'oy')::int = 15 from public.arsivci_seviyeleri where kullanici_adi = 'cem'));
 select test.ok('Tömye basamağı formülü', (select bool_and(basamak >= 1 and 5 * (basamak - 1) * (basamak + 4) <= xp and 5 * basamak * (basamak + 5) > xp) from public.arsivci_seviyeleri));
 select test.ok('haftalık ilerleme', public.haftalik_ilerleme() ? 'hafta');
@@ -318,3 +325,12 @@ select test.ok('hesap silinince her şeyi gider',
   and (select count(*) = 0 from public.ilerlemeler where id = '22222222-2222-2222-2222-222222222222')
   and (select count(*) = 0 from public.teoriler)
   and (select count(*) = 0 from public.takipler where takip_edilen = '22222222-2222-2222-2222-222222222222'));
+
+-- yarış XP'si: günde yalnızca ilk 3 geçerli (puanlı) oyun
+reset role;
+select (dokum->>'yaris')::int as yaris_once from public.arsivci_seviyeleri where kullanici_adi = 'deniz' \gset
+insert into public.yaris_skorlari (kullanici, yaris, puan, dogru, sure_ms, hafta, sezon)
+  select '44444444-4444-4444-4444-444444444444', 'alinti', p, p, 30000, current_date, public.tomye_ay(now())
+  from (values (0), (0), (3), (4), (5), (6), (7)) v(p);
+select test.ok('yarış XP''si günde ilk 3 puanlı oyun', (select (dokum->>'yaris')::int - :yaris_once <= 30 and (dokum->>'yaris')::int >= 30
+  from public.arsivci_seviyeleri where kullanici_adi = 'deniz'));
