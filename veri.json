@@ -1,5 +1,5 @@
 {
-  "surum": "2.1.0",
+  "surum": "2.2.0",
   "guncelleme": "2026-09-26",
   "delilik": {
     "baslik": "Delilik",
@@ -7162,6 +7162,7 @@
     }
   ],
   "degisiklik": [
+    {"surum": "2.2.0", "tarih": "2026-09-27", "maddeler": ["Sayfalar apayrı: sayfa numaraları ve alttaki sayfa çubuğu kalktı", "Kendi evreninde Görünüm: hazır görünümler (Gece, Parşömen, Okyanus, Orman, Neon, Kül), zemin deseni, yazı boyutu, başlık hizası", "Yazı çizimi ve görünüm artık evren sayfasının başında: “Evrenini kişiselleştir”"], "yeniler": []},
     {"surum": "2.1.0", "tarih": "2026-09-27", "maddeler": ["Tek kullanımlık kodlar: evren kurma, Evrengezer kurma, sınırlı yönetici ve kişi erişimi için; her kod ilk girenin hesabına bağlanır, başkası giremez", "Çıkıp girince haklar hesaptan geri gelir", "Yönetici bağı silebilir (Panel → Bakım → Tek kodlar ya da Supabase); kişinin yaptıkları silinmez"], "yeniler": []},
     {"surum": "2.0.2", "tarih": "2026-09-27", "maddeler": ["Düzeltme: oyunlar sayfasında yarış puanları yüklenirken çıkan hata (günlük oyun kartları sırayı kaydırıyordu)"], "yeniler": []},
     {"surum": "2.0.1", "tarih": "2026-09-27", "maddeler": ["Düzeltme: yavaş bağlantıda sayfa açılırken çıkan “alintilar” hatası giderildi"], "yeniler": []},

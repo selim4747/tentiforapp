@@ -4312,3 +4312,9 @@ html.ecka-yeni #cuzdanTutar{visibility:hidden}
 .ey-baslik{display:block;margin:10px 0}
 .ey-tur,.ey-tur b,.ey-tur span,.ey-baslik{text-transform:none;letter-spacing:normal;font-family:inherit;font-size:15px}
 .ey-tur b{font-weight:700}
+
+/* 2.2: evren görünümü (72) */
+.evg-hazir{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin:8px 0 12px}
+.evg-hazir-oge{min-height:52px;border:2px solid;font:inherit;cursor:pointer;padding:8px}
+.evs-baslik{text-align:var(--evs-hiza,left)}
+.evg-kisisel{margin-bottom:14px}
