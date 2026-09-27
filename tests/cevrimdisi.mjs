@@ -73,12 +73,12 @@ export async function cevrimdisiTestleri({ dizin }) {
     durum.kapali = true; await ctx.setOffline(true);
     await p.reload(); await p.waitForFunction(veriVar, null, { timeout: 15000 });
     ok("internetsiz yeniden açılır, veri gelir", await p.evaluate(function () { return document.querySelectorAll("script").length > 50; }));
-    ok("çevrimdışı şeridi görünür", await p.locator("#cevrimdisiSerit").count() === 1);
+    ok("çevrimdışı şeridi görünür", await p.locator("#cevrimdisi").count() === 1);
     await p.goto(adres + "/oyunlar/"); await p.waitForFunction(veriVar, null, { timeout: 15000 });
     ok("hiç açılmamış sayfa da internetsiz açılır (rota yoldan)", await p.evaluate(function () { return rota().indexOf("#/oyunlar") === 0; }));
     durum.kapali = false; await ctx.setOffline(false);
     await p.waitForTimeout(400);
-    ok("bağlantı gelince şerit kalkar", await p.locator("#cevrimdisiSerit").count() === 0);
+    ok("bağlantı gelince şerit kalkar", await p.locator("#cevrimdisi").count() === 0);
 
     /* zayıf bağlantı: ağ cevap vermiyor gibi; son kopya beklemeden gelir */
     durum.yavas = true;
@@ -156,6 +156,62 @@ export async function cevrimdisiTestleri({ dizin }) {
     await git("/oyunlar/");
     ok("internetsiz kazanılan ilerleme yenileyince durur", await p.evaluate(function (n) { return cuzdan.acilan.length === n + 1 && okunduMu("zaman:cd-test"); }, once));
     durum.kapali = false; await ctx.setOffline(false); await p.waitForTimeout(500);
+    /* ---------- ek kaynak indirme ---------- */
+    /* 1. service worker'ın önceden indirdiği her dosya pakette var (biri eksikse kurulum bütünüyle düşer) */
+    const ilk = await p.evaluate(async function () {
+      const y = await (await fetch("/sw.js", { cache: "no-store" })).text();
+      const m = /const ILK = (\[[^\]]*\])/.exec(y);
+      const l = m ? JSON.parse(m[1]) : [];
+      const eksik = [];
+      for (const u of l) { const r = await fetch(new URL(u, location.origin + "/").href, { cache: "no-store" }); if (!r.ok) { eksik.push(u + " " + r.status); } }
+      return { sayi: l.length, eksik: eksik };
+    });
+    ok("önceden indirilen bütün dosyalar pakette var", ilk.sayi > 70 && ilk.eksik.length === 0, ilk);
+    /* 2. sonradan inen yönetici betikleri ve hesap kütüphanesi */
+    await git("/");
+    ok("yönetici betikleri sonradan iner", await p.evaluate(async function () { await yoneticiBetikleriYukle(); return yoneticiBetikleriHazir(); }));
+    ok("hesap kütüphanesi sonradan iner", await p.evaluate(async function () { await hesapKutuphaneYukle(); return !!(window.supabase && window.supabase.createClient); }));
+    ok("sonradan inen dosyalar da önbelleğe girer", await p.evaluate(async function () {
+      const u = ["js/vendor/supabase-2.117.2.js", "js/25-panel-roman-ses-basin.js", "js/43-kurulum.js"];
+      const var_ = [];
+      for (const x of u) { const r = await caches.match(new URL(x, location.origin + "/").href, { ignoreSearch: true }); var_.push(!!r); }
+      return var_.every(Boolean);
+    }));
+    /* 3. internetsizken: önbellekteki kütüphane iner, giriş formu açılır; önbellekte olmayan betik çökertmez */
+    durum.kapali = true; await ctx.setOffline(true);
+    await git("/");
+    ok("internetsiz: önbellekteki hesap kütüphanesi yüklenir", await p.evaluate(async function () { await hesapKutuphaneYukle(); return !!window.supabase; }));
+    ok("internetsiz: olmayan betik yüklenemeyince hata sayfaya taşmaz", await p.evaluate(async function () {
+      try { await new Promise(function (c, r) { const s = document.createElement("script"); s.src = "js/yok-" + Date.now() + ".js"; s.onload = c; s.onerror = r; document.head.appendChild(s); }); return false; } catch (_) { return true; }
+    }));
+    /* 4. internetsizken "cihaza indir": anlaşılır Türkçe hata, çökme yok */
+    const indirHata = await p.evaluate(async function () {
+      let h = ""; try { h = await evdCevrimdisiIndir("fornek-kul"); } catch (e) { h = "FIRLATTI: " + e.message; }
+      return h;
+    });
+    ok("internetsiz cihaza indir: anlaşılır uyarı", /internet|bağlan/i.test(indirHata) && !/FIRLATTI|Failed to fetch/.test(indirHata), indirHata);
+    await p.evaluate(function () { location.hash = "#/fan"; kesifCiz(); }); await p.waitForTimeout(500);
+    await p.evaluate(function () { kesif25Onizle("fornek-kul"); }); await p.waitForTimeout(500);
+    ok("internetsizken sayfa kaymaz, pencere ekranın içinde açılır", await p.evaluate(function () {
+      const r = document.querySelector("#perde .pencere").getBoundingClientRect();
+      return getComputedStyle(document.documentElement).transform === "none" && getComputedStyle(document.body).position !== "fixed" &&
+        r.top >= 0 && r.bottom <= innerHeight + 1 && document.documentElement.classList.contains("cevrimdisi-mod");
+    }));
+    await p.click("#perde [data-ko-indir]"); await p.waitForTimeout(800);
+    ok("keşif önizlemesinde internetsiz indir: uyarı gösterilir", /internet|bağlan/i.test(await p.textContent("#koDurum")), await p.textContent("#koDurum"));
+    await p.evaluate(function () { perdeKapat(); });
+    /* 5. cihazdan kaldırmak internetsiz de çalışır */
+    ok("internetsiz cihazdan kaldırılır", await p.evaluate(async function () {
+      await evdCevrimdisiSil("fornek-sis");
+      return !evdIndirilenler()["fornek-sis"] && !(await caches.match(new URL("evrenler/fornek-sis.json", location.origin + "/").href, { cacheName: "tf-evrenler" }));
+    }));
+    durum.kapali = false; await ctx.setOffline(false); await p.waitForTimeout(400);
+    /* 6. sunucuda olmayan evren dosyası: anlaşılır uyarı */
+    ok("sunucuda olmayan evren dosyası: anlaşılır uyarı", await p.evaluate(async function () {
+      const oz = { tur: "evren", id: "yokevren", dosya: "evrenler/yokevren.json" };
+      try { await evdYukle(oz); return false; } catch (e) { return /inemedi|404/.test(e.message); }
+    }));
+
     ok("çevrimdışı testlerinde sayfa hatası yok", hatalar.length === 0, hatalar);
     await ctx.close();
   } finally {

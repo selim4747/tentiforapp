@@ -477,25 +477,16 @@ document.addEventListener("keydown", function (e) {
 
 /* ==================== çevrimdışı ==================== */
 
+/* Uyarının kendisi 42-mobil.js'te (#cevrimdisi; bağlantı gelince bildirim ve eşitleme de orada). Burada yalnızca
+   sayfa sınıfı. Dikkat: "cevrimdisi" sınıf adı o uyarının stilidir (sabit konum, dar kutu); html'e verilirse bütün
+   sayfa o kutuya sıkışır — bu yüzden ayrı ad. */
 function cevrimdisiSerit() {
-  const disi = navigator.onLine === false;
-  document.documentElement.classList.toggle("cevrimdisi", disi);
-  let s = document.querySelector("#cevrimdisiSerit");
-  if (!disi) { if (s) { s.remove(); } return; }
-  if (s) { return; }
-  s = document.createElement("div");
-  s.id = "cevrimdisiSerit";
-  s.className = "cevrimdisi-serit";
-  s.setAttribute("role", "status");
-  s.textContent = "Çevrimdışısın · okuma, oyunlar ve kendi evrenlerin çalışır; kazandıkların cihazda durur, bağlantı gelince hesabına eşitlenir.";
-  document.body.appendChild(s);
+  document.documentElement.classList.toggle("cevrimdisi-mod", navigator.onLine === false);
 }
 
 window.addEventListener("offline", cevrimdisiSerit);
 window.addEventListener("online", function () {
   cevrimdisiSerit();
-  if (typeof eckaBildir === "function") { eckaBildir("Bağlantı geldi · eşitleniyor"); }
-  if (typeof hesapEsitle === "function") { setTimeout(function () { hesapEsitle(); }, 800); }
   if (typeof tekHaklariYukle === "function") { tekHaklariYukle(); }
 });
 

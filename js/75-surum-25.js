@@ -971,7 +971,8 @@ document.addEventListener("click", async function (ev) {
   ev.preventDefault();
   if (b.dataset.kesifOnizle) { kesif25Onizle(b.dataset.kesifOnizle); return; }
   b.disabled = true;
-  const h = await evdCevrimdisiIndir(b.dataset.koIndir);
+  let h = "";
+  try { h = await evdCevrimdisiIndir(b.dataset.koIndir); } catch (e) { h = (e && e.message) || "İndirilemedi"; }
   y25Durum("#koDurum", h || "Cihaza indirildi: internet yokken de açılır.", !h);
   b.disabled = false;
   if (typeof kesifCiz === "function") { kesifCiz(); }
