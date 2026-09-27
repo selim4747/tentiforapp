@@ -12,8 +12,11 @@ function hickirikBugunGosterildi() {
   try { return localStorage.getItem(HICKIRIK_ANAHTAR) === new Date().toISOString().slice(0, 10); } catch (e) { return false; }
 }
 
+let hickirikSonSoru = 0;
+
 async function hickirikSor() {
   if (document.hidden || hickirikBugunGosterildi()) { return; }
+  hickirikSonSoru = Date.now();
   if (typeof HESAP_AYAR === "undefined" || !HESAP_AYAR.url || !HESAP_AYAR.anahtar) { return; }
   try {
     const y = await fetch(HESAP_AYAR.url + "/rest/v1/rpc/hickirik_durum", {
@@ -29,9 +32,12 @@ async function hickirikSor() {
 
 function hickirikBaslat() {
   if (hickirikZamanlayici) { return; }
+  /* pencere 3 dakika açık kalır: 2 dakikada bir sormak onu her zaman en az 1 dakika kala yakalar */
   setTimeout(hickirikSor, 8000);
-  hickirikZamanlayici = setInterval(hickirikSor, 60000);
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) { hickirikSor(); } });
+  hickirikZamanlayici = setInterval(hickirikSor, 120000);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && Date.now() - hickirikSonSoru > 60000) { hickirikSor(); }
+  });
 }
 
 function hickirikGoster(kalan) {

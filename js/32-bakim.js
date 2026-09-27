@@ -68,7 +68,12 @@ function hataAdresi() {
 }
 
 window.hataGonder = function (kayit) {
-  if (!kayit || hataGonderilen >= 10) { return; }
+  if (!kayit || hataGonderilen >= 5) { return; }
+  /* aynı hata oturumda bir kez: döngüye giren bir hata yüzlerce satır üretmesin */
+  const hataIz = String(kayit.baslik || "") + "|" + String(kayit.mesaj || "").slice(0, 200);
+  if (window.__gonderilenHatalar && window.__gonderilenHatalar[hataIz]) { return; }
+  window.__gonderilenHatalar = window.__gonderilenHatalar || {};
+  window.__gonderilenHatalar[hataIz] = true;
   if (typeof HESAP_AYAR === "undefined" || !HESAP_AYAR.url || !HESAP_AYAR.anahtar) { return; }
   if (/^(localhost|127\.)/.test(location.hostname) && !window.__hataYereldeGonder) { return; }
   hataGonderilen++;

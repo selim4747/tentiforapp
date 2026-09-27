@@ -472,3 +472,10 @@ select test.ok('evren istatistiği sayar ve herkes okur', (select sum((x ->> 'sa
 select test.ok('geçersiz evren sayılmaz', jsonb_array_length(public.evren_istatistik('ev kötü', 30)) = 0);
 select test.ok('anonim sayaç tablosunu doğrudan okuyamaz', test.patlar('select * from public.evren_sayaclari'));
 reset role;
+
+-- ---------- sayaçlar tek istekte ----------
+set role anon;
+select public.sayac_toplu('[{"tur":"olay","ad":"toplu_test"},{"tur":"olay","ad":"toplu_test"},{"tur":"evren","evren":"ev:toplu","ad":"ziyaret"},{"tur":"kotu"}]'::jsonb);
+reset role;
+select test.ok('toplu sayaç olayları sayar', (select sayi from public.olay_sayaclari where ad = 'toplu_test' and gun = current_date) = 2);
+select test.ok('toplu sayaç evren sayacını sayar', (select sum(sayi) from public.evren_sayaclari where evren = 'ev:toplu') = 1);

@@ -17,13 +17,49 @@ function olaySay(ad, herSefer) {
       const k = "tentiforapp_olay_" + ad;
       try { if (sessionStorage.getItem(k)) { return; } sessionStorage.setItem(k, "1"); } catch (_) { /* yok */ }
     }
-    fetch(HESAP_AYAR.url + "/rest/v1/rpc/olay_say", {
-      method: "POST", keepalive: true,
-      headers: { "Content-Type": "application/json", apikey: HESAP_AYAR.anahtar, Authorization: "Bearer " + HESAP_AYAR.anahtar },
-      body: JSON.stringify({ p_ad: ad })
-    }).catch(function () { /* sayaç kurulmamış olabilir */ });
+    sayacEkle({ tur: "olay", ad: ad });
   } catch (_) { /* sayaç hiçbir şeyi bozmasın */ }
 }
+
+/* Sayaçlar tek tek gitmez: biriktirilir, sayfa gizlenirken (ya da en geç 20 saniye sonra) tek istekte gider
+   (sayac_toplu). Sunucu yükü ve log satırları azalır; sayılar aynı kalır. Sunucuda sayac_toplu yoksa (eski kurulum)
+   eskisi gibi tek tek gider. */
+const SAYAC = { kuyruk: [], zaman: null };
+const SAYAC_TOPLU_YOK = "tentiforapp_sayac_toplu_yok";
+
+function sayacEkle(x) {
+  SAYAC.kuyruk.push(x);
+  if (SAYAC.kuyruk.length >= 40) { sayacGonder(); return; }
+  if (!SAYAC.zaman) { SAYAC.zaman = setTimeout(sayacGonder, window.__olayTest ? 50 : 20000); }
+}
+
+function sayacTekTek(l) {
+  const bas = { "Content-Type": "application/json", apikey: HESAP_AYAR.anahtar, Authorization: "Bearer " + HESAP_AYAR.anahtar };
+  l.forEach(function (x) {
+    const yol = x.tur === "evren" ? "evren_say" : "olay_say";
+    const govde = x.tur === "evren" ? { p_evren: x.evren, p_ad: x.ad } : { p_ad: x.ad };
+    fetch(HESAP_AYAR.url + "/rest/v1/rpc/" + yol, { method: "POST", keepalive: true, headers: bas, body: JSON.stringify(govde) }).catch(function () { /* yok */ });
+  });
+}
+
+function sayacGonder() {
+  if (SAYAC.zaman) { clearTimeout(SAYAC.zaman); SAYAC.zaman = null; }
+  const l = SAYAC.kuyruk.splice(0, 50);
+  if (!l.length || typeof HESAP_AYAR === "undefined" || !HESAP_AYAR.url) { return; }
+  let yok = false;
+  try { yok = localStorage.getItem(SAYAC_TOPLU_YOK) === "1"; } catch (_) { yok = false; }
+  if (yok) { sayacTekTek(l); return; }
+  fetch(HESAP_AYAR.url + "/rest/v1/rpc/sayac_toplu", {
+    method: "POST", keepalive: true,
+    headers: { "Content-Type": "application/json", apikey: HESAP_AYAR.anahtar, Authorization: "Bearer " + HESAP_AYAR.anahtar },
+    body: JSON.stringify({ p: l })
+  }).then(function (y) {
+    if (y.status === 404) { try { localStorage.setItem(SAYAC_TOPLU_YOK, "1"); } catch (_) { /* yok */ } sayacTekTek(l); }
+  }).catch(function () { /* çevrimdışı: bu seferki sayılmaz */ });
+}
+
+document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") { sayacGonder(); } });
+window.addEventListener("pagehide", sayacGonder);
 
 /** İlk açılış: nereden girildi, Instagram'dan mı gelindi. */
 function girisSay() {
