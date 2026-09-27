@@ -499,6 +499,28 @@ window.addEventListener("online", function () {
   if (typeof tekHaklariYukle === "function") { tekHaklariYukle(); }
 });
 
+/* internetsizken giriş: hesap kütüphanesi henüz inmediyse pencere boş kalıyordu; ne olduğunu söyle */
+if (typeof hesapPencere === "function") {
+  const eskiHP = hesapPencere;
+  window.hesapPencere = function () {
+    const kutuphane = window.supabase && window.supabase.createClient;
+    if (navigator.onLine === false && !kutuphane) {
+      const p = document.querySelector("#perde");
+      if (p) {
+        p.innerHTML = '<div class="pencere" role="dialog" aria-modal="true" aria-labelledby="cdHesapBaslik">' +
+          '<button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button>' +
+          '<h3 id="cdHesapBaslik">Çevrimdışısın</h3>' +
+          '<p class="pencere-alt">Giriş yapmak ya da hesap açmak için internet gerekir.</p>' +
+          '<p class="oyun-not">Okuduğun, oynadığın ve kazandığın her şey bu cihazda duruyor. Bağlantı gelince giriş yaparsan hesabınla birleşir.</p>' +
+          '<button class="dugme" data-kapat="1">Tamam</button></div>';
+        p.hidden = false;
+      }
+      return;
+    }
+    return eskiHP.apply(this, arguments);
+  };
+}
+
 function cevrimdisiHazirBildir() {
   if (!("serviceWorker" in navigator)) { return; }
   if (TentiforKopru.ortam() === "web") { return; }
