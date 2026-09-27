@@ -203,8 +203,8 @@ function seviyeUnvani(s) {
   return u;
 }
 
-/** Seviye s için gereken XP: seviye = floor(sqrt(xp/40)) + 1 */
-function seviyeXp(s) { return 40 * (s - 1) * (s - 1); }
+/** Seviye s için gereken XP: seviye = floor(sqrt(xp/60)) + 1 */
+function seviyeXp(s) { return 60 * (s - 1) * (s - 1); }
 
 /** Sen → Hesabın bölümünün altı: seviye ve madalya kontrolü. */
 async function toplulukHesapEk() {

@@ -157,7 +157,7 @@ create table if not exists public.istatistikler (
   guncelleme timestamptz not null default now(),
   olusturma timestamptz not null default now()
 );
--- tam okunan kutular (okuma süresi dolmuş kayıt, madde, mektup…): kutu başına 15 XP
+-- tam okunan kutular (okuma süresi dolmuş kayıt, madde, mektup…): kutu başına 10 XP (her kutu bir kez)
 alter table public.istatistikler add column if not exists okunan_kutu int not null default 0;
 alter table public.istatistikler enable row level security;
 drop policy if exists "kendi istatistiğini okur" on public.istatistikler;
@@ -1669,7 +1669,7 @@ $$;
 
 -- Arşivci seviyesi: bütün ilerlemeden sunucuda hesaplanan XP.
 -- Aynı XP iki sistemi besler:
---   seviye  : arşivci seviyesi (unvanlar), gereken XP = 40·(seviye−1)²
+--   seviye  : arşivci seviyesi (unvanlar), gereken XP = 60·(seviye−1)²
 --   basamak : Tömye basamağı, gereken XP = 5·(basamak−1)·(basamak+4); Tömye rakamlarıyla yazılır (Neo … Net, sıfırsız onluk)
 -- dokum: XP'nin kaynaklara göre dağılımı (herkese açık; ayrıntı içermez)
 create or replace view public.arsivci_seviyeleri as
@@ -1683,7 +1683,7 @@ create or replace view public.arsivci_seviyeleri as
       coalesce(p.gun, 0) * 5 as x_gun,
       coalesce(p.madalya, 0) * 30 as x_madalya,
       coalesce(p.katman, 0) * 40 as x_katman,
-      coalesce(p.okunan_kutu, 0) * 15 as x_okuma,
+      coalesce(p.okunan_kutu, 0) * 10 as x_okuma,
       10 * (select count(*) from public.yaris_skorlari y where y.kullanici = p.id and not y.supheli) as x_yaris,
       15 * (select count(*) from public.kesifler k where k.kullanici = p.id) as x_kesif,
       25 * (select count(*) from public.kesifler k where k.kullanici = p.id
@@ -1712,7 +1712,7 @@ create or replace view public.arsivci_seviyeleri as
     select x.*, x_tamlik + x_gun + x_madalya + x_katman + x_yaris + x_kesif + x_ilk_kasif + x_gk + x_teori + x_begeni + x_isaret + x_oy + x_hickirik + x_av + x_defter + x_soru + x_okur_bulmaca + x_davet + x_okuma as xp
     from x)
   select kullanici_adi, gorunen_ad, xp, yil_xp,
-    (floor(sqrt(xp / 40.0)) + 1)::int as seviye,
+    (floor(sqrt(xp / 60.0)) + 1)::int as seviye,
     floor((-3 + sqrt(25 + 0.8 * xp)) / 2)::int as basamak,
     jsonb_build_object('tamlik', x_tamlik, 'gun', x_gun, 'madalya', x_madalya, 'katman', x_katman, 'yaris', x_yaris,
       'kesif', x_kesif, 'ilk_kasif', x_ilk_kasif, 'gk', x_gk, 'teori', x_teori, 'begeni', x_begeni,

@@ -179,11 +179,13 @@ function okuEtiketle() {
   esle(".madde[id] > .madde-govde", function (el) { return "madde:" + el.parentNode.id; });
   esle(".ce-kisi[id] > .detay-metin", function (el) { return "madde:" + el.parentNode.id; });
   esle(".ce-hikaye[id] > .detay-metin", function (el) { return "madde:" + el.parentNode.id; });
-  /* Tömye evren maddeleri (data-madde: veri.evren sırası) */
-  esle("#evrenListe .madde[data-madde] > .madde-govde", function (el) {
+  /* evren maddeleri (data-madde: veri.evren sırası). Tömye listesinde de E25 gibi kanon evren sayfalarında da
+     aynı anahtar: iki yerde görünen madde tek kutudur, XP'si bir kez gelir */
+  esle(".madde[data-madde] > .madde-govde", function (el) {
     const m = (veri.evren || [])[Number(el.parentNode.getAttribute("data-madde"))];
     return m && m.id ? "evren:" + m.id : null;
   });
+  esle("#notlarAlan .madde[data-not] > .madde-govde", function (el) { return "not:" + el.parentNode.getAttribute("data-not"); });
 }
 
 function okuAlintiGorunur() {

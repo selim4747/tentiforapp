@@ -19,8 +19,8 @@ const SEVIYE_BOLUMLER = {
 
 const SVK = { sunucu: 0, istendi: false, onbellek: null, zaman: 0 };
 
-function svkXpSeviye(xp) { return Math.floor(Math.sqrt(Math.max(0, xp) / 40)) + 1; }
-function svkSeviyeXp(s) { return 40 * (s - 1) * (s - 1); }
+function svkXpSeviye(xp) { return Math.floor(Math.sqrt(Math.max(0, xp) / 60)) + 1; }
+function svkSeviyeXp(s) { return 60 * (s - 1) * (s - 1); }
 
 /** Bu cihazdaki ilerlemeden XP (sunucudaki formülün cihazda bilinen kısmı). */
 function yerelXp() {
@@ -31,8 +31,8 @@ function yerelXp() {
     xp += 5 * (o.gun || 0) + 40 * (o.katman || 0);
   } catch (_) { /* yok */ }
   try { xp += 30 * ((typeof arsivciMadalyalari === "function" && arsivciMadalyalari().length) || 0); } catch (_) { /* yok */ }
-  /* tam okunan her kutu (okuma süresi dolmuş) 15 XP */
-  try { xp += 15 * (cuzdan.acilan || []).filter(function (x) { return /^oku_/.test(x); }).length; } catch (_) { /* yok */ }
+  /* tam okunan her kutu (okuma süresi dolmuş) 10 XP (her kutu bir kez: anahtar başına tek kayıt) */
+  try { xp += 10 * (cuzdan.acilan || []).filter(function (x) { return /^oku_/.test(x); }).length; } catch (_) { /* yok */ }
   return Math.round(xp);
 }
 
@@ -77,7 +77,7 @@ function seviyeCubukHtml(gereken) {
   return '<span class="svk-cubuk" aria-hidden="true"><i style="width:' + oran + '%"></i></span>';
 }
 
-const SVK_NASIL = "XP; kutuları sonuna kadar okuyarak (kutu başına 15), her gün gelerek, madalya ve buz katmanlarıyla birikir. Hesabın varsa yarışlar, " +
+const SVK_NASIL = "XP; kutuları sonuna kadar okuyarak (kutu başına 10, her kutu bir kez), her gün gelerek, madalya ve buz katmanlarıyla birikir. Hesabın varsa yarışlar, " +
   "günün kelimesi, teoriler ve keşifler de sayılır.";
 
 /** Kapıya takılınca açılan küçük pencere. */
