@@ -4324,3 +4324,31 @@ html.ecka-yeni #cuzdanTutar{visibility:hidden}
 .eks-vitrin{overflow-wrap:anywhere}
 .eks-vitrin img{max-width:100%;height:auto}
 .eks-vitrin table{border-collapse:collapse;max-width:100%}
+
+/* ==================== 2.4 ==================== */
+.y24-serit{display:grid;gap:8px;margin-bottom:14px}
+.y-uyari{padding:10px 12px;border:1px solid var(--sig);border-left:4px solid var(--deniz);background:var(--beyaz);border-radius:6px;font-size:14.5px;line-height:1.5}
+.y-uyari.kotu{border-left-color:#B3261E;background:#FDF1F0}
+.y-uyari code{font-family:var(--mono);font-size:13px}
+.eks-duzen .y-alan-izgara{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 12px;margin:6px 0}
+.eks-duzen select{margin-bottom:10px}
+.yc-yazi{display:block;margin:10px 0;min-height:52px}
+.yc-yazi svg{height:48px;width:auto;max-width:100%}
+.evu-skor{margin-top:8px;font-size:14.5px}
+.evu-skor ol{margin:4px 0 0 20px}
+.evren-kesif{margin-bottom:18px}
+.evren-kesif .gk-ust{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.evren-kesif .kesif-sira{width:auto}
+.kesif-liste{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
+.kesif-kart{display:grid;gap:4px;text-align:left;padding:12px;border:1px solid var(--sig);border-radius:8px;background:var(--beyaz);color:var(--murekkep);font:inherit;cursor:pointer;min-height:44px}
+.kesif-kart:hover,.kesif-kart:focus-visible{border-color:var(--deniz)}
+.kesif-sayi{font-family:var(--mono);font-size:12px;color:var(--murekkep-2)}
+.cihazlarim{margin-top:10px}
+.cihazlarim summary{cursor:pointer;min-height:32px}
+.cihazlarim ul{margin:6px 0 4px 18px;display:grid;gap:4px}
+.cevrimdisi-serit{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));z-index:90;
+  max-width:min(560px,calc(100vw - 32px));padding:9px 14px;border-radius:10px;background:#0D3560;color:#fff;font-size:13.5px;line-height:1.45;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+@media (max-width:760px){.cevrimdisi-serit{bottom:calc(72px + env(safe-area-inset-bottom))}}
+html.uygulama-modu{-webkit-tap-highlight-color:transparent}
+html.uygulama-modu body{overscroll-behavior-y:contain}
+html[data-ayar-tema="gece"] .y-uyari.kotu{background:#2A1413}

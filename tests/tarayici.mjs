@@ -895,10 +895,96 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       return !!v && /Kıyı Evreni/.test(v.textContent) && /Arvel/.test(v.textContent) && !window.__xss &&
         !/onerror|onclick|<script|javascript:/i.test(h) && !!v.querySelector("p.k");
     }));
+    /* ---------- 2.4: canlı önizleme, şablon, sekme düzeni, yazı çözme ---------- */
+    await N.click('#evrenSayfa [data-evs-sekme="kodstil"]'); await bekle(N, 200);
+    await N.fill("#eksStil", "h2 { letter-spacing: 7px }"); await bekle(N, 100);
+    ok("stil kodu yazdıkça önizlenir (kaydetmeden)", await N.evaluate(function (id) {
+      return getComputedStyle(document.querySelector("#evrenSayfa h2")).letterSpacing === "7px" && !/7px/.test(evrenBenimBul(id).stilKodu || "");
+    }, nEv));
+    await N.fill("#eksGorunum", "<h3>Canlı {{ad}}</h3>"); await bekle(N, 100);
+    ok("görünüm kodu yazdıkça önizlenir", /Canlı Kıyı Evreni/.test(await N.textContent("#eksOnizle")));
+    await N.selectOption("#eksIlk", "roman"); await bekle(N, 100);
+    await N.check('[data-eks-gizle="defter"]'); await bekle(N, 100);
+    ok("sekme düzeni kaydedilir", await N.evaluate(function (id) {
+      const d = evrenBenimBul(id).sekmeDuzen; return d && d.ilk === "roman" && d.gizli.join() === "defter";
+    }, nEv));
+    ok("sekme düzeni temizlenir", await N.evaluate(function () {
+      const e = {}; evrenEkTemizle({ sekmeDuzen: { ilk: "<x>", gizli: ["harita", "a b", 5, "roman"] } }, e);
+      return !e.sekmeDuzen.ilk && e.sekmeDuzen.gizli.join() === "harita,roman";
+    }));
+    await N.click('#evrenSayfa [data-eks-sablon="1"]'); await bekle(N, 300);
+    ok("şablon: stil ve görünüm birlikte gelir, vitrin açılır", await N.evaluate(function (id) {
+      const e = evrenBenimBul(id);
+      return /Georgia/.test(e.stilKodu) && /\{\{harita\}\}/.test(e.gorunumKodu) && EVS.sekme === "vitrin" &&
+        !!document.querySelector("#evrenSayfa .eks-vitrin .kutu svg");
+    }, nEv));
+    ok("yazı çözme oyunu: yazısı çizilmiş kelimelerle sorular", await N.evaluate(function (id) {
+      evrenBenimDegistir(id, function (e) {
+        const is = {}; Array.from("abcçdefgğhıijklmnoöprsştuüvyz").forEach(function (h, i) { is[h] = "M" + i + " 0L" + (i + 5) + " 60"; });
+        e.yazi = { tur: "alfabe", isaretler: is };
+      });
+      const e = evrenBenimBul(id);
+      const d = evoDurumlari(e).find(function (x) { return x.id === "yazicoz"; });
+      return !!d && d.yeter && d.sayi === yaziCozKelimeleri(e).length;
+    }, nEv));
+    await N.click('#evrenSayfa [data-evs-sekme="oyunlar"]'); await bekle(N, 200);
+    await N.click('#evrenSayfa [data-evo-basla="yazicoz"]'); await bekle(N, 200);
+    ok("yazı çözme: soru evrenin yazısıyla çizilir, doğru cevap seçeneklerde", await N.evaluate(function () {
+      const q = EVO && EVO.sorular[0];
+      return EVO.oyun === "yazicoz" && !!document.querySelector("#evrenSayfa .yc-yazi svg path") && q.secenekler.indexOf(q.dogru) !== -1 &&
+        document.querySelector("#evrenSayfa").textContent.indexOf("ne yazıyor") !== -1;
+    }));
+    await N.evaluate(function () { EVO = null; }); 
+    await N.evaluate(function () {
+      const e = veri.fanEserleri.evrenler.find(function (x) { return x.id === "fsitedeki1"; });
+      e.sekmeDuzen = { ilk: "roman", gizli: ["harita", "defter"] };
+      evrenSayfaKapat(); location.hash = "#/ev/fan/fsitedeki1";
+    }); await bekle(N, 800);
+    ok("ziyaretçi: gizlenen sekmeler yok, ilk sekme kurucunun seçtiği", await N.evaluate(function () {
+      const t = Array.from(document.querySelectorAll("#evrenSayfa [data-evs-sekme]")).map(function (x) { return x.dataset.evsSekme; });
+      return t.indexOf("harita") === -1 && t.indexOf("defter") === -1 && EVS.sekme === "roman";
+    }));
+    await N.evaluate(function () { delete veri.fanEserleri.evrenler.find(function (x) { return x.id === "fsitedeki1"; }).sekmeDuzen; evrenSayfaKapat(); }); await bekle(N, 200);
+
     await N.evaluate(function () { evrenSayfaKapat(); location.hash = "#/oyunlar"; }); await bekle(N, 500);
     ok("sayfalar apayrı: sayfa numarası ve sayfalama çubuğu yok", await N.evaluate(function () {
       const s = document.querySelector("#sayfalama");
       return !document.querySelector("#sayfaBasi .sayfa-no") && (!s || s.hidden || !s.textContent.trim());
+    }));
+
+    /* ---------- 2.4: keşif, cihazlar, çevrimdışı, köprü, davet ---------- */
+    await N.evaluate(function () { location.hash = "#/fan"; kesifCiz(); }); await bekle(N, 400);
+    ok("evren keşfi: sitedeki evrenler kart olarak", await N.evaluate(function () {
+      return document.querySelectorAll("#evrenKesif .kesif-kart").length === veri.fanEserleri.evrenler.length && veri.fanEserleri.evrenler.length >= 1;
+    }));
+    await N.fill("#kesifAra", "yokboyleevren"); await bekle(N, 100);
+    ok("evren keşfi: arama süzer", await N.locator("#evrenKesif .kesif-kart").count() === 0);
+    await N.fill("#kesifAra", "kıyı"); await bekle(N, 100);
+    ok("evren keşfi: kart evrene götürür", await N.locator("#evrenKesif .kesif-kart[data-evren-git='#/ev/fan/fsitedeki1']").count() === 1);
+    ok("cihazlarım: bu cihaz kalıcı kimlikle listelenir, eşitlemeye girmez", await N.evaluate(function () {
+      const a = buCihazId(), b = buCihazId();
+      localStorage.setItem("tentiforapp_cihazlar", JSON.stringify({ [a]: { ad: buCihazAdi(), son: new Date().toISOString() }, x1: { ad: "Android · Chrome", son: "2026-01-01T00:00:00Z" } }));
+      const h = cihazlarimHtml();
+      return a === b && /bu cihaz/.test(h) && /Android/.test(h) && ESITLEME_DISI.indexOf("tentiforapp_cihaz_id") !== -1 && ESIT_BIRLESIM.indexOf("tentiforapp_cihazlar") !== -1;
+    }));
+    ok("uygulama köprüsü: tarayıcıda ortam web", await N.evaluate(function () {
+      return TentiforKopru.ortam() === "web" && document.documentElement.getAttribute("data-ortam") === "web" && typeof TentiforKopru.paylas === "function";
+    }));
+    await N.context().setOffline(true); await bekle(N, 200);
+    ok("çevrimdışı olunca şerit çıkar", await N.locator("#cevrimdisiSerit").count() === 1 && await N.evaluate(function () { return document.documentElement.classList.contains("cevrimdisi"); }));
+    await N.context().setOffline(false); await bekle(N, 300);
+    ok("bağlantı gelince şerit kalkar", await N.locator("#cevrimdisiSerit").count() === 0);
+    ok("davet bağlantısı: ?kod= adresten silinir, kod penceresi dolu açılır ve denenir", await N.evaluate(function () {
+      history.replaceState(null, "", location.pathname + "?kod=tntf-basla" + location.hash);
+      davetKoduAl();
+      const temiz = location.search.indexOf("kod=") === -1 && sessionStorage.getItem("tf-davet-kod") === "TNTF-BASLA";
+      davetKoduDene();
+      const dolu = document.querySelector("#kodGiris").value === "TNTF-BASLA" && !sessionStorage.getItem("tf-davet-kod");
+      perdeKapat();
+      return temiz && dolu;
+    }));
+    ok("uygulama API'sinde puan gönderme var", await N.evaluate(function () {
+      return /evren\.skor=function/.test(evuSrcdoc({ ad: "x" }, { id: "u1", ad: "x", tur: "oyun", html: "", js: "", css: "" })) && typeof evuSkorYaz === "function";
     }));
 
     /* ---------- 2.0: çoklu evren, hızlı geçiş ---------- */

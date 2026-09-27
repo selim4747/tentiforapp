@@ -2257,6 +2257,8 @@ create table if not exists public.tek_kodlar (
 alter table public.tek_kodlar enable row level security;
 revoke all on public.tek_kodlar from anon, authenticated;
 create index if not exists tek_kodlar_kullanici on public.tek_kodlar (kullanici);
+-- süreli kod (2.4): bağlandıktan sonra kaç gün geçerli; boşsa süresiz
+alter table public.tek_kodlar add column if not exists sure_gun int check (sure_gun between 1 and 3650);
 
 create table if not exists public.tek_kod_denemeleri (
   kullanici uuid not null references auth.users(id) on delete cascade,
@@ -2305,6 +2307,9 @@ begin
     return jsonb_build_object('durum', 'yok');
   end if;
   if r.kullanici is not null and r.kullanici <> uid then return jsonb_build_object('durum', 'dolu'); end if;
+  if r.kullanici = uid and r.sure_gun is not null and r.baglanma + make_interval(days => r.sure_gun) < now() then
+    return jsonb_build_object('durum', 'sure_doldu');
+  end if;
   if r.kullanici is null then
     update public.tek_kodlar set kullanici = uid, baglanma = now() where ozet = oz;
     if r.tur = 'yonetici' then
@@ -2317,9 +2322,16 @@ $$;
 
 -- girişte: bu hesaba bağlı kodların verdiği haklar
 create or replace function public.tek_kodlarim() returns jsonb
-language sql stable security definer set search_path = '' as $$
-  select coalesce(jsonb_agg(jsonb_build_object('tur', tur, 'ad', ad, 'veri', veri) order by baglanma), '[]'::jsonb)
-  from public.tek_kodlar where kullanici = auth.uid() and not iptal;
+language plpgsql security definer set search_path = '' as $$
+begin
+  -- süresi dolan tek kodların verdiği yöneticilik kalkar
+  delete from public.yoneticiler y using public.tek_kodlar t
+    where y.id = auth.uid() and y.tek_kod = t.ozet and t.sure_gun is not null and t.baglanma + make_interval(days => t.sure_gun) < now();
+  return (select coalesce(jsonb_agg(jsonb_build_object('tur', tur, 'ad', ad, 'veri', veri,
+      'bitis', case when sure_gun is null then null else baglanma + make_interval(days => sure_gun) end) order by baglanma), '[]'::jsonb)
+    from public.tek_kodlar where kullanici = auth.uid() and not iptal
+      and (sure_gun is null or baglanma + make_interval(days => sure_gun) >= now()));
+end;
 $$;
 
 -- yönetici: kod üret (kodların kendisi sitede üretilir; buraya yalnızca özetleri gelir)
@@ -2330,8 +2342,9 @@ begin
   if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
   if jsonb_typeof(p_kodlar) <> 'array' or jsonb_array_length(p_kodlar) > 50 then raise exception 'en çok 50 kod'; end if;
   for x in select * from jsonb_array_elements(p_kodlar) loop
-    insert into public.tek_kodlar (ozet, tur, ad, veri, olusturan)
-    values (x->>'ozet', x->>'tur', left(coalesce(x->>'ad', ''), 80), coalesce(x->'veri', '{}'::jsonb), auth.uid());
+    insert into public.tek_kodlar (ozet, tur, ad, veri, olusturan, sure_gun)
+    values (x->>'ozet', x->>'tur', left(coalesce(x->>'ad', ''), 80), coalesce(x->'veri', '{}'::jsonb), auth.uid(),
+      nullif(coalesce((x->>'sure_gun')::int, 0), 0));
     n := n + 1;
   end loop;
   return n;
@@ -2342,7 +2355,9 @@ create or replace function public.tek_kod_listesi() returns jsonb
 language sql stable security definer set search_path = '' as $$
   select case when not public.tam_yonetici_mi() then null else coalesce(jsonb_agg(jsonb_build_object(
     'ozet', t.ozet, 'tur', t.tur, 'ad', t.ad, 'iptal', t.iptal, 'olusturma', t.olusturma, 'baglanma', t.baglanma,
-    'kullanici_adi', p.kullanici_adi, 'bagli', t.kullanici is not null) order by t.olusturma desc), '[]'::jsonb) end
+    'kullanici_adi', p.kullanici_adi, 'bagli', t.kullanici is not null, 'sure_gun', t.sure_gun,
+    'bitis', case when t.sure_gun is null or t.baglanma is null then null else t.baglanma + make_interval(days => t.sure_gun) end)
+    order by t.olusturma desc), '[]'::jsonb) end
   from public.tek_kodlar t left join public.profiller p on p.id = t.kullanici;
 $$;
 
@@ -2368,6 +2383,60 @@ revoke execute on function public.tek_kod_kullan(text), public.tek_kodlarim(), p
   public.tek_kod_bag_sil(text), public.tek_kod_iptal(text, boolean), public.tek_kod_bag_degisti() from public, anon;
 grant execute on function public.tek_kod_kullan(text), public.tek_kodlarim(), public.tek_kod_olustur(jsonb), public.tek_kod_listesi(),
   public.tek_kod_bag_sil(text), public.tek_kod_iptal(text, boolean) to authenticated;
+
+-- ---------- 2.4: kurulum sürümü ve evren uygulamalarının puan tabloları ----------
+-- Site, bu dosyanın Supabase'de çalıştırılmış sürümünü sorar; eskiyse panelde "kurulum.sql'i çalıştır" uyarısı çıkar.
+create or replace function public.kurulum_surumu() returns text
+language sql immutable set search_path = '' as $$ select '2.4'::text $$;
+grant execute on function public.kurulum_surumu() to anon, authenticated;
+
+-- Evren uygulamalarının (kurucunun kodla yazdığı oyunlar) en iyi puanları: her kişinin her oyundaki en iyisi.
+-- Puanı oyunun kendisi bildirir (tarayıcıda çalışır): hile önlenemez, yalnızca eğlence tablosudur; XP vermez.
+create table if not exists public.uygulama_skorlari (
+  evren text not null check (evren ~ '^[\w:.-]{1,80}$'),
+  uygulama text not null check (uygulama ~ '^[\w-]{1,40}$'),
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  puan bigint not null check (puan between -1000000000 and 1000000000),
+  zaman timestamptz not null default now(),
+  primary key (evren, uygulama, kullanici)
+);
+alter table public.uygulama_skorlari enable row level security;
+revoke all on public.uygulama_skorlari from anon, authenticated;
+create table if not exists public.uygulama_skor_denemeleri (kullanici uuid not null references auth.users(id) on delete cascade, zaman timestamptz not null default now());
+create index if not exists uygulama_skor_denemeleri_k on public.uygulama_skor_denemeleri (kullanici, zaman);
+alter table public.uygulama_skor_denemeleri enable row level security;
+revoke all on public.uygulama_skor_denemeleri from anon, authenticated;
+
+create or replace function public.uygulama_skor_yaz(p_evren text, p_uygulama text, p_puan bigint) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); onceki bigint;
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if (select count(*) from public.uygulama_skor_denemeleri where kullanici = uid and zaman > now() - interval '1 hour') >= 120 then
+    return jsonb_build_object('durum', 'sinir');
+  end if;
+  insert into public.uygulama_skor_denemeleri (kullanici) values (uid);
+  select puan into onceki from public.uygulama_skorlari where evren = p_evren and uygulama = p_uygulama and kullanici = uid;
+  if onceki is null or p_puan > onceki then
+    insert into public.uygulama_skorlari (evren, uygulama, kullanici, puan) values (p_evren, p_uygulama, uid, p_puan)
+    on conflict (evren, uygulama, kullanici) do update set puan = excluded.puan, zaman = now();
+    return jsonb_build_object('durum', 'rekor', 'onceki', onceki);
+  end if;
+  return jsonb_build_object('durum', 'tamam', 'enIyi', onceki);
+end;
+$$;
+
+create or replace function public.uygulama_skor_tablosu(p_evren text, p_uygulama text) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('ad', coalesce(p.gorunen_ad, p.kullanici_adi, 'okur'), 'kullanici_adi', p.kullanici_adi, 'puan', s.puan)
+    order by s.puan desc, s.zaman), '[]'::jsonb)
+  from (select * from public.uygulama_skorlari where evren = p_evren and uygulama = p_uygulama order by puan desc, zaman limit 10) s
+  left join public.profiller p on p.id = s.kullanici;
+$$;
+
+revoke execute on function public.uygulama_skor_yaz(text, text, bigint), public.uygulama_skor_tablosu(text, text) from public, anon;
+grant execute on function public.uygulama_skor_yaz(text, text, bigint) to authenticated;
+grant execute on function public.uygulama_skor_tablosu(text, text) to anon, authenticated;
 
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';

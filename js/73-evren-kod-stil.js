@@ -59,14 +59,18 @@ function eksYerTutucu(e) {
     ad: kacir(e.ad || ""), ozet: kacir(e.ozet || ""),
     kisiler: liste((e.kisiler || []).filter(function (k) { return !k.kutu; }), "ad", "rol"),
     yerler: liste(e.yerler, "ad", "aciklama"), sozluk: liste(e.sozluk, "terim", "tanim"),
-    tarih: liste(e.tarih, "zaman", "olay"), kurallar: liste(e.kurallar, "ad", "aciklama")
+    tarih: liste(e.tarih, "zaman", "olay"), kurallar: liste(e.kurallar, "ad", "aciklama"),
+    harita: '<div class="eks-yer-harita"></div>',
+    roman: ((e.roman || {}).bolumler || []).length ? "<ol>" + e.roman.bolumler.map(function (b, i) { return "<li>" + kacir(b.baslik || "Bölüm " + (i + 1)) + "</li>"; }).join("") + "</ol>" : ""
   };
 }
 
 /** Görünüm kodunu güvenli HTML'e çevirir: izinli etiket ve öznitelikler dışında her şey atılır. */
 function eksHtmlTemizle(html, e) {
   const yt = eksYerTutucu(e || {});
-  const kaynak = String(html || "").slice(0, EKS_GORUNUM_SINIR).replace(/\{\{\s*(ad|ozet|kisiler|yerler|sozluk|tarih|kurallar)\s*\}\}/g, function (_, k) { return yt[k]; });
+  const kaynak = String(html || "").slice(0, EKS_GORUNUM_SINIR)
+    .replace(/\{\{\s*yazi\s*:\s*([^}]{1,120})\}\}/g, function (_, m) { return '<span class="eks-yer-yazi" title="' + kacir(m.trim()) + '"></span>'; })
+    .replace(/\{\{\s*(ad|ozet|kisiler|yerler|sozluk|tarih|kurallar|harita|roman)\s*\}\}/g, function (_, k) { return yt[k]; });
   const doc = new DOMParser().parseFromString("<div>" + kaynak + "</div>", "text/html");
   const kok = doc.body.firstChild;
   const temizle = function (el) {
@@ -92,6 +96,15 @@ function eksHtmlTemizle(html, e) {
     });
   };
   temizle(kok);
+  /* yer tutucuların üretilmiş içeriği (temizlikten sonra; kendi kodumuzun çıktısı) */
+  kok.querySelectorAll(".eks-yer-harita").forEach(function (el) {
+    const h = (e && e.harita) || {};
+    el.innerHTML = (h.yerler || []).length && typeof evrenHaritaSvg === "function" ? evrenHaritaSvg(h, { alfabe: e.alfabe }) : "";
+  });
+  kok.querySelectorAll(".eks-yer-yazi").forEach(function (el) {
+    const m = el.getAttribute("title") || "";
+    el.innerHTML = (typeof eyYaziSvg === "function" && e && e.yazi && eyYaziSvg(m, e.yazi, 34)) || kacir(m);
+  });
   return kok.innerHTML;
 }
 
@@ -109,8 +122,10 @@ function eksKodBolumu(v) {
         '<button class="dugme dugme-sade y-sil" data-eks-sil="stilKodu">Stil kodunu sil</button></div></div>' +
     '<div class="kutu-y eks-kod"><label for="eksGorunum">Görünüm kodu (HTML)</label>' +
       '<p class="oyun-not">Evreninin <b>Vitrin</b> sayfasını kendi HTML\'inle kur. Betik çalışmaz; başlık, paragraf, liste, tablo, görsel, bağlantı ve <code>class</code>/<code>style</code> serbest. ' +
-        "Yer tutucular: <code>{{ad}}</code> <code>{{ozet}}</code> <code>{{kisiler}}</code> <code>{{yerler}}</code> <code>{{sozluk}}</code> <code>{{tarih}}</code> <code>{{kurallar}}</code>.</p>" +
+        "Yer tutucular: <code>{{ad}}</code> <code>{{ozet}}</code> <code>{{kisiler}}</code> <code>{{yerler}}</code> <code>{{sozluk}}</code> <code>{{tarih}}</code> <code>{{kurallar}}</code> " +
+        "<code>{{harita}}</code> <code>{{roman}}</code> <code>{{yazi:metin}}</code> (metni evreninin çizilmiş yazısıyla gösterir).</p>" +
       '<textarea class="kod-giris arac-giris evkod" id="eksGorunum" rows="14" spellcheck="false" autocapitalize="off" maxlength="' + EKS_GORUNUM_SINIR + '">' + kacir(e.gorunumKodu || "") + "</textarea>" +
+      '<p class="oyun-not">Canlı önizleme (yazdıkça değişir; kalıcı olması için “uygula”ya bas):</p><div class="eks-vitrin eks-onizle" id="eksOnizle">' + eksHtmlTemizle(e.gorunumKodu || "", e) + "</div>" +
       '<div class="oyun-sira"><button class="dugme" data-eks-kaydet="gorunumKodu">Görünüm kodunu uygula</button>' +
         '<button class="dugme dugme-sade" data-eks-ornek="gorunumKodu">Örnek görünüm</button>' +
         '<button class="dugme dugme-sade" data-evs-sekme="vitrin">Vitrini gör</button>' +
