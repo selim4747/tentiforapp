@@ -147,13 +147,20 @@ function evdIndirKutusu(ozet) {
 async function evdCevrimdisiIndir(id) {
   const ozet = ((veri.fanEserleri || {}).evrenler || []).find(function (x) { return x.id === id; });
   if (!evdDosyali(ozet) || typeof caches === "undefined") { return "Bu tarayıcı çevrimdışı indirmeyi desteklemiyor."; }
-  const tam = await evdYukle(ozet);
-  const c = await caches.open(EVD_ONBELLEK);
-  const adresler = [ozet.dosya].concat((tam.cizimler || []).filter(function (x) { return x.yol && EVC_YOL.test(x.yol); }).map(function (x) { return x.yol; }));
-  for (let i = 0; i < adresler.length; i++) {
-    const y = await fetch(adresler[i], { cache: "no-cache" });
-    if (!y.ok) { return "İndirilemedi: " + adresler[i]; }
-    await c.put(new URL(adresler[i], location.origin + "/").href, y);
+  const agYok = "İnternet yok: evreni indirmek için bağlantı gerekir. Bağlanınca yeniden dene.";
+  if (navigator.onLine === false) { return agYok; }
+  try {
+    const tam = await evdYukle(ozet);
+    const c = await caches.open(EVD_ONBELLEK);
+    const adresler = [ozet.dosya].concat((tam.cizimler || []).filter(function (x) { return x.yol && EVC_YOL.test(x.yol); }).map(function (x) { return x.yol; }));
+    for (let i = 0; i < adresler.length; i++) {
+      /* önbellekten değil, ağdan: indirilen hâl güncel olsun */
+      const y = await fetch(adresler[i], { cache: "no-cache" });
+      if (!y.ok) { return "İndirilemedi: " + adresler[i]; }
+      await c.put(new URL(adresler[i], location.origin + "/").href, y);
+    }
+  } catch (e) {
+    return (e instanceof TypeError || navigator.onLine === false) ? agYok : ((e && e.message) || "İndirilemedi");
   }
   if (navigator.storage && navigator.storage.persist) { try { await navigator.storage.persist(); } catch (_) { /* yok */ } }
   const l = evdIndirilenler();

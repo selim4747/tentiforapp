@@ -999,9 +999,9 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       return TentiforKopru.ortam() === "web" && document.documentElement.getAttribute("data-ortam") === "web" && typeof TentiforKopru.paylas === "function";
     }));
     await N.context().setOffline(true); await bekle(N, 200);
-    ok("çevrimdışı olunca şerit çıkar", await N.locator("#cevrimdisiSerit").count() === 1 && await N.evaluate(function () { return document.documentElement.classList.contains("cevrimdisi"); }));
+    ok("çevrimdışı olunca şerit çıkar", await N.locator("#cevrimdisi").count() === 1 && await N.evaluate(function () { return document.documentElement.classList.contains("cevrimdisi-mod"); }));
     await N.context().setOffline(false); await bekle(N, 300);
-    ok("bağlantı gelince şerit kalkar", await N.locator("#cevrimdisiSerit").count() === 0);
+    ok("bağlantı gelince şerit kalkar", await N.locator("#cevrimdisi").count() === 0);
     ok("davet bağlantısı: ?kod= adresten silinir, kod penceresi dolu açılır ve denenir", await N.evaluate(function () {
       history.replaceState(null, "", location.pathname + "?kod=tntf-basla" + location.hash);
       davetKoduAl();

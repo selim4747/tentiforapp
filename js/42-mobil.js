@@ -228,7 +228,7 @@ function baglantiDurumuCiz() {
     b.id = "cevrimdisi";
     b.className = "cevrimdisi";
     b.setAttribute("role", "status");
-    b.textContent = "Çevrimdışısın — arşiv, oyunlar ve taslakların çalışır; hesap işleri bağlantı gelince.";
+    b.textContent = "Çevrimdışısın · okuma, oyunlar ve kendi evrenlerin çalışır; kazandıkların cihazda durur, bağlantı gelince hesabına eşitlenir.";
     document.body.appendChild(b);
   }
 }
