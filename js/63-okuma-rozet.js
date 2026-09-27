@@ -86,7 +86,8 @@ setInterval(function () {
 let okuTaraZaman = null;
 new MutationObserver(function () {
   if (okuTaraZaman) { return; }
-  okuTaraZaman = setTimeout(function () { okuTaraZaman = null; okuEtiketle(); okuTara(); }, 300);
+  /* veri.json gelmeden (sayfa açılırken) etiketlenecek bir şey yok */
+  okuTaraZaman = setTimeout(function () { okuTaraZaman = null; if (typeof veri === "undefined" || !veri) { return; } okuEtiketle(); okuTara(); }, 300);
 }).observe(document.documentElement, { childList: true, subtree: true });
 
 /* ---------- ödüller ---------- */
@@ -163,6 +164,7 @@ function okuErisim(bolum, gizli) {
 
 /** Sayfadaki bilinen kutuları [data-oku] ile işaretler (karakterlerle bağları rozet için). */
 function okuEtiketle() {
+  if (typeof veri === "undefined" || !veri) { return; }
   const esle = function (sec, fn) {
     document.querySelectorAll(sec).forEach(function (el, i) {
       if (el.hasAttribute("data-oku")) { return; }
