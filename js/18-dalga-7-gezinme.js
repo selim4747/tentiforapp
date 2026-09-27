@@ -167,11 +167,28 @@ function ilerlemeKur() {
     const ic = c.firstChild;
     if (ic) { ic.style.width = oran + "%"; }
 
-    y.classList.toggle("gorunur", h.scrollTop > 600);
+    y.classList.toggle("gorunur", h.scrollTop > 600 && !yukariAltiDolu());
     aktifBolumIsaretle();
   };
 
+  /* altında düğme, bağlantı ya da yazı alanı varsa (ör. oyunun "Dene"si) ya da klavye açıksa gizlenir */
+  const ETKILESIMLI = "button,a[href],input,textarea,select,label,[role=button],[contenteditable=true]";
+  const yukariAltiDolu = function () {
+    const o = document.activeElement;
+    if (o && o !== y && o.matches && o.matches("input,textarea,select,[contenteditable=true]")) { return true; }
+    if (!document.elementsFromPoint) { return false; }
+    const r = y.getBoundingClientRect();
+    const noktalar = [[r.left + r.width / 2, r.top + r.height / 2], [r.left + 4, r.top + 4], [r.right - 4, r.top + 4], [r.left + 4, r.bottom - 4], [r.right - 4, r.bottom - 4]];
+    return noktalar.some(function (n) {
+      return document.elementsFromPoint(n[0], n[1]).some(function (el) {
+        return el !== y && !el.closest(".alt-menu,#ilerleme") && getComputedStyle(el).position !== "fixed" && el.closest(ETKILESIMLI);
+      });
+    });
+  };
+
   window.addEventListener("scroll", tikIste, { passive: true });
+  document.addEventListener("focusin", tikIste);
+  document.addEventListener("focusout", tikIste);
   tikIste();
 }
 
