@@ -1,0 +1,379 @@
+/* Sürüm 2.6 — sunucuya yük bindirmeden:
+
+   Okuma yolları: bir karakter ya da Claude evreni kişisi hakkındaki kutular sırayla ("Kyldo'yu tanı: 6 kutu, 12 dk").
+     Yollar kutu bağlarından (76-rozet-baglari.js) kurulur; ilerleme okunan kutulardan gelir. Yol bitince o konunun
+     rozeti de gelmiş olur (aynı kutular). Hepsi cihazda; sunucuya hiçbir şey gitmez.
+   Çevrimdışı okuma paketi: sitedeki bütün fan evrenleri tek dokunuşla cihaza (Cloudflare'den iner, Supabase'e değil);
+     kullanılan alan gösterilir. Arşiv, Claude'un Evreni ve kanon evrenler zaten sayfa verisiyle cihazda.
+   Ortak yazarlık işaretleri: kim, ne zaman, hangi sekmede değiştirdi; değişen bölümlerin günlüğü; sürüm geçmişinde
+     kimin değişikliğinden önceki hâl olduğu. Canlı yoklama yok: bilgi zaten giden/gelen kayıtla taşınır, sekmeye
+     dönünce (en çok dakikada bir) yenilenir.
+   Panel sağlık ekranı: kurulum sürümü, son 24 saatin hataları, bekleyen içerik bildirimleri, yedek yaşı, yayındaki
+     sürüm, çevrimdışı paket ve cihaz alanı — hepsi zaten alınan bilgilerden. */
+
+/* ==================== okuma yolları ==================== */
+
+const YOL_AKTIF = "tentiforapp_okuma_yolu";   /* seçilen yol: { id } */
+
+function yolKelime(anahtar) {
+  try { const d = rbAg().get(anahtar); return d ? rbKelime(d.kutu.metin) : 0; } catch (_) { return 0; }
+}
+
+/** Bütün okuma yolları: [{ id, ad, adimlar: [{ anahtar, ad, git }], dakika }] */
+function okumaYollari() { return okumaYollariKaynak(); }
+
+function okumaYollariKaynak(karSec, ceSec) {
+  const l = [];
+  const dakika = function (adimlar) {
+    const sn = adimlar.reduce(function (t, a) { return t + yolKelime(a.anahtar) * (typeof okuSaniyeKelime === "function" ? okuSaniyeKelime() : 0.25); }, 0);
+    return Math.max(1, Math.round(sn / 60));
+  };
+  (karSec === null ? [] : (veri.karakterler || []).filter(karSec || function () { return true; })).forEach(function (k) {
+    if (!k.id || k.kart === false || (typeof okuErisim === "function" && !okuErisim(null, k.gizli))) { return; }
+    const adimlar = karakterKutulari(k).filter(function (x) { return !x.kilitli; });
+    if (adimlar.length < 3) { return; }
+    l.push({ id: "kar:" + k.id, ad: k.ad + "'i tanı", adimlar: adimlar, dakika: dakika(adimlar) });
+  });
+  (ceSec === null ? [] : ((veri.claudeEvreni || {}).kisiler || []).filter(ceSec || function () { return true; })).forEach(function (k) {
+    const bas = "madde:ce-" + k.id;
+    let baglar = [];
+    try { baglar = rbBaglar(bas); } catch (_) { baglar = []; }
+    if (baglar.length < 2) { return; }
+    const adimlar = [{ anahtar: bas, ad: "Kişi: " + k.ad, git: "#/claude" }].concat(baglar.map(function (b) { return { anahtar: b.anahtar, ad: b.ad, git: b.git }; }));
+    l.push({ id: "ce:" + k.id, ad: k.ad + " (Claude'un Evreni)", adimlar: adimlar, dakika: dakika(adimlar) });
+  });
+  return l.sort(function (a, b) { return b.adimlar.length - a.adimlar.length; });
+}
+
+function yolIlerleme(y) {
+  const okunan = y.adimlar.filter(function (a) { return okunduMu(a.anahtar); }).length;
+  return { okunan: okunan, toplam: y.adimlar.length, sonraki: y.adimlar.find(function (a) { return !okunduMu(a.anahtar); }) || null };
+}
+
+/** Tek yol (bütün yolları hesaplamadan). */
+function okumaYolu(id) {
+  const m = /^(kar|ce):(.+)$/.exec(id || "");
+  if (!m) { return null; }
+  const l = okumaYollariKaynak(m[1] === "kar" ? function (k) { return k.id === m[2]; } : null, m[1] === "ce" ? function (k) { return k.id === m[2]; } : null);
+  return l[0] || null;
+}
+function yolAktif() { const d = jsonOku(YOL_AKTIF, null); return d && d.id ? okumaYolu(d.id) : null; }
+
+function yollarHtml() {
+  let l;
+  try { l = okumaYollari(); } catch (_) { l = []; }
+  if (!l.length) { return '<p class="oyun-not">Okuma yolları, kodlarla açtığın bölümlerdeki kutulardan kurulur.</p>'; }
+  const aktif = jsonOku(YOL_AKTIF, null);
+  return '<p class="oyun-not">Bir konuyu baştan sona okumak için sıralı kutular. Yol bitince o konunun rozeti de gelir.</p>' +
+    '<ul class="yol-liste">' + l.slice(0, 30).map(function (y) {
+      const o = yolIlerleme(y);
+      const bitti = o.okunan === o.toplam;
+      const secili = aktif && aktif.id === y.id;
+      return '<li class="' + (bitti ? "bitti" : "") + (secili ? " secili" : "") + '"><span><b>' + kacir(y.ad) + "</b>" +
+        '<span class="oyun-not"> · ' + o.toplam + " kutu · ~" + y.dakika + " dk · " + (bitti ? "✓ bitti" : o.okunan + " okundu") + "</span></span>" +
+        (bitti ? "" : '<button class="dugme dugme-sade y-kucuk" data-yol-basla="' + kacir(y.id) + '">' + (secili ? "Sıradaki →" : (o.okunan ? "Devam et" : "Başla")) + "</button>") + "</li>";
+    }).join("") + "</ul>";
+}
+
+/** Yol çubuğu: seçili yol varken altta küçük bir düğme (sıradaki kutu). */
+function yolCubuguCiz() {
+  let c = document.querySelector("#yolCubugu");
+  const y = yolAktif();
+  const o = y ? yolIlerleme(y) : null;
+  if (!y || !o.sonraki || document.querySelector("#evrenSayfa")) { if (c) { c.remove(); } return; }
+  if (!c) { c = document.createElement("div"); c.id = "yolCubugu"; c.className = "yol-cubugu"; document.body.appendChild(c); }
+  c.innerHTML = '<button class="yol-cubugu-git" data-yol-sonraki title="' + kacir(o.sonraki.ad) + '"><span class="oyun-not">' + kacir(y.ad) + " · " + o.okunan + "/" + o.toplam + "</span>" +
+    "<b>Sıradaki: " + kacir(o.sonraki.ad.slice(0, 40)) + " →</b></button>" +
+    '<button class="yol-cubugu-kapat" data-yol-birak aria-label="Yolu bırak">✕</button>';
+}
+
+function yolAdimaGit(a) {
+  if (!a || !a.git) { return; }
+  /* sitenin kendi bağlantı yönlendirmesi (00-rota.js): "#/…" rotaları ve "#bolum" bağlantıları aynı yoldan */
+  const b = document.createElement("a");
+  b.href = a.git;
+  b.style.display = "none";
+  document.body.appendChild(b);
+  b.click();
+  b.remove();
+  if (typeof eckaBildir === "function") { eckaBildir("Sıradaki: " + a.ad + " — sonuna kadar oku"); }
+}
+
+document.addEventListener("click", function (ev) {
+  const b = ev.target.closest && ev.target.closest("[data-yol-basla], [data-yol-sonraki], [data-yol-birak]");
+  if (!b) { return; }
+  if (b.hasAttribute("data-yol-birak")) { jsonYaz(YOL_AKTIF, null); yolCubuguCiz(); if (typeof ayar25Ciz === "function") { ayar25Ciz(); } return; }
+  if (b.dataset.yolBasla) { jsonYaz(YOL_AKTIF, { id: b.dataset.yolBasla }); }
+  const y = yolAktif();
+  if (typeof perdeKapat === "function" && !document.querySelector("#perde").hidden) { perdeKapat(); }
+  yolAdimaGit(y && yolIlerleme(y).sonraki);
+  setTimeout(yolCubuguCiz, 400);
+});
+
+/* okuma bitince çubuk ilerlesin; yol biterse haber */
+if (typeof okumaBitti === "function") {
+  const eskiOB26 = okumaBitti;
+  window.okumaBitti = function () {
+    const y = yolAktif();
+    const once = y ? yolIlerleme(y).okunan : 0;
+    const r = eskiOB26.apply(this, arguments);
+    if (y) {
+      const o = yolIlerleme(y);
+      if (o.okunan > once && !o.sonraki) {
+        jsonYaz(YOL_AKTIF, null);
+        if (typeof eckaBildir === "function") { eckaBildir("Yol bitti: " + y.ad + " ✓"); }
+      }
+      yolCubuguCiz();
+    }
+    return r;
+  };
+}
+window.addEventListener("hashchange", function () { setTimeout(yolCubuguCiz, 300); });
+
+/* karakter penceresinde: bu karakterin yolu */
+if (typeof rozetKutusuHtml === "function") {
+  const eskiRKH = rozetKutusuHtml;
+  window.rozetKutusuHtml = function (k) {
+    const h = eskiRKH.apply(this, arguments);
+    const y = okumaYolu("kar:" + k.id);
+    if (!y) { return h; }
+    const o = yolIlerleme(y);
+    if (!o.sonraki) { return h; }
+    return h.replace(/<\/div>$/, '<div class="oyun-sira"><button class="dugme dugme-sade y-kucuk" data-yol-basla="' + kacir(y.id) + '">📖 Okuma yolu: ' +
+      o.okunan + "/" + o.toplam + " · ~" + y.dakika + " dk</button></div></div>");
+  };
+}
+
+/* ==================== çevrimdışı okuma paketi ==================== */
+
+function paketEvrenleri() { return ((veri.fanEserleri || {}).evrenler || []).filter(function (e) { return typeof evdDosyali === "function" && evdDosyali(e); }); }
+
+async function paketIndir(durum) {
+  const l = paketEvrenleri();
+  let tamam = 0, hata = "";
+  for (let i = 0; i < l.length; i++) {
+    if (durum) { durum.textContent = "İndiriliyor: " + (l[i].ad || l[i].id) + " (" + (i + 1) + "/" + l.length + ")"; }
+    let h = "";
+    try { h = await evdCevrimdisiIndir(l[i].id); } catch (e) { h = (e && e.message) || "İndirilemedi"; }
+    if (h) { hata = h; if (/İnternet yok/.test(h)) { break; } } else { tamam++; }
+  }
+  return { tamam: tamam, toplam: l.length, hata: hata };
+}
+
+async function paketAlanHtml() {
+  let kullanilan = "";
+  try { if (navigator.storage && navigator.storage.estimate) { const t = await navigator.storage.estimate(); kullanilan = (t.usage / 1048576).toFixed(1) + " MB"; } } catch (_) { kullanilan = ""; }
+  return kullanilan ? "Bu site cihazında " + kullanilan + " yer kullanıyor." : "";
+}
+
+function paketKutusuHtml() {
+  const l = paketEvrenleri();
+  const indirilen = typeof evdIndirilenler === "function" ? evdIndirilenler() : {};
+  const kalan = l.filter(function (e) { return !indirilen[e.id]; });
+  const kb = Math.max(1, Math.round(kalan.reduce(function (t, e) { return t + (Number(e.boyut) || 0); }, 0) / 1024));
+  setTimeout(function () { paketAlanHtml().then(function (h) { const a = document.querySelector("#paketAlan"); if (a) { a.textContent = h; } }); }, 0);
+  return '<div class="paket-kutu"><p class="oyun-not">Arşiv, Claude\'un Evreni ve kanon evrenler zaten internetsiz açılır. ' +
+      (l.length ? (kalan.length ? "Sitedeki " + kalan.length + " fan evreni daha indirilebilir (~" + kb + " KB)." : "Sitedeki bütün fan evrenleri cihazda.") : "Sitede ayrı dosyalı fan evreni yok.") + "</p>" +
+    (kalan.length ? '<button class="dugme" data-paket-indir>Hepsini cihaza indir</button>' : (l.length ? '<button class="dugme dugme-sade" data-paket-indir>Hepsini güncelle</button>' : "")) +
+    '<p class="oyun-not" id="paketAlan"></p><p class="pencere-durum" id="paketDurum" role="status"></p></div>';
+}
+
+document.addEventListener("click", async function (ev) {
+  const b = ev.target.closest && ev.target.closest("[data-paket-indir]");
+  if (!b) { return; }
+  b.disabled = true;
+  const d = document.querySelector("#paketDurum");
+  const s = await paketIndir(d);
+  if (d) {
+    d.textContent = s.hata && !s.tamam ? s.hata : (s.tamam + " / " + s.toplam + " evren cihazda" + (s.hata ? " · " + s.hata : ""));
+    d.className = "pencere-durum " + (s.hata && !s.tamam ? "kotu" : "iyi");
+  }
+  b.disabled = false;
+  setTimeout(function () { if (typeof ayar25Ciz === "function") { ayar25Ciz(); } }, 1500);
+});
+
+/* Sen sayfası: okuma yolları en üstte, paket cihazdaki evrenlerin içinde */
+if (typeof ayar25Html === "function") {
+  const eskiA25 = ayar25Html;
+  window.ayar25Html = function () {
+    let h = eskiA25.apply(this, arguments);
+    h = '<details class="kutu-y ayar25"><summary><b>Okuma yolları</b></summary>' + yollarHtml() + "</details>" + h;
+    return h.replace('<summary><b>Cihazdaki evrenler</b>', '<summary><b>Çevrimdışı okuma</b>').replace(/(<summary><b>Çevrimdışı okuma<\/b>[^<]*<\/summary>)/, "$1" + paketKutusuHtml());
+  };
+}
+
+/* ==================== ortak yazarlık işaretleri ==================== */
+
+const ORTAK_GUNLUK = "tentiforapp_ortak_gunluk";   /* { evrenId: [{ kim, zaman, sekme, alanlar }] } bu cihazda */
+const ORTAK_ALANLAR = { ad: "Ad", ozet: "Özet", kurallar: "Kurallar", kisiler: "Kişiler", yerler: "Yerler", tarih: "Tarih", sozluk: "Sözlük",
+  ozelAlanlar: "Kendi alanlar", harita: "Harita", roman: "Roman", cizimler: "Çizimler", oyunlar: "Oyunlar", uygulamalar: "Uygulamalar",
+  yazi: "Yazı", stil: "Görünüm", stilKodu: "Stil kodu", gorunumKodu: "Görünüm kodu", lorlar: "Kilitli lore", para: "Para", alfabe: "Alfabe", sekmeDuzen: "Sekmeler" };
+const OI_SEKME = { harita: "Harita", bilgi: "Bilgiler", roman: "Roman", oyunlar: "Oyunlar", cizim: "Çizimler", stil: "Görünüm", kodstil: "Kod ile stil",
+  yazi: "Yazı", lore: "Kilitli lore", uygulama: "Uygulamalar", vitrin: "Vitrin", ag: "Bağlar ve zaman", kod: "Kod" };
+
+function oiBenimAdim() {
+  const p = typeof hesapProfil !== "undefined" && hesapProfil ? hesapProfil : null;
+  return String((p && (p.gorunen_ad || p.kullanici_adi)) || "Bir yazar").slice(0, 40);
+}
+
+/* giden kayda "kim, hangi sekmede, ne zaman" eklenir (sunucuda ek sütun gerekmez; evrenle birlikte gider) */
+if (typeof ortakGonderim === "function") {
+  const eskiOG = ortakGonderim;
+  window.ortakGonderim = function (e) {
+    const o = eskiOG.apply(this, arguments);
+    o.ortakIz = { kim: oiBenimAdim(), sekme: (typeof EVS !== "undefined" && EVS && EVS.id === e.id) ? String(EVS.sekme || "") : "", zaman: new Date().toISOString() };
+    return o;
+  };
+}
+if (typeof evrenEkTemizle === "function") {
+  const eskiEk26 = evrenEkTemizle;
+  window.evrenEkTemizle = function (ham, e) {
+    eskiEk26.apply(this, arguments);
+    const z = ham.ortakIz;
+    if (z && typeof z === "object") {
+      e.ortakIz = { kim: String(z.kim || "").slice(0, 40), sekme: /^[a-z]{0,20}$/.test(z.sekme || "") ? z.sekme || "" : "", zaman: String(z.zaman || "").slice(0, 30) };
+    }
+  };
+}
+
+function oiDegisenAlanlar(eski, yeni) {
+  return Object.keys(ORTAK_ALANLAR).filter(function (k) { return JSON.stringify((eski || {})[k]) !== JSON.stringify((yeni || {})[k]); });
+}
+
+/* başka yazarın hâli gelince: neyin değiştiğini günlüğe yaz, geçmiş kaydı kimin değişikliğinden önce olduğunu söylesin */
+if (typeof ortakUzaktanUygula === "function") {
+  const eskiOU = ortakUzaktanUygula;
+  window.ortakUzaktanUygula = async function (id, d) {
+    const once = evrenBenimBul(id);
+    const eskiKopya = once ? JSON.parse(JSON.stringify(once)) : null;
+    const iz = (d && d.veri && d.veri.ortakIz) || {};
+    const kim = iz.kim || d.guncelleyen || "Ortak yazar";
+    const eskiGK = window.gcmKaydet;
+    window.gcmKaydet = function (eid, neden, zorla) { return eskiGK.call(this, eid, neden === "ortak yazardan önce" ? kim + "'in değişikliğinden önce" : neden, zorla); };
+    let r;
+    try { r = await eskiOU.apply(this, arguments); } finally { window.gcmKaydet = eskiGK; }
+    const sonra = evrenBenimBul(id);
+    const alanlar = oiDegisenAlanlar(eskiKopya, sonra);
+    if (eskiKopya && alanlar.length) {
+      const g = jsonOku(ORTAK_GUNLUK, {}) || {};
+      g[id] = [{ kim: kim, zaman: iz.zaman || d.guncelleme || new Date().toISOString(), sekme: iz.sekme || "", alanlar: alanlar }].concat(g[id] || []).slice(0, 30);
+      jsonYaz(ORTAK_GUNLUK, g);
+    }
+    return r;
+  };
+}
+
+function oiNeZaman(t) {
+  const d = (Date.now() - new Date(t).getTime()) / 60000;
+  if (!isFinite(d)) { return ""; }
+  if (d < 1) { return "az önce"; }
+  if (d < 60) { return Math.round(d) + " dk önce"; }
+  if (d < 1440) { return Math.round(d / 60) + " saat önce"; }
+  return new Date(t).toLocaleDateString("tr-TR");
+}
+
+function oiSeritHtml(e) {
+  const iz = e.ortakIz;
+  const g = ((jsonOku(ORTAK_GUNLUK, {}) || {})[e.id] || []);
+  if (!iz && !g.length) { return ""; }
+  const son = iz && iz.kim && iz.kim !== oiBenimAdim() ? iz : (g[0] || null);
+  if (!son) { return ""; }
+  return '<div class="oi-serit" role="status">✎ <b>' + kacir(son.kim) + "</b> " + kacir(oiNeZaman(son.zaman)) +
+    (son.sekme && OI_SEKME[son.sekme] ? " · " + kacir(OI_SEKME[son.sekme]) + " sekmesinde" : "") + " değiştirdi</div>";
+}
+
+function oiGunlukHtml(id) {
+  const g = ((jsonOku(ORTAK_GUNLUK, {}) || {})[id] || []);
+  if (!g.length) { return ""; }
+  return '<details class="oi-gunluk"><summary>Değişiklik günlüğü · ' + g.length + "</summary><ul>" + g.slice(0, 15).map(function (x) {
+    return "<li><b>" + kacir(x.kim) + "</b> · " + kacir(oiNeZaman(x.zaman)) + " · " + kacir(x.alanlar.map(function (a) { return ORTAK_ALANLAR[a] || a; }).join(", ")) + "</li>";
+  }).join("") + '</ul><p class="oyun-not">Bir değişikliği geri almak için Sürüm geçmişinde o kişinin adının geçtiği “… değişikliğinden önce” kaydına dön.</p></details>';
+}
+
+if (typeof ortakKutusu === "function") {
+  const eskiOK = ortakKutusu;
+  window.ortakKutusu = function (e) {
+    const h = eskiOK.apply(this, arguments);
+    if (!e.ortak) { return h; }
+    return h.replace('<p class="pencere-durum" id="ortakDurum"', oiGunlukHtml(e.id) + '<p class="pencere-durum" id="ortakDurum"');
+  };
+}
+
+/* ortak evrenin sayfasında en üstte son değiştiren */
+if (typeof evrenSayfaCiz === "function") {
+  const eskiCiz26 = evrenSayfaCiz;
+  window.evrenSayfaCiz = function () {
+    const r = eskiCiz26.apply(this, arguments);
+    if (typeof EVS !== "undefined" && EVS && EVS.kaynak === "benim") {
+      const e = evrenBenimBul(EVS.id);
+      const g = document.querySelector("#evrenSayfa .evs-govde");
+      if (e && e.ortak && g && !g.querySelector(".oi-serit")) { const h = oiSeritHtml(e); if (h) { g.insertAdjacentHTML("afterbegin", h); } }
+    }
+    yolCubuguCiz();
+    return r;
+  };
+}
+
+/* sekmeye dönünce (en çok dakikada bir) açık ortak evrenin güncel hâli — canlı yoklama yok */
+let oiSonCekim = 0;
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState !== "visible" || Date.now() - oiSonCekim < 60000) { return; }
+  if (typeof EVS === "undefined" || !EVS || EVS.kaynak !== "benim" || typeof ortakCek !== "function") { return; }
+  const e = evrenBenimBul(EVS.id);
+  if (!e || !e.ortak) { return; }
+  oiSonCekim = Date.now();
+  ortakCek(EVS.id);
+});
+
+/* ==================== panel: site sağlığı ==================== */
+
+const SAGLIK = { yayin: null, alan: null, soruldu: false, acik: false };
+document.addEventListener("toggle", function (e) { if (e.target && e.target.classList && e.target.classList.contains("saglik-kutu")) { SAGLIK.acik = e.target.open; } }, true);
+
+function saglikSor() {
+  if (SAGLIK.soruldu) { return; }
+  SAGLIK.soruldu = true;
+  fetch("/surum.json?_=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) { SAGLIK.yayin = d; if (typeof yon24SeritKoy === "function") { yon24SeritKoy(); } }).catch(function () { SAGLIK.yayin = false; });
+  if (navigator.storage && navigator.storage.estimate) {
+    navigator.storage.estimate().then(function (t) { SAGLIK.alan = t; if (typeof yon24SeritKoy === "function") { yon24SeritKoy(); } }).catch(function () { /* yok */ });
+  }
+}
+
+function saglikHtml() {
+  saglikSor();
+  const satir = function (durum, ad, deger) { return '<div class="sg-satir sg-' + durum + '"><span class="sg-nokta" aria-hidden="true"></span><span>' + ad + "</span><b>" + deger + "</b></div>"; };
+  const l = [];
+  const kurulum = typeof YON24 !== "undefined" ? YON24.surum : null;
+  l.push(satir(kurulum === null ? "bilinmez" : (kurulum === (typeof KURULUM_BEKLENEN !== "undefined" ? KURULUM_BEKLENEN : kurulum) ? "iyi" : "kotu"), "Supabase kurulumu",
+    kurulum === null ? "giriş yapınca" : kacir(kurulum === "yok" ? "eski" : kurulum)));
+  const hata = typeof YON24 !== "undefined" && YON24.hata ? YON24.hata.reduce(function (t, x) { return t + (Number(x.sayi) || 0); }, 0) : null;
+  l.push(satir(hata === null ? "bilinmez" : (hata === 0 ? "iyi" : (hata < 20 ? "uyari" : "kotu")), "Hatalar (24 saat)", hata === null ? "—" : String(hata)));
+  const ib = typeof IB_SAYI !== "undefined" && IB_SAYI.soruldu ? IB_SAYI.yeni : null;
+  l.push(satir(ib === null ? "bilinmez" : (ib ? "uyari" : "iyi"), "Bekleyen içerik bildirimi", ib === null ? "—" : String(ib)));
+  let son = 0;
+  try { son = Number(localStorage.getItem("tentiforapp_son_yedek")) || 0; } catch (_) { son = 0; }
+  const gun = son ? Math.floor((Date.now() - son) / 86400000) : null;
+  l.push(satir(gun === null ? "kotu" : (gun < 7 ? "iyi" : "uyari"), "Son yedek (bu cihaz)", gun === null ? "hiç" : (gun === 0 ? "bugün" : gun + " gün önce")));
+  const y = SAGLIK.yayin;
+  const ayni = y && y.surum && veri && y.surum === veri.surum;
+  l.push(satir(y === null ? "bilinmez" : (y === false ? "uyari" : (ayni ? "iyi" : "uyari")), "Yayındaki sürüm",
+    y === null ? "…" : (y === false ? "okunamadı" : kacir((y.surum || "?") + (ayni ? "" : " (paneldeki: " + (veri && veri.surum) + " — Kaydet/Yayınla?)")))));
+  const indirilen = typeof evdIndirilenler === "function" ? Object.keys(evdIndirilenler()).length : 0;
+  const alan = SAGLIK.alan ? (SAGLIK.alan.usage / 1048576).toFixed(1) + " MB" : "…";
+  l.push(satir("iyi", "Çevrimdışı (bu cihaz)", indirilen + " evren indirili · " + alan));
+  return '<details class="kutu-y saglik-kutu"' + (SAGLIK.acik ? " open" : "") + '><summary><b>Site sağlığı</b></summary><div class="sg-izgara">' + l.join("") + "</div></details>";
+}
+
+if (typeof yon24Serit === "function") {
+  const eskiSerit26 = yon24Serit;
+  window.yon24Serit = function () {
+    const h = eskiSerit26.apply(this, arguments);
+    return (typeof yoneticiAcik === "function" && yoneticiAcik() ? saglikHtml() : "") + h;
+  };
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const bekle = typeof veriHazirOlunca === "function" ? veriHazirOlunca : function (f) { setTimeout(f, 1500); };
+  bekle(function () { setTimeout(yolCubuguCiz, 800); });
+});
