@@ -4,12 +4,16 @@
 
 import { createRequire } from "node:module";
 import { mkdirSync, readFileSync } from "node:fs";
+import { gunzipSync } from "node:zlib";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const { yeniSahte } = require("./supabase-taklidi.cjs");
 
 const TEST_URL = "https://test.supabase.co";
+
+/** Buluttaki ilerleme sıkıştırılmış olabilir ({ _z: gzip+base64 }) */
+function ilerlemeAc(v) { return v && typeof v._z === "string" ? JSON.parse(gunzipSync(Buffer.from(v._z, "base64")).toString("utf8")) : (v || {}); }
 
 function b64urlBaytUzunluk(s) { return Buffer.from(String(s).replace(/-/g, "+").replace(/_/g, "/"), "base64").length; }
 
@@ -45,9 +49,12 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, function (r) { return r.abort(); });
     const p = await ctx.newPage();
     sayfalar.push([ad, p]);
-    p.on("pageerror", function (e) { hatalar.push(ad + ": " + e.message); });
+    /* korumalı evren uygulaması çerçevesi (about:srcdoc): engellemeler beklenir; test aracının service worker
+       engeli de oraya kod ekler ve orada hata verir — bunlar sitenin hatası değil */
+    p.on("pageerror", function (e) { if (!/sandboxed and lacks the 'allow-same-origin'/.test(e.message)) { hatalar.push(ad + ": " + e.message); } });
     p.on("console", function (m) {
-      if (m.type() === "error" && !/Failed to load resource|ERR_FAILED|fonts\.g/.test(m.text())) { hatalar.push(ad + " konsol: " + m.text()); }
+      const cerceve = (m.location() || {}).url === "about:srcdoc" || /Content Security Policy/.test(m.text());
+      if (m.type() === "error" && !cerceve && !/Failed to load resource|ERR_FAILED|fonts\.g/.test(m.text())) { hatalar.push(ad + " konsol: " + m.text()); }
     });
     return p;
   }
@@ -786,6 +793,121 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("okur romanı ve çizimleri okur", await N.evaluate(function () {
       const t = Array.from(document.querySelectorAll("#evrenSayfa [data-evs-sekme]")).map(function (x) { return x.dataset.evsSekme; });
       return t.indexOf("roman") !== -1 && t.indexOf("cizim") !== -1 && t.indexOf("defter") !== -1 && t.indexOf("stil") === -1;
+    }));
+
+    /* ---------- 2.0: evren uygulamaları (korumalı çerçeve) ve evren yazısı ---------- */
+    await N.evaluate(function (id) { location.hash = "#/ev/benim/" + id; }, nEv); await bekle(N, 900);
+    await N.click('#evrenSayfa [data-evs-sekme="uygulama"]'); await bekle(N, 200);
+    await N.click('#evrenSayfa [data-evu-yeni="oyun"]'); await bekle(N, 1200);
+    ok("uygulama korumalı çerçevede (yalnızca betik; aynı köken yok)", await N.evaluate(function () {
+      const f = document.querySelector("#evuSahne iframe");
+      return !!f && f.getAttribute("sandbox") === "allow-scripts" && f.contentDocument === null && /Content-Security-Policy/.test(f.srcdoc);
+    }));
+    const cer = N.frames().find(function (f) { return f !== N.mainFrame() && /Kim bu/.test(f.url() === "about:srcdoc" ? "Kim bu" : ""); }) || N.frames()[N.frames().length - 1];
+    ok("çerçeve evrenin verisini okur", await cer.evaluate(function () { return evren.ad === "Kıyı Evreni" && evren.kisiler.length === 4; }));
+    ok("çerçeve sitenin kayıtlarına ve internete erişemez", await cer.evaluate(async function () {
+      let depo = "acik"; try { localStorage.getItem("tentiforapp_cuzdan"); } catch (e) { depo = "engel"; }
+      const ag = await fetch("https://example.com/").then(function () { return "acik"; }, function () { return "engel"; });
+      let ust = "acik"; try { void parent.document.title; } catch (e) { ust = "engel"; }
+      return depo + ag + ust;
+    }) === "engelengelengel");
+    await cer.evaluate(function () { evren.kazandim(); }); await bekle(N, 300);
+    ok("kendi evreninde uygulama XP vermez", /XP vermez/.test(await N.textContent("#evuDurum")));
+    await cer.evaluate(function () { evren.kaydet({ n: 7 }); }); await bekle(N, 200);
+    ok("uygulamanın küçük kaydı sitede saklanır (hesapla eşitlenir)", await cer.evaluate(function () { return evren.yukle(); }).then(function (v) { return v && v.n === 7; }));
+    await N.click('#evrenSayfa [data-evs-sekme="yazi"]'); await bekle(N, 200);
+    const cizCizgi = async function (x1, y1, x2, y2) {
+      await N.locator("#eyPad").scrollIntoViewIfNeeded(); await bekle(N, 50);
+      const b = await N.locator("#eyPad").boundingBox();
+      await N.mouse.move(b.x + b.width * x1, b.y + b.height * y1); await N.mouse.down();
+      await N.mouse.move(b.x + b.width * ((x1 + x2) / 2), b.y + b.height * ((y1 + y2) / 2), { steps: 4 });
+      await N.mouse.move(b.x + b.width * x2, b.y + b.height * y2, { steps: 4 }); await N.mouse.up(); await bekle(N, 150);
+    };
+    await cizCizgi(0.2, 0.2, 0.8, 0.8);
+    ok("yazı: harfe işaret çizilir ve kaydedilir", await N.evaluate(function (id) { const y = evrenBenimBul(id).yazi; return y.tur === "alfabe" && /^M\d+ \d+L/.test(y.isaretler.a); }, nEv));
+    await N.check('#evrenSayfa [data-ey-tur][value="birlesik"]'); await bekle(N, 200);
+    await N.click('#evrenSayfa [data-ey-sec="k"]'); await bekle(N, 100); await cizCizgi(0.2, 0.5, 0.8, 0.5);
+    await N.click('#evrenSayfa [data-ey-sec="o"]'); await bekle(N, 100); await cizCizgi(0.5, 0.1, 0.5, 0.3);
+    ok("birleşik yazı: ünsüz ve ünlü ayrı çizilir, hecede tek blokta birleşir", await N.evaluate(function (id) {
+      const y = evrenBenimBul(id).yazi;
+      const p = eyParcala("koko k", y);
+      return y.tur === "birlesik" && p.length === 4 && p[0].isaret.join() === "k,o" && p[3].isaret.join() === "k" && (eyYaziSvg("ko", y).match(/<path/g) || []).length === 2;
+    }, nEv));
+    await N.check('#evrenSayfa [data-ey-tur][value="hece"]'); await bekle(N, 200);
+    await N.fill("#eyHeceler", "ki, ye, kıy"); await N.click("#evrenSayfa [data-ey-hece-ekle]"); await bekle(N, 150);
+    await N.click('#evrenSayfa [data-ey-sec="kıy"]'); await bekle(N, 100); await cizCizgi(0.1, 0.9, 0.9, 0.1);
+    ok("hece yazısı: en uzun hece önce eşleşir", await N.evaluate(function (id) {
+      const y = evrenBenimBul(id).yazi; const p = eyParcala("kıyı", y);
+      return y.tur === "hece" && y.heceler.indexOf("kıy") !== -1 && p[0].isaret && p[0].isaret[0] === "kıy" && p[1].harf === "ı";
+    }, nEv));
+    await N.check("#evrenSayfa [data-ey-baslik]"); await bekle(N, 200);
+    ok("evrenin adı başlıkta kendi yazısıyla", await N.locator("#evrenSayfa .evs-yazi-ad svg.ey-yazi").count() === 1);
+    ok("zararlı çizgi yolu temizlenir", await N.evaluate(function () {
+      const t = eyTemizle({ tur: "alfabe", isaretler: { a: 'M1 1" onload="alert(1)', b: "M1 1L5 5" } });
+      return !t.isaretler.a && t.isaretler.b === "M1 1L5 5";
+    }));
+    /* başkasının evreninde uygulama XP verir (günde bir kez) */
+    await N.evaluate(function (id) {
+      const u = evrenBenimBul(id).uygulamalar[0];
+      const e = veri.fanEserleri.evrenler.find(function (x) { return x.id === "fsitedeki1"; });
+      e.uygulamalar = [JSON.parse(JSON.stringify(u))];
+      evrenSayfaKapat(); location.hash = "#/ev/fan/fsitedeki1";
+    }, nEv); await bekle(N, 900);
+    await N.click('#evrenSayfa [data-evs-sekme="uygulama"]'); await bekle(N, 200);
+    await N.click("#evrenSayfa [data-evu-ac]"); await bekle(N, 1200);
+    const cer2 = N.frames()[N.frames().length - 1];
+    await cer2.evaluate(function () { evren.kazandim(); }); await bekle(N, 300);
+    ok("başka evrendeki kodlu oyun kazanınca XP", await N.evaluate(function () { return oyunXpKayitlari().some(function (x) { return /fsitedeki1\|kod:/.test(x); }); }) &&
+      /\+10 XP/.test(await N.textContent("#evuDurum")));
+    await N.evaluate(function () { evrenSayfaKapat(); }); await bekle(N, 200);
+
+    /* ---------- 2.0: çoklu evren, hızlı geçiş ---------- */
+    await N.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(N, 500);
+    ok("başlıkta şu anki evren: başlangıç evreni", /Tentiforverse/.test(await N.textContent("#evrenSecBtn")) && await N.locator("#evrenSerit .es-serit-oge").count() >= 3);
+    await N.keyboard.press("e"); await bekle(N, 200);
+    ok("E tuşu evren seçicisini açar, arama kutusuyla", await N.locator("#evrenSecici #esAra").count() === 1);
+    await N.fill("#esAra", "claude"); await bekle(N, 100);
+    ok("evren araması süzer", await N.evaluate(function () {
+      const g = Array.from(document.querySelectorAll("#evrenSecici .es-oge:not([hidden])")).map(function (b) { return b.textContent; });
+      return g.length >= 1 && g.every(function (t) { return /claude/i.test(t); });
+    }));
+    await N.press("#esAra", "Enter"); await bekle(N, 700);
+    ok("Enter ile evrene geçilir; başlık yeni evreni gösterir", await N.evaluate(function () { return rota().indexOf("#/claude") === 0; }) && /Claude/.test(await N.textContent("#evrenSecBtn")));
+    await N.evaluate(function () { location.hash = "#/ev/fan/fsitedeki1"; }); await bekle(N, 800);
+    await N.evaluate(function () { evrenSayfaKapat(); location.hash = "#/arsiv"; }); await bekle(N, 400);
+    await N.evaluate(function () { evrenSeciciAc(); }); await bekle(N, 150);
+    ok("son girilen evrenler seçicide", /Sitedeki Kıyı/.test(await N.textContent("#evrenSecici .es-son")));
+    await N.evaluate(function () { evrenSeciciKapat(); });
+
+    /* ---------- 2.0: seviye kodu ve altın rozet katmanı ---------- */
+    ok("seviye kodu: kod girilince Evrengezer ve evren kapıları seviyeyi beklemeden açılır", await N.evaluate(function () {
+      const eski = localStorage.getItem("tentiforapp_seviye_test"); localStorage.removeItem("tentiforapp_seviye_test"); SVK.onbellek = null;
+      const kayit = cuzdan.acilan.slice();
+      cuzdan.acilan = cuzdan.acilan.filter(function (x) { return !/^(svkod_|oku_|oxp_)/.test(x); }); SVK.onbellek = null;
+      veri.seviyeKodlari = (veri.seviyeKodlari || []).concat([{ ozet: dogrulamaOzeti("TESTSVK015"), ad: "Evren kurma", seviye: 15 }]);
+      const once = !uretimAcik("evren") && !uretimAcik("kisi");
+      kodPenceresi(); kodDene("testsvk015");
+      const sonra = uretimAcik("evren") && uretimAcik("kisi") && uretimAcik("hikaye") && /açıldı/.test(document.querySelector("#kodDurum").textContent);
+      veri.seviyeKodlari.pop(); cuzdan.acilan = kayit; perdeKapat();
+      if (eski) { localStorage.setItem("tentiforapp_seviye_test", eski); } SVK.onbellek = null;
+      return once && sonra;
+    }));
+    ok("veride yalnızca seviye kodlarının özeti var", await N.evaluate(function () {
+      return (veri.seviyeKodlari || []).length === 2 && veri.seviyeKodlari.every(function (k) { return /^[0-9a-f]{64}$/.test(k.ozet) && Object.keys(k).join() === "ozet,ad,seviye"; });
+    }));
+    ok("altın rozet o karakterin buz katmanlarını açar (kartsız gizli karakter hariç)", await N.evaluate(function () {
+      const k = veri.karakterler.find(function (x) { return x.kart !== false && (x.gizli || []).length && !cozulenler[x.gizli[0].dogrulama]; });
+      if (!k) { return false; }
+      const g = k.gizli[0];
+      const once = !/çözüldü|altın rozetle/.test(buzul(g));
+      cuzdan.acilan.push("rozet_altin_" + k.id); rozetKatmanOnbellek = null;
+      const sonra = /altın rozetle açıldı/.test(buzul(g)) && !cozulenler[g.dogrulama];
+      cuzdan.acilan = cuzdan.acilan.filter(function (x) { return x !== "rozet_altin_" + k.id; }); rozetKatmanOnbellek = null;
+      const kartsiz = veri.karakterler.filter(function (x) { return x.kart === false; });
+      kartsiz.forEach(function (x) { cuzdan.acilan.push("rozet_altin_" + x.id); });
+      const acilmaz = Object.keys(rozetAcikKatmanlar()).length === 0;
+      cuzdan.acilan = cuzdan.acilan.filter(function (x) { return !/^rozet_altin_/.test(x); }); rozetKatmanOnbellek = null;
+      return once && sonra && acilmaz;
     }));
 
     /* Tömye'nin günlük oyunları: güne göre sorular, kazanınca günde bir kez 10 XP */
@@ -1648,7 +1770,9 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       return fanEserlerim().some(function (e) { return e.tur === "evren" && e.ad === "Misafir Evreni"; });
     }));
     await M.evaluate(function () { return hesapEsitle(); }); await bekle(M, 1200);
-    const bVeri = (await sahte.kokSorgu("select veri from public.ilerlemeler i join auth.users u on u.id = i.id where u.email = 'b@ornek.test'")).rows[0].veri;
+    const bHam = (await sahte.kokSorgu("select veri from public.ilerlemeler i join auth.users u on u.id = i.id where u.email = 'b@ornek.test'")).rows[0].veri;
+    const bVeri = ilerlemeAc(bHam);
+    ok("bulutta ilerleme sıkıştırılmış durur (tek satır)", typeof bHam._z === "string" && bHam._z.length < JSON.stringify(bVeri).length);
     ok("birleşen evren hesaba da yazılır", /Misafir Evreni/.test(bVeri.tentiforapp_fan_eserlerim || ""));
     /* aynı cihazda iki hesap: çıkınca cihaz misafire döner, ikinci hesap birincinin ilerlemesini görmez */
     await M.evaluate(function () { cuzdan.ecka += 123; cuzdanKaydet(); return hesapEsitle(true); }); await bekle(M, 800);
@@ -1661,10 +1785,35 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("aynı cihazda açılan ikinci hesap ilkinin ilerlemesini görmez", await M.evaluate(function () {
       return !!hesapKullanici && !fanEserlerim().some(function (e) { return e.ad === "Misafir Evreni"; }) && cuzdan.ecka < 123;
     }));
-    const bVeri2 = (await sahte.kokSorgu("select veri from public.ilerlemeler i join auth.users u on u.id = i.id where u.email = 'b@ornek.test'")).rows[0].veri;
+    const bVeri2 = ilerlemeAc((await sahte.kokSorgu("select veri from public.ilerlemeler i join auth.users u on u.id = i.id where u.email = 'b@ornek.test'")).rows[0].veri);
     ok("ilk hesabın ilerlemesi hesabında durur", /Misafir Evreni/.test(bVeri2.tentiforapp_fan_eserlerim || "") &&
       JSON.parse(bVeri2.tentiforapp_cuzdan || "{}").ecka === mEcka);
     await M.close();
+
+    /* ---------- iki cihaz: bilgisayarda kazanılan telefonda da görünür (birleşir, ezilmez) ---------- */
+    const PC = await cihaz("pc");
+    await kayitOl(PC, "Pc", "pcokur", "pc@ornek.test");
+    await PC.evaluate(function () { cuzdan.acilan.push("esit_hazirlik"); cuzdanKaydet(); return hesapEsitle(true); }); await bekle(PC, 600);
+    const TEL = await cihaz("telefon");
+    await TEL.goto(adres + "/#/sen"); await bekle(TEL, 1200);
+    await TEL.click("#hesapBtn"); await bekle(TEL, 300);
+    if (await TEL.locator("#hGirisEposta").count() === 0) { await TEL.click('#perde [data-hesap-pencere="giris"]'); await bekle(TEL, 300); }
+    await TEL.fill("#hGirisEposta", "pc@ornek.test"); await TEL.fill("#hGirisSifre", "tomye-2026");
+    await TEL.click('[data-hesap-form="giris"] button[type=submit]'); await bekle(TEL, 4000);
+    ok("telefonda girince bilgisayardaki ilerleme gelir", await TEL.evaluate(function () { return kilitAcik("esit_hazirlik"); }));
+    const e0 = await PC.evaluate(function () { return cuzdan.ecka; });
+    const tel0 = await TEL.evaluate(function () { const k = hesapEsitKaydi(); return { ecka: cuzdan.ecka, taban: k && k.cuzdan ? k.cuzdan.ecka : null }; });
+    ok("telefonun birleşme tabanı hesaptaki cüzdan", tel0.taban !== null);
+    await PC.evaluate(function () { cuzdan.acilan.push("esit_pc"); cuzdan.ecka += 10; cuzdan.kazanilan = (cuzdan.kazanilan || 0) + 10; cuzdanKaydet(); return hesapEsitle(true); }); await bekle(PC, 600);
+    await TEL.evaluate(function () { cuzdan.acilan.push("esit_tel"); cuzdan.ecka += 5; cuzdan.kazanilan = (cuzdan.kazanilan || 0) + 5; cuzdanKaydet(); return hesapEsitle(true); }); await bekle(TEL, 3500);
+    const beklenen = (e0 + 10) + (tel0.ecka + 5) - tel0.taban;
+    ok("telefon kaydederken bilgisayardakini birleştirir (ikisi de, eçka toplanır)", await TEL.evaluate(function (e) {
+      return kilitAcik("esit_pc") && kilitAcik("esit_tel") && kilitAcik("esit_hazirlik") && cuzdan.ecka === e;
+    }, beklenen), [beklenen, await TEL.evaluate(function () { return cuzdan.ecka; })]);
+    await PC.evaluate(function () { return hesapUzaktanCek(true); }); await bekle(PC, 3500);
+    ok("bilgisayar da telefondakini alır", await PC.evaluate(function (e) { return kilitAcik("esit_tel") && kilitAcik("esit_pc") && cuzdan.ecka === e; }, beklenen));
+    ok("değişiklik yokken yalnızca zaman sorulur (tam veri inmez)", await PC.evaluate(async function () { return (await hesapUzakDegistiMi()) === false; }));
+    await PC.close(); await TEL.close();
     await B.click("#evrenSayfa [data-evs-kapat]"); await bekle(B, 300);
 
     /* ---------- kartpostal ---------- */

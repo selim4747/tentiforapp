@@ -65,6 +65,14 @@ function svkYonetici() { return typeof yoneticiAcik === "function" && yoneticiAc
 
 function seviyeYeter(gereken) { return svkYonetici() || seviyeDurumu().seviye >= gereken; }
 
+/** Üretim kapısı açık mı: seviye yetiyor ya da seviye kodu girilmiş (68-surum-2.js; kod kendi seviyesine
+    kadarki bütün kapıları açar: evren kodu hikâye ve Evrengezer'i de). */
+function uretimAcik(tur) {
+  const x = SEVIYE_URETIM[tur];
+  if (!x) { return true; }
+  return seviyeYeter(x.seviye) || (typeof seviyeKoduSeviyesi === "function" && seviyeKoduSeviyesi() >= x.seviye);
+}
+
 /** "Seviye 5'te açılır · şu an 3 · 240 XP kaldı" */
 function seviyeKapiMetni(gereken) {
   const d = seviyeDurumu();
@@ -96,10 +104,11 @@ function seviyeUyari(tur) {
     '<p class="oyun-not">' + kacir(SVK_NASIL) + "</p>" +
     '<ul class="svk-yol">' + Object.keys(SEVIYE_URETIM).map(function (t) {
       const x = SEVIYE_URETIM[t];
-      return '<li class="' + (seviyeYeter(x.seviye) ? "acik" : "") + '"><b>Seviye ' + x.seviye + "</b> · " + kacir(x.ad) + (seviyeYeter(x.seviye) ? " ✓" : "") + "</li>";
+      return '<li class="' + (uretimAcik(t) ? "acik" : "") + '"><b>Seviye ' + x.seviye + "</b> · " + kacir(x.ad) + (uretimAcik(t) ? (seviyeYeter(x.seviye) ? " ✓" : " ✓ (kodla)") : "") + "</li>";
     }).join("") + "</ul>" +
     '<div class="oyun-sira">' + (hesapYok ? '<button class="dugme" data-svk-hesap="1">Hesap aç — XP her yerde sayılsın</button>' : "") +
-      '<a class="dugme dugme-sade" href="#/oyunlar" data-kapat="1">Oyna, XP kazan</a></div></div>';
+      '<a class="dugme dugme-sade" href="#/oyunlar" data-kapat="1">Oyna, XP kazan</a>' +
+      '<button class="dugme dugme-sade" data-kod-ac>Seviye kodum var</button></div></div>';
   p.hidden = false;
 }
 
@@ -108,14 +117,14 @@ function seviyeUyari(tur) {
 if (typeof fanYeni === "function") {
   const eskiFanYeni = fanYeni;
   window.fanYeni = function (tur) {
-    if (SEVIYE_URETIM[tur] && !seviyeYeter(SEVIYE_URETIM[tur].seviye)) { seviyeUyari(tur); return null; }
+    if (SEVIYE_URETIM[tur] && !uretimAcik(tur)) { seviyeUyari(tur); return null; }
     return eskiFanYeni.apply(this, arguments);
   };
 }
 if (typeof evrenYeniKur === "function") {
   const eskiKur = evrenYeniKur;
   window.evrenYeniKur = function () {
-    if (!seviyeYeter(SEVIYE_URETIM.evren.seviye)) { seviyeUyari("evren"); return null; }
+    if (!uretimAcik("evren")) { seviyeUyari("evren"); return null; }
     return eskiKur.apply(this, arguments);
   };
 }
@@ -123,7 +132,7 @@ if (typeof kisiKaydet === "function") {
   const eskiKisiKaydet = kisiKaydet;
   window.kisiKaydet = function (id) {
     /* yenisini yaratmak kapıda; var olanı düzenlemek serbest */
-    if (!id && !seviyeYeter(SEVIYE_URETIM.kisi.seviye)) { seviyeUyari("kisi"); return Promise.resolve("Evrengezer yaratmak " + seviyeKapiMetni(SEVIYE_URETIM.kisi.seviye) + "."); }
+    if (!id && !uretimAcik("kisi")) { seviyeUyari("kisi"); return Promise.resolve("Evrengezer yaratmak " + seviyeKapiMetni(SEVIYE_URETIM.kisi.seviye) + "."); }
     return eskiKisiKaydet.apply(this, arguments);
   };
 }
@@ -131,7 +140,7 @@ if (typeof e25KisilerHtml === "function") {
   const eskiE25 = e25KisilerHtml;
   window.e25KisilerHtml = function () {
     const h = eskiE25.apply(this, arguments);
-    if (seviyeYeter(SEVIYE_URETIM.kisi.seviye)) { return h; }
+    if (uretimAcik("kisi")) { return h; }
     /* "Evrengezerini ekle" formu yerine kapı */
     return h.replace(/<details class="kutu-y"[^>]*><summary><b>\+ Evrengezerini ekle<\/b><\/summary>[\s\S]*?<\/details><\/div>$/,
       '<div class="kutu-y svk-kapi"><b>🔒 Evrengezerini ekle</b><p class="oyun-not">' + kacir(seviyeKapiMetni(SEVIYE_URETIM.kisi.seviye)) + "</p>" +
@@ -147,7 +156,7 @@ const SVK_DUGMELER = [
 function svkDugmeleriIsaretle(kok) {
   SVK_DUGMELER.forEach(function (d) {
     (kok || document).querySelectorAll(d[0]).forEach(function (b) {
-      const kilitli = !seviyeYeter(SEVIYE_URETIM[d[1]].seviye);
+      const kilitli = !uretimAcik(d[1]);
       b.classList.toggle("svk-kilitli", kilitli);
       const r = b.querySelector(".svk-rozet");
       if (kilitli && !r) { b.insertAdjacentHTML("beforeend", ' <span class="svk-rozet">🔒 Sv ' + SEVIYE_URETIM[d[1]].seviye + "</span>"); }
@@ -159,7 +168,7 @@ function svkDugmeleriIsaretle(kok) {
 document.addEventListener("click", function (ev) {
   for (let i = 0; i < SVK_DUGMELER.length; i++) {
     const b = ev.target.closest && ev.target.closest(SVK_DUGMELER[i][0]);
-    if (b && !seviyeYeter(SEVIYE_URETIM[SVK_DUGMELER[i][1]].seviye)) {
+    if (b && !uretimAcik(SVK_DUGMELER[i][1])) {
       ev.preventDefault(); ev.stopImmediatePropagation();
       seviyeUyari(SVK_DUGMELER[i][1]);
       return;
