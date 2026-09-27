@@ -14,6 +14,7 @@ import { cevrimdisiTestleri } from "./cevrimdisi.mjs";
 import { surum25Testleri } from "./surum-25.mjs";
 import { sunucuYukuTestleri } from "./sunucu-yuku.mjs";
 import { surum26Testleri } from "./surum-26.mjs";
+import { uygulamaKabuguTestleri } from "./uygulama-kabugu.mjs";
 
 const KOK = new URL("..", import.meta.url).pathname;
 const DB = process.env.TEST_DB || "tentifor_test";
@@ -106,7 +107,9 @@ try {
   const yk = await sunucuYukuTestleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
   console.log("• sürüm 2.6");
   const s26 = await surum26Testleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
-  console.log("\nHepsi geçti: " + sqlSayisi + " veritabanı + " + f + " fonksiyon + " + (n + s25 + yk + s26) + " tarayıcı + " + c + " çevrimdışı kontrolü.");
+  console.log("• Android uygulama kabuğu");
+  const ak = await uygulamaKabuguTestleri({ dizin: DIZIN });
+  console.log("\nHepsi geçti: " + sqlSayisi + " veritabanı + " + f + " fonksiyon + " + (n + s25 + yk + s26 + ak) + " tarayıcı + " + c + " çevrimdışı kontrolü.");
 } catch (e) {
   console.error("\n" + (e.stack || e.message || e));
   process.exitCode = 1;

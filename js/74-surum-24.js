@@ -539,6 +539,9 @@ const TentiforKopru = {
     return "web";
   },
   paylas: async function (v) {
+    /* uygulamada (Capacitor) WebView'ın paylaşımı yok: telefonun kendi paylaşım menüsü */
+    const pl = window.Capacitor && window.Capacitor.Plugins;
+    if (pl && pl.Share && TentiforKopru.ortam() === "capacitor") { try { await pl.Share.share({ title: v.title, text: v.text, url: v.url }); return true; } catch (_) { return false; } }
     if (navigator.share) { try { await navigator.share(v); return true; } catch (_) { return false; } }
     if (v && v.url && typeof panoyaKopyala === "function") { panoyaKopyala(v.url); return true; }
     return false;

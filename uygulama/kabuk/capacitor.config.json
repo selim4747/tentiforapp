@@ -1,0 +1,14 @@
+{
+  "appId": "dev.pages.tentiforapp",
+  "appName": "TentiforApp",
+  "webDir": "www",
+  "server": {
+    "url": "https://tentiforapp.pages.dev",
+    "cleartext": false,
+    "errorPath": "hata.html"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#F4F9FD"
+  }
+}

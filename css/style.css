@@ -4423,3 +4423,9 @@ html[data-ayar-tema="gece"] .y-uyari.kotu{background:#2A1413}
 .sg-iyi .sg-nokta{background:#2E7D32}
 .sg-uyari .sg-nokta{background:#B26A00}
 .sg-kotu .sg-nokta{background:#B3261E}
+/* Android uygulaması: yeni kabuk sürümü */
+.kabuk-guncelleme{position:fixed;left:12px;right:12px;bottom:calc(var(--alt-h, 60px) + 12px + env(safe-area-inset-bottom));z-index:80;display:flex;align-items:center;gap:10px;
+  max-width:520px;margin:0 auto;padding:10px 12px;border-radius:10px;background:var(--beyaz);border:1px solid var(--deniz);box-shadow:0 8px 24px rgba(13,53,96,.2);font-size:14px}
+.kabuk-guncelleme > div{flex:1;min-width:0}
+.kabuk-guncelleme p{margin:4px 0 0}
+.kabuk-kapat{border:none;background:transparent;color:var(--murekkep-2);font-size:16px;width:36px;height:36px;cursor:pointer}
