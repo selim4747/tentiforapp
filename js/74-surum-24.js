@@ -458,6 +458,23 @@ if (typeof hesapCiz === "function") {
   };
 }
 
+/* ==================== arşiv araması: telefonda sonuç kutusu kapanabilsin ==================== */
+
+/* Sonuç kutusu yalnızca yazı silinince kapanıyordu: dışarı dokununca ya da Esc ile kapanır, kutuya dönünce yeniden açılır. */
+document.addEventListener("click", function (e) {
+  const k = document.querySelector("#aramaSonuc");
+  if (!k || k.hidden || (e.target.closest && e.target.closest(".arama-kutu"))) { return; }
+  k.hidden = true;
+});
+document.addEventListener("focusin", function (e) {
+  if (e.target && e.target.id === "aramaGiris" && typeof aramaCiz === "function") { aramaCiz(); }
+});
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Escape" || !e.target || e.target.id !== "aramaGiris") { return; }
+  const k = document.querySelector("#aramaSonuc");
+  if (k && !k.hidden) { k.hidden = true; e.target.blur(); }
+});
+
 /* ==================== çevrimdışı ==================== */
 
 function cevrimdisiSerit() {
