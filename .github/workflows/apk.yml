@@ -62,10 +62,13 @@ jobs:
           echo "AD=$AD" >> $GITHUB_ENV
           # simge: sitenin ikonu (uyarlanabilir simge dosyaları kaldırılır, düz PNG kullanılır)
           rm -rf app/src/main/res/mipmap-anydpi-v26
+          if command -v magick >/dev/null; then IM=magick
+          elif command -v convert >/dev/null; then IM=convert
+          else sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick >/dev/null && IM=convert; fi
           for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
             klasor=app/src/main/res/mipmap-${d%%:*}; boy=${d##*:}
             mkdir -p $klasor
-            convert ../../../ikon/ikon-512.png -resize ${boy}x${boy} $klasor/ic_launcher.png
+            $IM ../../../ikon/ikon-512.png -resize ${boy}x${boy} $klasor/ic_launcher.png
             cp $klasor/ic_launcher.png $klasor/ic_launcher_round.png
             rm -f $klasor/ic_launcher_foreground.png
           done
