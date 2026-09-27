@@ -4359,3 +4359,40 @@ html[data-ayar-tema="gece"] .y-uyari.kotu{background:#2A1413}
 .komut-kapat{flex-shrink:0;width:44px;height:44px;margin-right:6px;border:none;background:transparent;color:var(--murekkep-2);font-size:18px;cursor:pointer;border-radius:6px}
 .komut-kapat:hover,.komut-kapat:focus-visible{background:var(--buz);color:var(--murekkep)}
 @media (max-width:760px){.komut-katman{padding-top:calc(12px + env(safe-area-inset-top))}}
+
+/* ==================== 2.5 ==================== */
+.ib-dugme{font-size:13px;color:var(--murekkep-2)}
+.ib-evren,.ib-uygulama{margin-top:10px}
+.ib-satir.ib-yeni{border-left:3px solid var(--deniz);padding-left:8px}
+.ib-satir.ib-kaldirildi{opacity:.6}
+.ib-neden{margin:4px 0;font-size:14px;white-space:pre-wrap}
+.hafta-evren{margin:0 0 14px}
+.hafta-evren-kart{display:grid;gap:3px;width:100%;text-align:left;padding:14px 16px;margin-top:6px;border:1px solid var(--sig);border-left:4px solid var(--deniz);border-radius:8px;background:var(--beyaz);color:var(--murekkep);font:inherit;cursor:pointer;min-height:44px}
+.hafta-evren-kart b{font-family:var(--display);font-size:1.15em}
+.hafta-evren-kart:hover,.hafta-evren-kart:focus-visible{border-color:var(--deniz)}
+.kesif-sar{display:grid;gap:4px;align-content:start}
+.kesif-sar .kesif-kart{height:100%}
+.kesif-alt{display:flex;justify-content:space-between;align-items:center;padding:0 4px;min-height:32px}
+.kesif-onizle .ko-harita{margin:10px 0;border:1px solid var(--buz);border-radius:8px;overflow:hidden}
+.kesif-onizle .ko-harita svg{display:block;width:100%;height:auto;max-height:46vh}
+.y25-kurucu{display:grid;gap:12px;margin-top:14px}
+.onizle-serit{position:sticky;top:0;z-index:3;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 12px;margin-bottom:12px;border-radius:8px;background:#0D3560;color:#fff;font-size:14px}
+.onizle-serit .dugme{color:#fff;border-color:rgba(255,255,255,.6)}
+.ortak-kutu ul,.ayar25-liste,.okl-liste{list-style:none;margin:6px 0;padding:0;display:grid;gap:6px}
+.okl-liste li,.gcm-liste li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 10px;padding:6px 0;border-bottom:1px solid var(--buz)}
+.gcm-liste ol{margin:6px 0;padding:0;list-style:none}
+.gcm-kutu summary,.ayar25 summary{cursor:pointer;min-height:32px}
+.evi-toplam{margin:4px 0}
+.evi-toplam b{font-family:var(--display);font-size:1.6em}
+.evi-grafik{display:block;width:100%;height:auto;max-height:90px}
+.evi-tablo{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+.evi-tablo td{padding:4px 0;border-bottom:1px solid var(--buz)}
+.evi-tablo td:last-child{text-align:right;font-family:var(--mono)}
+.okl-serit{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+#ayar25Alan{display:grid;gap:10px;margin-top:14px}
+.ayar25-satir{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--buz)}
+.ayar25-saat{display:flex;align-items:center;gap:6px}
+.ayar25-saat select{width:auto}
+.yk-onizle{min-height:56px;margin:8px 0;padding:8px;border:1px dashed var(--sig);border-radius:8px;overflow-x:auto}
+.yk-onizle svg{height:48px;width:auto;max-width:none}
+.evy-yetki{margin-top:10px;padding-top:10px;border-top:1px solid var(--buz)}
