@@ -275,7 +275,7 @@ document.addEventListener("click", function (ev) {
 
 /* ==================== bağlantıyla açılan bölüm yerinde kalsın ====================
    /gizlilik/ gibi bir bölüm adresiyle gelince üstteki bölümler sonradan çizilip sayfayı itebiliyor;
-   ziyaretçi kendisi kaydırmadıysa bölüme yeniden hizalanır. */
+   ziyaretçi kendisi kaydırmadıysa bölüme yeniden hizalanır. Sayfa adresleri (/arsiv/) hizalanmaz. */
 (function () {
   let dokundu = false;
   ["wheel", "touchstart", "keydown", "mousedown"].forEach(function (o) {
@@ -285,6 +285,8 @@ document.addEventListener("click", function (ev) {
     if (dokundu || typeof rota !== "function") { return; }
     const p = rota().replace(/^#\//, "").split("/");
     if (p.length !== 1 || !p[0]) { return; }
+    /* /arsiv/, /oyunlar/ sayfa adresidir (aynı adlı bölüm de var): sayfa başında kalsın */
+    if (typeof sayfaVarMi === "function" && sayfaVarMi(p[0])) { return; }
     const el = document.getElementById(p[0]);
     if (!el || !el.classList.contains("bolum") || el.offsetParent === null) { return; }
     if (Math.abs(el.getBoundingClientRect().top) > 40) { el.scrollIntoView({ block: "start" }); }

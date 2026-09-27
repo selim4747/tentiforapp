@@ -22,7 +22,8 @@ Uygulama ince bir Capacitor kabuğudur (`uygulama/kabuk/`): açılınca https://
 
 ## Sonraki APK güncellemeleri
 
-Actions → Android APK → Run workflow (istersen "not" yaz) → Yayınla. Uygulamayı kullananlara "Yeni uygulama sürümü"
+`uygulama/kabuk/**`, `.github/workflows/apk.yml` ya da `ikon/ikon-512.png` main'de değişince APK kendiliğinden
+derlenir ve depoya girer → Yayınla. (Elle: Actions → Android APK → Run workflow, istersen "not" yaz.) Uygulamayı kullananlara "Yeni uygulama sürümü"
 şeridi çıkar; İndir'e basıp üstüne kurarlar, veriler (giriş, ilerleme) kaybolmaz. İmza anahtarı hep aynı kalmalıdır.
 
 Uygulamaya özel (js/78-uygulama-kabugu.js): geri tuşu önce açık pencereyi kapatır, ana sayfada iki basışta çıkar;
