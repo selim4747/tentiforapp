@@ -10,6 +10,7 @@ import { readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 import { tarayiciTestleri } from "./tarayici.mjs";
 import { bildirimFonksiyonTestleri } from "./bildirim-fonksiyonu.mjs";
+import { cevrimdisiTestleri } from "./cevrimdisi.mjs";
 
 const KOK = new URL("..", import.meta.url).pathname;
 const DB = process.env.TEST_DB || "tentifor_test";
@@ -94,7 +95,9 @@ try {
   const f = await bildirimFonksiyonTestleri(KOK);
   console.log("• tarayıcı testleri (" + adres + ")");
   const n = await tarayiciTestleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
-  console.log("\nHepsi geçti: " + sqlSayisi + " veritabanı + " + f + " fonksiyon + " + n + " tarayıcı kontrolü.");
+  console.log("• çevrimdışı (service worker)");
+  const c = await cevrimdisiTestleri({ dizin: DIZIN });
+  console.log("\nHepsi geçti: " + sqlSayisi + " veritabanı + " + f + " fonksiyon + " + n + " tarayıcı + " + c + " çevrimdışı kontrolü.");
 } catch (e) {
   console.error("\n" + (e.stack || e.message || e));
   process.exitCode = 1;
