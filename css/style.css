@@ -3597,7 +3597,7 @@ button,a{-webkit-tap-highlight-color:rgba(28,92,150,.12)}
   .cuzdan-etiket{display:none}
   .cuzdan-rozet{min-height:40px;justify-content:center}
   .kod-btn{min-height:38px;padding:8px 11px}
-  .aktif-serit{top:var(--ust-h);padding:3px 14px;background:color-mix(in srgb,var(--kar) 92%,transparent);border-bottom:1px solid var(--buz)}
+  .aktif-serit{top:var(--ust-h);padding:3px 14px;background:var(--kar);border-bottom:1px solid var(--buz)}
   .aktif-serit:has(#aktifBolum:empty){display:none}
 
   /* menü sayfası (alttan açılır) */
@@ -3833,7 +3833,7 @@ html.evren-acik{overflow:hidden}
 .gk-modlar{display:flex;gap:0;margin-bottom:12px;border:1px solid var(--sig);border-radius:999px;padding:3px;background:var(--beyaz);width:max-content;max-width:100%}
 .gk-modlar .dugme{font-size:13px;border:0;border-radius:999px;min-height:38px;padding:6px 14px;white-space:nowrap}
 .gk-modlar .dugme.dugme-sade{background:transparent}
-@media (max-width:420px){ .gk-modlar{width:100%} .gk-modlar .dugme{flex:1;padding:6px 8px;font-size:12px} }
+@media (max-width:420px){ .gk-modlar{width:100%} .gk-modlar .dugme{flex:1;min-width:0;padding:6px 8px;font-size:12px;white-space:normal;line-height:1.2} }
 .ko-bilgi{border:1px solid var(--buz);border-left:4px solid var(--deniz);background:var(--kar);padding:10px 14px;margin:8px 0 12px;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
 .ko-bilgi .oyun-etiket{margin:0}
 .ko-bilgi b{font-family:var(--display);font-weight:400;font-size:22px}
