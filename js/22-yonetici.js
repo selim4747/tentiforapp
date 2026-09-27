@@ -260,7 +260,7 @@ function yoneticiDisaAktar() {
 const Y_GRUPLARI = {
   icerik: { ad: "İçerik", sekmeler: ["karakterler", "evren", "roman", "haritaDuzen", "yollar", "kisiler", "basin", "listeler", "anahtarlar", "bosluklar"] },
   ekle:   { ad: "Ekle",   sekmeler: ["hizli", "yapimEkle", "olayEkle", "hikayeEkle", "gorselEkle", "sesEkle", "dosyaEkle"] },
-  bakim:  { ad: "Bakım",  sekmeler: ["denetim", "istatistik", "liderlik", "teoriler", "hatalar", "kurulum", "bildirim", "e99", "evrengezer", "yayinla", "yedek", "yayilma", "araclar", "test", "kaydet"] },
+  bakim:  { ad: "Bakım",  sekmeler: ["denetim", "istatistik", "liderlik", "teoriler", "hatalar", "kurulum", "bildirim", "e99", "evrengezer", "tekkod", "yayinla", "yedek", "yayilma", "araclar", "test", "kaydet"] },
 };
 
 let yoneticiGrup = "icerik";
@@ -304,7 +304,7 @@ function yoneticiCiz() {
                      yapimEkle: "Yapım Ekle", haritaDuzen: "Evren / Harita", yollar: "Yollar", kisiler: "Kişiler",
                      olayEkle: "Olay Ekle", hikayeEkle: "Hikâye Ekle", gorselEkle: "Görsel Ekle",
                      dosyaEkle: "Kilitli Dosya Ekle", roman: "Roman", sesEkle: "Ses Ekle", basin: "Basın Kiti", liderlik: "Liderlik",
-                     listeler: "Listeler", istatistik: "İstatistik", teoriler: "Teoriler", hatalar: "Hatalar", bildirim: "Bildirim", kurulum: "Kurulum", e99: "E99 katkıları", evrengezer: "Evrengezer", yayinla: "Yayınla", yedek: "Yedek",
+                     listeler: "Listeler", istatistik: "İstatistik", teoriler: "Teoriler", hatalar: "Hatalar", bildirim: "Bildirim", kurulum: "Kurulum", e99: "E99 katkıları", evrengezer: "Evrengezer", tekkod: "Tek kodlar", yayinla: "Yayınla", yedek: "Yedek",
                      anahtarlar: "Anahtarlar", bosluklar: "Boşluklar",
                      denetim: "Denetim", yayilma: "Yayılma", araclar: "Araçlar",
                      test: "Test", kaydet: "Kaydet" }[s];
@@ -345,6 +345,7 @@ function yoneticiCiz() {
   else if (yoneticiSekme === "e99") { govde = yoneticiE99(); }
   else if (yoneticiSekme === "yayinla") { govde = yoneticiYayinla(); }
   else if (yoneticiSekme === "evrengezer") { govde = yoneticiEvrengezer(); }
+  else if (yoneticiSekme === "tekkod") { govde = typeof yoneticiTekKodlar === "function" ? yoneticiTekKodlar() : ""; }
   else if (yoneticiSecili === null) { govde = yoneticiListe(); }
   else { govde = yoneticiForm(); }
 

@@ -2235,5 +2235,139 @@ grant execute on function public.evren_defter_oku(text) to anon, authenticated;
 grant execute on function public.gk_istatistik(), public.evren_defter_yaz(text, text), public.evren_defter_sil(bigint),
   public.evren_defter_bekleyenler(), public.evren_defter_karar(bigint, boolean), public.hafta_ozeti() to authenticated;
 
+-- ---------- Tek kullanımlık kodlar (2.1) ----------
+-- Her kod bir kişi içindir: ilk giren hesaba bağlanır; o hesap çıkıp girse de hakkı sürer, başka hesap giremez.
+-- Kodun kendisi saklanmaz, yalnızca özeti: sha256(büyük harf kod || '#tek').
+-- Türler: evren (seviye 15'i beklemeden evren kurma), evrengezer (seviye 10), yonetici (sınırlı yönetici paneli),
+--         kisi (bölüm ve evren erişimi; veri: { erisim: { bolumler, evrenler }, anahtarlar, selamlama }).
+-- Bağı silmek (kişiyi koddan çıkarmak): Supabase → Table Editor → tek_kodlar → o satırın "kullanici" hücresini NULL yap
+--   (ya da sitede Panel → Bakım → Tek kodlar → "Bağı sil"). Kişinin yaptıkları silinmez; yalnızca kodun verdiği hak gider,
+--   kod yeniden kullanılabilir hâle gelir. Tamamen kapatmak için "iptal" = true.
+create table if not exists public.tek_kodlar (
+  ozet text primary key check (ozet ~ '^[0-9a-f]{64}$'),
+  tur text not null check (tur in ('evren', 'evrengezer', 'yonetici', 'kisi')),
+  ad text not null default '' check (char_length(ad) <= 80),
+  veri jsonb not null default '{}'::jsonb check (pg_column_size(veri) < 20000),
+  kullanici uuid references auth.users(id) on delete set null,
+  baglanma timestamptz,
+  iptal boolean not null default false,
+  olusturan uuid references auth.users(id) on delete set null,
+  olusturma timestamptz not null default now()
+);
+alter table public.tek_kodlar enable row level security;
+revoke all on public.tek_kodlar from anon, authenticated;
+create index if not exists tek_kodlar_kullanici on public.tek_kodlar (kullanici);
+
+create table if not exists public.tek_kod_denemeleri (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  zaman timestamptz not null default now()
+);
+create index if not exists tek_kod_denemeleri_k on public.tek_kod_denemeleri (kullanici, zaman);
+alter table public.tek_kod_denemeleri enable row level security;
+revoke all on public.tek_kod_denemeleri from anon, authenticated;
+
+-- tek kodla verilen yöneticilik: bağ silinince yalnızca o kodun verdiği satır gider
+alter table public.yoneticiler add column if not exists tek_kod text;
+
+create or replace function public.tek_kod_ozet(p_kod text) returns text
+language sql immutable set search_path = '' as $$
+  select encode(sha256(convert_to(upper(btrim(coalesce(p_kod, ''))) || '#tek', 'UTF8')), 'hex');
+$$;
+
+-- bağ silinince, kod iptal edilince ya da satır silinince: o kodun verdiği yöneticilik kalkar
+create or replace function public.tek_kod_bag_degisti() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if old.kullanici is not null and (tg_op = 'DELETE' or new.kullanici is distinct from old.kullanici or new.iptal) then
+    delete from public.yoneticiler where id = old.kullanici and tek_kod = old.ozet;
+  end if;
+  return coalesce(new, old);
+end;
+$$;
+drop trigger if exists tek_kod_bag on public.tek_kodlar;
+create trigger tek_kod_bag after update or delete on public.tek_kodlar
+  for each row execute procedure public.tek_kod_bag_degisti();
+
+create or replace function public.tek_kod_kullan(p_kod text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  uid uuid := auth.uid();
+  oz text := public.tek_kod_ozet(p_kod);
+  r public.tek_kodlar;
+begin
+  if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if (select count(*) from public.tek_kod_denemeleri where kullanici = uid and zaman > now() - interval '1 hour') >= 30 then
+    return jsonb_build_object('durum', 'sinir');
+  end if;
+  select * into r from public.tek_kodlar where ozet = oz for update;
+  if not found or r.iptal then
+    insert into public.tek_kod_denemeleri (kullanici) values (uid);
+    return jsonb_build_object('durum', 'yok');
+  end if;
+  if r.kullanici is not null and r.kullanici <> uid then return jsonb_build_object('durum', 'dolu'); end if;
+  if r.kullanici is null then
+    update public.tek_kodlar set kullanici = uid, baglanma = now() where ozet = oz;
+    if r.tur = 'yonetici' then
+      insert into public.yoneticiler (id, duzey, tek_kod) values (uid, 'sinirli', oz) on conflict (id) do nothing;
+    end if;
+  end if;
+  return jsonb_build_object('durum', 'tamam', 'tur', r.tur, 'ad', r.ad, 'veri', r.veri);
+end;
+$$;
+
+-- girişte: bu hesaba bağlı kodların verdiği haklar
+create or replace function public.tek_kodlarim() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('tur', tur, 'ad', ad, 'veri', veri) order by baglanma), '[]'::jsonb)
+  from public.tek_kodlar where kullanici = auth.uid() and not iptal;
+$$;
+
+-- yönetici: kod üret (kodların kendisi sitede üretilir; buraya yalnızca özetleri gelir)
+create or replace function public.tek_kod_olustur(p_kodlar jsonb) returns int
+language plpgsql security definer set search_path = '' as $$
+declare x jsonb; n int := 0;
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  if jsonb_typeof(p_kodlar) <> 'array' or jsonb_array_length(p_kodlar) > 50 then raise exception 'en çok 50 kod'; end if;
+  for x in select * from jsonb_array_elements(p_kodlar) loop
+    insert into public.tek_kodlar (ozet, tur, ad, veri, olusturan)
+    values (x->>'ozet', x->>'tur', left(coalesce(x->>'ad', ''), 80), coalesce(x->'veri', '{}'::jsonb), auth.uid());
+    n := n + 1;
+  end loop;
+  return n;
+end;
+$$;
+
+create or replace function public.tek_kod_listesi() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select case when not public.tam_yonetici_mi() then null else coalesce(jsonb_agg(jsonb_build_object(
+    'ozet', t.ozet, 'tur', t.tur, 'ad', t.ad, 'iptal', t.iptal, 'olusturma', t.olusturma, 'baglanma', t.baglanma,
+    'kullanici_adi', p.kullanici_adi, 'bagli', t.kullanici is not null) order by t.olusturma desc), '[]'::jsonb) end
+  from public.tek_kodlar t left join public.profiller p on p.id = t.kullanici;
+$$;
+
+create or replace function public.tek_kod_bag_sil(p_ozet text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  update public.tek_kodlar set kullanici = null, baglanma = null where ozet = p_ozet;
+  return found;
+end;
+$$;
+
+create or replace function public.tek_kod_iptal(p_ozet text, p_iptal boolean) returns boolean
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  update public.tek_kodlar set iptal = p_iptal where ozet = p_ozet;
+  return found;
+end;
+$$;
+
+revoke execute on function public.tek_kod_kullan(text), public.tek_kodlarim(), public.tek_kod_olustur(jsonb), public.tek_kod_listesi(),
+  public.tek_kod_bag_sil(text), public.tek_kod_iptal(text, boolean), public.tek_kod_bag_degisti() from public, anon;
+grant execute on function public.tek_kod_kullan(text), public.tek_kodlarim(), public.tek_kod_olustur(jsonb), public.tek_kod_listesi(),
+  public.tek_kod_bag_sil(text), public.tek_kod_iptal(text, boolean) to authenticated;
+
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';

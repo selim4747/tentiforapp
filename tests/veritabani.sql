@@ -334,3 +334,46 @@ insert into public.yaris_skorlari (kullanici, yaris, puan, dogru, sure_ms, hafta
   from (values (0), (0), (3), (4), (5), (6), (7)) v(p);
 select test.ok('yarış XP''si günde ilk 3 puanlı oyun', (select (dokum->>'yaris')::int - :yaris_once <= 30 and (dokum->>'yaris')::int >= 30
   from public.arsivci_seviyeleri where kullanici_adi = 'deniz'));
+
+-- ---------- tek kullanımlık kodlar (2.1) ----------
+reset role;
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('yönetici olmayan tek kod üretemez', test.patlar($q$select public.tek_kod_olustur('[{"ozet":"aaaa","tur":"evren"}]')$q$));
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select test.ok('yönetici tek kod üretir (yalnızca özet)', public.tek_kod_olustur(jsonb_build_array(
+  jsonb_build_object('ozet', public.tek_kod_ozet('EVREN12345'), 'tur', 'evren', 'ad', 'Cem için'),
+  jsonb_build_object('ozet', public.tek_kod_ozet('YONET12345'), 'tur', 'yonetici', 'ad', 'Deniz'),
+  jsonb_build_object('ozet', public.tek_kod_ozet('KISI123456'), 'tur', 'kisi', 'veri', '{"erisim":{"bolumler":["roman"],"evrenler":["tomye"]}}'::jsonb))) = 3);
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('tek kod doğrudan okunamaz', test.patlar('select * from public.tek_kodlar'));
+select test.ok('yanlış kod', public.tek_kod_kullan('YANLIS0000') ->> 'durum' = 'yok');
+select test.ok('kod girilince hesaba bağlanır (küçük harf, boşluk önemsiz)', public.tek_kod_kullan('  evren12345 ') ->> 'tur' = 'evren');
+select test.ok('aynı hesap yeniden girebilir', public.tek_kod_kullan('EVREN12345') ->> 'durum' = 'tamam');
+select test.ok('girişte haklar geri gelir', (select public.tek_kodlarim() @> '[{"tur":"evren"}]'::jsonb));
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select test.ok('başka hesap aynı kodu kullanamaz', public.tek_kod_kullan('EVREN12345') ->> 'durum' = 'dolu');
+select test.ok('başkasının hakkı ona geçmez', jsonb_array_length(public.tek_kodlarim()) = 0);
+select test.ok('yönetici tek kodu kullanılır', public.tek_kod_kullan('YONET12345') ->> 'durum' = 'tamam');
+select test.ok('yönetici tek kodu sınırlı yönetici yapar', public.yonetici_mi() and not public.tam_yonetici_mi());
+select test.ok('kişi kodu erişimi taşır', (public.tek_kod_kullan('KISI123456') -> 'veri' -> 'erisim' -> 'bolumler') ? 'roman');
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select test.ok('yönetici kimde olduğunu görür', (select bool_or(x ->> 'kullanici_adi' = 'cem') from jsonb_array_elements(public.tek_kod_listesi()) x));
+select test.ok('bağ silinir', public.tek_kod_bag_sil(public.tek_kod_ozet('EVREN12345')) and public.tek_kod_bag_sil(public.tek_kod_ozet('YONET12345')));
+select test.ok('bağ silinince tek kodla gelen yöneticilik kalkar', (select count(*) = 0 from public.yoneticiler where id = '44444444-4444-4444-4444-444444444444'));
+select test.ok('asıl yönetici kalır', public.yonetici_mi());
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('bağı silinen hesabın hakkı gider', jsonb_array_length(public.tek_kodlarim()) = 0);
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select test.ok('bağı silinen kod başkasına geçebilir', public.tek_kod_kullan('EVREN12345') ->> 'durum' = 'tamam');
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select public.tek_kod_iptal(public.tek_kod_ozet('KISI123456'), true);
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select test.ok('iptal edilen kod hak vermez', not (public.tek_kodlarim() @> '[{"tur":"kisi"}]'::jsonb));
+select test.ok('çok deneme sınırlanır', (select bool_or(public.tek_kod_kullan('DENEME' || g) ->> 'durum' = 'sinir') from generate_series(1, 40) g));
+reset role;
+-- Supabase panelinden (Table Editor) bağ silmek de yöneticiliği kaldırır
+update public.tek_kodlar set kullanici = '44444444-4444-4444-4444-444444444444' where ozet = public.tek_kod_ozet('YONET12345');
+insert into public.yoneticiler (id, duzey, tek_kod) values ('44444444-4444-4444-4444-444444444444', 'sinirli', public.tek_kod_ozet('YONET12345')) on conflict (id) do nothing;
+update public.tek_kodlar set kullanici = null where ozet = public.tek_kod_ozet('YONET12345');
+select test.ok('elle NULL yapılınca yöneticilik gider', (select count(*) = 0 from public.yoneticiler where id = '44444444-4444-4444-4444-444444444444'));
