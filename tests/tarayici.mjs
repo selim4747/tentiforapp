@@ -79,6 +79,13 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     Z.on("request", function (r) { zIstek.push(r.url()); });
     await Z.goto(adres + "/"); await bekle(Z, 1500);
 
+    /* ---------- veri.json geç gelse de (yavaş bağlantı) hata çıkmaz ---------- */
+    const YAV = await cihaz("yavaş-bağlantı");
+    await YAV.context().route("**/veri.json*", async function (r) { await new Promise(function (z) { setTimeout(z, 2500); }); await r.continue(); });
+    await YAV.goto(adres + "/proje/"); await bekle(YAV, 4500);
+    ok("veri.json geç gelse de sayfa açılır", await YAV.evaluate(function () { return !!veri && document.querySelectorAll(".bolum").length > 0; }));
+    await YAV.close();
+
     /* ---------- performans ---------- */
     ok("veri.json tek kez iner", zIstek.filter(function (u) { return /\/veri\.json/.test(u); }).length === 1,
       zIstek.filter(function (u) { return /veri\.json/.test(u); }));
