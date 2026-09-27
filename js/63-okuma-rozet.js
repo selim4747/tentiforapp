@@ -1,5 +1,5 @@
 /* Okuyarak kazanmak: bir kutuya dokunmak artık ödül vermez; kutuda okuması kadar durmak verir.
-   - Süre: kutudaki her kelime 1 saniye (veri.cuzdan.okumaSaniye ile değişir). Kutu ekranın yarısından çoğunda
+   - Süre: kutudaki her kelime çeyrek saniye (veri.cuzdan.okumaSaniye: 0.25; dakikada ~240 kelime). Kutu ekranın yarısından çoğunda
      görünürken, sekme açıkken ve kişi son 45 saniyede ekranla ilgilenmişken sayılır. Kutunun altında ince çubuk.
    - Karakter kaydı okununca kart (ve eçka) gelir; bugünün kaydının ödülü de okununca. Öbür kutular (mektup, günlük,
      alıntı, zaman çizelgesi, evren maddesi) okuma tavanına kadar eçka verir.
@@ -12,7 +12,7 @@ const OKU_BOSTA_SN = 45;
 const OKU = { kayit: new Map(), sonEtkinlik: Date.now(), gozcu: null, bugunKart: null };
 
 function okuSaniyeKelime() {
-  let s = Number(veri && veri.cuzdan && veri.cuzdan.okumaSaniye) || 1;
+  let s = Number(veri && veri.cuzdan && veri.cuzdan.okumaSaniye) || 0.25;
   /* yalnızca yerel testte hızlandırılabilir */
   try { if (/^(localhost|127\.)/.test(location.hostname)) { const h = Number(localStorage.getItem("tentiforapp_okuma_hiz")); if (h > 0) { s = s / h; } } } catch (_) { /* yok */ }
   return s;

@@ -1278,8 +1278,8 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       return cuzdan.ecka > window.__e0 && okunduMu("kar:" + k.id) && kartSahip(k.id) && rozetDurumu(k) === "gumus" &&
         !document.documentElement.classList.contains("ecka-yeni") && /Gümüş rozet/.test(document.querySelector("#perde .rozet-kutu").textContent);
     }, tekKutu));
-    ok("okuma süresi: her kelime bir saniye", await YZ.evaluate(function () {
-      const e = document.querySelector('#perde [data-oku^="kar:"]'); return Number(e.getAttribute("data-oku-kelime")) > 5 && okuSaniyeKelime() * 60 === 1;
+    ok("okuma süresi: kelime başına çeyrek saniye (veri.cuzdan.okumaSaniye)", await YZ.evaluate(function () {
+      const e = document.querySelector('#perde [data-oku^="kar:"]'); return Number(e.getAttribute("data-oku-kelime")) > 5 && veri.cuzdan.okumaSaniye === 0.25 && okuSaniyeKelime() * 60 === 0.25;
     }));
     await YZ.evaluate(function () { perdeKapat(); bugunKartiCiz(); }); await bekle(YZ, 150);
     ok("“Kaldığın yer” kartı son okunanı gösterir", await YZ.locator("#bugunKartAlan .devam-kart [data-devam-kar]").count() === 1);
