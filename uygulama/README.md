@@ -18,8 +18,8 @@ Trusted Web Activity, siteyi Chrome motoruyla tam ekran açan küçük bir Andro
 3. `bubblewrap build` → `app-release-bundle.aab` Play Console'a yüklenir.
 4. Siteyle uygulamanın birbirini tanıması (adres çubuğu gizlensin diye):
    `bubblewrap fingerprint` çıktısındaki SHA-256 parmak izini `assetlinks.ornek.json` içine yaz,
-   dosyayı `.well-known/assetlinks.json` adıyla sitenin köküne koy ve `scripts/paketle.mjs` KOPYALA
-   listesine `.well-known` ekle. Parmak izi gizli değildir; anahtarın kendisi gizlidir.
+   dosyayı `.well-known/assetlinks.json` adıyla sitenin köküne koy; paketleme (scripts/paketle.mjs) onu yayına alır.
+   Parmak izi gizli değildir; anahtarın kendisi gizlidir.
 
 Uygulama içinde site `TentiforKopru.ortam() === "twa"` görür (`html[data-ortam="twa"]`).
 
@@ -38,9 +38,14 @@ Dikkat: Capacitor'da site dosyaları uygulamanın içindedir; yeni içerik için
 
 ## Mağaza öncesi kontrol listesi
 
-- [ ] Gizlilik politikası adresi: https://tentiforapp.pages.dev/gizlilik/
-- [ ] Hesap silme sitede var (Hesap → Hesabımı sil) — Play bunu ister.
-- [ ] 512×512 ikon ve maskeli ikon hazır (ikon/).
-- [ ] Ekran görüntüleri: telefon (en az 2), tablet (isteğe bağlı).
-- [ ] Yaş derecelendirmesi anketi; kullanıcı içeriği (evrenler, yorumlar) olduğu için bildirme/engelleme yolu belirtilmeli.
+- [x] Gizlilik politikası adresi: https://tentiforapp.pages.dev/gizlilik/
+- [x] Hesap silme sitede var (Sen → Hesabın → Hesabımı sil) — Play bunu ister.
+- [x] 512×512 ikon ve maskeli ikon hazır (ikon/).
+- [x] Ekran görüntüleri: ikon/ekran-dar-1.jpg, ikon/ekran-dar-2.jpg (telefon), ikon/ekran-genis-1.jpg (tablet/masaüstü);
+      manifest'te de var (Chrome'un zengin yükleme penceresi bunları gösterir). Play Console'a da bunları yükleyebilirsin.
+- [x] Kullanıcı içeriği için bildirme yolu (2.5): evren sayfasında ve uygulamaların altında “⚑ Bildir”; panelde
+      Bakım → İçerik bildirimleri. Yaş derecelendirmesi anketinde “kullanıcılar içerik paylaşır, bildirme var” de.
+- [ ] Yaş derecelendirmesi anketi (Play Console).
+- [ ] `.well-known/assetlinks.json`: `bubblewrap fingerprint` çıktısıyla `assetlinks.ornek.json`'u doldurup sitenin köküne
+      `.well-known/assetlinks.json` olarak koy; paketleme onu kendiliğinden yayına alır (scripts/paketle.mjs).
 - [ ] Supabase → Authentication → URL Configuration'a uygulamanın dönüş adresi (Capacitor'da özel şema) eklenmeli.

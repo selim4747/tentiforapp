@@ -379,7 +379,7 @@ update public.tek_kodlar set kullanici = null where ozet = public.tek_kod_ozet('
 select test.ok('elle NULL yapılınca yöneticilik gider', (select count(*) = 0 from public.yoneticiler where id = '44444444-4444-4444-4444-444444444444'));
 
 -- ---------- 2.4: kurulum sürümü, süreli kodlar, uygulama puanları ----------
-select test.ok('kurulum sürümü sorulabilir', public.kurulum_surumu() = '2.4');
+select test.ok('kurulum sürümü sorulabilir', public.kurulum_surumu() = '2.5');
 set role authenticated;
 set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
 select public.tek_kod_olustur(jsonb_build_array(jsonb_build_object('ozet', public.tek_kod_ozet('SURELI1234'), 'tur', 'evrengezer', 'sure_gun', 7)));
@@ -405,4 +405,70 @@ reset role;
 update public.istatistikler set gizli = false where id = '33333333-3333-3333-3333-333333333333';
 set role anon;
 select test.ok('herkes puan tablosunu okur', jsonb_array_length(public.uygulama_skor_tablosu('ev:kiyi', 'u1')) = 1);
+reset role;
+
+-- ---------- 2.5: sınırlı yönetici yetkileri ----------
+insert into auth.users (id, email, raw_user_meta_data) values
+ ('77777777-7777-7777-7777-777777777777', 'y25@ornek.test', '{"kullanici_adi":"yetkili25"}');
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select public.tek_kod_olustur(jsonb_build_array(jsonb_build_object('ozet', public.tek_kod_ozet('YETKI12345'), 'tur', 'yonetici',
+  'veri', jsonb_build_object('yetkiler', jsonb_build_array('hatalar')))));
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+select test.ok('yetkili yönetici kodu bağlanır', public.tek_kod_kullan('YETKI12345') ->> 'durum' = 'tamam');
+select test.ok('seçilen yetki çalışır (hatalar)', not test.patlar('select public.hata_temizle()'));
+select test.ok('seçilmeyen yetki reddedilir (teoriler)', test.patlar('select * from public.teori_denetim()'));
+select test.ok('seçilmeyen yetki reddedilir (istatistik)', test.patlar('select public.site_istatistik()'));
+select test.ok('seçilmeyen yetki reddedilir (liderlik)', test.patlar('select * from public.liderlik_denetim()'));
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select test.ok('tam yönetici her yetkide', public.yonetici_yetki('teoriler') and public.yonetici_yetki('icbildirim'));
+reset role;
+
+-- ---------- 2.5: ortak evren ----------
+set role authenticated;
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+select test.ok('evren ortak yazarlığa açılır', public.ortak_evren_ac('ortak1', '{"ad":"Ortak Kıyı","tur":"evren"}') ->> 'durum' = 'tamam');
+select test.ok('davet özeti eklenir', public.ortak_evren_davet('ortak1', public.ortak_davet_ozet('ORT-ABCDE12345')) ->> 'durum' = 'tamam');
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('üye olmayan evreni okuyamaz', public.ortak_evren_getir('ortak1') ->> 'durum' = 'yetki');
+select test.ok('başkasının evrenini açamaz', public.ortak_evren_ac('ortak1', '{"ad":"x"}') ->> 'durum' = 'baskasinin');
+select test.ok('davet koduyla katılır, evren gelir', (select x ->> 'durum' = 'tamam' and x -> 'veri' ->> 'ad' = 'Ortak Kıyı' from (select public.ortak_evren_katil('ort-abcde12345') x) t));
+select test.ok('ortak evrenlerim listesinde', public.ortak_evrenlerim() @> '[{"id":"ortak1","rol":"yazar"}]');
+select test.ok('yazar kaydeder', (select public.ortak_evren_yaz('ortak1', '{"ad":"Cem yazdı","tur":"evren"}', (public.ortak_evren_getir('ortak1') ->> 'guncelleme')::timestamptz) ->> 'durum') = 'tamam');
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+select test.ok('eski tabanla yazınca çatışma ve güncel hâl döner', (select x ->> 'durum' = 'catisma' and x -> 'veri' ->> 'ad' = 'Cem yazdı'
+  from (select public.ortak_evren_yaz('ortak1', '{"ad":"Ayşe yazdı"}', now() - interval '1 day') x) t));
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+select test.ok('kullanılmış davet başkasına geçmez', public.ortak_evren_katil('ORT-ABCDE12345') ->> 'durum' = 'dolu');
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+select test.ok('üyeler listesi', jsonb_array_length(public.ortak_evren_uyeler('ortak1')) = 2);
+select test.ok('kurucu yazarı çıkarır', public.ortak_evren_cikar('ortak1', '33333333-3333-3333-3333-333333333333') ->> 'durum' = 'tamam');
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('çıkarılan yazar artık okuyamaz', public.ortak_evren_getir('ortak1') ->> 'durum' = 'yetki');
+reset role;
+set role anon;
+select test.ok('anonim ortak evren okuyamaz', test.patlar($q$select public.ortak_evren_getir('ortak1')$q$));
+reset role;
+
+-- ---------- 2.5: içerik bildirimi ve evren istatistiği ----------
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('okur içerik bildirir', public.icerik_bildir('evren', 'fan:kiyi', 'uygunsuz görsel', '/evren/kiyi/') ->> 'durum' = 'tamam');
+select test.ok('aynı bildirim ikinci kez eklenmez', public.icerik_bildir('evren', 'fan:kiyi', 'yine') ->> 'durum' = 'zaten');
+select test.ok('okur bildirimleri okuyamaz', test.patlar('select public.icerik_bildirimleri_listesi()'));
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+select test.ok('yetkisi olmayan sınırlı yönetici bildirimleri okuyamaz', test.patlar('select public.icerik_bildirimleri_listesi()'));
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select test.ok('yönetici bildirimi görür', (select x ->> 'hedef' = 'fan:kiyi' and x ->> 'bildiren' = 'cem' from jsonb_array_elements(public.icerik_bildirimleri_listesi()) x limit 1));
+select public.icerik_bildirim_karar((select (x ->> 'no')::bigint from jsonb_array_elements(public.icerik_bildirimleri_listesi()) x limit 1), 'incelendi');
+select test.ok('bildirim incelendi işaretlenir', (select x ->> 'durum' = 'incelendi' from jsonb_array_elements(public.icerik_bildirimleri_listesi()) x limit 1));
+reset role;
+set role anon;
+select public.evren_say('ev:kiyi', 'ziyaret');
+select public.evren_say('ev:kiyi', 'ziyaret');
+select public.evren_say('ev:kiyi', 'sekme:roman');
+select public.evren_say('ev kötü', 'ziyaret');
+select test.ok('evren istatistiği sayar ve herkes okur', (select sum((x ->> 'sayi')::int) = 3 from jsonb_array_elements(public.evren_istatistik('ev:kiyi', 30)) x));
+select test.ok('geçersiz evren sayılmaz', jsonb_array_length(public.evren_istatistik('ev kötü', 30)) = 0);
+select test.ok('anonim sayaç tablosunu doğrudan okuyamaz', test.patlar('select * from public.evren_sayaclari'));
 reset role;

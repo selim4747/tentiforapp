@@ -2212,11 +2212,11 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     /* 2.4: panelin üstünde hata özeti ve kurulum sürümü uyarısı */
     await A.evaluate(function () { YON24.soruldu = false; yoneticiCiz(); }); await bekle(A, 1200);
     ok("panel: son 24 saatin hata özeti", /Son 24 saatte \d+ hata/.test(await A.textContent("#yoneticiAlan .y24-serit")));
-    ok("panel: kurulum güncelken sürüm uyarısı yok", await A.evaluate(function () { return YON24.surum === "2.4" && !document.querySelector("#yoneticiAlan .y-uyari.kotu"); }));
+    ok("panel: kurulum güncelken sürüm uyarısı yok", await A.evaluate(function () { return YON24.surum === "2.5" && !document.querySelector("#yoneticiAlan .y-uyari.kotu"); }));
     ok("panel: eski kurulumda sürüm uyarısı", await A.evaluate(function () {
       YON24.surum = "yok"; yon24SeritKoy();
       const var_ = /Supabase kurulumu güncel değil/.test(document.querySelector("#yoneticiAlan .y24-serit").textContent);
-      YON24.surum = "2.4"; yon24SeritKoy();
+      YON24.surum = "2.5"; yon24SeritKoy();
       return var_ && !document.querySelector("#yoneticiAlan .y-uyari.kotu") && document.querySelectorAll("#yoneticiAlan .y24-serit").length === 1;
     }));
     await A.evaluate(function () { yoneticiGrup = "icerik"; yoneticiSekme = "karakterler"; yoneticiCiz(); }); await bekle(A, 300);

@@ -16,7 +16,7 @@ function yoldanRota(yol) {
   });
   if (!p.length) { return ""; }
   if (p[0] === "evren" && p[1]) {
-    if (["benim", "acilan", "fan", "site"].indexOf(p[1]) !== -1) { return "#/ev/" + p.slice(1).join("/"); }
+    if (["benim", "acilan", "fan", "site", "onizle"].indexOf(p[1]) !== -1) { return "#/ev/" + p.slice(1).join("/"); }
     if (p[1] === "e99") { return "#/ev/e99"; }
     if (/^e\d+$/.test(p[1])) { return "#/ev/site/" + p[1]; }
     return "#/ev/fan/" + p[1];
