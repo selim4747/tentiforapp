@@ -236,13 +236,21 @@ document.addEventListener("click", async function (ev) {
 let yayinIzleme = null;
 
 async function yayinPaketiOku() {
-  try { const r = await fetch("/surum.json?_=" + Date.now(), { cache: "no-store" }); return r.ok ? (await r.json()).paket || "" : ""; } catch (_) { return ""; }
+  /* 3.2: paket kimliği içerik özetidir; GitHub'a gönderim siteyi zaten kurduysa Yayınla aynı kimliği üretir.
+     Kurulum zamanı (kuruldu) her kurulumda değişir: ikisine birlikte bakılır */
+  try { const r = await fetch("/surum.json?_=" + Date.now(), { cache: "no-store" }); if (!r.ok) { return ""; } const d = await r.json(); return (d.paket || "") + "|" + (d.kuruldu || ""); } catch (_) { return ""; }
 }
 
 async function yayinIzle() {
   if (yayinIzleme) { clearInterval(yayinIzleme.zaman); }
   const bas = Date.now();
   const onceki = await yayinPaketiOku();
+  /* sitede zaten bu sayfanın sürümünden yenisi varsa (otomatik kurulum önce bitti) hemen söyle */
+  const yayindaki = onceki.split("|")[0];
+  if (yayindaki && typeof sayfaPaketi === "function" && sayfaPaketi() && yayindaki !== sayfaPaketi()) {
+    const d0 = document.querySelector("#yYayinDurum");
+    if (d0) { d0.textContent = "Sitede daha yeni bir sürüm zaten yayında (GitHub'a gönderimle kurulmuş). Sayfayı yenileyince görürsün; Yayınla ayrıca yeniden kuruyor."; d0.className = "pencere-durum iyi"; }
+  }
   const yaz = function (m, iyi) {
     const d = document.querySelector("#yYayinDurum");
     if (d) { d.textContent = m; d.className = "pencere-durum " + (iyi === false ? "kotu" : "iyi"); }
