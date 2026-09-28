@@ -1,85 +1,88 @@
-name: Gemini Kod Müfettişi
+name: Gemini Kod Müfettişi ve Yol Haritası
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
     types: [opened, synchronize]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
-  review:
+  inspect:
     runs-on: ubuntu-latest
     steps:
       - name: Repoyu Çek
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
-      - name: PR Farklarını (Diff) Al
+      - name: Değişiklikleri Al
         run: |
-          git diff origin/${{ github.base_ref }}...HEAD > diff.txt
+          git diff HEAD~1 HEAD > diff.txt
 
-      - name: Gemini İncelemesi Yap ve PR'a Yorum At
+      - name: Gemini Analiz ve Görev Emri
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           python3 - << 'EOF'
           import os, json, urllib.request
 
           api_key = os.environ.get("GEMINI_API_KEY")
-          pr_number = os.environ.get("PR_NUMBER")
 
           if not os.path.exists("diff.txt"):
               print("diff.txt bulunamadı.")
               exit(0)
 
           with open("diff.txt", "r", encoding="utf-8", errors="ignore") as f:
-              diff_content = f.read()[:20000]
+              diff_content = f.read()[:25000]
 
           if not diff_content.strip():
-              print("İncelenecek bir kod değişikliği yok.")
-              exit(0)
+              review = "### 🧐 Durum Tespiti\nHerhangi bir kod farkı yakalayamadım, boş commit mi attın patron?"
+          else:
+              prompt = f"""Sen dobra, hafif esprili ama tavizsiz bir Kıdemli Yazılım Mühendisisin.
+              Aşağıdaki commit farklarını (git diff) incele. Geliştiriciye duruma özel NET EMİRLER ve YOL HARİTASI çıkar.
 
-          prompt = f"""Sen esprili, dobra ama son derece tecrübeli bir Kıdemli Yazılım Mimarı ve Kod Müfettişisin.
-          Aşağıdaki Pull Request kod farklarını (git diff) tara ve Türkçe bir inceleme raporu hazırla.
+              Raporunu tam olarak şu başlıklar altında ver:
 
-          Şu başlıklara göre cevap ver:
-          1. 🚨 **Gözüme Çarpan Riskler & Spagetti Kokuları:** (Bug'lar, mantık hataları, performans sorunları)
-          2. 💡 **Daha Temiz Kod Tavsiyeleri:** (Okunabilirlik ve mimari iyileştirmeler)
-          3. 🔨 **Hemen Ne Yapacaksın? (TODO Listesi):** (Geliştiricinin merge etmeden önce mutlaka düzeltmesi gereken somut adımlar)
+              ### 1. 🚨 Durum Analizi: Ne Durumdayız?
+              (Kodda patlama riski, mantık hatası, spagetti kokusu veya bellek tuzağı var mı? Durumu teşhis et.)
 
-          İşte Kod Değişiklikleri:
-          {diff_content}
-          """
+              ### 2. 🎯 Senaryoya Göre "Ne Yapmalısın?":
+              - **Eğer Hata/Bug Varsa:** (Derhal şunu düzelt, şu satırdaki mantığı ters çevir vb.)
+              - **Eğer Kod Çalışıyor ama Mimari Dağınıksa:** (Şu fonksiyonu ikiye böl, değişkenleri şuraya taşı vb.)
+              - **Eğer Kod Çiçek Gibiyse:** (Eline sağlık, şimdi sıradaki şu aşamaya/mekaniğe geçebilirsin de.)
 
-          url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
-          payload = {
-              "contents": [{"parts": [{"text": prompt}]}]
-          }
+              ### 3. 📋 Sıradaki Adım (TODO Listesi):
+              - [ ] 1. Adım...
+              - [ ] 2. Adım...
+              - [ ] 3. Adım...
 
-          req = urllib.request.Request(
-              url,
-              data=json.dumps(payload).encode("utf-8"),
-              headers={"Content-Type": "application/json"}
-          )
+              İşte Değişiklikler:
+              {diff_content}
+              """
 
-          try:
-              with urllib.request.urlopen(req) as res:
-                  data = json.loads(res.read().decode())
-                  review = data["candidates"][0]["content"]["parts"][0]["text"]
+              url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+              payload = {"contents": [{"parts": [{"text": prompt}]}]}
 
-                  with open("review.md", "w", encoding="utf-8") as out:
-                      out.write("### 🤖 Gemini Kod İnceleme Raporu\n\n" + review)
-          except Exception as e:
-              print(f"API Hatası: {e}")
-              exit(1)
+              req = urllib.request.Request(
+                  url,
+                  data=json.dumps(payload).encode("utf-8"),
+                  headers={"Content-Type": "application/json"}
+              )
+
+              try:
+                  with urllib.request.urlopen(req) as res:
+                      data = json.loads(res.read().decode())
+                      review = data["candidates"][0]["content"]["parts"][0]["text"]
+              except Exception as e:
+                  review = f"Müfettiş uyuyakaldı, API Hatası: {e}"
+
+          # Raporu GitHub Actions Özet Sayfasına (Job Summary) yazdır
+          summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary_file:
+              with open(summary_file, "a", encoding="utf-8") as sf:
+                  sf.write("## 🤖 Gemini Müfettiş Raporu\n\n" + review)
           EOF
-
-          if [ -f review.md ]; then
-            gh pr comment "$PR_NUMBER" --body-file review.md
-          fi
-          
