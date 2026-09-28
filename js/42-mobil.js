@@ -10,7 +10,7 @@
      dosyaya çift tıklamak onu doğrudan Fan → Dosya aç'ta açar (manifest share_target / file_handlers). */
 
 const ALT_MENU = [
-  ["arsiv", "Arşiv", "▤"], ["okuma", "Oku", "▧"], ["oyunlar", "Oyna", "▩"], ["evren", "Evren", "◎"]
+  ["arsiv", "Ana sayfa", "▤"], ["okuma", "Oku", "▧"], ["oyunlar", "Oyna", "▩"], ["evren", "Evren", "◎"]
 ];
 const MOBIL_ENI = 760;
 

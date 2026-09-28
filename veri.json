@@ -7191,7 +7191,9 @@
         "Karakter kartları düzeldi: ad, unvan ve özet yan yana akıyordu, artık alt alta",
         "Açıklama notları küçük daktilo yazısı yerine okunaklı düz yazıyla; arama ve yazı alanları da öyle",
         "Tekrarlar kalktı: sayfa başlığı iki kez yazılmıyor (“Oyunlar / Oyunlar”), ana sayfada evrenler ikinci kez şerit olarak çıkmıyor",
-        "Üst çubuk sade: yeni gelen için boş cüzdan rozeti ve fazladan “rastgele” simgesi yok"
+        "Üst çubuk sade: yeni gelen için boş cüzdan rozeti ve fazladan “rastgele” simgesi yok",
+        "Tömye arşivi kendi sayfasında: Karakterler, Evren rehberi, Kayıp ve Bilinmeyenler artık “Tömye” sekmesinde; ana sayfa yalnızca evrenler ve bugün (Tömye kartında “Tömye arşivi” düğmesi)",
+        "Masaüstünde 15 sekmeli şerit yerine yedi ana sayfa (Ana sayfa, Tömye, Okuma, Evren Atölyesi, Fan, Oyunlar, Sen); ötekiler “Tüm sayfalar” panelinde ve ⌘K aramasında"
       ]
     },
     {

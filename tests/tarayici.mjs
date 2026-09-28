@@ -114,7 +114,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     }
     await Zk.close();
     const sayfaIdleri = await Z.evaluate(function () { return GEZINME.map(function (g) { return g.id; }); });
-    ok("14 sayfa tanımlı", sayfaIdleri.length === 14, sayfaIdleri);
+    ok("15 sayfa tanımlı", sayfaIdleri.length === 15, sayfaIdleri);
     for (const s of sayfaIdleri) {
       await Z.evaluate(function (s) { location.hash = "#/" + s; }, s); await bekle(Z, 500);
       const gorunen = await Z.evaluate(function () {
@@ -131,7 +131,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("üst başlık telefonda sığar", await Z.evaluate(function () { const u = document.querySelector(".ust"); return u.scrollWidth <= u.clientWidth + 1; }));
     await Z.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(Z, 500);
     await Z.click("[data-mobil-menu]"); await bekle(Z, 300);
-    ok("menü sayfası bütün sayfaları listeler", await Z.locator("#mobilMenu .mm-sayfa").count() === 14);
+    ok("menü sayfası bütün sayfaları listeler", await Z.locator("#mobilMenu .mm-sayfa").count() === 15);
     await Z.click('#mobilMenu .mm-sayfa[href="#/fan"]'); await bekle(Z, 600);
     ok("menüden sayfaya gidilir, menü kapanır", await Z.evaluate(function () { return aktifSayfa === "fan" && !document.querySelector("#mobilMenu"); }));
     ok("alt menüde Evren düğmesi", await Z.evaluate(function () { return !!document.querySelector("#altMenu [data-evren-sec]"); }));
@@ -2313,7 +2313,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     await A.evaluate(function () { yoneticiBaslangicOnay = null; yoneticiKisiTaslak = null; });
 
     /* ---------- E25: Evrengezerler kendi evreninde, melezler ortak ---------- */
-    await A.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(A, 900);
+    await A.evaluate(function () { location.hash = "#/tomye"; }); await bekle(A, 900);
     await A.evaluate(function () { cizKarakterler(); evrenFiltre = "hepsi"; cizEvren(); });
     ok("Tömye arşivinde Evrengezerler yok, melezler var", await A.evaluate(function () {
       const k = Array.from(document.querySelectorAll("#karakterIzgara .kart-ad")).map(function (x) { return x.textContent; });
@@ -2338,7 +2338,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     /* ---------- Nıraz: Tömye'de adıyla, E25'te isimsiz; iki metin birbirini işaret etmez ---------- */
     const YASAK = /Evrengezer|gezgin|taş|Yansıma|Selim|yazar|izdüşüm|E25|başka evren/i;
     ok("Nıraz Tömye'de: Müdavim, Egir'in yanında, Evrengezer yok", await A.evaluate(function (yasak) {
-      location.hash = "#/arsiv"; cizKarakterler();
+      location.hash = "#/tomye"; cizKarakterler();
       const kartlar = Array.from(document.querySelectorAll("#karakterIzgara .kart"));
       const adlar = kartlar.map(function (k) { return k.querySelector(".kart-ad").textContent; });
       const i = adlar.indexOf("Nıraz");

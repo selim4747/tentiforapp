@@ -108,12 +108,20 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
         !document.querySelector("#bugunKartAlan").closest("#kesifDaha") && !document.querySelector(".arama-kutu").closest("#kesifDaha");
     }));
     ok("3.2: karakter kartında ad, unvan ve özet alt alta", await Y.evaluate(function () {
+      cizKarakterler();
       const k = document.querySelector("#karakterIzgara .kart");
       return !!k && ["kart-unvan", "kart-ad", "kart-ozet"].every(function (c) { const e = k.querySelector("." + c); return !e || getComputedStyle(e).display === "block"; });
     }));
     ok("3.2: ana sayfada tekrar eden evren şeridi ve boş cüzdan görünmez", await Y.evaluate(function () {
       const s = document.querySelector("#evrenSerit");
       return (!s || getComputedStyle(s).display === "none") && getComputedStyle(document.querySelector("#rastgeleBtn")).display === "none";
+    }));
+    await Y.evaluate(function () { location.hash = "#/tomye"; }); await bekle(Y, 900);
+    ok("3.2: Tömye arşivi kendi sayfasında; ana sayfada yok, şeritte ana sayfalar", await Y.evaluate(function () {
+      const kar = document.querySelector("#arsiv");
+      return aktifSayfa === "tomye" && !kar.hidden && document.querySelectorAll("#karakterIzgara .kart").length > 3 && !!document.querySelector("#sayfaBasi h1") &&
+        GEZINME.find(function (g) { return g.id === "arsiv"; }).bolumler.length === 1 && document.querySelectorAll("#gezinme a.gez-btn").length <= 8 &&
+        !!document.querySelector('.hero a[href="#/tomye"]');
     }));
     await Y.evaluate(function () { location.hash = "#/oyunlar"; }); await bekle(Y, 900);
     ok("3.2: sayfa başlığı ile ilk bölüm başlığı aynıysa ikincisi gizli", await Y.evaluate(function () {
@@ -291,7 +299,7 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
       const r = await T.evaluate(erisimTara, null);
       r.forEach(function (x) { hepsi.push(s + ": " + x); });
     }
-    ok("14 sayfada adsız düğme/bağlantı/alan yok, yinelenen kimlik yok, yana taşma yok", hepsi.length === 0, hepsi.slice(0, 12));
+    ok("15 sayfada adsız düğme/bağlantı/alan yok, yinelenen kimlik yok, yana taşma yok", hepsi.length === 0, hepsi.slice(0, 12));
     const evrenSorun = [];
     for (const yol of ["#/ev/site/e25", "#/ev/fan/" + (await T.evaluate(function () { return fanSiteListesi("evren")[0].id; }))]) {
       await T.evaluate(function (y) { location.hash = y; }, yol); await bekle(T, 1200);
