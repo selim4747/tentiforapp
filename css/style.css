@@ -5045,3 +5045,34 @@ html.ecka-yeni .cuzdan-rozet{display:none}
 /* 3.2: İçindekiler'de sayfa adları bağlantı */
 a.ic-grup-ad{display:block;text-decoration:none}
 a.ic-grup-ad:hover,a.ic-grup-ad:focus-visible{color:var(--deniz);text-decoration:underline}
+
+/* ==================== 3.3 ==================== */
+/* yıldızlı evrenler */
+.ana-evren-sar{position:relative;display:grid}
+.ana-evren-sar > .ana-evren{padding-right:44px}
+.ana-yildiz{position:absolute;top:6px;right:6px;width:36px;height:36px;border:none;border-radius:50%;background:transparent;color:var(--murekkep-2);font-size:19px;line-height:1;cursor:pointer}
+.ana-yildiz:hover,.ana-yildiz:focus-visible{background:var(--buz);color:var(--deniz)}
+.ana-yildiz.acik{color:#c98a0b}
+/* tüm evrenler */
+.tev-kutu{margin:14px 0}
+.tev-ust{display:flex;gap:8px;flex-wrap:wrap}
+.tev-ara{flex:1 1 180px;min-width:0;margin:0}
+.tev-sira{flex:0 0 auto;min-height:44px}
+.tev-secimler{display:flex;flex-wrap:wrap;gap:6px}
+.tev-sec{font:inherit;font-size:13.5px;padding:6px 12px;min-height:36px;border:1px solid var(--sig);border-radius:999px;background:var(--beyaz);color:var(--murekkep-2);cursor:pointer}
+.tev-sec.secili{background:var(--deniz);border-color:var(--deniz);color:var(--beyaz)}
+.tev-liste{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+/* okuma ayarları */
+.okuma-ayar{margin:0 0 18px;background:var(--beyaz);border:1px solid var(--buz);border-radius:var(--r-kart);padding:10px 14px}
+.okuma-ayar summary{cursor:pointer;font-weight:600;min-height:32px;display:flex;align-items:center}
+.okuma-ayar-ic{display:grid;gap:6px;padding-top:8px;max-width:420px}
+.okuma-ayar-ic input[type=range]{width:100%;accent-color:var(--deniz)}
+.okuma-sepya{display:flex;gap:8px;align-items:center;margin:6px 0}
+html[data-okuma-ozel] .okuma-metin p,html[data-okuma-ozel] .uzun-metin p,html[data-okuma-ozel] .evs-roman p,html[data-okuma-ozel] .fan-metin p{
+  font-size:calc(17px * var(--okuma-boyut,1)) !important;line-height:var(--okuma-aralik,1.65) !important}
+html[data-okuma-sepya] .okuma-metin,html[data-okuma-sepya] .uzun-metin,html[data-okuma-sepya] .evs-roman,html[data-okuma-sepya] .fan-metin,html[data-okuma-sepya] .detay-metin{
+  background:#f6eedc;color:#3b2f1e;border-radius:var(--r-kucuk);padding:12px 14px}
+/* evren doluluğu */
+.ev-doluluk{display:grid;gap:6px;margin:0 0 14px;padding:12px 14px;background:var(--beyaz);border:1px solid var(--buz);border-radius:var(--r-kart)}
+.ev-doluluk-ust{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px}
+.ev-doluluk .svk-cubuk{display:block}
