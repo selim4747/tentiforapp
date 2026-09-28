@@ -1,5 +1,5 @@
 {
-  "surum": "2.9.0",
+  "surum": "3.0.0",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7176,6 +7176,25 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "3.0.0",
+      "tarih": "2026-09-28",
+      "maddeler": [
+        "Evren Atölyesi: yeni sayfa — evrenini kur, kendi evrenlerin Tömye ölçeğiyle, kanon ve fan-made evrenler tek yerde",
+        "Kanon ve fan-made evrenler: kanon evrenlerde herkes fan hikâyesi ve Evrengezer hikâyesi yazar; fan-made evrenlere Evrengezerleri yalnızca sahibi ve yetkilileri getirir",
+        "Evrenini kanona aday gösterebilirsin (Kurucu → Paylaş → Kanona katılsın); yazar onaylarsa kanona girer. Fan-made evrenin sahibi başkalarının hikâye yazmasını da kapatabilir",
+        "Evren sayfasında “Bu evrende hikâye yaz”; Evrengezeri kanon evrende yeni bir hikâyeye götür",
+        "Kurucu'nun ilk adımında türle başla (su dünyası, çöl…)",
+        "Menüde “Android uygulamasını indir”: artık Chrome kısayolu değil, sitenin kendi uygulaması (sürümü ve boyutuyla)",
+        "Tutarlılık denetçisi: Kurucu, kişiler, aile bağları, takvim, tarih ve belgeler arasındaki çelişkileri gösterir (yaşı çocuğundan küçük ebeveyn, takvimde olmayan ay, sıra dışı tarih…)",
+        "İsim üretici: evreninin kendi adlarının seslerinden yeni kişi ve yer adları; dokununca boş kutuya yazılır",
+        "Evrengezer izni: fan-made evreninin sahibi birine kod verir, o kişi bu evrende Evrengezer hikâyesi yazabilir; istediğinde geri alır",
+        "Evren sayfasında “Bu evrende yazılanlar” rafı, ilk girişte 5 adımlık evren turu ve paylaşılabilir evren kartı (Instagram hikâyesi boyutunda)",
+        "Evren Atölyesi'nde evrenler arası geçitler haritası: haritalardaki kapılar ve Evrengezer yolculukları",
+        "Bütün Evrengezerler E25'te: nerede yaratılırsa ya da hangi esere konuk olursa olsun doğdukları yerde görünür; kartında göründüğü yerler ve E25'te arama"
+      ],
+      "yeniler": []
+    },
     {
       "surum": "2.9.0",
       "tarih": "2026-09-28",

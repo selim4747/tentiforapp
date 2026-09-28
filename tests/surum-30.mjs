@@ -212,9 +212,9 @@ export async function surum30Testleri({ adres, veritabani, dizin, kok }) {
     ok("açılışta değişiklik günlüğünün yalnızca başı iner", await O.evaluate(function (n) {
       return !!veri.__parcalar && veri.degisiklik.length === 3 && veri.__parcalar.degisiklik.toplam === n;
     }, kaynakVeri.degisiklik.length));
-    ok("GEZINME'de 13 sayfa, değişiklikler kendi sayfasında", await O.evaluate(function () {
+    ok("GEZINME'de 14 sayfa, değişiklikler kendi sayfasında", await O.evaluate(function () {
       const p = GEZINME.find(function (g) { return g.id === "surumler"; });
-      return GEZINME.length === 13 && !!p && p.bolumler[0][0] === "degisiklik" && !GEZINME.find(function (g) { return g.id === "proje"; }).bolumler.some(function (b) { return b[0] === "degisiklik"; });
+      return GEZINME.length === 14 && !!p && p.bolumler[0][0] === "degisiklik" && !GEZINME.find(function (g) { return g.id === "proje"; }).bolumler.some(function (b) { return b[0] === "degisiklik"; });
     }));
     await O.evaluate(function () { localStorage.setItem("tf30_degisiklik_son", "2.7.0"); });
     await O.goto(adres + "/surumler/"); await O.waitForFunction(veriVar, null, { timeout: 20000 }); await bekle(O, 1200);
@@ -278,11 +278,18 @@ export async function surum30Testleri({ adres, veritabani, dizin, kok }) {
     istekler.length = 0;
     await U.goto(adres + "/oyunlar/"); await bekle(U, 4000);
     const say = function (d) { return istekler.filter(function (x) { return d.test(x); }).length; };
-    ok("sayfa yenilenince kendi verin sunucuya yeniden sorulmaz (profil, seviye, yarış, yönetici)",
-      say(/^GET \/profiller/) === 0 && say(/^GET \/arsivci_seviyeleri/) === 0 && say(/^GET \/yaris_tablolari/) === 0 && say(/rpc\/yonetici_mi/) === 0, istekler);
-    ok("açılışta 12'den az sunucu isteği (" + istekler.length + ")", istekler.length < 12, istekler);
+    ok("sayfa yenilenince kendi verin sunucuya yeniden sorulmaz (seviye, yarış, yönetici)",
+      say(/^GET \/arsivci_seviyeleri/) === 0 && say(/^GET \/yaris_tablolari/) === 0 && say(/rpc\/yonetici_mi/) === 0, istekler);
+    /* eşitleme yazmaları gerekli; liderlik ve kulüp tabloları yayında Cloudflare'den gelir (functions/api/pano.js) */
+    const okumalar = istekler.filter(function (x) { return !/^(POST|PATCH) \/(ilerlemeler|profiller|rpc\/istatistik_gonder|rpc\/sayac_toplu)/.test(x) && !/^GET \/(liderlik|kulup_savasi)$/.test(x); });
+    ok("sayfa açılışında 10'dan az sunucu okuması (" + okumalar.length + "; 2.8'de ~20)", okumalar.length < 10, okumalar);
     await U.evaluate(function () { return hesapIstemci.from("profiller").update({ gorunen_ad: "Yük Ölçen 2" }).eq("id", hesapKullanici.id); }); await bekle(U, 300);
-    ok("bir yazma kalıcı okuma önbelleğini boşaltır", await U.evaluate(function () { return !sessionStorage.getItem("tf30_okuma"); }));
+    ok("profil yazması profil okumalarını eskitir, eşitleme yazmaları önbelleği boşaltmaz", await U.evaluate(function () {
+      const t = JSON.parse(sessionStorage.getItem("tf30_okuma") || "{}");
+      return !Object.keys(t).some(function (k) { return /\/rest\/v1\/profiller\?/.test(k); }) && Object.keys(t).length > 0;
+    }));
+    await U.evaluate(function () { return hesapIstemci.rpc("teori_bildir", { p_id: 0 }); }); await bekle(U, 300);
+    ok("tanınmayan bir yazma bütün kalıcı önbelleği boşaltır", await U.evaluate(function () { return !sessionStorage.getItem("tf30_okuma"); }));
 
     /* ---------- 8. uygulamanın açılış ekranı ---------- */
     console.log("3.0 uygulama açılış ekranı");
@@ -301,10 +308,10 @@ export async function surum30Testleri({ adres, veritabani, dizin, kok }) {
     await K.goto(adres + "/"); await K.waitForFunction(veriVar, null, { timeout: 20000 }); await bekle(K, 400);
     await K.evaluate(function () { window.kanonErisim = function () { return { hepsi: true, tumEvren: true, bolumler: new Set(), evrenler: new Set() }; }; location.hash = "#/oyunlar"; }); await bekle(K, 300);
     await K.evaluate(function () { evrenSeciciAc(); }); await bekle(K, 200);
-    await K.click("[data-es-yeni]"); await bekle(K, 700);
+    await K.click("#evrenSecici [data-es-yeni]"); await bekle(K, 700);
     ok("yeni evren Kurucu'yla açılır: adımlar ve Tömye ölçeği", await K.evaluate(function () {
       return EVS.sekme === "kurucu" && document.querySelectorAll("#evrenSayfa .evr-adim").length === 7 && !!document.querySelector("#evrenSayfa .evr-olcek-halka") &&
-        document.querySelector('#evrenSayfa [data-evs-sekme="kurucu"]') === document.querySelector("#evrenSayfa .evs-sekmeler [data-evs-sekme]");
+        !!document.querySelector('#evrenSayfa .evs-sekmeler [data-evs-sekme="kurucu"].secili');
     }));
     const evId = await K.evaluate(function () { return EVS.id; });
     await K.fill('#evrenSayfa .evr-kurucu [data-fan-alan="ad"]', "Tuz Denizi"); await bekle(K, 450);
@@ -354,6 +361,132 @@ export async function surum30Testleri({ adres, veritabani, dizin, kok }) {
     }));
     ok("zengin görünümde de okuma kutusu bölümleri yerinde", await K.evaluate(function () {
       return ["kisiler", "tarih", "belgeler", "aylar"].every(function (k) { return !!document.querySelector('#evrenSayfa section.fan-grup[data-grup="' + k + '"]'); });
+    }));
+
+    /* ---------- 10. kanon ve fan-made evrenler, Evren Atölyesi ---------- */
+    console.log("3.0 kanon ve fan-made evrenler");
+    ok("statü: sitenin evrenleri kanon, fan evreni fan-made, kendi evrenin senin", await K.evaluate(function (id) {
+      const f = fanSiteListesi("evren")[0];
+      return evaStatu("Tömye").tur === "kanon" && evaStatu("E25").tur === "kanon" && evaStatu(f.ad).tur === "fan" && evaStatu("Tuz Denizi").tur === "benim" && evaStatu("").tur === "serbest";
+    }, evId));
+    ok("fan-made evrene Evrengezer yalnızca sahibi ve yetkilileri getirir; kanonda herkes", await K.evaluate(function () {
+      const f = fanSiteListesi("evren")[0];
+      const h = fanYeni("hikaye"); const l = fanEserlerim(); const x = l.find(function (y) { return y.id === h.id; });
+      x.evren = f.ad; x.baslik = "Deneme"; x.metin = "metin"; x.konuklar = [{ bicim: "tentifor-eser", tur: "kisi", id: "k1", ad: "Gezgin" }]; fanEserlerimYaz(l);
+      const yasak = !!evaHikayeDenetle(fanEserlerim().find(function (y) { return y.id === h.id; }));
+      let indi = false; const eski = window.kartIndir; window.kartIndir = function () { indi = true; };
+      fanIndir(fanEserlerim().find(function (y) { return y.id === h.id; }));
+      const engel = !indi;
+      const gotur = kisiGotur({ bicim: "tentifor-eser", tur: "kisi", id: "k2", ad: "Gezgin 2" }, "hikaye:" + h.id) === null;
+      const yetki = JSON.parse(localStorage.getItem("tentiforapp_evren_yonetim") || "{}"); yetki[f.id] = true; localStorage.setItem("tentiforapp_evren_yonetim", JSON.stringify(yetki));
+      const yetkili = !evaHikayeDenetle(fanEserlerim().find(function (y) { return y.id === h.id; }));
+      delete yetki[f.id]; localStorage.setItem("tentiforapp_evren_yonetim", JSON.stringify(yetki));
+      f.kanon = true; const kanonda = !evaHikayeDenetle(fanEserlerim().find(function (y) { return y.id === h.id; })); delete f.kanon;
+      window.kartIndir = eski;
+      return yasak && engel && gotur && yetkili && kanonda && /Kanon evrende yeni hikâye: Tömye/.test(kisiGoturHtml({}, "a:b"));
+    }));
+    ok("sahibi kapattıysa fan-made evrende başkası hikâye yazamaz", await K.evaluate(function () {
+      const f = fanSiteListesi("evren")[0]; f.izinler = { hikaye: "sahip" };
+      const r = !evaHikayeIzni(f.ad).izin && evaHikayeIzni("Tömye").izin; delete f.izinler; return r;
+    }));
+    await K.evaluate(function () { if (EVS) { evrenSayfaKapat(); } location.hash = "#/ev/benim/" + arguments[0]; }, evId); await bekle(K, 500);
+    await K.evaluate(function (id) { EVS.sekme = "kurucu"; EVR_ADIM[id] = "paylas"; evrenSayfaCiz(); }, evId); await bekle(K, 300);
+    await K.click('#evrenSayfa [data-eva-durum="kanonAday"]'); await bekle(K, 300);
+    ok("Kurucu → Paylaş: evrenin yolu seçilir (kanona aday), rozet ve dosyada", await K.evaluate(function (id) {
+      const e = evrenBenimBul(id);
+      return e.durum === "kanonAday" && fanTemizle(e).durum === "kanonAday" && /kanona aday/.test(document.querySelector("#evrenSayfa .evs-rozet").textContent);
+    }, evId));
+    await K.evaluate(function () { evrenSayfaKapat(); location.hash = "#/atolye"; }); await bekle(K, 700);
+    ok("Evren Atölyesi: yeni evren, kendi evrenlerin (Tömye ölçeği), kanon ve fan-made listeleri", await K.evaluate(function () {
+      const a = document.querySelector("#evrenAtolyeAlan");
+      return aktifSayfa === "atolye" && !!a.querySelector("[data-es-yeni]") && /Tuz Denizi/.test(a.textContent) && /Tömye ölçeği %/.test(a.textContent) &&
+        a.querySelectorAll(".eva-rozet.kanon").length >= 3 && a.querySelectorAll("[data-eva-hikaye]").length >= 3;
+    }));
+    await K.click('#evrenAtolyeAlan [data-eva-hikaye="Tömye"]'); await bekle(K, 600);
+    ok("kanon evrende hikâye yaz: yeni hikâye evreni seçili açılır", await K.evaluate(function () {
+      const h = fanDuzenlenen("hikaye"); return aktifSayfa === "fan" && !!h && h.evren === "Tömye" && /Kanon evren/.test((document.querySelector(".eva-not") || {}).textContent || "");
+    }));
+
+    /* ---------- 10b. evren araçları ve Evrengezerler ---------- */
+    console.log("3.0 evren araçları");
+    ok("tutarlılık denetçisi: yaş, olmayan ay, gün taşması, tarih sırası, eksik kişi", await K.evaluate(function () {
+      const l = evrDenetim({ ad: "X", ozet: "a", kisiler: [{ ad: "Mira", yas: "30" }, { ad: "Oren", yas: "20" }], baglar: [{ a: "Oren", b: "Mira", etiket: "baba" }, { a: "Kael", b: "Mira", etiket: "eş" }],
+        aylar: [{ ad: "Kar", gun: "30" }], etkinlikler: [{ ad: "G1", ay: "Tuz", gun: "3" }, { ad: "G2", ay: "Kar", gun: "40" }], tarih: [{ zaman: "10", olay: "a" }, { zaman: "5", olay: "b" }] }).map(function (x) { return x.mesaj; }).join("|");
+      return /yaşı \(20\)/.test(l) && /olmayan bir ayda: Tuz/.test(l) && /40\. gününde/.test(l) && /sırayı kontrol et/.test(l) && /“Kael” kişiler arasında yok/.test(l) &&
+        evrDenetim({ ad: "Y", ozet: "b", kisiler: [{ ad: "A", yas: "40" }, { ad: "B", yas: "10" }], baglar: [{ a: "A", b: "B", etiket: "anne" }] }).length === 0;
+    }));
+    ok("isim üretici evrenin kendi seslerinden yeni ve farklı adlar önerir", await K.evaluate(function () {
+      const l = evrIsimler({ kisiler: [{ ad: "Miralen" }, { ad: "Orensa" }], yerler: [{ ad: "Tuzkent" }] }, 8);
+      return l.length === 8 && l.every(function (a) { return /^[A-ZÇĞİÖŞÜ][a-zçğıöşü]{2,10}$/.test(a) && ["Miralen", "Orensa", "Tuzkent"].indexOf(a) === -1; }) && new Set(l).size === 8;
+    }));
+    await K.evaluate(function (id) { evrenSayfaKapat(); evrenSonrakiSekme = "kurucu"; location.hash = "#/ev/benim/" + id; }, evId); await bekle(K, 500);
+    await K.evaluate(function (id) { EVR_ADIM[id] = "kisiler"; evrenSayfaCiz(); }, evId); await bekle(K, 200);
+    await K.click('#evrenSayfa [data-fan-ekle="kisiler"]'); await bekle(K, 300);
+    await K.click("#evrenSayfa [data-evr-isim]"); await bekle(K, 100);
+    const onerilen = await K.evaluate(function () { const b = document.querySelector("#evrenSayfa [data-evr-isim-sec]"); b.click(); return b.getAttribute("data-evr-isim-sec"); }); await bekle(K, 500);
+    ok("önerilen isme dokununca boş ad kutusuna yazılır ve kaydedilir", await K.evaluate(function (a) { const e = evrenBenimBul(EVS.id); return e.kisiler.some(function (k) { return k.ad === a; }); }, onerilen));
+    await K.evaluate(function (id) { evrenBenimDegistir(id, function (e) { delete e.durum; }); EVR_ADIM[id] = "paylas"; evrenSayfaCiz(); }, evId); await bekle(K, 300);
+    ok("Paylaş adımında denetim ve evren kartı; fan-made'de izin yönetimi", await K.evaluate(function () {
+      return !!document.querySelector("#evrenSayfa .evr-denetim") && !!document.querySelector("#evrenSayfa [data-evr-kart]") && !!document.querySelector("#evrenSayfa [data-evr-izin-uret]");
+    }));
+    await K.fill("#evrIzinNot", "Ayşe"); await K.click("#evrenSayfa [data-evr-izin-uret]"); await bekle(K, 400);
+    const izin = await K.evaluate(function (id) {
+      const d = document.querySelector("#evrIzinDurum");
+      const kod = (/EG-[A-Z0-9]{4}-[A-Z0-9]{4}/.exec(d ? d.textContent : "") || [])[0];
+      const e = evrenBenimBul(id);
+      return { kod: kod, n: (e.egIzinleri || []).length, temiz: (fanTemizle(e).egIzinleri || []).length, not: (e.egIzinleri || [{}])[0].not };
+    }, evId);
+    ok("Evrengezer izni kodu üretilir, yalnızca özeti evrende saklanır", !!izin.kod && izin.n === 1 && izin.temiz === 1 && izin.not === "Ayşe", izin);
+    ok("izin kodu girilince fan-made evrene Evrengezer getirilebilir", await K.evaluate(function (a) {
+      const f = fanSiteListesi("evren")[0];
+      f.egIzinleri = [{ oz: evrEgIzinOzeti(f.id, a.kod), not: "Ayşe", t: "" }];
+      const once = evaEvrengezerIzni(f.ad).izin;
+      evrenSayfaKapat(); evrenSayfaAc("fan", f.id); EVS.sekme = "bilgi"; evrenSayfaCiz();
+      document.querySelector("#evrIzinKod").value = a.kod.toLowerCase(); document.querySelector("[data-evr-izin-gir]").click();
+      const sonra = evaEvrengezerIzni(f.ad).izin;
+      const k = JSON.parse(localStorage.getItem("tf30_eg_izin") || "{}"); delete k[f.id]; localStorage.setItem("tf30_eg_izin", JSON.stringify(k)); delete f.egIzinleri;
+      return !once && sonra;
+    }, izin));
+    ok("okur evren turu: ilk girişte açılır, kapatınca bir daha çıkmaz", await K.evaluate(async function () {
+      const f = fanSiteListesi("evren")[0];
+      localStorage.removeItem("tf30_tur_gorulen");
+      evrenSayfaKapat(); evrenSayfaAc("fan", f.id); evrenSayfaCiz();
+      await new Promise(function (r) { setTimeout(r, 1500); });   /* evrenin tam dosyası iner */
+      const var_ = !!document.querySelector("#evrenSayfa .evr-tur");
+      document.querySelector('#evrenSayfa [data-evr-tur="kapat"]').click();
+      const yok = !document.querySelector("#evrenSayfa .evr-tur");
+      evrenSayfaKapat(); evrenSayfaAc("fan", f.id); evrenSayfaCiz();
+      return var_ && yok && !document.querySelector("#evrenSayfa .evr-tur");
+    }));
+    ok("kanon evrende 'bu evrende yazılanlar' rafı taslağını ve sitedekileri gösterir", await K.evaluate(function () {
+      const h = evrRafHtml("Tömye");
+      return /Bu evrende yazılanlar/.test(h) && /taslağın/.test(h);
+    }));
+    ok("evren kartı (1080×1920) üretilir", await K.evaluate(async function (id) { const t = await evrKartUret(evrenBenimBul(id)); return !!t && t.width === 1080 && t.height === 1920; }, evId));
+    ok("her Evrengezer E25'te: başka evrende yaratılan ve eserlere konuk olanlar da", await K.evaluate(function () {
+      const l = fanEserlerim();
+      l.push({ bicim: "tentifor-eser", surum: 1, tur: "kisi", id: "egbaska1", evren: "e26", ad: "Başka Doğan", kisilik: [] });
+      const h = l.find(function (x) { return x.tur === "hikaye"; });
+      h.konuklar = [{ bicim: "tentifor-eser", tur: "kisi", id: "egkonuk1", ad: "Konuk Gezgin", evren: "e25", kisilik: [] }];
+      fanEserlerimYaz(l);
+      const adlar = e25Kisileri().map(function (x) { return x.e.ad; });
+      const kart = kisiKartHtml(e25Kisileri().find(function (x) { return x.e.id === "egkonuk1"; }));
+      return adlar.indexOf("Başka Doğan") !== -1 && adlar.indexOf("Konuk Gezgin") !== -1 && /E25’te doğdu/.test(kart) && /Göründüğü yerler/.test(kart) && !!kisiBul("site", "egkonuk1");
+    }));
+    ok("evrenler arası geçitler: harita geçidi ve Evrengezer yolculuğu", await K.evaluate(function (id) {
+      evrenBenimDegistir(id, function (e) { e.harita = e.harita || { yerler: [] }; e.harita.yerler.push({ id: "g1", ad: "Kapı", x: 10, y: 10, gecit: "#/ev/site/e26" }); });
+      const g = evrGecitAgi();
+      return g.baglar.some(function (b) { return b.tur === "gecit" && b.b === "site:e26"; }) && g.baglar.some(function (b) { return b.tur === "gezgin" && b.a === "site:e25"; }) && /<svg/.test(evrGecitSvg());
+    }, evId));
+
+    /* ---------- 11. menüde Android uygulaması ---------- */
+    const AN = await cihaz("android", { ctx: { userAgent: "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36" } });
+    await AN.route("**/uygulama/indir/apk.json", function (r) { return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ kod: 142, surum: "2.9.0", boyut: 5242880 }) }); });
+    await AN.goto(adres + "/"); await AN.waitForFunction(veriVar, null, { timeout: 20000 }); await bekle(AN, 400);
+    await AN.click("[data-mobil-menu]"); await bekle(AN, 600);
+    ok("Android'de menü sitenin APK'sını indirir (Chrome kısayolu değil)", await AN.evaluate(function () {
+      const a = document.querySelector("#mobilMenu [data-apk-indir]");
+      return !!a && /\/uygulama\/indir\/tentiforapp\.apk\?v=142$/.test(a.getAttribute("href")) && /2\.9\.0/.test(a.textContent) && /5\.0 MB/.test(a.textContent) && !document.querySelector("#mobilMenu [data-mobil-yukle]");
     }));
 
     ok("3.0 testlerinde sayfa hatası yok", hatalar.length === 0, hatalar);

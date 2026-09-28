@@ -1111,12 +1111,12 @@ function ayar25Html() {
     "</details>";
 }
 
+function ayar25Gorunur() { return typeof aktifSayfa === "undefined" || aktifSayfa === "sen"; }
+
 function ayar25Ciz() {
   const h = document.querySelector("#hesap");
   const alan = document.querySelector("#hesapAlan");
   if (!h || !alan || !veri) { return; }
-  /* 3.0: Sen sayfası kapalıyken çizilmez (açılışta okuma yolları hesabı boşa gidiyordu); sayfaya gelince çizilir */
-  if (typeof aktifSayfa !== "undefined" && aktifSayfa !== "sen") { return; }
   let k = document.querySelector("#ayar25Alan");
   if (!k) { k = document.createElement("div"); k.id = "ayar25Alan"; alan.insertAdjacentElement("afterend", k); }
   const acik = Array.prototype.slice.call(k.querySelectorAll("details")).map(function (d) { return d.open; });
@@ -1149,7 +1149,8 @@ if (typeof sayfaGoster === "function") {
 
 if (typeof hesapCiz === "function") {
   const eskiHC25 = hesapCiz;
-  window.hesapCiz = function () { const r = eskiHC25.apply(this, arguments); ayar25Ciz(); return r; };
+  /* 3.0: Sen sayfası kapalıyken çizilmez (açılışta okuma yolları hesabı boşa gidiyordu); sayfaya gelince çizilir */
+  window.hesapCiz = function () { const r = eskiHC25.apply(this, arguments); if (ayar25Gorunur()) { ayar25Ciz(); } return r; };
 }
 
 /* ==================== 11. evren yazısı klavyesi ==================== */
@@ -1226,7 +1227,7 @@ document.addEventListener("click", async function (e) {
 
 document.addEventListener("DOMContentLoaded", function () {
   const bekle = typeof veriHazirOlunca === "function" ? veriHazirOlunca : function (f) { setTimeout(f, 1500); };
-  bekle(function () { haftaninEvreniCiz(); ayar25Ciz(); });
+  bekle(function () { haftaninEvreniCiz(); if (ayar25Gorunur()) { ayar25Ciz(); } });
 });
 /* açık bir ortak evrene girince güncel hâli çek */
 if (typeof evrenSayfaAc === "function") {

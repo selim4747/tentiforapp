@@ -94,6 +94,27 @@ function okumaKaliciYaz(anahtar, r) {
 }
 function okumaKaliciTemizle() { try { sessionStorage.removeItem(OKUMA_KALICI); } catch (_) { /* yok */ } }
 
+/* 3.0: hangi yazma hangi okumaları eskitir. Açılıştaki eşitleme yazmaları (ilerleme, istatistik, sayaç, hata)
+   bütün önbelleği silmesin: yoksa her sayfa açılışında hepsi yeniden sorulurdu. Tanınmayan yazma hepsini siler. */
+const OKUMA_YAZMA_ETKI = {
+  ilerlemeler: [], sayac_toplu: [], sayac_artir: [], hata_kaydet: [], olay_say: [],
+  profiller: ["profiller", "liderlik"],   /* eşitlemede profil özeti */
+  istatistik_gonder: ["istatistikler", "arsivci_seviyeleri", "liderlik"]
+};
+function okumaYazmaTemizle(url, rpc) {
+  const tablo = rpc || (/\/rest\/v1\/([a-z0-9_]+)/.exec(url) || [])[1] || "";
+  const hedefler = OKUMA_YAZMA_ETKI[tablo];
+  if (!hedefler) { OKUMA_ONBELLEK.clear(); okumaKaliciTemizle(); return; }
+  if (!hedefler.length) { return; }
+  const eski = function (k) { return hedefler.some(function (t) { return k.indexOf("/rest/v1/" + t + "?") !== -1 || k.indexOf("/rest/v1/rpc/" + t) !== -1; }); };
+  Array.from(OKUMA_ONBELLEK.keys()).forEach(function (k) { if (eski(k)) { OKUMA_ONBELLEK.delete(k); } });
+  try {
+    const t = okumaKaliciOku();
+    Object.keys(t).forEach(function (k) { if (eski(k)) { delete t[k]; } });
+    sessionStorage.setItem(OKUMA_KALICI, JSON.stringify(t));
+  } catch (_) { /* yok */ }
+}
+
 function hesapOnbellekliFetch(girdi, secenek) {
   const url = typeof girdi === "string" ? girdi : (girdi && girdi.url) || "";
   const yontem = String((secenek && secenek.method) || (girdi && girdi.method) || "GET").toUpperCase();
@@ -101,7 +122,7 @@ function hesapOnbellekliFetch(girdi, secenek) {
   const rpc = (/\/rest\/v1\/rpc\/([a-z0-9_]+)/.exec(url) || [])[1];
   const okuma = rest && !window.__okumaOnbellegiKapali && !/\/rest\/v1\/ilerlemeler/.test(url) &&
     ((yontem === "GET" || yontem === "HEAD") ? !rpc : (yontem === "POST" && OKUMA_RPC.indexOf(rpc) !== -1));
-  if (rest && !okuma && yontem !== "GET" && yontem !== "HEAD") { OKUMA_ONBELLEK.clear(); okumaKaliciTemizle(); }   /* yazma: önbellek boşalır */
+  if (rest && !okuma && yontem !== "GET" && yontem !== "HEAD") { okumaYazmaTemizle(url, rpc); }   /* yazma: ilgili okumalar boşalır */
   if (!okuma) { return fetch(girdi, secenek); }
   let yetki = "";
   try { yetki = new Headers((secenek && secenek.headers) || {}).get("Authorization") || ""; } catch (_) { yetki = ""; }

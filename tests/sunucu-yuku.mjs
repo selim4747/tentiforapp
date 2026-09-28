@@ -64,7 +64,7 @@ export async function sunucuYukuTestleri({ adres, veritabani, dizin }) {
     ok("aynı okuma 90 saniye içinde sunucuya bir kez gider, sonuç aynı", r1.every(Boolean) && oku1 === 1, [r1, istekler]);
     istekler.length = 0;
     await p.evaluate(async function () {
-      await hesapIstemci.rpc("olay_say", { p_ad: "yazma_deneme" });   /* bir yazma */
+      await hesapIstemci.rpc("yapim_oyla", { p_yapim: "yazma_deneme" });   /* bir yazma (sayaçlar gibi eşitleme yazmaları önbelleği boşaltmaz) */
       await hesapIstemci.from("teori_listesi").select("*").limit(5);
     });
     ok("yazmadan sonra önbellek boşalır, okuma sunucudan gelir", istekler.filter(function (x) { return /GET \/rest\/v1\/teori_listesi/.test(x); }).length === 1, istekler);

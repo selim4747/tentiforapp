@@ -114,7 +114,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     }
     await Zk.close();
     const sayfaIdleri = await Z.evaluate(function () { return GEZINME.map(function (g) { return g.id; }); });
-    ok("13 sayfa tanımlı", sayfaIdleri.length === 13, sayfaIdleri);
+    ok("14 sayfa tanımlı", sayfaIdleri.length === 14, sayfaIdleri);
     for (const s of sayfaIdleri) {
       await Z.evaluate(function (s) { location.hash = "#/" + s; }, s); await bekle(Z, 500);
       const gorunen = await Z.evaluate(function () {
@@ -131,7 +131,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("üst başlık telefonda sığar", await Z.evaluate(function () { const u = document.querySelector(".ust"); return u.scrollWidth <= u.clientWidth + 1; }));
     await Z.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(Z, 500);
     await Z.click("[data-mobil-menu]"); await bekle(Z, 300);
-    ok("menü sayfası bütün sayfaları listeler", await Z.locator("#mobilMenu .mm-sayfa").count() === 13);
+    ok("menü sayfası bütün sayfaları listeler", await Z.locator("#mobilMenu .mm-sayfa").count() === 14);
     await Z.click('#mobilMenu .mm-sayfa[href="#/fan"]'); await bekle(Z, 600);
     ok("menüden sayfaya gidilir, menü kapanır", await Z.evaluate(function () { return aktifSayfa === "fan" && !document.querySelector("#mobilMenu"); }));
     ok("alt menüde Evren düğmesi", await Z.evaluate(function () { return !!document.querySelector("#altMenu [data-evren-sec]"); }));
@@ -383,7 +383,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       const t = document.querySelector("#evrenSecici").textContent;
       return /E99/.test(t) && /Claude/.test(t) && /Senin evrenlerin/.test(t);
     }));
-    await Z.click("[data-es-yeni]"); await bekle(Z, 600);
+    await Z.click("#evrenSecici [data-es-yeni]"); await bekle(Z, 600);
     ok("yeni evren kendi sayfasında, Evren Kurucu'yla (Temel adımı) açılır", await Z.evaluate(function () {
       return /^#\/ev\/benim\//.test(rota()) && EVS.sekme === "kurucu" && !!document.querySelector('#evrenSayfa .evr-kurucu [data-fan-hedef] [data-fan-alan="ad"]');
     }));

@@ -338,6 +338,7 @@ function evrKurucuHtml(v) {
   let govde = "";
   if (a.id === "temel") {
     govde = form(fanGirdi("ad", e.ad, "Evrenin adı") + fanGirdi("yazar", e.yazar, "Kuran (takma ad olabilir)") + fanGirdi("ozet", e.ozet, "Evreni anlat", "uzun", { satir: 5 })) +
+      (typeof evkKartHtml === "function" ? evkKartHtml(e) : "") +
       '<div class="evr-ipucu"><b>İpucu:</b> Tömye bir cümleyle başlar: “Aysız bir gezegen, ayları 28 gün çeken bir takvim.” Evreninin tuhaflığını ilk cümlede söyle.</div>' +
       evrOlcekHtml(e, true);
   } else if (a.gruplar) {
