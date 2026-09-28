@@ -5076,25 +5076,3 @@ html[data-okuma-sepya] .okuma-metin,html[data-okuma-sepya] .uzun-metin,html[data
 .ev-doluluk{display:grid;gap:6px;margin:0 0 14px;padding:12px 14px;background:var(--beyaz);border:1px solid var(--buz);border-radius:var(--r-kart)}
 .ev-doluluk-ust{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px}
 .ev-doluluk .svk-cubuk{display:block}
-/* şablon seçimi Kurucu'da */
-.evr-kurucu + .evt-turler,.evt-turler{margin-top:12px}
-/* 3. evren sayfası: eylem kartı sıkı, düğmeler yan yana */
-.eva-eylem{padding:12px 14px}
-.eva-eylem .oyun-not{margin-top:4px;font-size:13px}
-.eva-eylem .oyun-sira{gap:6px;margin-top:8px}
-.eva-eylem .dugme{min-height:40px;padding:8px 14px;font-size:14px}
-.evs-cuzdan{gap:6px}
-/* 4. yönetici paneli: aynı kart dili, okunaklı satırlar */
-.y-satir{border-radius:var(--r-kucuk)}
-.y-kucuk{font-family:var(--govde);font-size:13px;letter-spacing:0;border-radius:var(--r-kucuk)}
-.y-satir-alt{font-size:13px}
-.y-rozet{border-radius:999px}
-/* 13. klavye: odak halkası her yerde net */
-:focus-visible{outline:2px solid var(--deniz);outline-offset:2px}
-.ana-evren:focus-visible,.kart:focus-visible,.dugme:focus-visible,.gez-btn:focus-visible,.tev-sec:focus-visible,.ana-yildiz:focus-visible{outline:3px solid var(--deniz);outline-offset:3px}
-html[data-ayar-tema="gece"] :focus-visible{outline-color:#A8CDEB}
-/* 12. uzun sayfalar: ekran dışındaki kartlar çizimi ertelesin */
-#karakterIzgara > .kart,#evrenListe > .madde{content-visibility:auto;contain-intrinsic-size:auto 220px}
-/* gece modunda soluk kalan oklar */
-html[data-ayar-tema="gece"] .go-isaret,html[data-ayar-tema="gece"] .madde-ok{color:var(--murekkep-2)}
-.go-isaret,.madde-ok{color:var(--murekkep-2)}
