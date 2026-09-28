@@ -8980,6 +8980,39 @@
           "a": "BK1ZqwrmW6xEt8wSGmDjMpCP802z1EbliIv0+4f+r7jQSznJirxpjQRRjHX9FBtw/yxnuW0xLhXhpdmL7ThrjFM=",
           "s": "4iZuU/Cqspf/BXhdqS9TZ7fs57W+9EBwRRT/TmjhK1pl8bHkuHR8/IOty2Jt6fSKrEbW3NBrcLRKjjG68nctdg=="
         }
+      },
+      {
+        "bicim": "tentifor-eser",
+        "surum": 1,
+        "tur": "kisi",
+        "id": "fmulkudszqd2y9",
+        "evren": "e25",
+        "ad": "Contra",
+        "unvan": "Ahiret gezgini",
+        "ozet": "Cennet ve cehenneme istediği gibi çıkıp giren biri",
+        "yazar": "Selimoo",
+        "olusturma": "2026-09-28T18:24:39.779Z",
+        "guncelleme": "2026-09-28T18:24:39.779Z",
+        "kisilik": [
+          {
+            "ad": "Sakin",
+            "aciklama": "Geçmişi düşünür ve elinden kaybettikleri için üzülür."
+          },
+          {
+            "ad": "Öfkeli",
+            "aciklama": "Öfkesini iyi kontrol eder ve sözlerini iyi seçer"
+          }
+        ],
+        "imza": {
+          "a": "BJcyEmrzs2Na9uRWu4IzmzMAmPYlOhTI5ftn9cQTkhjBNBMy0UbbcBwawtutMdLsaMWEaKlNaVmeTff1Dkvlgtc=",
+          "s": "sBww9QkijGglBPee3NHB1CJVSXDkiCye5h2r8+2XvWPF7kNYexL2XtiasCpNvFIIn0fhNCvWSBUHWGCXRrwjDQ=="
+        },
+        "dogum": {
+          "kapi": "",
+          "soz": "Buralara geldiğim yer geçmiş",
+          "t": "2026-09-28T18:24:39.786Z"
+        },
+        "eklenme": "2026-09-28"
       }
     ]
   },
