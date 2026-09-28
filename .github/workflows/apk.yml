@@ -17,6 +17,7 @@ on:
       - "uygulama/kabuk/**"
       - ".github/workflows/apk.yml"
       - "ikon/ikon-512.png"
+      - "veri.json"
   workflow_dispatch:
     inputs:
       not:
