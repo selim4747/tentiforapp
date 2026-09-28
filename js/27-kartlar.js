@@ -269,11 +269,17 @@ function isimKartCiz() {
   if (!alan || !veri.alfabe) { return; }
 
   const secenekler = isimKartAd.trim() ? isimUret(isimKartAd) : [];
-  alan.innerHTML =
-    '<p class="oyun-not">Adını yaz: isim sistemiyle Tentiforverse adın çıkar, Kyldo yazısıyla yazılır ' +
-      "ve bugünün Tömye tarihiyle kartın hazırlanır.</p>" +
-    '<input class="kod-giris arac-giris" id="isimKartGiris" maxlength="24" autocomplete="off" spellcheck="false" ' +
-      'placeholder="adın" value="' + kacir(isimKartAd) + '">' +
+  /* yazı kutusu bir kez çizilir; yazarken yalnızca altı yenilenir (telefonda klavye kapanmasın) */
+  if (!alan.querySelector("#isimKartGiris")) {
+    alan.innerHTML =
+      '<p class="oyun-not">Adını yaz: isim sistemiyle Tentiforverse adın çıkar, Kyldo yazısıyla yazılır ' +
+        "ve bugünün Tömye tarihiyle kartın hazırlanır.</p>" +
+      '<input class="kod-giris arac-giris" id="isimKartGiris" maxlength="24" autocomplete="off" spellcheck="false" ' +
+        'aria-label="Adın" placeholder="adın" value="' + kacir(isimKartAd) + '">' +
+      '<div id="isimKartDegisen"></div>';
+  }
+  const degisen = alan.querySelector("#isimKartDegisen");
+  degisen.innerHTML =
     (secenekler.length
       ? '<div class="filtre isim-kart-yol">' + secenekler.map(function (s, i) {
           return '<button class="' + (i === isimKartYol ? "secili" : "") + '" data-isim-kart-yol="' + i + '">' +
@@ -325,13 +331,7 @@ document.addEventListener("input", function (e) {
   isimKartYol = 0;
   /* seçenek düğmeleri değişsin ama yazılan kutu odağını kaybetmesin */
   clearTimeout(isimKartZaman);
-  isimKartZaman = setTimeout(function () {
-    const g = document.querySelector("#isimKartGiris");
-    const imlec = g ? g.selectionStart : null;
-    isimKartCiz();
-    const g2 = document.querySelector("#isimKartGiris");
-    if (g2) { g2.focus(); if (imlec !== null) { g2.setSelectionRange(imlec, imlec); } }
-  }, oncekiBos ? 0 : 220);
+  isimKartZaman = setTimeout(isimKartCiz, oncekiBos ? 0 : 220);
 });
 
 document.addEventListener("click", function (e) {

@@ -30,7 +30,8 @@ function metinDugumleri(el) {
   const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
     acceptNode: function (n) {
       const p = n.parentElement;
-      if (!p || !n.data.trim() || p.closest(".oku-cubuk, .oku-yazi, .ok-arac, .rb-serit, button, script, style, svg")) { return NodeFilter.FILTER_REJECT; }
+      /* metnin içindeki bağlantı düğmeleri (terim, çapraz bağ) metnin parçasıdır; öbür düğmeler değil */
+      if (!p || !n.data.trim() || p.closest(".oku-cubuk, .oku-yazi, .ok-arac, .rb-serit, button:not([data-terim]):not(.capraz):not(.ic-bag), script, style, svg")) { return NodeFilter.FILTER_REJECT; }
       return NodeFilter.FILTER_ACCEPT;
     }
   });
@@ -146,9 +147,20 @@ function okaPanelAc() {
   p.setAttribute("role", "dialog");
   p.setAttribute("aria-label", "Okuma ayarları");
   p.innerHTML = okaPanelIc();
+  ODAK27.once = document.activeElement;
   document.body.appendChild(p);
+  const ilk = p.querySelector("button:not([data-oka-kapat])");
+  if (ilk) { ilk.focus({ preventScroll: true }); }
 }
-function okaPanelKapat() { const p = document.querySelector("#okaPanel"); if (p) { p.remove(); return true; } return false; }
+function okaPanelKapat() { const p = document.querySelector("#okaPanel"); if (p) { p.remove(); odakGeriVer(); return true; } return false; }
+
+/* açılan kart ve panel kapanınca odak, açan düğmeye döner (klavye, ekran okuyucu) */
+const ODAK27 = { once: null };
+function odakGeriVer() {
+  const o = ODAK27.once;
+  ODAK27.once = null;
+  if (o && o.isConnected && typeof o.focus === "function") { try { o.focus({ preventScroll: true }); } catch (_) { /* yok */ } }
+}
 
 /* ==================== odak modu ==================== */
 
@@ -281,6 +293,7 @@ function adkIsaretle() {
     const kendi = el.getAttribute("data-oku") || "";
     const gorulen = new Set();
     metinDugumleri(el).forEach(function (n) {
+      if (n.parentElement.closest("button")) { return; }   /* bağlantı düğmesindeki ad zaten dokunulur */
       d.desen.lastIndex = 0;
       let m;
       while ((m = d.desen.exec(n.data))) {
@@ -366,8 +379,11 @@ function adKartAc(kayit) {
     '<div class="oyun-sira"><button type="button" class="dugme y-kucuk" data-ad-kart-git>' + (okundu ? "Kaydına git" : "Kaydını oku") + "</button>" +
       (yolAcik ? '<button type="button" class="dugme dugme-sade y-kucuk" data-yol-basla="' + kacir(yol.id) + '">📖 Okuma yolu · ' + yol.adimlar.length + " kutu</button>" : "") +
     "</div>";
+  ODAK27.once = document.activeElement;
   document.body.appendChild(div);
   ADK.acik = { div: div, kutu: k };
+  const ilk = div.querySelector("[data-ad-kart-git]");
+  if (ilk) { ilk.focus({ preventScroll: true }); }
 }
 
 function adKartKapat() {
@@ -375,6 +391,7 @@ function adKartKapat() {
   ADK.acik = null;
   if (!a || !a.div.isConnected) { return false; }
   a.div.remove();
+  odakGeriVer();
   return true;
 }
 
@@ -677,6 +694,9 @@ function bugunGit(hedef) {
 /* ==================== Harita Avı ==================== */
 
 const HAVI_ANAHTAR = "tf27_harita_avi";
+const HAVI_IZGARA = { acik: false };
+const HAVI_YON = ["kuzeyin", "kuzeyin ortası", "orta", "güneyin ortası", "güneyin"];
+const HAVI_YON2 = ["batısı", "batıya yakın", "ortası", "doğuya yakın", "doğusu"];
 const HAVI_HAK = 5;
 
 /** Bugünün haritası: Tömye (haritası açıksa) ve Claude'un Evreni gün aşırı. */
@@ -770,19 +790,31 @@ function haviCiz() {
   else if (d.bitti) { durum = "Haklar bitti. Aradığın yer: <b>" + kacir(d.y.ad) + "</b>. Yarın yeni bir yer."; }
   else if (son) { durum = "<b>" + haviSicaklik(son[2])[0] + ".</b> " + (d.tahmin.length >= 2 ? kacir(haviYon(son, d.y)) + " " : "") + kalan + " hakkın kaldı."; }
   else { durum = "Haritada bu yerin olduğunu düşündüğün noktaya dokun. " + HAVI_HAK + " hakkın var; yaklaştıkça ısınır."; }
+  const izgara = !d.bitti && HAVI_IZGARA.acik ? '<div class="havi-izgara" role="group" aria-label="Haritayı ızgarada seç: 5 satır, 5 sütun; kuzey yukarıda">' +
+    [0, 1, 2, 3, 4].map(function (r) {
+      return [0, 1, 2, 3, 4].map(function (c) {
+        return '<button type="button" data-havi-hucre="' + (c * 20 + 10) + "," + (r * 20 + 10) + '" aria-label="' + HAVI_YON[r] + " " + HAVI_YON2[c] + " (satır " + (r + 1) + ", sütun " + (c + 1) + ')">' + (r + 1) + "·" + (c + 1) + "</button>";
+      }).join("");
+    }).join("") + "</div>" : "";
   k.innerHTML = "<h4>Harita Avı · " + kacir(d.h.ad) + (d.kazandi ? " · bugün ✓" : "") + "</h4>" +
     '<p class="havi-ipucu"><span class="oyun-etiket">' + kacir(d.y.tur || "Yer") + "</span> " + kacir(haviIpucu(d)) + "</p>" +
-    haviSvg(d) +
-    '<p class="oyun-not havi-durum" role="status">' + durum + "</p>";
+    haviSvg(d) + izgara +
+    '<p class="oyun-not havi-durum" role="status" aria-live="polite">' + durum + "</p>" +
+    (d.bitti ? "" : '<button type="button" class="ic-bag" data-havi-izgara aria-pressed="' + HAVI_IZGARA.acik + '">' + (HAVI_IZGARA.acik ? "Izgarayı gizle" : "Izgarayla seç (klavye, ekran okuyucu)") + "</button>");
 }
 
 function haviTahmin(svg, x, y) {
-  const d = haviDurum();
-  if (!d || d.bitti) { return; }
   const m = svg.getScreenCTM();
   if (!m) { return; }
   const p = new DOMPoint(x, y).matrixTransform(m.inverse());
-  const t = [Math.round(Math.max(0, Math.min(100, p.x)) * 10) / 10, Math.round(Math.max(0, Math.min(100, p.y)) * 10) / 10];
+  haviTahminNokta(p.x, p.y);
+}
+
+/** Haritada (0–100) bir noktaya tahmin: dokunuş, ızgara ya da klavye. */
+function haviTahminNokta(hx, hy) {
+  const d = haviDurum();
+  if (!d || d.bitti) { return; }
+  const t = [Math.round(Math.max(0, Math.min(100, hx)) * 10) / 10, Math.round(Math.max(0, Math.min(100, hy)) * 10) / 10];
   const uz = Math.hypot(t[0] - d.y.x, t[1] - d.y.y);
   d.tahmin.push([t[0], t[1], Math.round(uz * 10) / 10]);
   if (uz <= 6) {
@@ -856,6 +888,9 @@ document.addEventListener("click", function (e) {
   const bg = t.closest("[data-bugun-git]");
   if (bg) { bugunGit(bg.getAttribute("data-bugun-git")); return; }
 
+  const hh = t.closest("[data-havi-hucre]");
+  if (hh) { const p = hh.getAttribute("data-havi-hucre").split(","); haviTahminNokta(Number(p[0]), Number(p[1])); const n = document.querySelector("#haviAlan [data-havi-hucre]"); if (n) { n.focus(); } return; }
+  if (t.closest("[data-havi-izgara]")) { HAVI_IZGARA.acik = !HAVI_IZGARA.acik; haviCiz(); const n = document.querySelector("#haviAlan [data-havi-hucre], #haviAlan [data-havi-izgara]"); if (n) { n.focus(); } return; }
   const hv = t.closest("[data-havi-harita]");
   if (hv) { haviTahmin(hv, e.clientX, e.clientY); return; }
 

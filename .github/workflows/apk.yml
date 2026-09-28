@@ -83,6 +83,35 @@ jobs:
           PY
           grep -n "uygulama/ac" app/src/main/AndroidManifest.xml
 
+      - name: Uygulama simgesi kısayolları (basılı tut)
+        working-directory: uygulama/kabuk/android
+        run: |
+          python3 - <<'PY'
+          import os
+          k = [("devam", "Kaldığın yer", "Kaldığın yerden oku"), ("bugun", "Bugün", "Bugün: günün oyunları"),
+               ("havi", "Harita Avı", "Harita Avı"), ("bulmaca", "Bulmaca", "Haftanın bulmacası")]
+          os.makedirs("app/src/main/res/xml", exist_ok=True)
+          x = ['<?xml version="1.0" encoding="utf-8"?>', '<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">']
+          for i, (id_, kisa, uzun) in enumerate(k):
+              x.append(f'  <shortcut android:shortcutId="{id_}" android:enabled="true" android:icon="@mipmap/ic_launcher" '
+                       f'android:shortcutShortLabel="@string/kisayol_{id_}_kisa" android:shortcutLongLabel="@string/kisayol_{id_}">')
+              x.append(f'    <intent android:action="android.intent.action.VIEW" android:targetPackage="dev.pages.tentiforapp" '
+                       f'android:targetClass="dev.pages.tentiforapp.MainActivity" android:data="https://tentiforapp.pages.dev/uygulama/ac/?kisayol={id_}" />')
+              x.append('  </shortcut>')
+          x.append('</shortcuts>')
+          open("app/src/main/res/xml/shortcuts.xml", "w").write("\n".join(x) + "\n")
+          p = "app/src/main/res/values/strings.xml"
+          s = open(p).read()
+          ek = "".join(f'    <string name="kisayol_{i}_kisa">{a}</string>\n    <string name="kisayol_{i}">{b}</string>\n' for i, a, b in k)
+          assert "</resources>" in s
+          open(p, "w").write(s.replace("</resources>", ek + "</resources>", 1))
+          p = "app/src/main/AndroidManifest.xml"
+          s = open(p).read()
+          assert "</activity>" in s
+          open(p, "w").write(s.replace("</activity>", '    <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />\n        </activity>', 1))
+          PY
+          grep -n "android.app.shortcuts" app/src/main/AndroidManifest.xml
+
       - name: Sürüm ve simge
         working-directory: uygulama/kabuk/android
         run: |

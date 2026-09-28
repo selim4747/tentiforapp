@@ -39,6 +39,10 @@ select public.hata_kaydet('x is not defined', 'a.js:1', '/#/arsiv', 'test', '1.0
 select test.ok('anonim hata kayıtlarını okuyamaz', (select count(*) = 0 from public.hata_kayitlari));
 reset role;
 select test.ok('aynı hata tek satırda sayılır', (select count(*) = 1 and max(sayi) = 2 from public.hata_kayitlari));
+select public.hata_kaydet('x is not defined', 'a.js:1', '/#/arsiv', 'test', '1.0.1');
+select test.ok('aynı hata yeni sürümde ayrı satırda sayılır (panel sürüme göre süzer)',
+  (select count(*) = 2 and count(*) filter (where surum = '1.0.1' and sayi = 1) = 1 from public.hata_kayitlari));
+delete from public.hata_kayitlari where surum = '1.0.1';
 
 -- ---------- giriş yapmış kullanıcı ----------
 set role authenticated;
@@ -379,7 +383,7 @@ update public.tek_kodlar set kullanici = null where ozet = public.tek_kod_ozet('
 select test.ok('elle NULL yapılınca yöneticilik gider', (select count(*) = 0 from public.yoneticiler where id = '44444444-4444-4444-4444-444444444444'));
 
 -- ---------- 2.4: kurulum sürümü, süreli kodlar, uygulama puanları ----------
-select test.ok('kurulum sürümü sorulabilir', public.kurulum_surumu() = '2.5');
+select test.ok('kurulum sürümü sorulabilir', public.kurulum_surumu() = '2.8');
 set role authenticated;
 set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
 select public.tek_kod_olustur(jsonb_build_array(jsonb_build_object('ozet', public.tek_kod_ozet('SURELI1234'), 'tur', 'evrengezer', 'sure_gun', 7)));

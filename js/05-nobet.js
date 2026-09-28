@@ -161,7 +161,7 @@ function olayCiz() {
              olay.secenekler.map(function (s, i) {
                const yetmez = s.ecka && s.ecka < 0 && !eckaVar(-s.ecka);
                return '<button class="dugme' + (i ? " dugme-sade" : "") +
-                      (yetmez ? " pasif" : "") + '" data-olay="' + i + '">' +
+                      (yetmez ? ' pasif" aria-disabled="true' : "") + '" data-olay="' + i + '">' +
                       kacir(s.metin) + (yetmez ? " · yetersiz " + birim() : "") + "</button>";
              }).join("") +
            "</div>" +
@@ -533,10 +533,10 @@ function cizGece() {
       '<button class="dugme dugme-sade" data-oyun="siper">siper al</button>' +
     "</div>" +
     '<div class="oyun-sira" style="margin-top:9px">' +
-      '<button class="dugme dugme-sade' + (fenerAktif ? "" : " pasif") + '" data-oyun="fener">' +
+      '<button class="dugme dugme-sade' + (fenerAktif ? "" : ' pasif" aria-disabled="true') + '" data-oyun="fener">' +
         (O.fener < 1 ? "fener yok" : (O.fenerKullanildi ? "fener tükendi" : "feneri yak")) +
       "</button>" +
-      '<button class="dugme dugme-sade' + (O.kacKalan > 0 ? "" : " pasif") +
+      '<button class="dugme dugme-sade' + (O.kacKalan > 0 ? "" : ' pasif" aria-disabled="true') +
         '" data-oyun="kac">arka kapı' +
         (O.kacKalan > 0 ? " (" + O.kacKalan + ")" : " — bitti") + "</button>" +
     "</div>";

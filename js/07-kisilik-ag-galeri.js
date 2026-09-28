@@ -196,7 +196,7 @@ function agCiz() {
           }).join("") +
         "</div>"
       : "") +
-    '<div class="ag-tahta-sarici">' +
+    '<div class="ag-tahta-sarici" tabindex="0" role="region" aria-label="Kişilik ağı (kaydırılabilir)">' +
       '<svg viewBox="0 0 ' + genislik + " " + yukseklik + '" width="' + genislik + '" height="' + yukseklik +
         '" class="ag-svg ag-tahta" role="img" aria-label="İlişki ağı">' +
         '<rect width="' + genislik + '" height="' + yukseklik + '" class="ag-pano"/>' +

@@ -71,6 +71,7 @@ function komutPaletiAc() {
     document.body.appendChild(k);
   }
 
+  k.innerHTML = "";   /* açılışta boş kutuyla baştan */
   komutPaletiCiz("");
   k.hidden = false;
   /* telefonda geri hareketi/tuşu paleti kapatsın (sayfadan çıkmasın) */
@@ -119,14 +120,7 @@ function komutPaletiCiz(sorgu) {
   const sonuclar = komutAra(sorgu);
   komutSecili = Math.min(komutSecili, Math.max(0, sonuclar.length - 1));
 
-  k.innerHTML =
-    '<div class="komut-panel" role="dialog" aria-modal="true" aria-label="Komut paleti">' +
-      '<div class="komut-ust">' +
-        '<input class="komut-giris" id="komutGiris" type="text" autocomplete="off" spellcheck="false" enterkeyhint="go" ' +
-          'placeholder="karakter, evren maddesi, araç ara…" value="' + kacir(sorgu) + '">' +
-        '<button class="komut-kapat" type="button" data-komut-kapat aria-label="Aramayı kapat">✕</button>' +
-      "</div>" +
-      '<div class="komut-liste">' +
+  const listeHtml =
         (sonuclar.length
           ? sonuclar.map(function (s, i) {
               return '<button class="komut-oge' + (i === komutSecili ? " secili" : "") +
@@ -138,8 +132,25 @@ function komutPaletiCiz(sorgu) {
                        "</span>" +
                      "</button>";
             }).join("")
-          : '<div class="komut-bos">Sonuç yok</div>') +
+          : '<div class="komut-bos">Sonuç yok</div>');
+
+  /* yazarken yalnızca liste yenilenir: arama kutusu yerinde kalır, odak ve telefonun klavyesi kapanmaz */
+  const liste = k.querySelector(".komut-liste");
+  if (liste && k.querySelector("#komutGiris")) {
+    liste.innerHTML = listeHtml;
+    const g = k.querySelector("#komutGiris");
+    if (g.value !== sorgu) { g.value = sorgu; }
+    return;
+  }
+
+  k.innerHTML =
+    '<div class="komut-panel" role="dialog" aria-modal="true" aria-label="Komut paleti">' +
+      '<div class="komut-ust">' +
+        '<input class="komut-giris" id="komutGiris" type="text" autocomplete="off" spellcheck="false" enterkeyhint="go" ' +
+          'aria-label="Ara" aria-controls="komutListe" placeholder="karakter, evren maddesi, araç ara…" value="' + kacir(sorgu) + '">' +
+        '<button class="komut-kapat" type="button" data-komut-kapat aria-label="Aramayı kapat">✕</button>' +
       "</div>" +
+      '<div class="komut-liste" id="komutListe" aria-label="Sonuçlar">' + listeHtml + "</div>" +
       '<div class="komut-ipucu">↑↓ gezin · Enter seç · Esc kapat</div>' +
     "</div>";
 }
@@ -272,8 +283,8 @@ function sohbetCiz() {
     '<p class="oyun-not">İki karakter seç; aralarında kısa, oyunsu bir diyalog üretilsin. ' +
     "Ciddiye alma — eğlencelik.</p>" +
     '<div class="sohbet-secim">' +
-      '<select class="kod-giris arac-giris" id="sohbetA">' + secenek(aId) + "</select>" +
-      '<select class="kod-giris arac-giris" id="sohbetB">' + secenek(bId) + "</select>" +
+      '<select class="kod-giris arac-giris" id="sohbetA" aria-label="Birinci karakter">' + secenek(aId) + "</select>" +
+      '<select class="kod-giris arac-giris" id="sohbetB" aria-label="İkinci karakter">' + secenek(bId) + "</select>" +
     "</div>" +
     '<button class="dugme" id="sohbetUret">Sohbet üret</button>' +
     '<div id="sohbetSonuc"></div>';
