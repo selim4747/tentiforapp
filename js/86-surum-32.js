@@ -24,3 +24,14 @@ if (typeof sayfaBasiCiz === "function") {
     return r;
   };
 }
+
+/* 3.2.2: Tentiforverse kartları ("#/arsiv": evren seçici, E25 kapısı, atölye) Tömye sayfasını açar.
+   Değer korunur (karşılaştırmalar ona bakıyor); ana sayfadaki Tömye kartı kendi düğmeleriyle kalır. */
+document.addEventListener("click", function (ev) {
+  const b = ev.target.closest && ev.target.closest('[data-evren-git="#/arsiv"]');
+  if (!b || b.closest("#anaEvrenler")) { return; }
+  ev.preventDefault(); ev.stopImmediatePropagation();
+  if (typeof evrenSeciciKapat === "function" && document.querySelector("#evrenSecici")) { evrenSeciciKapat(); }
+  if (typeof evrenSayfaKapat === "function" && document.querySelector("#evrenSayfa")) { evrenSayfaKapat(); }
+  location.hash = "#/tomye";
+}, true);
