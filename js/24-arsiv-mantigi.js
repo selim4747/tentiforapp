@@ -30,7 +30,8 @@ const $ = function (s) { return document.querySelector(s); };
 function kacir(m) {
   const d = document.createElement("div");
   d.textContent = m == null ? "" : m;
-  return d.innerHTML;
+  /* 3.1.1: tırnaklar da kaçsın; kacir çıktısı nitelik değerlerinde de kullanılıyor (ad="..." gibi) */
+  return d.innerHTML.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
 function paragraf(metin) {

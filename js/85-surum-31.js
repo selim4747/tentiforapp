@@ -31,22 +31,48 @@ async function evren1Harca() {
   } catch (_) { try { localStorage.setItem(EVR1_BEKLEYEN, "1"); } catch (__) { /* yok */ } return false; }
 }
 
-if (typeof evrenYeniKur === "function") {
-  const eskiEYK31 = evrenYeniKur;
-  window.evrenYeniKur = function () {
-    /* seviye ya da kalıcı kod yetmiyor, tek seferlik hak var: bu kurulum hakkı harcar */
-    const taban = typeof seviyeYeter === "function" && (seviyeYeter(SEVIYE_URETIM.evren.seviye) || (typeof seviyeKoduSeviyesi === "function" && seviyeKoduSeviyesi() >= SEVIYE_URETIM.evren.seviye));
-    const once = fanEserlerim().filter(function (x) { return x.tur === "evren"; }).map(function (x) { return x.id; });
-    const id = eskiEYK31.apply(this, arguments);
-    if (id && !taban && evren1Var() && once.indexOf(id) === -1) {
-      TEK.haklar = TEK.haklar.filter(function (h, i, l) { return !(h.tur === "evren1" && l.findIndex(function (x) { return x.tur === "evren1"; }) === i); });
-      if (typeof tekHaklariUygula === "function") { tekHaklariUygula(); }
-      evren1Harca();
-      if (typeof eckaBildir === "function") { eckaBildir("Tek seferlik evren kurma hakkın kullanıldı: bu evren senin."); }
-    }
-    return id;
+/** Seviye ya da kalıcı seviye kodu evren kurmaya yetiyor mu (tek seferlik hak sayılmadan). */
+function evrenTabanAcik() {
+  const g = (typeof SEVIYE_URETIM !== "undefined" && SEVIYE_URETIM.evren) ? SEVIYE_URETIM.evren.seviye : 15;
+  return typeof seviyeYeter === "function" && (seviyeYeter(g) || (typeof seviyeKoduSeviyesi === "function" && seviyeKoduSeviyesi() >= g));
+}
+
+function evren1Kullan() {
+  TEK.haklar = TEK.haklar.filter(function (h, i, l) { return !(h.tur === "evren1" && l.findIndex(function (x) { return x.tur === "evren1"; }) === i); });
+  if (typeof tekHaklariUygula === "function") { tekHaklariUygula(); }
+  evren1Harca();
+  if (typeof eckaBildir === "function") { eckaBildir("Tek seferlik evren kurma hakkın kullanıldı: bu evren senin."); }
+}
+
+function evrenSayisi() { return fanEserlerim().filter(function (x) { return x.tur === "evren" && !x.e99; }).length; }
+
+/* 3.1.1: hak, yeni evren hangi yoldan açılırsa açılsın harcanır (Kurucu, Fan sayfası "+ Yeni evren");
+   yarım kalmış boş taslağı yeniden açmak (evrenYeniKur) fanYeni'ye gitmez, hak harcamaz. */
+if (typeof fanYeni === "function") {
+  const eskiFY311 = fanYeni;
+  window.fanYeni = function (tur) {
+    if (tur !== "evren") { return eskiFY311.apply(this, arguments); }
+    const taban = evrenTabanAcik();
+    const e = eskiFY311.apply(this, arguments);
+    if (e && !taban && evren1Var()) { evren1Kullan(); }
+    return e;
   };
 }
+
+/* evren kopyalamak da yeni evren kurmaktır: kapıdan geçer, gerekirse tek seferlik hakkı harcar */
+document.addEventListener("click", function (ev) {
+  const b = ev.target.closest && ev.target.closest('[data-evs-kopyala], [data-fan-p="kopyala"]');
+  if (!b) { return; }
+  const evren = b.hasAttribute("data-evs-kopyala") || (typeof fanAcik !== "undefined" && fanAcik && fanAcik.eser && fanAcik.eser.tur === "evren");
+  if (!evren || evrenTabanAcik()) { return; }
+  if (!evren1Var()) {
+    ev.stopImmediatePropagation(); ev.preventDefault();
+    if (typeof seviyeUyari === "function") { seviyeUyari("evren"); }
+    return;
+  }
+  const once = evrenSayisi();
+  setTimeout(function () { if (evrenSayisi() > once && evren1Var()) { evren1Kullan(); } }, 0);
+}, true);
 /* bekleyen harcama: hesap hazır olunca */
 if (typeof tekHaklariYukle === "function") {
   const eskiTHY31 = tekHaklariYukle;
@@ -115,6 +141,21 @@ if (typeof kisiTemizle === "function") {
     }
     return e;
   };
+}
+
+/* 3.1.1: konuk havuzu bir çizimde onlarca kez isteniyor (her kart, salon, sıralama): aynı iş parçasında bir kez hesaplanır,
+   taslak yazılınca hemen tazelenir */
+let evrHavuzBellek = null;
+if (typeof evrKonukHavuzu === "function") {
+  const eskiEKH311 = evrKonukHavuzu;
+  window.evrKonukHavuzu = function () {
+    if (!evrHavuzBellek) { evrHavuzBellek = eskiEKH311.apply(this, arguments); setTimeout(function () { evrHavuzBellek = null; }, 0); }
+    return evrHavuzBellek;
+  };
+}
+if (typeof fanEserlerimYaz === "function") {
+  const eskiFEY311 = fanEserlerimYaz;
+  window.fanEserlerimYaz = function () { evrHavuzBellek = null; return eskiFEY311.apply(this, arguments); };
 }
 
 /** E25'in kapıları: bütün evrenler (kanon, okurların, senin). Yeni kurulan her evren bir kapı. */
@@ -342,7 +383,7 @@ document.addEventListener("click", function (ev) {
   if (!b || typeof EVS === "undefined" || !EVS) { return; }
   const v = evrenSayfaVerisi();
   if (!v || !v.eser) { return; }
-  const ad = b.getAttribute("data-evr-kisi").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&quot;/g, '"');
+  const ad = b.getAttribute("data-evr-kisi");   /* getAttribute varlıkları zaten çözer */
   const h = evrKisiSayfasiHtml(v.eser, ad);
   if (!h) { if (typeof eckaBildir === "function") { eckaBildir("“" + ad + "” bu evrenin kişileri arasında yok."); } return; }
   const p = document.querySelector("#perde");
@@ -512,5 +553,22 @@ document.addEventListener("click", function (ev) {
 /* kişi sayfası evren sayfasının üstünde açılır; kapanınca perde eski katmanına döner */
 if (typeof perdeKapat === "function") {
   const eskiPK31 = perdeKapat;
-  window.perdeKapat = function () { const p = document.querySelector("#perde"); if (p) { p.classList.remove("evr-perde-ust"); } return eskiPK31.apply(this, arguments); };
+  window.perdeKapat = function () {
+    const p = document.querySelector("#perde"); if (p) { p.classList.remove("evr-perde-ust"); }
+    const r = eskiPK31.apply(this, arguments);
+    /* 3.1.1: kod penceresi ya da seviye penceresi kapanınca ana sayfadaki kilit güncel olsun */
+    try { anaEvrenlerCiz(); } catch (_) { /* yok */ }
+    return r;
+  };
+}
+/* 3.1.1: girişten sonra sunucudaki XP gelince kilit açılmış olabilir */
+if (typeof svkSunucuYukle === "function") {
+  const eskiSSY311 = svkSunucuYukle;
+  window.svkSunucuYukle = async function () {
+    const once = SVK.sunucu;
+    const r = await eskiSSY311.apply(this, arguments);
+    /* yalnızca XP değiştiyse (seviyeDurumu bunu her çağrıda tetikler: döngü olmasın) */
+    if (SVK.sunucu !== once) { try { anaEvrenlerCiz(); } catch (_) { /* yok */ } }
+    return r;
+  };
 }
