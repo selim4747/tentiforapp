@@ -1,5 +1,5 @@
 {
-  "surum": "3.2.1",
+  "surum": "3.2.2",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7180,6 +7180,15 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "3.2.2",
+      "tarih": "2026-09-28",
+      "maddeler": [
+        "Tömye bağlantıları: Tentiforverse kartına (evren seçici, E25 kapısı, Evren Atölyesi) dokununca artık Tömye sayfası açılıyor",
+        "Bütün evren sayfaları 3.2 düzeninde: düğmeler, sekmeler, etiketler ve giriş alanları sitenin okunaklı arayüz yazısıyla; evrenin kendi yazı tipi yalnızca metinde",
+        "Evren sayfasında başlık iki kez yazılmıyor; eylem kartı sıkı, düğmeler yan yana; kartlar sitenin yuvarlak kart diliyle"
+      ]
+    },
     {
       "surum": "3.2.1",
       "tarih": "2026-09-28",

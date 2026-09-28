@@ -5045,3 +5045,25 @@ html.ecka-yeni .cuzdan-rozet{display:none}
 /* 3.2: İçindekiler'de sayfa adları bağlantı */
 a.ic-grup-ad{display:block;text-decoration:none}
 a.ic-grup-ad:hover,a.ic-grup-ad:focus-visible{color:var(--deniz);text-decoration:underline}
+
+/* ==================== 3.2.2 — evren sayfaları 3.2 düzeninde ====================
+   Evrenin kendi yazı tipi (--govde/--display evren sayfasında değişir) yalnızca metinde kalır;
+   düğme, sekme, etiket, giriş gibi denetimler sitenin arayüz yazısıyla ve aynı biçimde. */
+:root{--arayuz:"Karla",system-ui,sans-serif}
+#evrenSayfa .dugme,#evrenSayfa .evs-sekme,#evrenSayfa .evg-cip,#evrenSayfa .evs-cuzdan,#evrenSayfa .evs-cuzdan .evs-eg,
+#evrenSayfa .oyun-not,#evrenSayfa .oyun-etiket,#evrenSayfa .evs-rozet,#evrenSayfa .kutu-y label,#evrenSayfa .arac-giris,
+#evrenSayfa select,#evrenSayfa input,#evrenSayfa textarea,#evrenSayfa .evr-tur-ust,#evrenSayfa .ic-bag,#evrenSayfa .kod-btn{font-family:var(--arayuz)}
+#evrenSayfa .dugme{font-size:14.5px;font-weight:600;letter-spacing:0}
+#evrenSayfa .evs-sekme{font-size:14.5px;letter-spacing:0}
+#evrenSayfa .evs-rozet,#evrenSayfa .oyun-etiket{letter-spacing:.1em}
+#evrenSayfa .oyun-not{font-size:13.5px}
+/* üstteki başlık evrenin adını zaten gösteriyor: gövdedeki tekrar gizli */
+#evrenSayfa .fan-oku > .ust,#evrenSayfa .fan-oku > h1{display:none}
+/* eylem kartı sıkı, düğmeler yan yana */
+.eva-eylem{padding:12px 14px}
+.eva-eylem .oyun-not{margin-top:4px;font-size:13px}
+.eva-eylem .oyun-sira{gap:6px;margin-top:8px}
+.eva-eylem .dugme{min-height:40px;padding:8px 14px}
+/* kartlar sitenin kart diliyle */
+#evrenSayfa .kutu-y,#evrenSayfa .fan-grup,#evrenSayfa .evr-tur,#evrenSayfa .evh-kutu,#evrenSayfa .gz-kutu{border-radius:var(--r-kart)}
+#evrenSayfa .evg-cip{border-radius:999px}
