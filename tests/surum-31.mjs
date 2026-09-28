@@ -85,8 +85,17 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
     await Y.goto(adres + "/"); await Y.waitForFunction(veriVar, null, { timeout: 20000 }); await bekle(Y, 500);
     ok("ana sayfada evrenler: Tömye büyük kart, kanon ve okurların evrenleri", await Y.evaluate(function () {
       const a = document.querySelector("#anaEvrenler");
-      return aktifSayfa === "arsiv" && !!document.querySelector(".hero .ana-tomye .hero-baslik") && a.querySelectorAll(".ana-evren.kanon").length >= 3 &&
-        a.querySelectorAll(".ana-evren.fan").length >= 1 && /E25/.test(a.textContent);
+      return aktifSayfa === "arsiv" && !!document.querySelector(".hero .ana-tomye .hero-baslik") && a.querySelectorAll(".ana-evren.kanon").length >= 3 && /E25/.test(a.textContent);
+    }));
+    ok("Claude'un evreni ve örnek fan evrenleri kanon değil, test evreni olarak görünür", await Y.evaluate(function () {
+      const a = document.querySelector("#anaEvrenler");
+      const kanon = Array.from(a.querySelectorAll(".ana-evren.kanon")).map(function (x) { return x.textContent; }).join("|");
+      const test = Array.from(a.querySelectorAll(".ana-evren.test")).map(function (x) { return x.getAttribute("data-evren-git"); });
+      const sis = fanSiteListesi("evren").find(function (x) { return x.id === "fornek-sis"; });
+      return !/Claude/.test(kanon) && test.indexOf("#/claude") !== -1 && test.indexOf("#/ev/fan/fornek-sis") !== -1 && test.indexOf("#/ev/fan/fornek-kul") !== -1 &&
+        evaStatu("Claude'un Evreni").tur === "test" && evaStatu(sis.ad).tur === "fan" && evaStatu(sis.ad).test === true &&
+        /Test · fan-made/.test(evaStatuRozeti(evaStatu(sis.ad))) && !evaEvrengezerIzni(sis.ad).izin && evaEvrengezerIzni("Claude'un Evreni").izin &&
+        !/Kanon evrende yeni hikâye: Claude/.test(kisiGoturHtml({}, "a:b")) && /Test evreninde deneme hikâyesi/.test(kisiGoturHtml({}, "a:b"));
     }));
     ok("en altta kilitli 'Evrenini kur': seviye kapısı ve kod girişi", await Y.evaluate(function () {
       const k = document.querySelector("#anaEvrenler .ana-kur");

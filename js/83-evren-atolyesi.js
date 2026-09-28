@@ -24,25 +24,34 @@ if (typeof evrenEkTemizle === "function") {
 
 function evaAd(s) { return String(s || "").trim().toLocaleLowerCase("tr"); }
 
-/** Sitenin kendi evrenleri: her zaman kanon. */
-function evaKanonAdlari() {
-  const l = ["tömye", "24. evren", "e24", "e99", "claude'un evreni", "şomdo"];
-  (veri.haritalar || []).forEach(function (h) { if (h && h.ad) { l.push(evaAd(h.ad)); } });
-  Object.keys(veri.kanonEvrenleri || {}).forEach(function (id) { l.push(id); l.push(evaAd((veri.kanonEvrenleri[id] || {}).ad)); });
+/** Test evreni: Claude'un Evreni kanon değil; sitenin özelliklerinin denendiği ve gösterildiği evren. */
+function evaTestAdlari() {
+  const l = ["claude'un evreni", "şomdo", "claude"];
+  (veri.haritalar || []).forEach(function (h) { if (h && h.id === "claude" && h.ad) { l.push(evaAd(h.ad)); } });
   if (veri.claudeEvreni && veri.claudeEvreni.ad) { l.push(evaAd(veri.claudeEvreni.ad)); }
-  return l.filter(Boolean);
+  return l;
+}
+
+/** Sitenin kendi evrenleri: her zaman kanon (test evreni hariç). */
+function evaKanonAdlari() {
+  const l = ["tömye", "24. evren", "e24", "e99"];
+  (veri.haritalar || []).forEach(function (h) { if (h && h.ad && h.id !== "claude") { l.push(evaAd(h.ad)); } });
+  Object.keys(veri.kanonEvrenleri || {}).forEach(function (id) { l.push(id); l.push(evaAd((veri.kanonEvrenleri[id] || {}).ad)); });
+  const test = evaTestAdlari();
+  return l.filter(function (x) { return x && test.indexOf(x) === -1; });
 }
 
 /** Bir hikâyenin "Hangi evrende geçiyor?" alanından evrenin statüsü.
-    { tur: "kanon" | "benim" | "fan" | "serbest", ad, id, eser } */
+    { tur: "kanon" | "test" | "benim" | "fan" | "serbest", ad, id, eser, test } — test: sitenin örnek (test) fan evreni */
 function evaStatu(ad) {
   const a = evaAd(ad);
   if (!a) { return { tur: "serbest", ad: "" }; }
   const benim = (typeof fanEserlerim === "function" ? fanEserlerim() : []).find(function (x) { return x.tur === "evren" && !x.e99 && evaAd(x.ad) === a; });
   if (benim) { return { tur: "benim", ad: benim.ad, id: benim.id, eser: benim }; }
+  if (evaTestAdlari().indexOf(a) !== -1) { return { tur: "test", ad: ad }; }
   if (evaKanonAdlari().indexOf(a) !== -1) { return { tur: "kanon", ad: ad }; }
   const site = (typeof fanSiteListesi === "function" ? fanSiteListesi("evren") : []).find(function (x) { return evaAd(x.ad) === a; });
-  if (site) { return { tur: site.kanon === true ? "kanon" : "fan", ad: site.ad, id: site.id, eser: site }; }
+  if (site) { return { tur: site.kanon === true ? "kanon" : "fan", ad: site.ad, id: site.id, eser: site, test: site.test === true && site.kanon !== true }; }
   return { tur: "serbest", ad: ad };
 }
 
@@ -77,7 +86,8 @@ function evaHikayeDenetle(h) {
 
 function evaStatuRozeti(s) {
   if (s.tur === "kanon") { return '<span class="eva-rozet kanon">Kanon</span>'; }
-  if (s.tur === "fan") { return '<span class="eva-rozet fan">Fan-made</span>'; }
+  if (s.tur === "test") { return '<span class="eva-rozet test">Test</span>'; }
+  if (s.tur === "fan") { return s.test ? '<span class="eva-rozet test">Test · fan-made</span>' : '<span class="eva-rozet fan">Fan-made</span>'; }
   if (s.tur === "benim") { return '<span class="eva-rozet benim">Senin evrenin</span>'; }
   return "";
 }
@@ -86,9 +96,10 @@ function evaStatuNotu(ad) {
   const s = evaStatu(ad);
   if (s.tur === "kanon") { return evaStatuRozeti(s) + " Kanon evren: herkes hikâye ve Evrengezer hikâyesi yazabilir."; }
   if (s.tur === "benim") { return evaStatuRozeti(s) + " Senin evrenin: istediğin Evrengezeri getirebilirsin."; }
+  if (s.tur === "test") { return evaStatuRozeti(s) + " Test evreni: sitenin özelliklerinin denendiği ve gösterildiği evren, kanon değil. Deneme hikâyesi ve Evrengezer hikâyesi yazabilirsin."; }
   if (s.tur === "fan") {
     const y = evaYetkili(s);
-    return evaStatuRozeti(s) + " Fan-made evren" + (y ? " (yetkilisisin): Evrengezer getirebilirsin." : ": Evrengezerleri yalnızca sahibi ve yetkilileri getirebilir.") +
+    return evaStatuRozeti(s) + (s.test ? " Örnek (test) fan-made evren" : " Fan-made evren") + (y ? " (yetkilisisin): Evrengezer getirebilirsin." : ": Evrengezerleri yalnızca sahibi ve yetkilileri getirebilir.") +
       (!evaHikayeIzni(ad).izin ? " Sahibi başkalarının hikâye yazmasını kapattı." : "");
   }
   return "";
@@ -101,11 +112,12 @@ if (typeof kisiGoturHtml === "function") {
   window.kisiGoturHtml = function (e, anahtar) {
     const h = eskiGH30.apply(this, arguments);
     const kanon = [];
-    (veri.haritalar || []).forEach(function (x) { if (x && x.ad && (typeof kanonEvrenErisimi !== "function" || kanonEvrenErisimi(x.id))) { kanon.push(x.ad); } });
+    (veri.haritalar || []).forEach(function (x) { if (x && x.ad && x.id !== "claude" && (typeof kanonEvrenErisimi !== "function" || kanonEvrenErisimi(x.id))) { kanon.push(x.ad); } });
     (typeof fanSiteListesi === "function" ? fanSiteListesi("evren") : []).forEach(function (x) { if (x.kanon === true && x.ad) { kanon.push(x.ad); } });
+    const claude = (veri.haritalar || []).find(function (x) { return x && x.id === "claude"; });
     const secenek = kanon.filter(function (x, i, a) { return a.indexOf(x) === i; }).map(function (a) {
       return '<option value="yeni-hikaye@' + kacir(a) + '">Kanon evrende yeni hikâye: ' + kacir(a) + "</option>";
-    }).join("");
+    }).join("") + (claude ? '<option value="yeni-hikaye@' + kacir(claude.ad) + '">Test evreninde deneme hikâyesi: ' + kacir(claude.ad) + "</option>" : "");
     return h.replace("</select>", secenek + "</select>")
       .replace('<p class="oyun-not">Kişi oraya konuk olarak girer.', '<p class="oyun-not">Kanon evrenlerde herkes Evrengezer hikâyesi yazabilir; fan-made evrenlere Evrengezeri yalnızca sahibi ve yetkilileri getirir. Kişi oraya konuk olarak girer.');
   };
@@ -205,7 +217,8 @@ function evaEylemHtml(v) {
   return '<div class="kutu-y eva-eylem"><div class="eva-eylem-bas">' + evaStatuRozeti(s) + "<b>" + kacir(ad) + "</b></div>" +
     '<p class="oyun-not">' + (s.tur === "kanon"
       ? "Kanon evren: herkes burada fan hikâyesi ve Evrengezer hikâyesi yazabilir."
-      : "Fan-made evren: kendi kuralları var. Evrengezerleri buraya yalnızca sahibi ve yetkilileri getirebilir.") + "</p>" +
+      : (s.test ? "Örnek (test) fan-made evren: sitenin özelliklerini göstermek için kuruldu, kanon değil. Kendi kuralları var; Evrengezerleri buraya yalnızca sahibi ve yetkilileri getirebilir."
+        : "Fan-made evren: kendi kuralları var. Evrengezerleri buraya yalnızca sahibi ve yetkilileri getirebilir.")) + "</p>" +
     '<div class="oyun-sira">' +
       (hk.izin ? '<button class="dugme" data-eva-hikaye="' + kacir(ad) + '">✎ Bu evrende hikâye yaz</button>' : '<span class="oyun-not">' + kacir(hk.neden) + "</span>") +
       (s.tur === "kanon" ? '<button class="dugme dugme-sade" data-eva-evrengezer>Evrengezer getir</button>' : "") +
@@ -224,7 +237,10 @@ if (typeof evrenSayfaVerisi === "function") {
   window.evrenSayfaVerisi = function () {
     const v = eskiSV30.apply(this, arguments);
     if (!v || !EVS) { return v; }
-    if (EVS.kaynak === "fan" && !v.onizle) { v.rozet = v.eser && v.eser.kanon === true ? "Kanon evren · herkes hikâye yazabilir" : "Fan-made evren"; }
+    if (EVS.kaynak === "fan" && !v.onizle) {
+      const oz = fanSiteListesi("evren").find(function (x) { return x.id === EVS.id; }) || v.eser || {};
+      v.rozet = oz.kanon === true ? "Kanon evren · herkes hikâye yazabilir" : (oz.test === true ? "Test · fan-made evren (örnek)" : "Fan-made evren");
+    }
     if (EVS.kaynak === "benim" && v.eser && v.eser.durum === "kanonAday") { v.rozet += " · kanona aday"; }
     return v;
   };
@@ -298,8 +314,10 @@ if (typeof evrenSeciciListesi === "function") {
     const site = (veri.fanEserleri || {}).evrenler || [];
     (r.fan || []).forEach(function (x) {
       const e = site.find(function (y) { return "#/ev/fan/" + y.id === x.git; });
-      x.not = (e && e.kanon === true ? "kanon" : "fan-made") + (x.not ? " · " + x.not : "");
+      x.not = (e && e.kanon === true ? "kanon" : (e && e.test === true ? "test · fan-made" : "fan-made")) + (x.not ? " · " + x.not : "");
     });
+    /* Claude'un Evreni: test evreni (kanon değil) */
+    (r.site || []).forEach(function (x) { if (x.git === "#/claude") { x.not = "test evreni"; } });
     const benim = typeof fanEserlerim === "function" ? fanEserlerim() : [];
     (r.benim || []).forEach(function (x) {
       const e = benim.find(function (y) { return "#/ev/benim/" + y.id === x.git; });
@@ -334,7 +352,9 @@ function evrenAtolyeCiz() {
   });
   if (veri.e99) { kanonSite.push({ ad: "E99 · herkesin evreni", hikaye: "E99", git: "#/ev/e99" }); }
   site.filter(function (e) { return e.kanon === true; }).forEach(function (e) { kanonSite.push({ ad: e.ad, hikaye: e.ad, git: "#/ev/fan/" + e.id }); });
-  const fanMade = site.filter(function (e) { return e.kanon !== true; });
+  const fanMade = site.filter(function (e) { return e.kanon !== true && e.test !== true; });
+  const testler = site.filter(function (e) { return e.kanon !== true && e.test === true; });
+  const claude = (veri.haritalar || []).find(function (h) { return h && h.id === "claude"; });
 
   alan.innerHTML =
     '<div class="eva-bas">' +
@@ -359,7 +379,11 @@ function evrenAtolyeCiz() {
       const hk = evaHikayeIzni(e.ad);
       return evaEvrenKarti(e.ad, kacir([e.yazar, (e.kisiler || []).length ? (e.kisiler || []).length + " kişi" : ""].filter(Boolean).join(" · ")), "#/ev/fan/" + e.id, evaStatuRozeti({ tur: "fan" }),
         hk.izin ? '<button class="dugme dugme-sade y-kucuk" data-eva-hikaye="' + kacir(e.ad) + '">✎ Hikâye yaz</button>' : "");
-    }).join("") + "</div>" : "");
+    }).join("") + "</div>" : "") +
+    ((claude || testler.length) ? '<h3 class="eva-bolum">Test evrenleri · özellikleri gör ve dene</h3>' +
+      '<p class="oyun-not">Kanon değil: sitenin özelliklerinin denendiği ve gösterildiği evrenler. Bakıp öğren, kendi evreninde uygula.</p><div class="eva-kartlar">' +
+      (claude ? evaEvrenKarti(claude.ad, "Test evreni", "#/claude", evaStatuRozeti({ tur: "test" }), '<button class="dugme dugme-sade y-kucuk" data-eva-hikaye="' + kacir(claude.ad) + '">✎ Deneme hikâyesi</button>') : "") +
+      testler.map(function (e) { return evaEvrenKarti(e.ad, kacir(e.yazar || "örnek"), "#/ev/fan/" + e.id, evaStatuRozeti({ tur: "fan", test: true }), ""); }).join("") + "</div>" : "");
 }
 if (typeof GEC_CIZILENLER !== "undefined") { GEC_CIZILENLER.evrenAtolye = "evrenAtolyeCiz"; }
 

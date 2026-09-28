@@ -70,12 +70,16 @@ function anaEvrenlerCiz() {
       (x.not ? '<span class="ana-evren-not">' + kacir(x.not) + "</span>" : "") + "</button>";
   };
   /* ilk kart (Tentiforverse · 24. Evren) sayfada zaten büyük kart olarak duruyor */
-  const site = l.site.filter(function (x) { return x.git !== "#/arsiv"; });
+  const site = l.site.filter(function (x) { return x.git !== "#/arsiv" && x.git !== "#/claude"; });
+  /* test evrenleri: Claude'un Evreni ve sitenin örnek fan evrenleri (kanon değil) */
+  const test = l.site.filter(function (x) { return x.git === "#/claude"; }).concat(l.fan.filter(function (x) { return /^test/.test(x.not || ""); }));
+  const fan = l.fan.filter(function (x) { return !/^test/.test(x.not || ""); });
   const acik = typeof uretimAcik === "function" ? uretimAcik("evren") : true;
   const gereken = (typeof SEVIYE_URETIM !== "undefined" && SEVIYE_URETIM.evren) ? SEVIYE_URETIM.evren.seviye : 15;
   alan.innerHTML =
     (site.length ? '<div class="ana-evren-grup"><span class="ana-etiket">Kanon evrenler</span><div class="ana-evren-liste">' + site.map(function (x) { return kart(x, "kanon"); }).join("") + "</div></div>" : "") +
-    (l.fan.length ? '<div class="ana-evren-grup"><span class="ana-etiket">Okurların evrenleri</span><div class="ana-evren-liste">' + l.fan.map(function (x) { return kart(x, "fan"); }).join("") + "</div></div>" : "") +
+    (fan.length ? '<div class="ana-evren-grup"><span class="ana-etiket">Okurların evrenleri</span><div class="ana-evren-liste">' + fan.map(function (x) { return kart(x, "fan"); }).join("") + "</div></div>" : "") +
+    (test.length ? '<div class="ana-evren-grup"><span class="ana-etiket">Test evrenleri · özellikleri gör ve dene</span><div class="ana-evren-liste">' + test.map(function (x) { return kart(x, "test"); }).join("") + "</div></div>" : "") +
     (l.benim.length ? '<div class="ana-evren-grup"><span class="ana-etiket">Senin evrenlerin</span><div class="ana-evren-liste">' + l.benim.map(function (x) { return kart(x, "benim"); }).join("") + "</div></div>" : "") +
     '<div class="ana-kur' + (acik ? "" : " kilitli") + '">' +
       (acik
@@ -117,8 +121,8 @@ if (typeof kisiTemizle === "function") {
 function e25Kapilar() {
   const l = typeof evrenSeciciListesi === "function" ? evrenSeciciListesi() : { site: [], fan: [], benim: [] };
   const kapilar = [];
-  l.site.forEach(function (x) { if (!/^#\/ev\/site\/e25$/.test(x.git)) { kapilar.push({ ad: x.ad.replace(" · 24. Evren", ""), git: x.git, tur: "kanon", kilitli: x.kilitli }); } });
-  l.fan.forEach(function (x) { kapilar.push({ ad: x.ad, git: x.git, tur: /^kanon/.test(x.not || "") ? "kanon" : "fan" }); });
+  l.site.forEach(function (x) { if (!/^#\/ev\/site\/e25$/.test(x.git)) { kapilar.push({ ad: x.ad.replace(" · 24. Evren", ""), git: x.git, tur: x.git === "#/claude" ? "test" : "kanon", kilitli: x.kilitli }); } });
+  l.fan.forEach(function (x) { kapilar.push({ ad: x.ad, git: x.git, tur: /^kanon/.test(x.not || "") ? "kanon" : (/^test/.test(x.not || "") ? "test" : "fan") }); });
   l.benim.forEach(function (x) { kapilar.push({ ad: x.ad, git: x.git, tur: "benim" }); });
   return kapilar;
 }
@@ -175,7 +179,7 @@ function e25SalonHtml() {
         const n = gecen(k);
         return '<button type="button" class="e25-kapi ' + kacir(k.tur) + (k.kilitli ? " kilitli" : "") + '" data-evren-git="' + kacir(k.git) + '">' +
           '<span class="e25-kapi-kemer" aria-hidden="true"></span><b>' + (k.kilitli ? "🔒 " : "") + kacir(evrKisa(k.ad, 22)) + "</b>" +
-          '<span class="oyun-not">' + (n ? n + " Evrengezer geçti" : ({ kanon: "kanon", fan: "fan-made", benim: "senin evrenin" })[k.tur]) + "</span></button>";
+          '<span class="oyun-not">' + (n ? n + " Evrengezer geçti" : ({ kanon: "kanon", fan: "fan-made", benim: "senin evrenin", test: "test evreni" })[k.tur]) + "</span></button>";
       }).join("") + "</div></section>" +
     (kisiler.length >= 2 ? '<section class="e25-bulus" aria-label="İki Evrengezeri buluştur"><h3 class="evs-ara-baslik">Karşılaşma</h3>' +
       '<p class="oyun-not">İki Evrengezer bir hikâyede karşılaşsa? Seç, evrenini seç: ikisi de konuk olarak yeni bir hikâye taslağına girer.</p>' +

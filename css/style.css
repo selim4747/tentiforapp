@@ -4957,3 +4957,8 @@ html[data-ayar-tema="gece"] .evr-denetim-rozet{background:#5a3b0a;color:#ffe2b0}
 .evh-yer.zaman-isik circle:first-child{fill:#e0901f;r:2.2px;stroke:#fff}
 .evh-yer.zaman-isik{filter:drop-shadow(0 0 1.2px #e0901f)}
 .e25-secim{font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--sig);border-radius:10px;background:var(--beyaz);color:var(--murekkep);max-width:100%}
+.eva-rozet.test{background:#e7ddf6;color:#4b2a7b}
+html[data-ayar-tema="gece"] .eva-rozet.test{background:#3b2a5a;color:#e5d6ff}
+.ana-evren.test{border-left:4px solid #7a4fb5}
+.e25-kapi.test .e25-kapi-kemer{border-color:#7a4fb5}
+.e25-damga.test{border-color:#7a4fb5;color:#4b2a7b}
