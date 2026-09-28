@@ -1,5 +1,5 @@
 {
-  "surum": "3.1.1",
+  "surum": "3.2.0",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7176,6 +7176,20 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "3.2.0",
+      "tarih": "2026-09-28",
+      "maddeler": [
+        "Sade arayüz: ana sayfada önce evrenler, sonra kaldığın yer; yenilikler, günün kaydı, takip, Evrengezer vitrini ve brifing tek bir katlanır “Bugün sitede” bölümünde",
+        "Düğmeler daha okunaklı (daktilo yazısı yerine düz yazı, daha büyük), kartlar tek biçimde yuvarlatılmış ve hafif gölgeli",
+        "Etiketler sakinleşti, bölümler arasındaki çizgiler kalktı, telefonda bölüm boşlukları kısaldı",
+        "Masaüstündeki sayfa şeridi okunaklı; bulunduğun sayfa belirgin",
+        "Karakter kartları düzeldi: ad, unvan ve özet yan yana akıyordu, artık alt alta",
+        "Açıklama notları küçük daktilo yazısı yerine okunaklı düz yazıyla; arama ve yazı alanları da öyle",
+        "Tekrarlar kalktı: sayfa başlığı iki kez yazılmıyor (“Oyunlar / Oyunlar”), ana sayfada evrenler ikinci kez şerit olarak çıkmıyor",
+        "Üst çubuk sade: yeni gelen için boş cüzdan rozeti ve fazladan “rastgele” simgesi yok"
+      ]
+    },
     {
       "surum": "3.1.1",
       "tarih": "2026-09-28",

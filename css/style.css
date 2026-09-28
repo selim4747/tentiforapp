@@ -4963,3 +4963,81 @@ html[data-ayar-tema="gece"] .eva-rozet.test{background:#3b2a5a;color:#e5d6ff}
 .ana-evren.test{border-left:4px solid #7a4fb5}
 .e25-kapi.test .e25-kapi-kemer{border-color:#7a4fb5}
 .e25-damga.test{border-color:#7a4fb5;color:#4b2a7b}
+
+/* ==================== 3.2 — sade arayüz ====================
+   Tek biçim: yuvarlatılmış kartlar, okunaklı düğmeler (daktilo yazısı yerine gövde yazısı), sakin etiketler,
+   daha az çizgi. Ana sayfanın ikincil kutuları "Bugün sitede" altında katlı (index.html). */
+:root{--r-kucuk:8px;--r-kart:14px;--golge-hafif:0 1px 2px rgba(13,53,96,.05),0 4px 14px rgba(13,53,96,.05)}
+
+/* düğmeler */
+.dugme,.kod-btn,.hesap-btn{border-radius:var(--r-kucuk)}
+.dugme{font-family:var(--govde);font-size:14.5px;font-weight:600;letter-spacing:0;padding:11px 18px;min-height:44px}
+.dugme-tam{font-size:14.5px}
+.kod-btn{font-family:var(--govde);font-size:13.5px;font-weight:600;letter-spacing:0}
+
+/* kartlar ve kutular */
+.kutu-y,.baslangic,.surum-notu,.hafta-evren-kart,.devam-kart,.ana-evren,.ana-kur,.ana-tomye,.pencere,.ic-panel,.kesif-daha{border-radius:var(--r-kart)}
+.kutu-y,.baslangic,.hafta-evren-kart,.devam-kart,.kesif-daha{box-shadow:var(--golge-hafif)}
+.arama-giris{border-radius:var(--r-kart)}
+
+/* etiketler: daha az bağırsın */
+.etiket,.oyun-etiket,.ana-etiket{letter-spacing:.1em}
+.kutu-y label{letter-spacing:.06em}
+
+/* bölümler: aralarında çizgi yerine boşluk */
+.bolum + .bolum{border-top:none}
+.bolum-basi{margin-bottom:24px}
+@media (max-width:760px){.bolum{padding-top:44px;padding-bottom:44px}}
+
+/* masaüstü sayfa şeridi: okunaklı, seçili sayfa belirgin */
+.gezinme .gez-btn,.gezinme a.gez-btn{font-family:var(--govde);font-size:14px;letter-spacing:0;border-radius:999px;padding:6px 13px;background:transparent;border-color:transparent}
+.gezinme .gez-btn:hover,.gezinme .gez-btn:focus-visible{background:var(--buz);color:var(--deniz);border-color:transparent}
+.gezinme a.gez-btn.bu-sayfa{background:var(--deniz);color:var(--beyaz);border-color:var(--deniz)}
+.gezinme .komut-tetik{border-radius:999px}
+
+/* açıklama notları ve ipuçları: 11 px daktilo yerine okunaklı gövde yazısı (sitede 60'tan fazla yerde cümle taşıyor) */
+.oyun-not{font-family:var(--govde);font-size:13.5px;line-height:1.55}
+.oyun-ipucu{font-family:var(--govde);font-size:14px;border-radius:var(--r-kucuk)}
+.rol-eksik{font-family:var(--govde)}
+
+/* serbest yazı alanları ve seçimler gövde yazısıyla (kod girişi daktiloda kalır) */
+.arac-giris,select.kod-giris,textarea.kod-giris,input[type="search"]{font-family:var(--govde);letter-spacing:0;text-transform:none}
+.arac-giris,.kod-giris{border-radius:var(--r-kucuk)}
+
+/* sekmeler ve süzgeçler: yumuşak köşeli, dokunması kolay */
+.filtre-btn,.oyun-sekme button{border-radius:var(--r-kucuk);min-height:40px}
+
+/* karakter kartı: parçalar düğmenin içinde span; alt alta dursun (ad, unvan ve özet yan yana akıyordu) */
+.kart{border-radius:var(--r-kart);display:flex;flex-direction:column;align-items:flex-start}
+.kart-unvan,.kart-ad,.kart-ozet,.kart-onizleme{display:block}
+.kart-ad{margin:6px 0 8px}
+
+.sayfa-icerik-oge,.hesap-btn{font-family:var(--govde);letter-spacing:0}
+.sayfa-icerik-oge{font-size:13.5px}
+
+/* sayfa başlığı ile ilk bölüm başlığı aynıysa ikincisi gizli (js/86-surum-32.js) */
+.bolum.baslik-tekrar > .bolum-basi h2,.bolum.baslik-tekrar > .bolum-basi .etiket{display:none}
+.bolum.baslik-tekrar{padding-top:20px}
+.sayfa-icerik.tek-cip{display:none}
+
+/* üst çubuk sadeliği: yeni ziyaretçide boş cüzdan rozeti, masaüstünde de "rastgele" simgesi (ana sayfada ve ⌘K'da var) yok */
+html.ecka-yeni .cuzdan-rozet{display:none}
+.cuzdan-etiket{display:none}
+#rastgeleBtn{display:none}
+
+/* ana sayfa evrenleri zaten büyük kartlarla gösteriyor: altındaki ikinci evren şeridi tekrar */
+.evren-serit{display:none}
+
+/* ana sayfa: "Bugün sitede" katlı bölümü */
+.kesif-daha{margin-top:14px;background:var(--beyaz);border:1px solid var(--buz)}
+.kesif-daha > summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:14px 44px 14px 16px;position:relative;min-height:48px}
+.kesif-daha > summary::-webkit-details-marker{display:none}
+.kesif-daha > summary::after{content:"";position:absolute;right:18px;top:50%;width:9px;height:9px;margin-top:-7px;border-right:2px solid var(--deniz);border-bottom:2px solid var(--deniz);transform:rotate(45deg);transition:transform .2s}
+.kesif-daha[open] > summary::after{transform:rotate(-135deg);margin-top:-2px}
+.kesif-daha-ad{font-family:var(--display);font-size:19px;color:var(--murekkep)}
+.kesif-daha-not{font-size:13.5px;color:var(--murekkep-2)}
+.kesif-daha-ic{padding:0 16px 16px;display:grid;gap:14px}
+.kesif-daha-ic > div:empty{display:none}
+.kesif-daha-ic .arac-blok{margin-top:0;padding-top:14px}
+#kesif .baslangic{margin-top:14px}
+@media (prefers-reduced-motion:reduce){.kesif-daha > summary::after{transition:none}}

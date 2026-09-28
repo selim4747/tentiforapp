@@ -252,7 +252,8 @@ function bugunKartiCiz() {
     if (arama) { arama.insertAdjacentElement("afterend", k); } else { kesif.prepend(k); }
     /* vitrin ve brifing aşağıya: önce bugün, sonra keşif */
     const vitrin = document.querySelector("#e25VitrinAlan"), bas = kesif.querySelector("details.baslangic");
-    if (vitrin && bas) { bas.insertAdjacentElement("afterend", vitrin); }
+    /* 3.2: vitrin artık "Bugün sitede" bölümünde; oradaysa yerinde kalır */
+    if (vitrin && bas && !vitrin.closest("#kesifDaha")) { bas.insertAdjacentElement("afterend", vitrin); }
   }
   const son = sonOkunan();
   let devam = "";
