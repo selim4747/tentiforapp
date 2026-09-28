@@ -191,6 +191,45 @@ export async function surum27Testleri({ adres, veritabani, dizin, kok }) {
     ok("yerinde tahmin: buldun, oyun XP'si, seri bugünle 6", d2.d.kazandi && d2.d.bitti && d2.xp === h.xp + 10 && d2.s.seri === 6 && d2.s.bugunOynandi && /🔥 6 gün/.test(d2.kart), { xp: d2.xp, s: d2.s });
     ok("bitince haritaya tahmin yapılamaz", await O.evaluate(function () { return !document.querySelector("#haviAlan [data-havi-harita]"); }));
 
+    console.log("2.7 güvenlik: evren stil kodu dışarı çıkamaz");
+    const G = await cihaz("guvenlik");
+    const dis = [];
+    await G.route(/kotu\.test/, function (r) { dis.push(r.request().url()); return r.fulfill({ status: 200, body: "" }); });
+    await G.goto(adres + "/"); await bekle(G, 1200);
+    const css = await G.evaluate(async function () {
+      const yuk = [
+        ".a{background:url(https://kotu.test/1.png)}", ".a{background:u\\72 l(https://kotu.test/2.png)}", ".a{background:u\\rl(https://kotu.test/3.png)}",
+        ".a{background-image:image-set(\"https://kotu.test/4.png\" 1x)}", ".a{background-image:-webkit-image-set('//kotu.test/5.png' 1x)}",
+        "@import url(https://kotu.test/6.css); .a{color:red}", ".a{} } body{outline:9px solid rgb(255, 0, 0)} .b{"
+      ];
+      const k = document.createElement("div"); k.id = "evrenSayfa"; k.innerHTML = '<div class="a">x</div>'; document.body.appendChild(k);
+      yuk.forEach(function (y) { const st = document.createElement("style"); st.textContent = eksStilCss({ stilKodu: y }); document.head.appendChild(st); });
+      getComputedStyle(k.firstChild).backgroundImage;
+      await new Promise(function (r) { setTimeout(r, 500); });
+      const veri = eksStilCss({ stilKodu: '.a{background:url("data:image/png;base64,AAA")}' });
+      return { govde: getComputedStyle(document.body).outlineStyle, veri: veri };
+    });
+    ok("stil kodu dış adrese istek attıramaz (url, kaçış dizisi, image-set, @import)", dis.length === 0, dis);
+    ok("fazla } ile sitenin geri kalanı biçimlenemez", css.govde !== "solid", css);
+    ok("data: görselleri çalışmaya devam eder", /url\("data:image\/png;base64,AAA"\)/.test(css.veri), css.veri);
+
+    console.log("2.7 düzeltmeler: seviye kapısında kişi götürme, iki adlı karakterler");
+    const dz = await G.evaluate(function () {
+      const kisi = typeof kisiBul === "function" ? kisiBul("site", "fornek-kisi") : null;
+      const eski = window.uretimAcik;
+      window.uretimAcik = function () { return false; };
+      let sonuc, hata = null;
+      try { sonuc = kisi ? kisiGotur(kisi, "yeni-hikaye") : "kisi-yok"; } catch (e) { hata = e.message; }
+      window.uretimAcik = eski;
+      document.querySelectorAll("#perde").forEach(function (p) { p.hidden = true; });
+      window.okuErisim = function () { return true; };
+      const saek = veri.karakterler.find(function (k) { return k.id === "saek"; });
+      const kutular = saek ? karakterKutulari(saek).map(function (x) { return x.anahtar; }) : [];
+      return { sonuc: sonuc, hata: hata, adlar: saek ? karakterAdlari(saek) : [], mektup: kutular.some(function (a) { return /^mektup:/.test(a); }), alinti: kutular.some(function (a) { return /^alinti:/.test(a); }) };
+    });
+    ok("seviyesi yetmeyen kişi götürünce çökme yok (uyarı gösterilir)", dz.sonuc === null && !dz.hata, dz);
+    ok("iki adlı karakter ilk adıyla imzalanan mektup ve alıntılarını sayar", dz.adlar.join("|") === "Saek Luyot|Saek" && dz.mektup && dz.alinti, dz);
+
     console.log("2.7 liderlik: fonksiyon yoksa Supabase");
     const L = await cihaz("lider");
     await L.goto(adres + "/"); await bekle(L, 1200);

@@ -192,6 +192,7 @@ function evrenYeniKur() {
   const bos = fanEserlerim().find(evrenBosMu);
   if (bos) { return bos.id; }
   const e = fanYeni("evren");
+  if (!e) { return null; }   /* seviye kapısı: uyarıyı fanYeni gösterdi */
   if (!evrenBenimBul(e.id)) {
     if (typeof eckaBildir === "function") { eckaBildir("Evren kurulamadı: bu tarayıcının depolaması dolu ya da kapalı."); }
     return null;
