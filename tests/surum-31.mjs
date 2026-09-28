@@ -101,6 +101,26 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
       const k = document.querySelector("#anaEvrenler .ana-kur");
       return !!k && k === document.querySelector("#anaEvrenler").lastElementChild && k.classList.contains("kilitli") && !!k.querySelector("[data-kod-ac]") && !k.querySelector("[data-es-yeni]") && /Seviye 15/.test(k.textContent);
     }));
+    /* 3.2: sade arayüz */
+    ok("3.2: ikincil kutular kapalı 'Bugün sitede' bölümünde, bugün kartı ve arama dışarıda", await Y.evaluate(function () {
+      const d = document.querySelector("#kesifDaha");
+      return !!d && !d.open && !!d.querySelector("#gununAlan") && !!d.querySelector("#brifingAlan") && !!d.querySelector("#e25VitrinAlan") &&
+        !document.querySelector("#bugunKartAlan").closest("#kesifDaha") && !document.querySelector(".arama-kutu").closest("#kesifDaha");
+    }));
+    ok("3.2: karakter kartında ad, unvan ve özet alt alta", await Y.evaluate(function () {
+      const k = document.querySelector("#karakterIzgara .kart");
+      return !!k && ["kart-unvan", "kart-ad", "kart-ozet"].every(function (c) { const e = k.querySelector("." + c); return !e || getComputedStyle(e).display === "block"; });
+    }));
+    ok("3.2: ana sayfada tekrar eden evren şeridi ve boş cüzdan görünmez", await Y.evaluate(function () {
+      const s = document.querySelector("#evrenSerit");
+      return (!s || getComputedStyle(s).display === "none") && getComputedStyle(document.querySelector("#rastgeleBtn")).display === "none";
+    }));
+    await Y.evaluate(function () { location.hash = "#/oyunlar"; }); await bekle(Y, 900);
+    ok("3.2: sayfa başlığı ile ilk bölüm başlığı aynıysa ikincisi gizli", await Y.evaluate(function () {
+      const s = document.querySelector("#oyunlar");
+      return s.classList.contains("baslik-tekrar") && getComputedStyle(s.querySelector(".bolum-basi h2")).display === "none" && getComputedStyle(document.querySelector("#sayfaBasi h1")).display !== "none";
+    }));
+    await Y.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(Y, 700);
     await Y.click('#anaEvrenler [data-evren-git="#/ev/site/e25"]'); await bekle(Y, 800);
     ok("ana sayfadaki evren kartı evrene götürür", await Y.evaluate(function () { return !!EVS && EVS.kaynak === "site" && EVS.id === "e25"; }));
 
