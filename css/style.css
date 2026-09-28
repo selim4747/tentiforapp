@@ -4824,3 +4824,29 @@ blockquote.evr-belge-metin{margin:0;padding-left:12px;border-left:3px solid var(
 .fan-oge-katla{border-left:3px solid var(--buz);padding-left:10px}
 .fan-oge-katla>summary{cursor:pointer;font-weight:700;padding:8px 0;list-style-position:inside}
 .fan-oge-katla[open]>summary{color:var(--deniz)}
+
+/* ==================== 3.0 — kanon ve fan-made evrenler ==================== */
+.eva-rozet{display:inline-block;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:2px 9px;margin-right:6px;vertical-align:middle}
+.eva-rozet.kanon{background:var(--deniz);color:var(--kar)}
+.eva-rozet.fan{background:#fbe6c4;color:#6b3f00}
+.eva-rozet.benim{background:var(--buz);color:var(--deniz)}
+html[data-ayar-tema="gece"] .eva-rozet.fan{background:#5a3b0a;color:#ffe2b0}
+.eva-eylem-bas{display:flex;align-items:center;gap:6px}
+.eva-uyari{color:#a3261f}
+html[data-ayar-tema="gece"] .eva-uyari{color:#ff9b93}
+.eva-yollar{display:flex;flex-direction:column;gap:8px;margin:6px 0 12px}
+.eva-yollar h4{margin:0;font-family:var(--display);font-size:1.15rem}
+.eva-yol-liste{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.eva-yol{display:flex;flex-direction:column;gap:4px;text-align:left;padding:12px 14px;border:1px solid var(--sig);border-radius:12px;background:var(--beyaz);color:var(--murekkep);font:inherit;cursor:pointer}
+.eva-yol span{font-size:.84rem;color:var(--murekkep-2)}
+.eva-yol.secili{border:2px solid var(--deniz);background:var(--buz)}
+.eva-bas{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.eva-yeni{align-self:flex-start;font-size:1.05rem;padding:12px 20px}
+.eva-kurallar{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin:6px 0 10px}
+.eva-kural{border:1px solid var(--buz);border-radius:12px;padding:12px 14px;background:var(--beyaz)}
+.eva-kural p{margin:8px 0 0;font-size:.9rem;line-height:1.5}
+.eva-bolum{font-family:var(--mono);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--deniz);margin:20px 0 8px}
+.eva-kartlar{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.eva-kart{display:flex;flex-direction:column;align-items:flex-start;gap:6px;border:1px solid var(--buz);border-radius:12px;padding:12px 14px;background:var(--beyaz)}
+.eva-kart-ad{font-family:var(--display);font-size:1.15rem;color:var(--murekkep);text-decoration:none}
+.eva-kart-ad:hover{color:var(--deniz)}

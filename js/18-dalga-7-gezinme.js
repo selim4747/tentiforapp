@@ -25,6 +25,10 @@ const GEZINME = [
     ["sira", "Nereden başlamalı"], ["roman", "Roman"], ["olaylar", "Olaylar"],
     ["hikaye", "Gece Vardiyası"], ["kisaHikayeler", "Kısa Hikâyeler"], ["ortakDefter", "Kütüphane Defteri"] ] },
 
+  /* 3.0: evren kurma merkezi */
+  { id: "atolye", ad: "Evren Atölyesi", ikon: "✦", bolumler: [
+    ["evrenAtolye", "Evrenini kur"] ] },
+
   { id: "fan", ad: "Fan", ikon: "✎", bolumler: [
     ["fanHikaye", "Fan hikâyeleri"], ["fanEvren", "Fan evrenleri"], ["fanAc", "Dosya aç"] ] },
 

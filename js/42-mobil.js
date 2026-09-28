@@ -80,9 +80,17 @@ function mobilMenuCiz() {
   const gece = document.documentElement.getAttribute("data-ayar-tema") === "gece";
   const sesAcik = typeof ortamSesAcikMi === "function" && ortamSesAcikMi();
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  const yukle = uygulamaKurulu() ? "" : (kurulumOlayi
+  /* 3.0: Android'de menü Chrome'un kısayol uygulamasını değil, sitenin kendi Android uygulamasını (APK) indirir */
+  const android = /Android/i.test(navigator.userAgent) && !(typeof kabukMu === "function" && kabukMu());
+  if (android && APK_BILGI.durum === "") { apkBilgiYukle(); }
+  const apk = android && APK_BILGI.durum !== "yok"
+    ? '<a class="mm-eylem mm-yukle" href="/uygulama/indir/tentiforapp.apk' + (APK_BILGI.kod ? "?v=" + encodeURIComponent(APK_BILGI.kod) : "") + '" download data-apk-indir>' +
+        '<span aria-hidden="true">⤓</span>Android uygulamasını indir' + (APK_BILGI.surum ? " · " + kacir(APK_BILGI.surum) : "") + (APK_BILGI.boyut ? " · " + (APK_BILGI.boyut / 1048576).toFixed(1) + " MB" : "") + "</a>" +
+      '<div class="mm-ipucu">İnince dosyayı aç ve “Yükle”ye dokun. Android ilk seferde bu kaynağa izin vermeni isteyebilir.</div>'
+    : "";
+  const yukle = apk || (uygulamaKurulu() ? "" : (kurulumOlayi
     ? '<button class="mm-eylem mm-yukle" data-mobil-yukle><span aria-hidden="true">⤓</span>Uygulamayı yükle</button>'
-    : (ios ? '<div class="mm-ipucu">Uygulama gibi kullanmak için: Safari\'de <b>Paylaş</b> → <b>Ana Ekrana Ekle</b>. Bildirimler de ancak böyle çalışır.</div>' : ""));
+    : (ios ? '<div class="mm-ipucu">Uygulama gibi kullanmak için: Safari\'de <b>Paylaş</b> → <b>Ana Ekrana Ekle</b>. Bildirimler de ancak böyle çalışır.</div>' : "")));
 
   m.innerHTML =
     '<div class="mobil-menu" role="dialog" aria-modal="true" aria-label="Menü">' +
@@ -108,6 +116,15 @@ function mobilMenuCiz() {
 }
 
 /* ==================== uygulama yükleme ==================== */
+
+const APK_BILGI = { durum: "", surum: "", boyut: 0, kod: "" };
+function apkBilgiYukle() {
+  APK_BILGI.durum = "yukleniyor";
+  fetch("/uygulama/indir/apk.json", { cache: "no-cache" }).then(function (y) { return y.ok ? y.json() : null; }).then(function (d) {
+    if (!d || !d.kod) { APK_BILGI.durum = "yok"; } else { APK_BILGI.durum = "var"; APK_BILGI.surum = String(d.surum || ""); APK_BILGI.boyut = Number(d.boyut) || 0; APK_BILGI.kod = String(d.kod); }
+    mobilMenuCiz();
+  }).catch(function () { APK_BILGI.durum = "var"; });
+}
 
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();
