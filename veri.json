@@ -1,5 +1,5 @@
 {
-  "surum": "3.0.0",
+  "surum": "3.1.0",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7176,6 +7176,21 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "3.1.0",
+      "tarih": "2026-09-28",
+      "maddeler": [
+        "Ana sayfa artık evrenler sayfası: Tömye büyük kartta, altında kanon evrenler, okurların evrenleri ve senin evrenlerin; en altta kilitli “Evrenini kur”",
+        "Tek seferlik evren kodu: yönetici hesaba bağlanan bir kod verir, kişi seviyeyi beklemeden bir evren kurar; evren kurulunca hak harcanır (Supabase → kurulum.sql bir kez yeniden çalıştırılmalı)",
+        "E25 Evrengezerlerin yurdu: doğum sahnesi (hangi kapıdan çıktı, ilk sözü), pasaport damgaları, Kapılar Salonu (yeni kurulan her evren bir kapı), iki Evrengezeri bir hikâyede karşılaştırma, E25 sıralamaları",
+        "Kişi sayfası: evrendeki bir kişiye dokununca ailesi, bağları, tarihteki olayları, belgeleri ve hikâyeleri",
+        "Sürüm geçmişinde karşılaştırma: evreninin eski bir hâliyle şimdiki arasında ne değişti",
+        "Haritada zaman: tarih olayına yer yazılır, haritanın üstündeki kaydırıcıyla olaylar yerlerinde yanar",
+        "Panel: kanona aday evrenler tek listede (Tömye ölçeği, tutarlılık notları, önizleme, kanona al / fan-made bırak)",
+        "Erişilebilirlik ve telefon: 14 sayfada ve evren sayfalarında adsız düğme, yinelenen kimlik ve yana taşma otomatik denetleniyor"
+      ],
+      "yeniler": []
+    },
     {
       "surum": "3.0.0",
       "tarih": "2026-09-28",

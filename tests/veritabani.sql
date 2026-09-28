@@ -374,6 +374,15 @@ set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
 select public.tek_kod_iptal(public.tek_kod_ozet('KISI123456'), true);
 set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
 select test.ok('iptal edilen kod hak vermez', not (public.tek_kodlarim() @> '[{"tur":"kisi"}]'::jsonb));
+-- 3.1: tek seferlik evren kurma hakkı (evren1): bir evren kurunca harcanır
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select test.ok('yönetici tek seferlik evren kodu üretir', public.tek_kod_olustur(jsonb_build_array(jsonb_build_object('ozet', public.tek_kod_ozet('BIREVREN01'), 'tur', 'evren1', 'ad', 'Tek evren'))) = 1);
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select test.ok('tek seferlik evren kodu hesaba bağlanır', public.tek_kod_kullan('BIREVREN01') ->> 'tur' = 'evren1' and public.tek_kodlarim() @> '[{"tur":"evren1"}]'::jsonb);
+select test.ok('başka türün hakkı harcanamaz', not public.tek_kod_harca('evren'));
+select test.ok('evren kurulunca hak harcanır', public.tek_kod_harca('evren1'));
+select test.ok('harcanan hak listeden düşer, ikinci kez harcanmaz', not (public.tek_kodlarim() @> '[{"tur":"evren1"}]'::jsonb) and not public.tek_kod_harca('evren1'));
+select test.ok('harcanan kod yeniden girilince hak geri gelmez', public.tek_kod_kullan('BIREVREN01') ->> 'durum' = 'tamam' and not (public.tek_kodlarim() @> '[{"tur":"evren1"}]'::jsonb));
 select test.ok('çok deneme sınırlanır', (select bool_or(public.tek_kod_kullan('DENEME' || g) ->> 'durum' = 'sinir') from generate_series(1, 40) g));
 reset role;
 -- Supabase panelinden (Table Editor) bağ silmek de yöneticiliği kaldırır
@@ -383,7 +392,7 @@ update public.tek_kodlar set kullanici = null where ozet = public.tek_kod_ozet('
 select test.ok('elle NULL yapılınca yöneticilik gider', (select count(*) = 0 from public.yoneticiler where id = '44444444-4444-4444-4444-444444444444'));
 
 -- ---------- 2.4: kurulum sürümü, süreli kodlar, uygulama puanları ----------
-select test.ok('kurulum sürümü sorulabilir', public.kurulum_surumu() = '2.8');
+select test.ok('kurulum sürümü sorulabilir', public.kurulum_surumu() = '3.1');
 set role authenticated;
 set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
 select public.tek_kod_olustur(jsonb_build_array(jsonb_build_object('ozet', public.tek_kod_ozet('SURELI1234'), 'tur', 'evrengezer', 'sure_gun', 7)));
