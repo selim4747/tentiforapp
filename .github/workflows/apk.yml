@@ -132,6 +132,14 @@ jobs:
             cp $klasor/ic_launcher.png $klasor/ic_launcher_round.png
             rm -f $klasor/ic_launcher_foreground.png
           done
+          # açılış ekranı (3.0): Capacitor'ın kendi logosu yerine buz rengi zemin üzerinde sitenin ikonu
+          if [ "$IM" = magick ]; then KIM="magick identify"; else KIM=identify; fi
+          find app/src/main/res -name 'splash.png' | while read f; do
+            boyut=$($KIM -format '%w %h' "$f"); g=${boyut% *}; y=${boyut#* }
+            k=$(( (g < y ? g : y) * 30 / 100 ))
+            $IM -size ${g}x${y} xc:'#F4F9FD' \( ../../../ikon/ikon-512.png -resize ${k}x${k} \) -gravity center -composite "$f"
+          done
+          find app/src/main/res -name 'splash.png' | head -3
 
       - name: Derle ve imzala
         working-directory: uygulama/kabuk/android

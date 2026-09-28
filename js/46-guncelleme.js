@@ -87,8 +87,32 @@ document.addEventListener("click", function (ev) {
   if (c) { c.remove(); }
 });
 
+/* 3.0 — sayfa cihazdaki kopyadan anında açılır (sw.js); yayında yeni paket varsa kullanıcı daha bir şeye
+   dokunmadan bir kez sessizce yenilenir. Aynı paket için ikinci kez yenilemez (döngü olmasın), çubuk çıkar. */
+let guncellemeDokunuldu = false;
+["pointerdown", "keydown", "scroll"].forEach(function (t) { window.addEventListener(t, function () { guncellemeDokunuldu = true; }, { once: true, passive: true }); });
+
+async function guncellemeAcilisBak() {
+  const benim = sayfaPaketi();
+  if (!benim || !navigator.onLine || !navigator.serviceWorker || !navigator.serviceWorker.controller) { return guncellemeBak(false); }
+  guncellemeSonBakis = Date.now();
+  let yayin = null;
+  try { yayin = await yayindakiPaket(); } catch (_) { return; }
+  if (!yayin || yayin.paket === benim) { return; }
+  guncellemeYeni = yayin;
+  let once = "";
+  try { once = sessionStorage.getItem("tentiforapp_acilis_yenilendi") || ""; } catch (_) { /* yok */ }
+  if (once !== yayin.paket && !guncellemeDokunuldu && !guncellemeBekletir()) {
+    try { sessionStorage.setItem("tentiforapp_acilis_yenilendi", yayin.paket); } catch (_) { /* yok */ }
+    /* servis çalışanı yeni sayfayı arka planda indirsin diye kısa bekleme */
+    setTimeout(guncellemeUygula, 600);
+    return;
+  }
+  guncellemeCubugu();
+}
+
 window.addEventListener("load", function () {
-  setTimeout(function () { guncellemeBak(false); }, 4000);
+  setTimeout(guncellemeAcilisBak, 1200);
   setInterval(function () { if (document.visibilityState === "visible") { guncellemeBak(false); } }, GUNCELLEME_ARALIK);
   try {
     const s = sessionStorage.getItem("tentiforapp_guncellendi");

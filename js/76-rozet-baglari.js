@@ -20,6 +20,58 @@ function rbDesen(adlar) {
 }
 function rbKelime(t) { return String(t || "").split(/\s+/).filter(Boolean).length; }
 
+/* Düzenli ifadenin "i" bayrağıyla aynı büyük/küçük harf eşlemesi (ı ile I, İ ile i eşleşmez) */
+function rbKatla(t) {
+  let o = "";
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i], u = c.toUpperCase();
+    o += (u.length !== 1 || (c.charCodeAt(0) >= 128 && u.charCodeAt(0) < 128)) ? c : u;
+  }
+  return o;
+}
+const RB_HARF = "0-9A-Za-zÇĞİÖŞÜçğıöşü";
+
+/** Bir alanın ad bağları: [a, b] çiftleri — a'nın metni b'nin adlarından birini anıyor (rbDesen'le aynı kural). */
+function rbAdBaglari(l) {
+  const adlar = new Map();   /* katlanmış ad → { ad, kutular: [anahtar] } */
+  l.forEach(function (b) {
+    if (!b.desen) { return; }
+    (b.adlar || []).map(function (a) { return String(a || "").trim(); }).filter(function (a) { return a.length >= 3 && a.length <= 40; }).forEach(function (a) {
+      const k = rbKatla(a);
+      if (!adlar.has(k)) { adlar.set(k, { ad: a, kutular: [] }); }
+      if (adlar.get(k).kutular.indexOf(b.anahtar) === -1) { adlar.get(k).kutular.push(b.anahtar); }
+    });
+  });
+  if (!adlar.size) { return []; }
+  const liste = Array.from(adlar.values());
+  const sonra = "(?=$|[^" + RB_HARF + "])";
+  const tum = new RegExp("(?<![" + RB_HARF + "])(?:" + liste.map(function (x) { return rbKac(x.ad); }).join("|") + ")" + sonra, "gi");
+  /* aynı yerde başlayan başka adlar da (kısa/uzun) sayılsın: ilk harfe göre kovalar */
+  const kova = new Map();
+  liste.forEach(function (x) {
+    const h = rbKatla(x.ad[0]);
+    if (!kova.has(h)) { kova.set(h, []); }
+    kova.get(h).push(x);
+  });
+  const cift = [];
+  l.forEach(function (a) {
+    const t = String(a.metin == null ? "" : a.metin);
+    const bulunan = new Set();
+    tum.lastIndex = 0;
+    let m;
+    while ((m = tum.exec(t))) {
+      (kova.get(rbKatla(t[m.index])) || []).forEach(function (x) {
+        if (!x.ys) { x.ys = new RegExp(rbKac(x.ad) + sonra, "iy"); }
+        x.ys.lastIndex = m.index;
+        if (x.ys.test(t)) { bulunan.add(x); }
+      });
+      tum.lastIndex = m.index + 1;
+    }
+    bulunan.forEach(function (x) { x.kutular.forEach(function (b) { if (b !== a.anahtar) { cift.push([a.anahtar, b]); } }); });
+  });
+  return cift;
+}
+
 /** Gizli (kartsız) karakterlerin adları: bağlarda ve eşleşmede hiç kullanılmaz. */
 function rbGizliAdlar() {
   const l = [];
@@ -121,9 +173,9 @@ function rbAg() {
         if (!hedef) { return; }
         l.forEach(function (b) { if ((b.adlar || []).some(function (x) { return String(x || "").toLocaleLowerCase("tr") === hedef; })) { bagla(a.anahtar, b.anahtar); } });
       });
-      /* ad bağları */
-      l.forEach(function (b) { if (b !== a && b.desen && b.desen.test(a.metin)) { bagla(a.anahtar, b.anahtar); } });
     });
+    /* ad bağları: her kutunun metni bir kez taranır (eskiden her kutu çifti için ayrı düzenli ifade: açılışta en ağır iş) */
+    rbAdBaglari(l).forEach(function (c) { bagla(c[0], c[1]); });
   });
   /* Claude'un Evreni: kişiler arası bağlar */
   ((veri.claudeEvreni || {}).baglar || []).forEach(function (x) { bagla("madde:ce-" + x.a, "madde:ce-" + x.b); });
@@ -270,7 +322,15 @@ function rbSeritleriTazele() {
 
 if (typeof okuTara === "function") {
   const eskiOT = okuTara;
-  window.okuTara = function () { const r = eskiOT.apply(this, arguments); try { rbSeritleriEkle(); } catch (_) { /* yok */ } return r; };
+  /* 3.0: bağ ağı ilk kez kurulurken ağır; tarayıcı boşalınca eklenir */
+  let rbBoslukSira = 0;
+  window.okuTara = function () {
+    const r = eskiOT.apply(this, arguments);
+    if (!rbBoslukSira) {
+      rbBoslukSira = (window.requestIdleCallback || setTimeout)(function () { rbBoslukSira = 0; try { rbSeritleriEkle(); } catch (_) { /* yok */ } }, { timeout: 1200 });
+    }
+    return r;
+  };
 }
 if (typeof okumaBitti === "function") {
   const eskiOB = okumaBitti;

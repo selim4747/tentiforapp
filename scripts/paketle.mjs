@@ -10,10 +10,10 @@ import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFi
 import { join } from "node:path";
 
 const KOK = new URL("..", import.meta.url).pathname;
-const HEDEF = join(KOK, "dist");
+const HEDEF = process.env.PAKET_HEDEF || join(KOK, "dist");   /* PAKET_HEDEF: testler başka klasöre de üretebilsin */
 /* Sitenin kalıcı adresi: Cloudflare Pages'teki SITE_URL ortam değişkeni. */
 const SITE = (process.env.SITE_URL || "https://tentiforapp.pages.dev").replace(/\/$/, "");
-const KOPYALA = ["index.html", "veri.json", "sw.js", "manifest.webmanifest", "paylasim.png", "robots.txt", "_headers", "css", "js", "ikon", "evrenler", ".well-known"];   /* .well-known/assetlinks.json: Play Store (TWA) uygulaması siteyle eşleşsin (uygulama/README.md) */
+const KOPYALA = ["index.html", "veri.json", "sw.js", "manifest.webmanifest", "paylasim.png", "robots.txt", "_headers", "css", "js", "ikon", "yazitipi", "evrenler", ".well-known"];   /* .well-known/assetlinks.json: Play Store (TWA) uygulaması siteyle eşleşsin (uygulama/README.md) */
 /* evrenler/: sitedeki fan evrenlerinin ayrı dosyaları (js/54-evren-dosyalari.js) */
 
 rmSync(HEDEF, { recursive: true, force: true });
@@ -57,7 +57,7 @@ for (const ad of readdirSync(join(HEDEF, "js"))) {
 /* Yalnızca yöneticinin kullandığı betikler ziyaretçiye inmez: index.html'den ve servis çalışanının listesinden çıkar,
    panel açılınca js/65-yonetici-yukle.js yükler. (Tek dosyada birleştirmek denendi: satır içi çalışan kod tarayıcının
    akışlı derlemesini ve kod önbelleğini kullanamadığı için soğuk açılışta ~%5 yavaştı; ayrı dosyalar kaldı.) */
-const YONETICI_BETIKLERI = ["js/25-panel-roman-ses-basin.js", "js/43-kurulum.js"];
+const YONETICI_BETIKLERI = ["js/22b-yonetici-araclari.js", "js/25-panel-roman-ses-basin.js", "js/43-kurulum.js"];
 {
   const anaYol0 = join(HEDEF, "index.html");
   let ana = readFileSync(anaYol0, "utf8");
@@ -67,6 +67,67 @@ const YONETICI_BETIKLERI = ["js/25-panel-roman-ses-basin.js", "js/43-kurulum.js"
   let sw0 = readFileSync(swYol0, "utf8");
   YONETICI_BETIKLERI.forEach(function (y) { sw0 = sw0.replace('"' + y + '", ', ""); });
   writeFileSync(swYol0, sw0);
+}
+
+/* 3.0 — betik paketleri: ziyaretçinin 79 ayrı isteği birkaç dosyada birleşir (aynı sıra, aynı kod; her parça
+   kendi satırında başlar). Her dosya ayrı küçültüldüğü ve sıra korunduğu için davranış aynı kalır; bunu
+   tests/paketler.mjs birleşik ve ayrı sürümde bütün fonksiyonları karşılaştırarak denetler.
+   Paket içindeki hata satırı hangi dosyaya ait: window.__PAKET__ tablosu (js/01-tanilama.js okur).
+   PAKETSIZ=1 ile eski düzen (her dosya ayrı) üretilir. */
+/* panel betiklerinin yükleyicisi paketin içine girmeden önce sürümlü adresleri alır */
+{
+  const yukleYol = join(HEDEF, "js/65-yonetici-yukle.js");
+  writeFileSync(yukleYol, readFileSync(yukleYol, "utf8").replace(/(js\/[A-Za-z0-9._\/-]+\.js)(?=["'])/g, function (tam, yol) {
+    if (yol.indexOf("js/vendor/") === 0) { return yol; }
+    try { return yol + "?v=" + createHash("sha256").update(readFileSync(join(HEDEF, yol))).digest("hex").slice(0, 10); } catch (e) { return yol; }
+  }));
+}
+const PAKET_SAYISI = 4;
+if (!process.env.PAKETSIZ) {
+  const anaYolP = join(HEDEF, "index.html");
+  let ana = readFileSync(anaYolP, "utf8");
+  /* js/24-arsiv-mantigi.js en sonda ayrı kalır: veri'yi ve paylaşılan adları o tanımlar; önceki dosyalar onları
+     "typeof" ile yoklar. Aynı betikte olsalar tanım henüz çalışmadan yoklama hata verirdi (let/const). */
+  const SON_AYRI = "js/24-arsiv-mantigi.js";
+  const betikler = [...ana.matchAll(/<script src="(js\/[^"]+\.js)"><\/script>\n?/g)].map(function (m) { return m[1]; }).filter(function (y) { return y !== SON_AYRI; });
+  const boyut = betikler.map(function (y) { return statSync(join(HEDEF, y)).size; });
+  const toplam = boyut.reduce(function (a, b) { return a + b; }, 0);
+  const gruplar = [[]];
+  let birikmis = 0;
+  betikler.forEach(function (y, i) {
+    const g = gruplar[gruplar.length - 1];
+    if (g.length && birikmis + boyut[i] / 2 > toplam * gruplar.length / PAKET_SAYISI && gruplar.length < PAKET_SAYISI) { gruplar.push([]); }
+    gruplar[gruplar.length - 1].push(y);
+    birikmis += boyut[i];
+  });
+  const paketYollari = [];
+  gruplar.forEach(function (g, i) {
+    const ad = "paket-" + (i + 1) + ".js";
+    const govde = g.map(function (y) { return readFileSync(join(HEDEF, y), "utf8").replace(/\s*$/, "") + "\n;"; });
+    /* her dosya hangi satırda başlıyor (1. satır tablonun kendisi); ";" kendi satırında, önceki ifade yarım kalmasın */
+    const tablo2 = [];
+    let s2 = 2;
+    g.forEach(function (y, j) { tablo2.push([s2, y.replace(/^js\//, "")]); s2 += govde[j].split("\n").length; });
+    const bas = "(window.__PAKET__=window.__PAKET__||{})[" + JSON.stringify(ad) + "]=" + JSON.stringify(tablo2) + ";";
+    writeFileSync(join(HEDEF, "js", ad), bas + "\n" + govde.join("\n") + "\n");
+    paketYollari.push("js/" + ad);
+  });
+  /* index.html: ilk betiğin yerine paketler, diğerleri silinir */
+  let ilk = true;
+  ana = ana.replace(/<script src="(js\/[^"]+\.js)"><\/script>\n?/g, function (tam, y) {
+    if (betikler.indexOf(y) === -1) { return tam; }
+    if (!ilk) { return ""; }
+    ilk = false;
+    return paketYollari.map(function (p) { return '<script src="' + p + '"></script>\n'; }).join("");
+  });
+  writeFileSync(anaYolP, ana);
+  /* servis çalışanı: paketleri önceden indirir, ayrı dosyaları değil */
+  const swP = join(HEDEF, "sw.js");
+  let swm = readFileSync(swP, "utf8");
+  betikler.forEach(function (y) { swm = swm.replace('"' + y + '", ', "").replace(', "' + y + '"', ""); });
+  swm = swm.replace('"veri.json", ', '"veri.json", ' + paketYollari.map(function (p) { return JSON.stringify(p); }).join(", ") + ", ");
+  writeFileSync(swP, swm);
+  console.log("Betik paketleri: " + betikler.length + " dosya → " + paketYollari.length + " (" + gruplar.map(function (g) { return g.length; }).join("+") + ")");
 }
 
 for (const ad of readdirSync(join(HEDEF, "css"))) {
@@ -83,7 +144,27 @@ ozet.update(readFileSync(join(HEDEF, "veri.json")));
 
 /* veri.json: boşluksuz (panel GitHub'a biçimli kaydeder; yayında gerek yok) */
 const veriYol = join(HEDEF, "veri.json");
-writeFileSync(veriYol, JSON.stringify(JSON.parse(readFileSync(veriYol, "utf8"))));
+/* 3.0 — veri parçaları: açılışta gerekmeyen uzun listeler ayrı dosyaya çıkar (veri-<ad>.json). veri.json'da
+   yerinde ilk birkaç kaydı kalır ve __parcalar hangi dosyada tamamının olduğunu söyler. Site gerekince indirir;
+   panel kaydetmeden ve dışa aktarmadan önce hepsini yerine koyar (js/81-surum-30.js). Anahtar sırası değişmez. */
+const VERI_PARCALARI = { degisiklik: 3 };
+{
+  const v = JSON.parse(readFileSync(veriYol, "utf8"));
+  const parcalar = {};
+  for (const [ad, kalan] of Object.entries(VERI_PARCALARI)) {
+    if (!Array.isArray(v[ad]) || v[ad].length <= kalan) { continue; }
+    const metin = JSON.stringify(v[ad]);
+    const dosya = "veri-" + ad + ".json";
+    writeFileSync(join(HEDEF, dosya), metin);
+    parcalar[ad] = { dosya: dosya + "?v=" + createHash("sha256").update(metin).digest("hex").slice(0, 10), toplam: v[ad].length };
+    v[ad] = v[ad].slice(0, kalan);
+  }
+  if (Object.keys(parcalar).length) { v.__parcalar = parcalar; }
+  writeFileSync(veriYol, JSON.stringify(v));
+  /* servis çalışanı parçaları da önceden indirir (internetsiz de tam günlük) */
+  const swV = join(HEDEF, "sw.js");
+  writeFileSync(swV, readFileSync(swV, "utf8").replace('"veri.json", ', '"veri.json", ' + Object.values(parcalar).map(function (p) { return JSON.stringify(p.dosya); }).join(", ") + (Object.keys(parcalar).length ? ", " : "")));
+}
 
 /* sürümlü adresler: js/css adreslerine içerik özeti eklenir; _headers bunları bir yıl önbellekte tutar.
    index.html her açılışta tazelenir (no-cache), yani eski bir adres asla istenmez. */
@@ -102,11 +183,70 @@ const paket = ozet.digest("hex").slice(0, 12);
 const veriSurum = JSON.parse(readFileSync(join(HEDEF, "veri.json"), "utf8")).surum || "";
 writeFileSync(join(HEDEF, "surum.json"), JSON.stringify({ paket: paket, surum: veriSurum }));
 
-const yukleYol = join(HEDEF, "js/65-yonetici-yukle.js");
-writeFileSync(yukleYol, surumle(readFileSync(yukleYol, "utf8")));
+/* (js/65-yonetici-yukle.js'in sürümlü adresleri paketlerden önce yazıldı) */
 
 const anaYol = join(HEDEF, "index.html");
 writeFileSync(anaYol, surumle(readFileSync(anaYol, "utf8")).replace("</head>", '<meta name="tentifor-paket" content="' + paket + '">\n</head>'));
+
+/* 3.0 — kritik CSS: ilk ekranın (betikler çalışmadan görünen HTML'in) kuralları sayfaya gömülür, tam CSS bekletmeden
+   iner. Kurallar index.html'deki sınıf/kimlik/etiketlerden kendiliğinden seçilir (CSS değişince elle güncellenmez).
+   Tekrar ziyarette (servis çalışanı varken) CSS önbellekten gelir: eskisi gibi hemen uygulanır.
+   Veri çizimi tam CSS'i bekler (js/24-arsiv-mantigi.js cssBekle): biçimsiz içerik bir an bile görünmez. */
+{
+  let ana = readFileSync(anaYol, "utf8");
+  const m = /<link rel="stylesheet" href="(css\/style\.css\?v=\w+)">/.exec(ana);
+  if (m && !process.env.KRITIKSIZ) {
+    const css = readFileSync(join(HEDEF, "css/style.css"), "utf8");
+    const govde = ana.slice(ana.indexOf("<body"), ana.indexOf('<script src="js/')).replace(/<script[\s\S]*?<\/script>/g, "");
+    const sinif = new Set(["alt-menu", "alt-oge", "alt-ikon", "alt-ad", "sayfa-basi", "sayfa-bas-ust", "sayfa-no", "gez-btn", "bu-sayfa", "komut-tetik", "evren-sayfa", "evren-sec-btn"]);
+    const kimlik = new Set(), etiket = new Set(["html", "body"]);
+    for (const x of govde.matchAll(/class="([^"]+)"/g)) { x[1].split(/\s+/).forEach(function (c) { sinif.add(c); }); }
+    for (const x of govde.matchAll(/id="([^"]+)"/g)) { kimlik.add(x[1]); }
+    for (const x of govde.matchAll(/<([a-z][a-z0-9]*)/g)) { etiket.add(x[1]); }
+    const bloklar = function (s) {
+      const l = [];
+      let i = 0;
+      while (i < s.length) {
+        const a = s.indexOf("{", i);
+        if (a === -1) { break; }
+        let d = 1, j = a + 1;
+        while (d && j < s.length) { if (s[j] === "{") { d++; } else if (s[j] === "}") { d--; } j++; }
+        l.push([s.slice(i, a).trim(), s.slice(a + 1, j - 1)]);
+        i = j;
+      }
+      return l;
+    };
+    const uyar = function (secici) {
+      return secici.split(",").some(function (p) {
+        if (/:not\(\.veri-hazir\)|data-ilk-sayfa/.test(p)) { return true; }
+        const q = p.replace(/::?[a-z-]+(\([^)]*\))?/g, "").replace(/\[[^\]]*\]/g, "");
+        return [...q.matchAll(/\.([\w-]+)/g)].every(function (x) { return sinif.has(x[1]); }) &&
+          [...q.matchAll(/#([\w-]+)/g)].every(function (x) { return kimlik.has(x[1]); }) &&
+          [...q.matchAll(/(?:^|[\s>+~])([a-z][a-z0-9]*)/g)].every(function (x) { return etiket.has(x[1]); });
+      });
+    };
+    const sec = function (s) {
+      return bloklar(s).map(function (b) {
+        const bas = b[0], ic = b[1];
+        if (bas.indexOf("@keyframes") === 0) { return /iskelet/.test(bas) ? bas + "{" + ic + "}" : ""; }
+        if (bas.indexOf("@media") === 0 || bas.indexOf("@supports") === 0) { const x = sec(ic); return x ? bas + "{" + x + "}" : ""; }
+        if (bas.indexOf("@font-face") === 0) { return bas + "{" + ic.replace(/url\(\.\.\//g, "url(") + "}"; }   /* sayfaya gömülünce adres kökten */
+        if (bas.indexOf("@") === 0) { return ""; }
+        return uyar(bas) ? bas + "{" + ic + "}" : "";
+      }).join("");
+    };
+    /* tam CSS gelene kadar üst şeritte yalnızca marka ve Kod: betiğin eklediği düğmeler biçimsiz görünmesin */
+    const kritik = (sec(css) + "html:not(.css-tam) .ust>:not(.marka):not(.kod-btn){visibility:hidden}").replace(/<\/style/gi, "<\\/style");
+    ana = ana.replace(m[0],
+      "<style id=\"kritikCss\">" + kritik + "</style>\n" +
+      '<link rel="preload" href="' + m[1] + '" as="style" id="anaCss">\n' +
+      '<script>(function(){var l=document.getElementById("anaCss");function t(){l.onload=null;l.rel="stylesheet";document.documentElement.classList.add("css-tam")}' +
+      'if(navigator.serviceWorker&&navigator.serviceWorker.controller){t()}else{l.onload=t;l.onerror=t}})();</script>\n' +
+      '<noscript><link rel="stylesheet" href="' + m[1] + '"></noscript>');
+    writeFileSync(anaYol, ana);
+    console.log("Kritik CSS: " + Math.round(kritik.length / 1024) + " KB sayfada, " + Math.round(css.length / 1024) + " KB bekletmeden");
+  }
+}
 
 /* servis çalışanı: aynı sürümlü adresleri önceden indirir; yeni paket = yeni önbellek adı */
 const sw = join(HEDEF, "sw.js");

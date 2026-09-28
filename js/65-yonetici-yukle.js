@@ -1,11 +1,11 @@
 /* Yalnızca yöneticinin kullandığı betikler (roman/ses/basın düzenleyicisi, kurulum yardımcısı) yayın paketinde
    index.html'e konmaz (scripts/paketle.mjs); panel açılınca burada yüklenir. Geliştirirken hepsi zaten yüklüdür. */
 
-const YONETICI_BETIKLERI = ["js/25-panel-roman-ses-basin.js", "js/43-kurulum.js"];
+const YONETICI_BETIKLERI = ["js/22b-yonetici-araclari.js", "js/25-panel-roman-ses-basin.js", "js/43-kurulum.js"];
 let yoneticiBetikSozu = null;
 
 function yoneticiBetikleriHazir() {
-  return typeof yoneticiRoman === "function" && typeof yoneticiKurulum === "function";
+  return typeof yoneticiGithub === "function" && typeof yoneticiRoman === "function" && typeof yoneticiKurulum === "function";
 }
 
 function yoneticiBetikleriYukle() {

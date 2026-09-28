@@ -43,7 +43,8 @@ async function svkSunucuYukle() {
   if (SVK.istendi || typeof hesapIstemci === "undefined" || !hesapIstemci || typeof hesapProfil === "undefined" || !hesapProfil || !hesapProfil.kullanici_adi) { return; }
   SVK.istendi = true;
   try {
-    const r = await hesapIstemci.from("arsivci_seviyeleri").select("xp").eq("kullanici_adi", hesapProfil.kullanici_adi).maybeSingle();
+    /* 31-topluluk.js'teki seviye kartıyla aynı sorgu: okuma önbelleğinde tek istek olur */
+    const r = await hesapIstemci.from("arsivci_seviyeleri").select("xp, yil_xp, seviye, basamak, dokum").eq("kullanici_adi", hesapProfil.kullanici_adi).maybeSingle();
     if (r && r.data) { SVK.sunucu = Number(r.data.xp) || 0; SVK.onbellek = null; }
   } catch (_) { SVK.istendi = false; }
 }

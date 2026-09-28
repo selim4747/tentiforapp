@@ -19,13 +19,24 @@ const FAN_KURAL_TURLERI = ["fizik", "zaman", "ışık", "ölüm", "büyü", "dil
 const FAN_EVREN_GRUPLARI = [
   { k: "kurallar", ad: "Evren kuralları", tekil: "kural", not: "Fizik olmak zorunda değil: bu evrende neyin nasıl işlediğini yaz. Türü listede yoksa kendi türünü yaz.",
     alanlar: [["ad", "Kuralın adı"], ["tur", "Türü", "liste"], ["aciklama", "Nasıl işler, neyi değiştirir?", "uzun"]] },
-  { k: "kisiler", ad: "Kişiler", tekil: "kişi", alanlar: [["ad", "Adı"], ["rol", "Kim, ne iş yapar?"], ["aciklama", "Hikâyesi", "uzun"]] },
+  /* 3.0: kişi kaydı 24. Evren'in karakter kayıtları gibi: yaş, yaşadığı yer, sözü, etiketler (hepsi isteğe bağlı) */
+  { k: "kisiler", ad: "Kişiler", tekil: "kişi", alanlar: [["ad", "Adı"], ["rol", "Kim, ne iş yapar?"], ["yas", "Yaşı (ya da çağı)", "kisa"], ["yer", "Nerede yaşar?", "kisa"],
+    ["aciklama", "Hikâyesi", "uzun"], ["soz", "Sözü (onu anlatan bir cümle)", "kisa"], ["etiketler", "Etiketler (virgülle: kaşif, sürgün…)", "kisa"]] },
   { k: "yerler", ad: "Yerler", tekil: "yer", alanlar: [["ad", "Adı"], ["aciklama", "Nasıl bir yer?", "uzun"]] },
-  { k: "tarih", ad: "Tarih", tekil: "olay", alanlar: [["zaman", "Ne zaman?"], ["olay", "Ne oldu?", "uzun"]] },
+  { k: "tarih", ad: "Tarih", tekil: "olay", not: "Çağ yazarsan zaman çizelgesi çağlara ayrılır (ör. \"Buzdan önce\", \"Birinci Çağ\").",
+    alanlar: [["zaman", "Ne zaman?"], ["cag", "Hangi çağ?", "kisa"], ["olay", "Ne oldu?", "uzun"]] },
   { k: "sozluk", ad: "Sözlük", tekil: "terim", alanlar: [["terim", "Terim"], ["tanim", "Anlamı", "uzun"]] },
   { k: "ozelAlanlar", ad: "Kendi alanların", tekil: "alan", not: "Sitede tanımlı olmayan her şey: \"Gökyüzünün rengi\", \"Para birimi\", \"Ay sayısı\"… Adını da içeriğini de sen koy.",
-    alanlar: [["ad", "Alanın adı"], ["deger", "İçeriği", "uzun"]] }
+    alanlar: [["ad", "Alanın adı"], ["deger", "İçeriği", "uzun"]] },
+  /* 3.0: belgeler (mektup, günlük, alıntı…) ve evrenin kendi takvimi */
+  { k: "belgeler", ad: "Belgeler", tekil: "belge", not: "Evrenin içinden yazılar: mektuplar, günlükler, alıntılar, raporlar. Okur onları evrenin kendi sesinden okur.",
+    alanlar: [["tur", "Türü", "liste", "fanBelgeTur"], ["baslik", "Başlığı"], ["kimden", "Kimden / kimin?", "kisa"], ["kime", "Kime? (varsa)", "kisa"], ["tarih", "Tarihi", "kisa"], ["metin", "Metni", "uzun"]] },
+  { k: "aylar", ad: "Takvimin ayları", tekil: "ay", not: "Evreninin yılı hangi aylardan oluşur? Sırayla yaz; gün sayısı boşsa 30 sayılır.",
+    alanlar: [["ad", "Ayın adı"], ["gun", "Kaç gün?", "kisa"], ["not", "Bu ay neyle bilinir?", "uzun"]] },
+  { k: "etkinlikler", ad: "Özel günler", tekil: "gün", not: "Bayramlar, anma günleri, felaket yıldönümleri… Takvimde işaretlenir.",
+    alanlar: [["ad", "Günün adı"], ["ay", "Hangi ay? (adı ya da sırası)", "kisa"], ["gun", "Ayın kaçıncı günü?", "kisa"], ["metin", "O gün ne olur?", "uzun"]] }
 ];
+const FAN_BELGE_TURLERI = ["Mektup", "Günlük", "Alıntı", "Rapor", "Kayıt", "Şarkı", "Efsane", "Haber", "Kehanet", "Harita notu"];
 
 /* geçit hedefi: sitedeki evren adresleri (kanon, fanmade, E99, kişinin kendi evreni) */
 const FAN_GECIT = /^#\/ev\/(site|fan|benim)\/[\w-]{1,40}$|^#\/ev\/e99$|^#\/arsiv$/;
@@ -167,6 +178,11 @@ function fanEserGovde(e, dosya) {
     ((e.lorlar || []).length ? "<h2>Kilitli lore</h2><ul>" + e.lorlar.map(function (l) { return "<li>" + kacir(l.baslik) + " · kodla açılır</li>"; }).join("") + "</ul>" : "") +
     FAN_EVREN_GRUPLARI.map(function (g) {
       const liste = (e[g.k] || []).filter(function (x) { return Object.keys(x).some(function (k) { return String(x[k] || "").trim(); }); });
+      /* 3.0: zengin görünüm (kişi kartları, zaman çizelgesi, takvim, belgeler): js/82-evren-kurucu.js */
+      if (typeof g.ciz === "function") {
+        const h = g.ciz(liste, e, dosya);
+        if (h !== null) { return h ? '<section class="fan-grup" data-grup="' + g.k + '"><h2>' + kacir(g.ad) + "</h2>" + h + "</section>" : ""; }
+      }
       if (!liste.length) { return ""; }
       /* "kutu" kişi: isim satırı yok, yalnızca anlatım */
       const kutular = liste.filter(function (x) { return x.kutu; });
@@ -363,18 +379,32 @@ function fanEvrenFormHtml(e, basliklar) {
         fanGirdi("yazar", e.yazar, "Kuran (takma ad olabilir)") +
         fanGirdi("ozet", e.ozet, "Evreni anlat", "uzun", { satir: 4 })
       : "") +
-    FAN_EVREN_GRUPLARI.map(function (g) {
-      return '<fieldset class="fan-grup"><legend>' + kacir(g.ad) + "</legend>" +
-        (g.not ? '<p class="oyun-not">' + kacir(g.not) + "</p>" : "") +
-        (e[g.k] || []).map(function (x, i) {
-          return '<div class="fan-oge">' + g.alanlar.map(function (a) {
-            return fanGirdi(g.k + "." + i + "." + a[0], x[a[0]], a[1], a[2] === "uzun" ? "uzun" : "", a[2] === "liste" ? { liste: "fanKuralTur" } : { satir: 2 });
-          }).join("") +
-            '<button class="dugme dugme-sade y-sil" data-fan-cikar="' + g.k + ":" + i + '">Bu ' + g.tekil + "i kaldır</button></div>";
-        }).join("") +
-        '<button class="dugme dugme-sade" data-fan-ekle="' + g.k + '">+ ' + kacir(g.tekil) + " ekle</button></fieldset>";
+    FAN_EVREN_GRUPLARI.map(function (g) { return fanEvrenGrupHtml(e, g); }).join("") + fanEvrenListeleri();
+}
+
+/** Tek bir bilgi grubunun düzenleyicisi (Evren Kurucu adım adım bunu kullanır: js/82-evren-kurucu.js). */
+function fanEvrenGrupHtml(e, g, sec) {
+  const l = e[g.k] || [];
+  /* katla: uzun listelerde her kayıt başlığıyla kapalı durur (Evren Kurucu); son kayıt ve boş olanlar açık */
+  const katla = sec && sec.katla && l.length > 3;
+  return '<fieldset class="fan-grup"><legend>' + kacir(g.ad) + (l.length ? " · " + l.length : "") + "</legend>" +
+    (g.not ? '<p class="oyun-not">' + kacir(g.not) + "</p>" : "") +
+    l.map(function (x, i) {
+      const ic = g.alanlar.map(function (a) {
+        return fanGirdi(g.k + "." + i + "." + a[0], x[a[0]], a[1], a[2] === "uzun" ? "uzun" : "", a[2] === "liste" ? { liste: a[3] || "fanKuralTur" } : { satir: 2 });
+      }).join("") +
+        '<button class="dugme dugme-sade y-sil" data-fan-cikar="' + g.k + ":" + i + '">Bu ' + g.tekil + "i kaldır</button>";
+      if (!katla) { return '<div class="fan-oge">' + ic + "</div>"; }
+      const bas = String((x && (x[g.alanlar[0][0]] || x[g.alanlar[1] ? g.alanlar[1][0] : ""])) || "").trim();
+      const acik = i === l.length - 1 || !bas;
+      return '<details class="fan-oge fan-oge-katla"' + (acik ? " open" : "") + "><summary>" + (i + 1) + ". " + kacir(bas ? bas.slice(0, 60) : "(boş " + g.tekil + ")") + "</summary>" + ic + "</details>";
     }).join("") +
-    '<datalist id="fanKuralTur">' + FAN_KURAL_TURLERI.map(function (a) { return '<option value="' + kacir(a) + '">'; }).join("") + "</datalist>";
+    '<button class="dugme dugme-sade" data-fan-ekle="' + g.k + '">+ ' + kacir(g.tekil) + " ekle</button></fieldset>";
+}
+
+function fanEvrenListeleri() {
+  const dl = function (id, l) { return '<datalist id="' + id + '">' + l.map(function (a) { return '<option value="' + kacir(a) + '">'; }).join("") + "</datalist>"; };
+  return dl("fanKuralTur", FAN_KURAL_TURLERI) + dl("fanBelgeTur", FAN_BELGE_TURLERI);
 }
 
 let fanSilOnay = null;

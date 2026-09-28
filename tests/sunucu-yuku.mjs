@@ -11,7 +11,6 @@ const TEST_URL = "https://test.supabase.co";
 
 export async function sunucuYukuTestleri({ adres, veritabani, dizin }) {
   const sahte = yeniSahte(veritabani);
-  const hesapKod = readFileSync(dizin + "/js/28-hesap.js", "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL);
   let gecen = 0;
   const ok = function (ad, kosul, ek) {
     if (!kosul) { throw new Error("BAŞARISIZ: " + ad + (ek !== undefined ? " → " + JSON.stringify(ek) : "")); }
@@ -26,7 +25,7 @@ export async function sunucuYukuTestleri({ adres, veritabani, dizin }) {
       try { localStorage.setItem("tentiforapp_tur", "bitti"); localStorage.setItem("tentiforapp_baslangic_oto", "kapali"); localStorage.setItem("tentiforapp_hesap_hatirlat", JSON.stringify({ kapat: true })); } catch (e) { /* yok */ }
       window.__olayTest = true; window.__hataYereldeGonder = true;
     });
-    await ctx.route(/\/js\/28-hesap\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: hesapKod }); });
+    await ctx.route(/\/js\/(?:28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
     await ctx.route(TEST_URL + "/**", function (r) { istekler.push(r.request().method() + " " + new URL(r.request().url()).pathname); return sahte.isle(r); });
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, function (r) { return r.abort(); });
     const p = await ctx.newPage();

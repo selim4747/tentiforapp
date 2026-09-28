@@ -67,12 +67,12 @@ export async function cevrimdisiTestleri({ dizin }) {
     ok("sürümlü dosyalar önceden önbellekte", await p.evaluate(async function () {
       const k = (await caches.keys()).find(function (x) { return /^tentiforapp-[0-9a-f]{12}$/.test(x); });
       const l = k ? (await (await caches.open(k)).keys()).map(function (r) { return r.url; }) : [];
-      return l.some(function (u) { return /js\/74-surum-24\.js\?v=[0-9a-f]{10}$/.test(u); }) && l.some(function (u) { return /veri\.json$/.test(u); });
+      return l.some(function (u) { return /js\/paket-\d\.js\?v=[0-9a-f]{10}$/.test(u); }) && l.some(function (u) { return /veri\.json$/.test(u); });
     }));
 
     durum.kapali = true; await ctx.setOffline(true);
     await p.reload(); await p.waitForFunction(veriVar, null, { timeout: 15000 });
-    ok("internetsiz yeniden açılır, veri gelir", await p.evaluate(function () { return document.querySelectorAll("script").length > 50; }));
+    ok("internetsiz yeniden açılır, veri gelir", await p.evaluate(function () { return document.querySelectorAll("script").length > 4 && typeof veri !== "undefined" && !!veri; }));
     ok("çevrimdışı şeridi görünür", await p.locator("#cevrimdisi").count() === 1);
     await p.goto(adres + "/oyunlar/"); await p.waitForFunction(veriVar, null, { timeout: 15000 });
     ok("hiç açılmamış sayfa da internetsiz açılır (rota yoldan)", await p.evaluate(function () { return rota().indexOf("#/oyunlar") === 0; }));
@@ -87,8 +87,8 @@ export async function cevrimdisiTestleri({ dizin }) {
     await p.waitForFunction(veriVar, null, { timeout: 20000 });
     const sure = Date.now() - bas;
     durum.yavas = false;
-    /* en az sayfanın bekleme süresi (3,5 sn) geçer: gecikme gerçekten uygulandı; ama 12 sn beklenmez */
-    ok("zayıf bağlantıda sayfa ve veri son kopyadan gelir (ağı 12 sn beklemez)", sure > 3000 && sure < 8000, sure);
+    /* 3.0: cihazda kopyası olan sayfa ve veri ağı hiç beklemeden gelir (ağ 12 sn gecikmeli) */
+    ok("zayıf bağlantıda sayfa ve veri anında son kopyadan gelir (ağı beklemez)", sure < 3000, sure);
 
     /* ---------- çevrimdışı senaryolar ---------- */
     const git = async function (yol) { await p.goto(adres + yol); await p.waitForFunction(veriVar, null, { timeout: 15000 }); await p.waitForTimeout(700); };
@@ -166,13 +166,13 @@ export async function cevrimdisiTestleri({ dizin }) {
       for (const u of l) { const r = await fetch(new URL(u, location.origin + "/").href, { cache: "no-store" }); if (!r.ok) { eksik.push(u + " " + r.status); } }
       return { sayi: l.length, eksik: eksik };
     });
-    ok("önceden indirilen bütün dosyalar pakette var", ilk.sayi > 70 && ilk.eksik.length === 0, ilk);
+    ok("önceden indirilen bütün dosyalar pakette var", ilk.sayi >= 8 && ilk.eksik.length === 0, ilk);
     /* 2. sonradan inen yönetici betikleri ve hesap kütüphanesi */
     await git("/");
     ok("yönetici betikleri sonradan iner", await p.evaluate(async function () { await yoneticiBetikleriYukle(); return yoneticiBetikleriHazir(); }));
     ok("hesap kütüphanesi sonradan iner", await p.evaluate(async function () { await hesapKutuphaneYukle(); return !!(window.supabase && window.supabase.createClient); }));
     ok("sonradan inen dosyalar da önbelleğe girer", await p.evaluate(async function () {
-      const u = ["js/vendor/supabase-2.117.2.js", "js/25-panel-roman-ses-basin.js", "js/43-kurulum.js"];
+      const u = ["js/vendor/supabase-2.117.2.js", "js/22b-yonetici-araclari.js", "js/25-panel-roman-ses-basin.js", "js/43-kurulum.js"];
       const var_ = [];
       for (const x of u) { const r = await caches.match(new URL(x, location.origin + "/").href, { ignoreSearch: true }); var_.push(!!r); }
       return var_.every(Boolean);

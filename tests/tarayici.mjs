@@ -19,7 +19,6 @@ function b64urlBaytUzunluk(s) { return Buffer.from(String(s).replace(/-/g, "+").
 
 export async function tarayiciTestleri({ adres, veritabani, dizin }) {
   const sahte = yeniSahte(veritabani);
-  const hesapKod = readFileSync(dizin + "/js/28-hesap.js", "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL);
   const hatalar = [];
   let gecen = 0;
   const ok = function (ad, kosul, ek) {
@@ -45,7 +44,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       await ctx.addInitScript(function () { try { localStorage.setItem("tentiforapp_hesap_hatirlat", JSON.stringify({ kapat: true })); } catch (e) { /* yok */ } });
     }
     await ctx.addInitScript(function () { window.__okumaOnbellegiKapali = true; });   /* testler sunucudaki son hâli okusun */
-    await ctx.route(/\/js\/28-hesap\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: hesapKod }); });
+    await ctx.route(/\/js\/(?:28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
     await ctx.route(TEST_URL + "/**", function (r) { return sahte.isle(r); });
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, function (r) { return r.abort(); });
     const p = await ctx.newPage();
@@ -115,7 +114,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     }
     await Zk.close();
     const sayfaIdleri = await Z.evaluate(function () { return GEZINME.map(function (g) { return g.id; }); });
-    ok("12 sayfa tanımlı", sayfaIdleri.length === 12, sayfaIdleri);
+    ok("13 sayfa tanımlı", sayfaIdleri.length === 13, sayfaIdleri);
     for (const s of sayfaIdleri) {
       await Z.evaluate(function (s) { location.hash = "#/" + s; }, s); await bekle(Z, 500);
       const gorunen = await Z.evaluate(function () {
@@ -132,7 +131,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("üst başlık telefonda sığar", await Z.evaluate(function () { const u = document.querySelector(".ust"); return u.scrollWidth <= u.clientWidth + 1; }));
     await Z.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(Z, 500);
     await Z.click("[data-mobil-menu]"); await bekle(Z, 300);
-    ok("menü sayfası bütün sayfaları listeler", await Z.locator("#mobilMenu .mm-sayfa").count() === 12);
+    ok("menü sayfası bütün sayfaları listeler", await Z.locator("#mobilMenu .mm-sayfa").count() === 13);
     await Z.click('#mobilMenu .mm-sayfa[href="#/fan"]'); await bekle(Z, 600);
     ok("menüden sayfaya gidilir, menü kapanır", await Z.evaluate(function () { return aktifSayfa === "fan" && !document.querySelector("#mobilMenu"); }));
     ok("alt menüde Evren düğmesi", await Z.evaluate(function () { return !!document.querySelector("#altMenu [data-evren-sec]"); }));
@@ -385,8 +384,8 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       return /E99/.test(t) && /Claude/.test(t) && /Senin evrenlerin/.test(t);
     }));
     await Z.click("[data-es-yeni]"); await bekle(Z, 600);
-    ok("yeni evren kendi sayfasında, bilgi sekmesiyle açılır", await Z.evaluate(function () {
-      return /^#\/ev\/benim\//.test(rota()) && !!document.querySelector('#evrenSayfa [data-fan-hedef] [data-fan-alan="ad"]');
+    ok("yeni evren kendi sayfasında, Evren Kurucu'yla (Temel adımı) açılır", await Z.evaluate(function () {
+      return /^#\/ev\/benim\//.test(rota()) && EVS.sekme === "kurucu" && !!document.querySelector('#evrenSayfa .evr-kurucu [data-fan-hedef] [data-fan-alan="ad"]');
     }));
     await Z.fill('#evrenSayfa [data-fan-alan="ad"]', "Deneme Evreni"); await bekle(Z, 450);
     const evId = await Z.evaluate(function () { return EVS.id; });
@@ -1153,7 +1152,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       const u = r.request().url();
       if (r.request().method() === "GET") {
         return /contents\/veri\.json/.test(u)
-          ? r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ sha: "abc", encoding: "base64", content: Buffer.from(readFileSync(dizin + "/veri.json")).toString("base64") }) })
+          ? r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ sha: "abc", encoding: "base64", content: Buffer.from(readFileSync(dizin + "/../veri.json")   /* GitHub'daki tam veri (yayındaki parçalı) */).toString("base64") }) })
           : r.fulfill({ status: 404, contentType: "application/json", body: "{}" });
       }
       ghPut.push({ u: u, govde: JSON.parse(r.request().postData() || "{}") });
@@ -1772,9 +1771,9 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     ok("geri bildirim panele (hata kayıtlarına) gider", !!gbGovde && gbGovde.p_kaynak === "geri-bildirim" && /Harita sayfasında/.test(gbGovde.p_mesaj) && /teşekkürler/.test(await YZ.textContent("#gbDurum")));
     await YZ.evaluate(function () { perdeKapat(); });
     ok("yönetici betikleri ziyaretçiye inmez, panel açılınca yüklenir", await YZ.evaluate(async function () {
-      const once = typeof yoneticiKurulum === "undefined" && !document.querySelector('script[src*="43-kurulum"]');
+      const once = typeof yoneticiKurulum === "undefined" && typeof yoneticiGithub === "undefined" && !document.querySelector('script[src*="43-kurulum"]');
       await yoneticiBetikleriYukle();
-      return once && typeof yoneticiKurulum === "function" && typeof yoneticiRoman === "function";
+      return once && typeof yoneticiKurulum === "function" && typeof yoneticiRoman === "function" && typeof yoneticiGithub === "function";
     }));
     await YZ.close();
 
@@ -1782,7 +1781,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     const kisa = await (await fetch(adres + "/dunya/")).text();
     ok("/dunya/ kendi başlığıyla ayrı sayfa", /<title>Dünya — TentiforApp<\/title>/.test(kisa) && /og:title" content="Dünya — TentiforApp"/.test(kisa) &&
       /rel="canonical" href="[^"]*\/dunya\/"/.test(kisa));
-    ok("/dunya/ yönlendirmez, uygulamanın kendisi", !/location\.replace|http-equiv="refresh"/.test(kisa) && /<base href="\/">/.test(kisa) && /js\/00-rota\.js/.test(kisa) && !/js\/43-kurulum\.js/.test(kisa));
+    ok("/dunya/ yönlendirmez, uygulamanın kendisi", !/location\.replace|http-equiv="refresh"/.test(kisa) && /<base href="\/">/.test(kisa) && /js\/paket-1\.js/.test(kisa) && !/js\/43-kurulum\.js/.test(kisa) && !/js\/22b-yonetici/.test(kisa));
     const man = await (await fetch(adres + "/manifest.webmanifest")).json();
     ok("manifest simgeleri", man.icons.length >= 2 && (await fetch(adres + "/" + man.icons[0].src)).ok);
 
@@ -1864,9 +1863,10 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
     const A = await cihaz("A");
     await kayitOl(A, "Yönetici", "yonetici", "a@ornek.test");
     await sahte.kokSorgu("insert into public.yoneticiler (id) select id from auth.users where email = 'a@ornek.test'");
-    await A.evaluate(function () { return yarisIcerikEsitle(); }); await bekle(A, 1200);
+    /* 2.9: oylama seçeneklerini yönetici panelden kurar (veri.oylama); listede olmayanlar sunucudan silinir */
+    await A.evaluate(function () { veri.oylama = ["Test yapımı A", "Test yapımı B"]; return yarisIcerikEsitle(); }); await bekle(A, 1200);
     const oylanabilir = await sahte.kokSorgu("select count(*)::int n from public.oylanabilir");
-    ok("yönetici girişinde yapımlar oylamaya yüklenir", oylanabilir.rows[0].n > 0, oylanabilir.rows[0]);
+    ok("yönetici girişinde paneldeki oylama listesi sunucuya yüklenir", oylanabilir.rows[0].n === 2, oylanabilir.rows[0]);
 
     const B = await cihaz("B");
     await kayitOl(B, "Ayşe", "ayse", "b@ornek.test");

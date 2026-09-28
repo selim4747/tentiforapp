@@ -311,6 +311,7 @@ const Y_LISTELER = {
   "e99.harita.yerler": { ad: "E99 · harita yerleri", ornek: { id: "", ad: "", tur: "Şehir", not: "", x: 50, y: 50 } },
   takvimEtkinlikleri: { ad: "Tömye takvimi etkinlikleri", ornek: { id: "", ad: "", ay: "Leg", gun: 1, sure: 1, tema: "", metin: "", alinti: "", gorev: { id: "yazi4", adet: 1, ad: "", odul: 30 } } },
   degisiklik:         { ad: "Değişiklik günlüğü",  ozel: true },
+  oylama:             { ad: "Sıradaki ne olsun",   ozel: true },
   site:               { ad: "Site ayarları",       ozel: true }
 };
 
@@ -386,6 +387,30 @@ function yListeOgeBaslik(x) {
   return x.baslik || x.soru || x.terim || x.metin || x.id || x.kelime || "(boş)";
 }
 
+/* 3.0 — "Sıradaki ne olsun" oylaması: seçenekleri yönetici elle kurar (her satıra bir tane). Listeden çıkan
+   seçeneğin oyları sunucuda silinir. Kaydedince yönetici hesabıyla girişliyse sunucuya hemen gider. */
+function yListeOylama() {
+  const l = Array.isArray(veri.oylama) ? veri.oylama : [];
+  return '<div class="kutu-y">' +
+    "<label for=\"yOylamaMetin\">Sıradaki ne olsun — her satıra bir seçenek (en çok 20)</label>" +
+    '<textarea class="kod-giris arac-giris" id="yOylamaMetin" rows="8" placeholder="Örnek: Delilik 2. kitap">' + kacir(l.join("\n")) + "</textarea>" +
+    '<p class="oyun-not">Okurlar en çok 3 seçeneğe oy verir. Listeden sildiğin seçeneğin oyları da silinir. ' +
+      "Kaydettikten sonra GitHub'a Kaydet ve Yayınla; oylama sunucuda hemen güncellenir (yönetici hesabıyla girişliysen).</p>" +
+    '<div class="oyun-sira"><button class="dugme" data-y-oylama-kaydet>Kaydet</button></div></div>';
+}
+
+document.addEventListener("click", function (e) {
+  if (!e.target.closest || !e.target.closest("[data-y-oylama-kaydet]")) { return; }
+  const m = document.querySelector("#yOylamaMetin");
+  if (!m) { return; }
+  const l = [];
+  m.value.split("\n").forEach(function (x) { const a = x.trim().slice(0, 120); if (a && l.indexOf(a) === -1 && l.length < 20) { l.push(a); } });
+  veri.oylama = l;
+  const esitle = typeof yarisIcerikEsitle === "function" ? Promise.resolve().then(yarisIcerikEsitle) : Promise.resolve();
+  esitle.catch(function () { /* hesap yok */ }).then(function () { if (typeof oylamaCiz === "function") { oylamaCiz(); } });
+  if (typeof yoneticiDurum === "function") { yoneticiDurum("Oylama listesi güncellendi (" + l.length + " seçenek). Kalıcı olması için GitHub'a Kaydet.", true); }
+});
+
 function yoneticiListeler() {
   /* site ayarları (sınırlı kod dahil) yalnızca tam yöneticide */
   if (!yoneticiAcik() && yListe === "site") { yListe = "bulmacalar"; }
@@ -399,6 +424,7 @@ function yoneticiListeler() {
 
   if (yListe === "kelimeler") { return secici + yListeKelimeler(); }
   if (yListe === "degisiklik") { return secici + yListeDegisiklik(); }
+  if (yListe === "oylama") { return secici + yListeOylama(); }
   if (yListe === "site") { return secici + yListeSite(); }
 
   const liste = yDizi(yListe);
@@ -857,7 +883,11 @@ document.addEventListener("click", function (e) {
     return;
   }
   if (e.target.closest("[data-y-yedek-al]")) { yoneticiYedekAl(); return; }
-  if (e.target.closest("[data-y-veri-indir]")) { bakimIndir("veri.json", JSON.stringify(veri, null, 2)); return; }
+  if (e.target.closest("[data-y-veri-indir]")) {
+    (typeof veriParcalariTam === "function" ? veriParcalariTam() : Promise.resolve()).then(function () { bakimIndir("veri.json", JSON.stringify(veri, null, 2)); },
+      function (h) { yoneticiDurum("İndirilemedi: " + h.message, false); });
+    return;
+  }
   const yt = e.target.closest("[data-y-teori]");
   if (yt) {
     hesapIstemci.rpc("teori_isaretle", { p_teori: Number(yt.dataset.yTeori), p_isaret: yt.dataset.isaret || "", p_gizli: yt.dataset.gizli === "1" })
