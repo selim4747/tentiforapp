@@ -1,5 +1,5 @@
 {
-  "surum": "3.2.0",
+  "surum": "3.2.1",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7180,6 +7180,13 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "3.2.1",
+      "tarih": "2026-09-28",
+      "maddeler": [
+        "Panel: Yayınla'dan sonra “Yayın kuruluyor…” takılı kalmıyor. Site GitHub'a gönderimle zaten kurulduysa aynı paket yeniden kurulunca değişiklik görünmüyordu; artık her kurulumun zamanına bakılıyor ve site zaten güncelse hemen söyleniyor"
+      ]
+    },
     {
       "surum": "3.2.0",
       "tarih": "2026-09-28",

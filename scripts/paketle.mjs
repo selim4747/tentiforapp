@@ -184,7 +184,8 @@ const surumle = function (metin) {
    karşılaştırır; farklıysa yeni sürüm yayındadır (js/46-guncelleme.js). */
 const paket = ozet.digest("hex").slice(0, 12);
 const veriSurum = JSON.parse(readFileSync(join(HEDEF, "veri.json"), "utf8")).surum || "";
-writeFileSync(join(HEDEF, "surum.json"), JSON.stringify({ paket: paket, surum: veriSurum }));
+/* 3.2: kuruldu — her kurulumda değişir; içerik aynı olsa da panel "yayında" diyebilsin */
+writeFileSync(join(HEDEF, "surum.json"), JSON.stringify({ paket: paket, surum: veriSurum, kuruldu: new Date().toISOString() }));
 
 /* (js/65-yonetici-yukle.js'in sürümlü adresleri paketlerden önce yazıldı) */
 
