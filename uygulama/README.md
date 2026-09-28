@@ -29,7 +29,8 @@ derlenir ve depoya girer → Yayınla. (Elle: Actions → Android APK → Run wo
 Uygulamaya özel (js/78-uygulama-kabugu.js): geri tuşu önce açık pencereyi kapatır, ana sayfada iki basışta çıkar;
 "İndir" düğmeleri dosyayı kaydedip telefonun Kaydet/Paylaş menüsünü açar; başka sitelere giden bağlantılar telefonun
 tarayıcısında açılır; sesli okuma telefonun sesiyle; günün kelimesi hatırlatması telefon bildirimiyle (19:00, uygulama
-her açılışta 7 günlüğünü kurar); aşağı çekince yenilenir; titreşim telefonun motoruyla.
+her açılışta 7 günlüğünü kurar); aşağı çekince yenilenir; titreşim telefonun motoruyla; odak modunda ekran
+kararmaz (KeepAwake eklentisi).
 
 E-posta bağlantıları (kayıt onayı, şifre sıfırlama) uygulamada kayıt olunduysa `/uygulama/ac/` adresine döner ve
 uygulamayı açar. Bunun için Supabase → Authentication → URL Configuration → Redirect URLs'e

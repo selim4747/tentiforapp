@@ -43,6 +43,27 @@ async function liderlikFiltrele(sorgu) {
 }
 let liderlikBenim = null;       /* kendi istatistik satırım: { gizli, askida, askida_neden, engelli } */
 
+/* Herkese aynı listeler önce Cloudflare'den (functions/api/pano.js, 10 dakikalık önbellek): Supabase'e her ziyaretçi
+   ayrı ayrı gitmez. O adres yoksa ya da hata verirse (yerel test, eski yayın) doğrudan Supabase'den okunur. */
+const LIDERLIK_PANO = { yok: false };
+
+async function liderlikPano(t, canli) {
+  if (!LIDERLIK_PANO.yok && !liderlikTakip && typeof fetch === "function") {
+    try {
+      const d = new AbortController();
+      const sure = setTimeout(function () { d.abort(); }, 4000);
+      const y = await fetch("/api/pano?t=" + encodeURIComponent(t), { signal: d.signal });
+      clearTimeout(sure);
+      if (y.ok && /json/.test(y.headers.get("content-type") || "")) {
+        const j = await y.json();
+        if (j && j.t === t && j.veri !== undefined) { return j.veri; }
+      }
+      if (y.status === 404 || !/json/.test(y.headers.get("content-type") || "")) { LIDERLIK_PANO.yok = true; }
+    } catch (_) { /* aşağıda canlı */ }
+  }
+  return canli();
+}
+
 function liderlikTablo(id) { return LIDERLIK_TABLOLARI.find(function (t) { return t.id === id; }) || LIDERLIK_TABLOLARI[0]; }
 
 function liderlikSezonAdi() {
@@ -206,10 +227,13 @@ function liderlikDegerMetni(t, v) {
 }
 
 async function liderlikSiralamaCiz(kutu, t) {
-  const { data, error } = await (await liderlikFiltrele(hesapIstemci.from("liderlik")
-    .select("kullanici_adi, gorunen_ad, " + t.id).gt(t.id, 0)))
-    .order(t.id, { ascending: false }).order("guncelleme", { ascending: true }).limit(LIDERLIK_SATIR);
-  if (error) { throw error; }
+  const data = await liderlikPano(t.id, async function () {
+    const { data, error } = await (await liderlikFiltrele(hesapIstemci.from("liderlik")
+      .select("kullanici_adi, gorunen_ad, " + t.id).gt(t.id, 0)))
+      .order(t.id, { ascending: false }).order("guncelleme", { ascending: true }).limit(LIDERLIK_SATIR);
+    if (error) { throw error; }
+    return data;
+  });
   if (!data || !data.length) {
     kutu.innerHTML = '<p class="lider-bos">Bu tabloda henüz kimse yok. İlk sen ol!</p>';
     return;
@@ -238,8 +262,11 @@ async function liderlikBulmacaCiz(kutu) {
 }
 
 async function liderlikKuluplerCiz(kutu) {
-  const { data: ham, error } = await hesapIstemci.from("kulupler").select("*").order("haftalik", { ascending: false });
-  if (error) { throw error; }
+  const ham = await liderlikPano("kulupler", async function () {
+    const { data, error } = await hesapIstemci.from("kulupler").select("*").order("haftalik", { ascending: false });
+    if (error) { throw error; }
+    return data;
+  });
   /* toplamlar veritabanında bigint: sayı olarak kullan */
   const data = (ham || []).map(function (k) {
     return { kisilik: k.kisilik, uye: Number(k.uye) || 0, haftalik: Number(k.haftalik) || 0, ortalama_tamlik: Number(k.ortalama_tamlik) || 0 };
@@ -261,12 +288,16 @@ async function liderlikKuluplerCiz(kutu) {
 }
 
 async function liderlikToplulukCiz(kutu) {
-  const [k, r] = await Promise.all([
-    hesapIstemci.from("kulupler").select("kisilik, uye"),
-    hesapIstemci.from("topluluk_roller").select("rol, sayi")
-  ]);
-  if (k.error) { throw k.error; }
-  if (r.error) { throw r.error; }
+  const [kd, rd] = await liderlikPano("topluluk", async function () {
+    const [k, r] = await Promise.all([
+      hesapIstemci.from("kulupler").select("kisilik, uye"),
+      hesapIstemci.from("topluluk_roller").select("rol, sayi")
+    ]);
+    if (k.error) { throw k.error; }
+    if (r.error) { throw r.error; }
+    return [k.data, r.data];
+  });
+  const k = { data: kd }, r = { data: rd };
   (k.data || []).forEach(function (x) { x.uye = Number(x.uye) || 0; });
   (r.data || []).forEach(function (x) { x.sayi = Number(x.sayi) || 0; });
   const cubuklar = function (liste, ad, sayi) {
