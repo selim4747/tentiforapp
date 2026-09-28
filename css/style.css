@@ -4878,6 +4878,7 @@ html[data-ayar-tema="gece"] .evr-denetim-rozet{background:#5a3b0a;color:#ffe2b0}
 .evr-gecit-gezgin{stroke:#c77d14;stroke-width:2;stroke-dasharray:5 4}
 .evr-gecit-dugum circle{fill:var(--kar);stroke:var(--deniz);stroke-width:2}
 .evr-gecit-dugum.fan circle{stroke:#c77d14}
+.evr-gecit-dugum.test circle{stroke:#7a4fb5;stroke-dasharray:3 2}
 .evr-gecit-dugum.benim circle{fill:var(--buz)}
 .evr-gecit-dugum text{font:11px var(--govde);fill:var(--murekkep)}
 .evr-gecit-anahtar{display:inline-block;width:22px;height:0;border-top:2px solid var(--deniz);vertical-align:middle}

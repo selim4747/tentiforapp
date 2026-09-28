@@ -497,16 +497,17 @@ function evrGecitAgi() {
   const hedef = function (g) {
     if (/^#\/arsiv$/.test(g)) { return d("site:tomye", "Tömye", "kanon"); }
     if (/^#\/ev\/e99$/.test(g)) { return d("e99", "E99", "kanon"); }
+    if (/^#\/claude$/.test(g)) { return d("site:claude", "Claude'un Evreni", "test"); }   /* 3.1.1: test evreni, kanon değil */
     const m = /^#\/ev\/(site|fan|benim)\/([\w-]+)$/.exec(g || "");
     if (!m) { return null; }
     if (m[1] === "site") { const k = (veri.kanonEvrenleri || {})[m[2]]; return d("site:" + m[2], (k && k.ad) || m[2].toUpperCase(), "kanon"); }
-    if (m[1] === "fan") { const e = fanSiteListesi("evren").find(function (x) { return x.id === m[2]; }); return e ? d("fan:" + e.id, e.ad, e.kanon === true ? "kanon" : "fan") : null; }
+    if (m[1] === "fan") { const e = fanSiteListesi("evren").find(function (x) { return x.id === m[2]; }); return e ? d("fan:" + e.id, e.ad, e.kanon === true ? "kanon" : (e.test ? "test" : "fan")) : null; }
     const b = evrenBenimBul(m[2]); return b ? d("benim:" + b.id, b.ad || "Adsız evren", "benim") : null;
   };
   const yerler = function (e) { const l = ((e.harita || {}).yerler || []).slice(); (e.gezegenler || []).forEach(function (g) { (((g.harita || {}).yerler) || []).forEach(function (y) { l.push(y); }); }); return l; };
   const isle = function (id, e) { yerler(e).forEach(function (y) { if (y.gecit) { const h = hedef(y.gecit); if (h && h !== id) { bag.push({ a: id, b: h, etiket: y.ad || "geçit", tur: "gecit" }); } } }); };
   /* sitedeki fan evreninin haritası ayrı dosyasında: inmişse (EVD_BELLEK) ondan */
-  fanSiteListesi("evren").forEach(function (e) { isle(d("fan:" + e.id, e.ad, e.kanon === true ? "kanon" : "fan"), (typeof EVD_BELLEK !== "undefined" && EVD_BELLEK[e.id]) || e); });
+  fanSiteListesi("evren").forEach(function (e) { isle(d("fan:" + e.id, e.ad, e.kanon === true ? "kanon" : (e.test ? "test" : "fan")), (typeof EVD_BELLEK !== "undefined" && EVD_BELLEK[e.id]) || e); });
   fanEserlerim().filter(function (e) { return e.tur === "evren" && !e.e99; }).forEach(function (e) { isle(d("benim:" + e.id, e.ad || "Adsız evren", "benim"), e); });
   /* Evrengezer yolculukları: E25 → konuk olduğu evren */
   const e25 = d("site:e25", "E25", "kanon");

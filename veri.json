@@ -1,5 +1,5 @@
 {
-  "surum": "3.1.0",
+  "surum": "3.1.1",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7176,6 +7176,18 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "3.1.1",
+      "tarih": "2026-09-28",
+      "maddeler": [
+        "Tek seferlik evren kodu artık her yolda harcanıyor: Fan sayfasındaki “+ Yeni evren” ve evren kopyalama da hakkı kullanır (önceden bu yollarla sınırsız evren kurulabiliyordu); hak yokken kopyalamak seviye kapısına takılır",
+        "Güvenlik: adlarda ve metinlerde tırnak işareti artık her yerde kaçırılıyor (tırnaklı bir ad sayfayı bozamaz)",
+        "Kişi sayfası tırnaklı ya da & içeren adlarda da açılıyor",
+        "E25 daha hızlı: Evrengezer konuk havuzu her kart için yeniden hesaplanmıyor, bir çizimde bir kez",
+        "Ana sayfadaki “Evrenini kur” kilidi kod girince, pencere kapanınca ve girişten sonra XP gelince kendiliğinden güncelleniyor",
+        "Geçit haritasında Claude'un Evreni ve örnek fan evrenleri test evreni olarak (kesikli mor) görünüyor, kanon gibi değil"
+      ]
+    },
     {
       "surum": "3.1.0",
       "tarih": "2026-09-28",

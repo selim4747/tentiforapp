@@ -123,6 +123,31 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
     ok("ikinci evren kurulamaz", await U.evaluate(function () { const n = fanEserlerim().filter(function (x) { return x.tur === "evren"; }).length; evrenYeniKur(); return fanEserlerim().filter(function (x) { return x.tur === "evren"; }).length === n; }));
     await U.evaluate(function () { if (typeof perdeKapat === "function") { perdeKapat(); } });
 
+    /* 3.1.1: hak Kurucu dışındaki yollarda da harcanır; kopyalamak da kapıdan geçer */
+    console.log("3.1.1 tek seferlik kod başka yollardan");
+    await sahte.kokSorgu("insert into public.tek_kodlar (ozet, tur, ad) values (public.tek_kod_ozet('IKIEVREN311'), 'evren1', 'Test') on conflict do nothing");
+    const U2 = await cihaz("uye2", { seviye: 0 });
+    await kayitOl(U2, "İki Evren", "ikievren311", "ie311@ornek.test");
+    await U2.goto(adres + "/arsiv/"); await U2.waitForFunction(veriVar, null, { timeout: 20000 }); await bekle(U2, 1500);
+    await U2.evaluate(function () { return tekKodDene("ikievren311", null); }); await bekle(U2, 1800);
+    ok("Fan sayfasındaki '+ Yeni evren' de hakkı harcar; ikincisi açılmaz", await U2.evaluate(function () {
+      const vardi = tekHakVar("evren1");
+      const e = fanYeni("evren");
+      const r = vardi && !!e && !tekHakVar("evren1") && !uretimAcik("evren") && fanYeni("evren") === null;
+      perdeKapat();
+      return r;
+    }));
+    await bekle(U2, 1200);
+    ok("fanYeni ile harcanan hak sunucuda da harcandı", (await sahte.kokSorgu("select harcama is not null h from public.tek_kodlar where ozet = public.tek_kod_ozet('IKIEVREN311')")).rows[0].h === true);
+    ok("hak yokken evren kopyalamak kapıya takılır", await U2.evaluate(function () {
+      const n = fanEserlerim().filter(function (x) { return x.tur === "evren"; }).length;
+      const b = document.createElement("button"); b.setAttribute("data-evs-kopyala", ""); document.body.appendChild(b); b.click(); b.remove();
+      const r = fanEserlerim().filter(function (x) { return x.tur === "evren"; }).length === n && !!document.querySelector("#perde .svk-pencere");
+      perdeKapat();
+      return r;
+    }));
+    ok("kacir tırnakları da kaçırır (nitelik değerleri güvenli)", await U2.evaluate(function () { return kacir("a\"b'c<d") === "a&quot;b&#39;c&lt;d"; }));
+
     /* ---------- 3. E25 ---------- */
     console.log("3.1 E25");
     const E = await cihaz("e25");
