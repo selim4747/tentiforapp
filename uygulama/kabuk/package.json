@@ -3,6 +3,7 @@
   "private": true,
   "description": "TentiforApp Android kabuğu (Capacitor). Site internetten açılır; APK GitHub Actions'ta derlenir (.github/workflows/apk.yml).",
   "dependencies": {
+    "@capacitor-community/keep-awake": "^7.1.0",
     "@capacitor-community/text-to-speech": "^6.1.0",
     "@capacitor/android": "^7.0.0",
     "@capacitor/app": "^7.0.0",

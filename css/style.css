@@ -4435,3 +4435,79 @@ html[data-ayar-tema="gece"] .y-uyari.kotu{background:#2A1413}
 .kabuk-cek.hazir{color:#fff;background:var(--vurgu, #3A7CA5)}
 .kabuk-cek.donuyor{animation:kabukDon .7s linear infinite}
 @keyframes kabukDon{to{transform:translate(-50%,56px) rotate(360deg)}}
+
+/* ================= 2.7: okuma ayarları, odak modu, isme dokun, altını çiz, bugün, harita avı ================= */
+.ok-arac{display:flex;justify-content:flex-end;gap:6px;margin:0 0 6px}
+.ok-arac button{font:500 12px var(--mono);letter-spacing:.04em;background:transparent;border:1px solid var(--sig);color:var(--deniz);
+  border-radius:999px;padding:4px 11px;min-height:32px;cursor:pointer}
+.ok-arac button:hover{background:var(--buz)}
+html[data-ok-olcek] [data-ok-temel]{font-size:calc(var(--ok-temel) * var(--ok-olcek))}
+html[data-ok-aralik] [data-ok-temel],html[data-ok-aralik] [data-ok-temel] p{line-height:var(--ok-aralik) !important}
+html[data-ok-yazi="tirnakli"] [data-ok-temel],html[data-ok-yazi="tirnakli"] [data-ok-temel] :not(code):not(.oku-yazi){font-family:"EB Garamond",Georgia,"Times New Roman",serif !important}
+html[data-ok-yazi="tirnaksiz"] [data-ok-temel],html[data-ok-yazi="tirnaksiz"] [data-ok-temel] :not(code):not(.oku-yazi){font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif !important}
+html[data-ok-zemin="kagit"] [data-ok-temel]{background:#F5ECD9;color:#3A2F22;padding:14px 16px;border-radius:6px}
+html[data-ok-zemin="gece"] [data-ok-temel]{background:#16181D;color:#DDD6C8;padding:14px 16px;border-radius:6px}
+html[data-ok-zemin] [data-ok-temel] :not(a){color:inherit}
+html[data-ok-genislik="dar"] [data-ok-temel]{max-width:34em;margin-left:auto;margin-right:auto}
+html[data-ok-genislik="genis"] [data-ok-temel]{max-width:none}
+
+.oka-panel,.ad-kart{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:120;
+  width:min(440px,calc(100vw - 24px));max-height:70vh;overflow-y:auto;background:var(--beyaz);border:1px solid var(--sig);border-radius:10px;
+  padding:16px 18px;box-shadow:0 12px 40px rgba(13,53,96,.22)}
+.oka-ust{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.oka-panel .pencere-kapat,.ad-kart .pencere-kapat{position:static}
+.ad-kart .pencere-kapat{position:absolute;top:8px;right:8px}
+.oka-satir{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--buz)}
+.oka-ad{font-size:14px;color:var(--murekkep-2)}
+.oka-secim{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;align-items:center}
+.oka-secim button{font:500 12px var(--mono);border:1px solid var(--sig);background:transparent;color:var(--murekkep);border-radius:999px;padding:5px 10px;min-height:32px;cursor:pointer}
+.oka-secim button.secili{background:var(--deniz);border-color:var(--deniz);color:var(--beyaz)}
+.oka-secim button:disabled{opacity:.4;cursor:default}
+.oka-deger{font:500 13px var(--mono);min-width:48px;text-align:center}
+.ad-kart h4{font-family:var(--display);font-size:24px;font-weight:400;margin:4px 30px 2px 0}
+.ad-kart-alt{font-size:13px;color:var(--murekkep-2);margin:0 0 6px}
+.ad-kart p{margin:6px 0}
+
+html[data-odak] .ust,html[data-odak] .alt-menu,html[data-odak] .aktif-serit,html[data-odak] .gezinme,html[data-odak] .yukari-btn,
+html[data-odak] #yolCubugu,html[data-odak] .ok-arac,html[data-odak] footer,html[data-odak] .hesap-hatirlat,html[data-odak] .evren-serit{display:none !important}
+html[data-odak] main:has(.odak-bolum) > :not(.odak-bolum){display:none !important}
+html[data-odak] body{padding-bottom:0}
+html[data-odak]{scroll-padding-top:16px}
+html[data-odak] #perde{padding:0}
+html[data-odak] #perde .pencere{max-width:none;max-height:100vh;height:100%;border:0;border-radius:0;padding:28px max(20px,calc((100vw - 720px)/2)) 60px}
+.odak-hedef{scroll-margin-top:16px}
+.odak-cik{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:12px;z-index:130;font:500 12px var(--mono);letter-spacing:.04em;
+  background:var(--beyaz);color:var(--deniz);border:1px solid var(--sig);border-radius:999px;padding:7px 12px;min-height:36px;opacity:.6;cursor:pointer}
+.odak-cik:hover,.odak-cik:focus{opacity:1}
+
+::highlight(tf-ad){text-decoration:underline dotted;text-decoration-color:var(--deniz);text-decoration-thickness:1.5px;text-underline-offset:3px}
+::highlight(tf-vurgu){background-color:rgba(255,206,84,.42)}
+.vurgu-balon{z-index:125}
+.vurgu-kart{display:flex;flex-direction:column}
+.vurgu-eylem{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+
+.oyun-bugun{border:1px solid var(--sig);border-radius:8px;background:var(--beyaz);padding:14px 16px;margin:0 0 22px}
+.ob-ust{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ob-seri{font:500 14px var(--mono);color:var(--deniz)}
+.ob-seri.sonmus{color:var(--murekkep-2);opacity:.7}
+.ob-liste{display:flex;flex-wrap:wrap;gap:8px}
+.ob-oyun{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:14px;border:1px solid var(--sig);background:transparent;color:var(--murekkep);
+  border-radius:999px;padding:7px 13px;min-height:40px;cursor:pointer}
+.ob-oyun.bitti{background:var(--buz);color:var(--deniz)}
+.ob-tik{font-family:var(--mono)}
+.oyun-bugun .oyun-not{margin:10px 0 0}
+
+.havi-kart .havi-ipucu{margin:6px 0 10px}
+.havi-svg{display:block;width:100%;max-width:460px;margin:0 auto;aspect-ratio:1;border:1px solid var(--sig);border-radius:6px;touch-action:manipulation}
+.havi-svg[data-havi-harita]{cursor:crosshair}
+.havi-deniz{fill:#CFE3F3}
+.havi-kara{fill:#EFE6D2;stroke:#9DB7CC;stroke-width:.4}
+.havi-tahmin{stroke:#fff;stroke-width:.5}
+.havi-tahmin.soguk{fill:#3A7CA5}.havi-tahmin.ilik{fill:#9C9A5E}.havi-tahmin.sicak{fill:#E08A2E}.havi-tahmin.kaynar{fill:#D2452A}.havi-tahmin.bulundu{fill:#2E8B57}
+.havi-no{font:3px var(--mono);fill:var(--murekkep)}
+.havi-hedef{fill:none;stroke:#2E8B57;stroke-width:.8;stroke-dasharray:1.5 1}
+.havi-ad{font:3.4px var(--govde);fill:#1E5E3B;text-anchor:middle}
+@media (max-width:420px){
+  .oka-satir{flex-direction:column;align-items:flex-start;gap:6px}
+  .oka-secim{justify-content:flex-start}
+}
