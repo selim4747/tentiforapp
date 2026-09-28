@@ -22,7 +22,11 @@ function rbKelime(t) { return String(t || "").split(/\s+/).filter(Boolean).lengt
 
 /** Gizli (kartsız) karakterlerin adları: bağlarda ve eşleşmede hiç kullanılmaz. */
 function rbGizliAdlar() {
-  return (veri.karakterler || []).filter(function (k) { return k.kart === false; }).map(function (k) { return String(k.ad || "").toLocaleLowerCase("tr"); });
+  const l = [];
+  (veri.karakterler || []).filter(function (k) { return k.kart === false; }).forEach(function (k) {
+    (typeof karakterAdlari === "function" ? karakterAdlari(k) : [k.ad]).forEach(function (a) { l.push(String(a || "").toLocaleLowerCase("tr")); });
+  });
+  return l;
 }
 
 /** Bütün kutular: anahtar → { anahtar, alan, ad, adlar, metin, acik: [bağlanacak ad], git, gizli } */
@@ -35,7 +39,7 @@ function rbKutular() {
   /* Tömye (başlangıç evreni) */
   (veri.karakterler || []).forEach(function (k) {
     if (!k.id || k.kart === false) { return; }
-    ekle({ anahtar: "kar:" + k.id, alan: "tomye", ad: "Kaydı: " + k.ad, adlar: [k.ad], metin: (k.ozet || "") + " " + (k.detay || ""), git: "#/karakter/" + k.id, gizli: k.gizli });
+    ekle({ anahtar: "kar:" + k.id, alan: "tomye", ad: "Kaydı: " + k.ad, adlar: typeof karakterAdlari === "function" ? karakterAdlari(k) : [k.ad], metin: (k.ozet || "") + " " + (k.detay || ""), git: "#/karakter/" + k.id, gizli: k.gizli });
   });
   (veri.mektuplar || []).forEach(function (m, i) {
     if (gizliMi(m.kimden) || gizliMi(m.kime)) { return; }

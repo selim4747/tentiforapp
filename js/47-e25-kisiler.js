@@ -283,9 +283,11 @@ function kisiGotur(kisi, hedef) {
   let l = fanEserlerim();
   let e;
   if (hedef === "yeni-hikaye") {
-    e = fanYeni("hikaye");
+    const yeni = fanYeni("hikaye");
+    if (!yeni) { return null; }   /* seviye kapısı: uyarıyı fanYeni gösterdi */
     l = fanEserlerim();
-    e = l.find(function (x) { return x.id === e.id; });
+    e = l.find(function (x) { return x.id === yeni.id; });
+    if (!e) { return null; }   /* depolama dolu: kaydedilemedi */
     e.baslik = kopya.ad + " hakkında";
   } else {
     const p = hedef.split(":");

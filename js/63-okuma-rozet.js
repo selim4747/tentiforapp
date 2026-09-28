@@ -247,23 +247,35 @@ function okuAdVar(metin, ad) {
   return new RegExp("(^|[^0-9A-Za-zÇĞİÖŞÜçğıöşü])" + kac + "(?=$|[^0-9A-Za-zÇĞİÖŞÜçğıöşü])", "i").test(String(metin));
 }
 
+/** Karakterin metinlerde geçen adları: tam adı ve (başka karakterle çakışmıyorsa) ilk adı.
+    Mektuplar ve alıntılar "Saek", "Feil" diye imzalanır; kayıtta tam ad "Saek Luyot"tur. */
+function karakterAdlari(k) {
+  const l = [k.ad];
+  const ilk = String(k.ad || "").split(/\s+/)[0];
+  if (ilk && ilk !== k.ad && ilk.length >= 3 &&
+      (veri.karakterler || []).filter(function (x) { return String(x.ad || "").split(/\s+/)[0] === ilk; }).length === 1) { l.push(ilk); }
+  return l;
+}
+function karakterAnilir(metin, k) { return karakterAdlari(k).some(function (a) { return okuAdVar(metin, a); }); }
+
 /** Karakter hakkındaki kutular: [{ anahtar, ad, git, kilitli }]. Kodla kilitli bölümdekiler de sayılır (rozet için
     hepsi okunmalı; o bölüm açılınca okunur); buz altındaki gizli kayıtlar sayılmaz, varlığı da belli edilmez. */
 function karakterKutulari(k) {
   const buzAcik = function (gizli) { return okuErisim(null, gizli); };
   const kodKilitli = function (bolum) { return !(typeof yoneticiAcik === "function" && yoneticiAcik()) && typeof bolumErisimi === "function" && !bolumErisimi(bolum); };
+  const adlar = karakterAdlari(k);
   const l = [{ anahtar: "kar:" + k.id, ad: "Kaydı: " + k.ad, git: "#/karakter/" + k.id, kilitli: kodKilitli("arsiv") }];
   (veri.mektuplar || []).forEach(function (m, i) {
-    if ((m.kimden === k.ad || m.kime === k.ad) && buzAcik(m.gizli)) { l.push({ anahtar: "mektup:" + (m.id || i), ad: "Mektup: " + m.kimden + " → " + m.kime, git: "#mektuplar", kilitli: kodKilitli("mektuplar") }); }
+    if ((adlar.indexOf(m.kimden) !== -1 || adlar.indexOf(m.kime) !== -1) && buzAcik(m.gizli)) { l.push({ anahtar: "mektup:" + (m.id || i), ad: "Mektup: " + m.kimden + " → " + m.kime, git: "#mektuplar", kilitli: kodKilitli("mektuplar") }); }
   });
   (veri.gunlukler || []).forEach(function (g, i) {
-    if (g.kim === k.ad && buzAcik(g.gizli)) { l.push({ anahtar: "gunluk:" + i, ad: "Günlük: " + (g.tarih || i + 1), git: "#gunluk", kilitli: kodKilitli("mektuplar") }); }
+    if (adlar.indexOf(g.kim) !== -1 && buzAcik(g.gizli)) { l.push({ anahtar: "gunluk:" + i, ad: "Günlük: " + (g.tarih || i + 1), git: "#gunluk", kilitli: kodKilitli("mektuplar") }); }
   });
   (veri.alintilar || []).forEach(function (a, i) {
-    if (okuAdVar(a.kim, k.ad) && buzAcik(a.gizli)) { l.push({ anahtar: "alinti:" + i, ad: "Alıntı: “" + String(a.metin).slice(0, 30) + "…”", git: "#alintilar", kilitli: kodKilitli("alintilar") }); }
+    if (karakterAnilir(a.kim, k) && buzAcik(a.gizli)) { l.push({ anahtar: "alinti:" + i, ad: "Alıntı: “" + String(a.metin).slice(0, 30) + "…”", git: "#alintilar", kilitli: kodKilitli("alintilar") }); }
   });
   (veri.zamanCizelgesi || []).forEach(function (z, i) {
-    if ((okuAdVar(z.metin, k.ad) || okuAdVar(z.baslik, k.ad)) && buzAcik(z.gizli)) { l.push({ anahtar: "zaman:" + (z.no || i), ad: "Zaman: " + z.baslik, git: "#zaman", kilitli: kodKilitli("zaman") }); }
+    if ((karakterAnilir(z.metin, k) || karakterAnilir(z.baslik, k)) && buzAcik(z.gizli)) { l.push({ anahtar: "zaman:" + (z.no || i), ad: "Zaman: " + z.baslik, git: "#zaman", kilitli: kodKilitli("zaman") }); }
   });
   return l;
 }

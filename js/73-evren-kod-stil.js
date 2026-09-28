@@ -26,13 +26,31 @@ if (typeof evrenEkTemizle === "function") {
 /* ==================== stil kodu ==================== */
 
 function eksCssTemizle(css) {
-  return String(css || "").slice(0, EKS_STIL_SINIR)
+  return eksSusluDengele(String(css || "").slice(0, EKS_STIL_SINIR)
+    /* kaçış dizileri (u\72 l( gibi) kuralları atlatmasın: hepsi atılır */
+    .replace(/\\[0-9a-fA-F]{1,6}\s?/g, "").replace(/\\[\s\S]?/g, "")
+    /* adres taşıyan dizgeler (image-set("https://…"), src: "//…") boşaltılır */
+    .replace(/(["'])(?:(?!\1)[^\n])*?(?:\/\/|:\s*\/)(?:(?!\1)[^\n])*\1/g, '""')
     .replace(/<\/?\s*style/gi, "")
     .replace(/@import[^;]*;?/gi, "")
     .replace(/@charset[^;]*;?/gi, "")
     .replace(/expression\s*\(/gi, "(")
     .replace(/behavior\s*:/gi, "x:")
-    .replace(/url\s*\(\s*(['"]?)(?!data:image\/)[^)]*\)/gi, "none");
+    .replace(/url\s*\(\s*(?!['"]?data:image\/)[^)]*\)/gi, "none"));
+}
+
+/** Fazla "}" ile #evrenSayfa sarmalının dışına çıkılmasın: dengesiz kapanışlar atılır, açık kalanlar kapatılır. */
+function eksSusluDengele(css) {
+  let d = 0, o = "", tirnak = "";
+  for (let i = 0; i < css.length; i++) {
+    const c = css[i];
+    if (tirnak) { o += c; if (c === tirnak) { tirnak = ""; } continue; }
+    if (c === '"' || c === "'") { tirnak = c; o += c; continue; }
+    if (c === "{") { d++; } else if (c === "}") { if (!d) { continue; } d--; }
+    o += c;
+  }
+  if (tirnak) { o += tirnak; }
+  return o + "}".repeat(d);
 }
 
 /** Evrenin sayfasına uygulanan CSS: #evrenSayfa içine sarılı (iç içe CSS). */
