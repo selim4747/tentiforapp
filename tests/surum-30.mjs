@@ -301,7 +301,7 @@ export async function surum30Testleri({ adres, veritabani, dizin, kok }) {
     await K.goto(adres + "/"); await K.waitForFunction(veriVar, null, { timeout: 20000 }); await bekle(K, 400);
     await K.evaluate(function () { window.kanonErisim = function () { return { hepsi: true, tumEvren: true, bolumler: new Set(), evrenler: new Set() }; }; location.hash = "#/oyunlar"; }); await bekle(K, 300);
     await K.evaluate(function () { evrenSeciciAc(); }); await bekle(K, 200);
-    await K.click("[data-es-yeni]"); await bekle(K, 700);
+    await K.click("#evrenSecici [data-es-yeni]"); await bekle(K, 700);
     ok("yeni evren Kurucu'yla açılır: adımlar ve Tömye ölçeği", await K.evaluate(function () {
       return EVS.sekme === "kurucu" && document.querySelectorAll("#evrenSayfa .evr-adim").length === 7 && !!document.querySelector("#evrenSayfa .evr-olcek-halka") &&
         document.querySelector('#evrenSayfa [data-evs-sekme="kurucu"]') === document.querySelector("#evrenSayfa .evs-sekmeler [data-evs-sekme]");

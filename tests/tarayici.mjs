@@ -383,7 +383,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       const t = document.querySelector("#evrenSecici").textContent;
       return /E99/.test(t) && /Claude/.test(t) && /Senin evrenlerin/.test(t);
     }));
-    await Z.click("[data-es-yeni]"); await bekle(Z, 600);
+    await Z.click("#evrenSecici [data-es-yeni]"); await bekle(Z, 600);
     ok("yeni evren kendi sayfasında, Evren Kurucu'yla (Temel adımı) açılır", await Z.evaluate(function () {
       return /^#\/ev\/benim\//.test(rota()) && EVS.sekme === "kurucu" && !!document.querySelector('#evrenSayfa .evr-kurucu [data-fan-hedef] [data-fan-alan="ad"]');
     }));

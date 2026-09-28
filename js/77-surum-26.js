@@ -189,7 +189,7 @@ document.addEventListener("click", async function (ev) {
     d.className = "pencere-durum " + (s.hata && !s.tamam ? "kotu" : "iyi");
   }
   b.disabled = false;
-  setTimeout(function () { if (typeof ayar25Ciz === "function") { ayar25Ciz(); } }, 1500);
+  setTimeout(function () { if (typeof ayar25Ciz === "function" && ayar25Gorunur()) { ayar25Ciz(); } }, 1500);
 });
 
 /* Sen sayfası: okuma yolları en üstte, paket cihazdaki evrenlerin içinde */
