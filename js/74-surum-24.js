@@ -7,11 +7,14 @@
    Çevrimdışı: bağlantı durumu şeridi, bağlantı gelince eşitleme, "internetsiz de açılır" bildirimi (sw.js'te önbellek stratejisi).
    Uygulama: TentiforKopru — ileride Play Store / App Store kabuğu (TWA, Capacitor) için tek giriş noktası. */
 
-const KURULUM_BEKLENEN = "2.5";
+const KURULUM_BEKLENEN = "2.8";
 
 /* ==================== yönetim: SQL sürüm uyarısı ve hata özeti ==================== */
 
 const YON24 = { surum: null, hata: null, soruldu: false };
+
+/** Yayındaki site sürümü (veri.json): hata listeleri yalnızca bununla gönderilmiş hataları gösterir. */
+function guncelSurum() { return String((typeof veri !== "undefined" && veri && veri.surum) || ""); }
 
 async function yon24Sor() {
   if (YON24.soruldu || typeof hesapIstemci === "undefined" || !hesapIstemci || !hesapKullanici) { return; }
@@ -22,7 +25,8 @@ async function yon24Sor() {
   } catch (_) { YON24.surum = "yok"; }
   try {
     const gun = new Date(Date.now() - 86400000).toISOString();
-    const r = await hesapIstemci.from("hata_kayitlari").select("mesaj,sayi,surum").gte("son", gun).order("sayi", { ascending: false }).limit(50);
+    /* yalnızca yayındaki sürümün hataları: eski sürümlerinkiler düzelmiş olabilir, paneli kalabalıklaştırmasın */
+    const r = await hesapIstemci.from("hata_kayitlari").select("mesaj,sayi,surum").eq("surum", guncelSurum()).gte("son", gun).order("sayi", { ascending: false }).limit(50);
     if (!r.error) { YON24.hata = r.data || []; }
   } catch (_) { /* yetki yok */ }
   yon24SeritKoy();
@@ -41,12 +45,13 @@ function yon24SeritKoy() {
 function yon24Serit() {
   const l = [];
   if (YON24.surum && YON24.surum !== KURULUM_BEKLENEN) {
+    /* 2.8: hataların sürüme göre ayrılması da buna bağlı */
     l.push('<div class="y-uyari kotu"><b>Supabase kurulumu güncel değil</b> (sunucuda: ' + kacir(YON24.surum === "yok" ? "2.4 öncesi" : YON24.surum) +
       ", gereken: " + KURULUM_BEKLENEN + "). Supabase → SQL Editor'de <code>supabase/kurulum.sql</code> dosyasının tamamını çalıştır; tek kodlar, oyun XP'si ve puan tabloları buna bağlı.</div>");
   }
   if (YON24.hata && YON24.hata.length) {
     const toplam = YON24.hata.reduce(function (t, x) { return t + (Number(x.sayi) || 0); }, 0);
-    l.push('<div class="y-uyari"><b>Son 24 saatte ' + toplam + " hata</b> (" + YON24.hata.length + " farklı). En sık: “" +
+    l.push('<div class="y-uyari"><b>v' + kacir(guncelSurum()) + ": son 24 saatte " + toplam + " hata</b> (" + YON24.hata.length + " farklı). En sık: “" +
       kacir(String(YON24.hata[0].mesaj || "").slice(0, 120)) + "” ×" + YON24.hata[0].sayi +
       ' <button class="dugme dugme-sade y-kucuk" data-y24-hatalar>Hatalara bak</button></div>');
   }

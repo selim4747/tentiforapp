@@ -576,11 +576,15 @@ async function yoneticiHatalarYukle() {
   if (!alan) { return; }
   const ist = await bakimIstemci(alan);
   if (!ist) { return; }
-  const { data, error } = await ist.from("hata_kayitlari").select("no,gun,mesaj,kaynak,adres,tarayici,surum,sayi,son")
-    .order("son", { ascending: false }).limit(100);
+  /* yalnızca yayındaki sürümün hataları (74-surum-24.js: guncelSurum) */
+  const surum = typeof guncelSurum === "function" ? guncelSurum() : "";
+  let q = ist.from("hata_kayitlari").select("no,gun,mesaj,kaynak,adres,tarayici,surum,sayi,son");
+  if (surum) { q = q.eq("surum", surum); }
+  const { data, error } = await q.order("son", { ascending: false }).limit(100);
   if (error) { bakimYetkiHatasi(alan, error); return; }
-  if (!data || !data.length) { alan.innerHTML = '<p class="oyun-not">Kayıtlı hata yok.</p>'; return; }
-  alan.innerHTML = "<label>Son hatalar — " + data.length + "</label>" +
+  const not = surum ? '<p class="oyun-not">Yalnızca yayındaki sürümün (v' + kacir(surum) + ") hataları; eski sürümlerinkiler gizli.</p>" : "";
+  if (!data || !data.length) { alan.innerHTML = not + '<p class="oyun-not">Bu sürümde kayıtlı hata yok.</p>'; return; }
+  alan.innerHTML = not + "<label>Son hatalar — " + data.length + "</label>" +
     '<div class="y-blok-liste">' + data.map(function (h) {
       return '<div class="y-lider-kayit"><div><b>' + kacir(h.mesaj) + '</b> <span class="y-lider-durum">×' + Number(h.sayi) + "</span></div>" +
         (h.kaynak ? '<div class="oyun-not y-kod-satir">' + kacir(h.kaynak) + "</div>" : "") +

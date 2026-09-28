@@ -1022,7 +1022,8 @@ create or replace function public.hata_kaydet(p_mesaj text, p_kaynak text defaul
 language plpgsql security definer set search_path = '' as $$
 declare
   bugun date := (now() at time zone 'utc')::date;
-  o text := md5(left(coalesce(p_mesaj, ''), 300) || '|' || left(coalesce(p_kaynak, ''), 200));
+  /* 2.8: sürüm de anahtarda — aynı hata her sürüm için ayrı sayılır, panel yalnızca yayındaki sürümünkileri gösterir */
+  o text := md5(left(coalesce(p_mesaj, ''), 300) || '|' || left(coalesce(p_kaynak, ''), 200) || '|' || left(coalesce(p_surum, ''), 40));
 begin
   if coalesce(p_mesaj, '') = '' then return; end if;
   if (select count(*) from public.hata_kayitlari where gun = bugun) >= 5000 then return; end if;
@@ -2400,7 +2401,7 @@ grant execute on function public.tek_kod_kullan(text), public.tek_kodlarim(), pu
 -- ---------- 2.4: kurulum sürümü ve evren uygulamalarının puan tabloları ----------
 -- Site, bu dosyanın Supabase'de çalıştırılmış sürümünü sorar; eskiyse panelde "kurulum.sql'i çalıştır" uyarısı çıkar.
 create or replace function public.kurulum_surumu() returns text
-language sql immutable set search_path = '' as $$ select '2.5'::text $$;
+language sql immutable set search_path = '' as $$ select '2.8'::text $$;
 grant execute on function public.kurulum_surumu() to anon, authenticated;
 
 -- Evren uygulamalarının (kurucunun kodla yazdığı oyunlar) en iyi puanları: her kişinin her oyundaki en iyisi.

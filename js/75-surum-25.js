@@ -1082,7 +1082,7 @@ const SESSIZ25 = "tentiforapp_sessiz_saat";   /* { bas: 22, bit: 8 } */
 function ayar25Html() {
   const sessiz = jsonOku(SESSIZ25, null) || {};
   const saat = function (id, d) {
-    return '<select class="kod-giris arac-giris" id="' + id + '">' + ['<option value="">—</option>'].concat(Array.from({ length: 24 }, function (_, i) {
+    return '<select class="kod-giris arac-giris" id="' + id + '" aria-label="' + (id === "sessizBas" ? "Sessiz saatlerin başlangıcı" : "Sessiz saatlerin bitişi") + '">' + ['<option value="">—</option>'].concat(Array.from({ length: 24 }, function (_, i) {
       return '<option value="' + i + '"' + (d === i ? " selected" : "") + ">" + String(i).padStart(2, "0") + ":00</option>";
     })).join("") + "</select>";
   };

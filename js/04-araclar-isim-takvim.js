@@ -290,7 +290,7 @@ function takvimCiz() {
 
     '<div class="arac-blok">' +
       '<div class="oyun-etiket">Dünya tarihi → Tömye</div>' +
-      '<input type="date" class="kod-giris arac-giris" id="tarihGiris" value="' +
+      '<input type="date" class="kod-giris arac-giris" id="tarihGiris" aria-label="Dünya tarihi" value="' +
         new Date().toISOString().slice(0, 10) + '">' +
       '<button class="dugme" data-takvim="cevir">Çevir</button>' +
       '<div id="tarihSonuc"></div>' +
