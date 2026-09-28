@@ -1,5 +1,5 @@
 {
-  "surum": "3.3.0",
+  "surum": "3.2.1",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7180,17 +7180,6 @@
     }
   ],
   "degisiklik": [
-    {
-      "surum": "3.3.0",
-      "tarih": "2026-09-28",
-      "maddeler": [
-        "Tömye bağlantıları: Tentiforverse kartına (evren seçici, E25 kapısı, atölye) dokununca artık Tömye sayfası açılıyor",
-        "Evrenleri yıldızla: ana sayfada her evrenin yanında ☆; yıldızladıkların en üstte (yalnızca cihazında)",
-        "Tüm evrenler: ana sayfada ara, süz (kanon, fan-made, test, senin, yıldızlı) ve sırala (A–Z, en çok gezdiğin)",
-        "Evren doluluğu: Kurucu'da “Evrenin %40’ı dolu · Sıradaki: tarih →” göstergesi, dokununca o adıma gider",
-        "Okuma ayarları: Okuma sayfasında yazı boyutu, satır aralığı ve sepya kâğıt rengi (cihazda hatırlanır)"
-      ]
-    },
     {
       "surum": "3.2.1",
       "tarih": "2026-09-28",
