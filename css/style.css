@@ -5041,3 +5041,7 @@ html.ecka-yeni .cuzdan-rozet{display:none}
 .kesif-daha-ic .arac-blok{margin-top:0;padding-top:14px}
 #kesif .baslangic{margin-top:14px}
 @media (prefers-reduced-motion:reduce){.kesif-daha > summary::after{transition:none}}
+
+/* 3.2: İçindekiler'de sayfa adları bağlantı */
+a.ic-grup-ad{display:block;text-decoration:none}
+a.ic-grup-ad:hover,a.ic-grup-ad:focus-visible{color:var(--deniz);text-decoration:underline}

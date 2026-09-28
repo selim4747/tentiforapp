@@ -181,6 +181,7 @@ export async function surum30Testleri({ adres, veritabani, dizin, kok }) {
       veriBirak(); await bekle(p, 1200);
       ok("veri geldi ama tam CSS yok: çizim CSS'i bekler (biçimsiz içerik görünmez)", await p.evaluate(function () { return !document.documentElement.classList.contains("veri-hazir") && !document.querySelector("#karakterIzgara .karakter-kart, #karakterIzgara > *"); }));
       cssBirak(); await p.waitForFunction(veriVar, null, { timeout: 15000 }); await bekle(p, 500);
+      await p.evaluate(function () { location.hash = "#/tomye"; }); await bekle(p, 600);   /* 3.2: karakterler Tömye sayfasında */
       ok("CSS gelince çizilir, iskelet kalkar", await p.evaluate(function () { return document.documentElement.classList.contains("css-tam") && document.querySelectorAll("#karakterIzgara > *").length > 3; }));
       await p.goto(adres + "/dunya/", { waitUntil: "commit" }); await bekle(p, 300);
       await ctx.close();
@@ -212,9 +213,9 @@ export async function surum30Testleri({ adres, veritabani, dizin, kok }) {
     ok("açılışta değişiklik günlüğünün yalnızca başı iner", await O.evaluate(function (n) {
       return !!veri.__parcalar && veri.degisiklik.length === 3 && veri.__parcalar.degisiklik.toplam === n;
     }, kaynakVeri.degisiklik.length));
-    ok("GEZINME'de 14 sayfa, değişiklikler kendi sayfasında", await O.evaluate(function () {
+    ok("GEZINME'de 15 sayfa, değişiklikler kendi sayfasında", await O.evaluate(function () {
       const p = GEZINME.find(function (g) { return g.id === "surumler"; });
-      return GEZINME.length === 14 && !!p && p.bolumler[0][0] === "degisiklik" && !GEZINME.find(function (g) { return g.id === "proje"; }).bolumler.some(function (b) { return b[0] === "degisiklik"; });
+      return GEZINME.length === 15 && !!p && p.bolumler[0][0] === "degisiklik" && !GEZINME.find(function (g) { return g.id === "proje"; }).bolumler.some(function (b) { return b[0] === "degisiklik"; });
     }));
     await O.evaluate(function () { localStorage.setItem("tf30_degisiklik_son", "2.7.0"); });
     await O.goto(adres + "/surumler/"); await O.waitForFunction(veriVar, null, { timeout: 20000 }); await bekle(O, 1200);

@@ -36,7 +36,7 @@ function komutTumListesi() {
 
   (bolumErisimi("arsiv") ? (veri.karakterler || []) : []).forEach(function (k, i) {
     liste.push({ tur: "Karakter", ad: k.ad, alt: k.unvan || "",
-      eylem: function () { location.hash = "#/arsiv"; setTimeout(function () { karakterAc(i); }, 60); } });
+      eylem: function () { location.hash = "#/tomye"; setTimeout(function () { karakterAc(i); }, 60); } });
   });
 
   (bolumErisimi("evren") ? (veri.evren || []) : []).forEach(function (e, i) {

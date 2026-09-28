@@ -772,7 +772,7 @@ function kisayolUygula(t) {
       const i = (veri.karakterler || []).findIndex(function (x) { return x.id === son.id; });
       if (i !== -1) { karakterAc(i); return; }
     }
-    location.hash = son && son.tur === "madde" ? "#/evren" : "#/arsiv";
+    location.hash = son && son.tur === "madde" ? "#/evren" : "#/tomye";
     return;
   }
   if (t === "bugun") {

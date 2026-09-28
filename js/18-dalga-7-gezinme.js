@@ -6,8 +6,12 @@
 /* ==================== BÖLÜM GRUPLARI ==================== */
 
 const GEZINME = [
-  { id: "arsiv", ad: "Arşiv", ikon: "▤", bolumler: [
-    ["kesif", "Keşif ve arama"], ["arsiv", "Karakterler"], ["evren", "Evren"], ["kayip", "Kayıp"],
+  /* 3.2: ana sayfa evrenler ve keşif; Tömye arşivi kendi sayfasında */
+  { id: "arsiv", ad: "Ana sayfa", ikon: "▤", bolumler: [
+    ["kesif", "Keşif ve arama"] ] },
+
+  { id: "tomye", ad: "Tömye", ikon: "▥", bolumler: [
+    ["arsiv", "Karakterler"], ["evren", "Evren"], ["kayip", "Kayıp"],
     ["bilinmeyenler", "Bilinmeyenler"] ] },
 
   { id: "baglar", ad: "Bağlar", ikon: "▥", bolumler: [
@@ -60,6 +64,7 @@ const GEZINME = [
 ];
 
 /* Üst şerit: her düğme kendi sayfasını açar. Bölüm listesi İçindekiler'de. */
+const GEZINME_ANA = ["arsiv", "tomye", "okuma", "atolye", "fan", "oyunlar", "sen"];
 let gezinmeSonHtml = "";
 let gezinmeKaydirSira = 0;
 
@@ -68,8 +73,10 @@ function gezinmeCiz() {
   if (!alan) { return; }
 
   const html =
-    '<button class="gez-btn" id="icindekilerBtn" aria-label="İçindekiler">☰ İçindekiler</button>' +
-    GEZINME.map(function (g, i) {
+    '<button class="gez-btn" id="icindekilerBtn" aria-label="Tüm sayfalar ve içindekiler">☰ Tüm sayfalar</button>' +
+    /* 3.2: şeritte yalnızca ana sayfalar (ve şu an açık olan); ötekiler "Tüm sayfalar"da ve ⌘K'da */
+    GEZINME.map(function (g, i) { return [g, i]; }).filter(function (x) { return GEZINME_ANA.indexOf(x[0].id) !== -1 || x[0].id === aktifSayfa; }).map(function (x) {
+      const g = x[0], i = x[1];
       const bu = aktifSayfa === g.id;
       const yeni = (typeof ziyaretSayfaSayisi === "function") ? ziyaretSayfaSayisi(g.id) : 0;
       return '<a class="gez-btn' + (bu ? " bu-sayfa" : "") + '" href="#/' + g.id + '"' +
@@ -136,7 +143,8 @@ function icindekilerAc() {
       "</div>" +
       GEZINME.map(function (g) {
         return '<div class="ic-grup">' +
-                 '<div class="ic-grup-ad">' + kacir(g.ad) + "</div>" +
+                 /* 3.2: sayfa adı bağlantı: şeritte olmayan sayfalar buradan açılır */
+                 '<a class="ic-grup-ad" href="#/' + g.id + '" data-ic-sayfa>' + kacir(g.ad) + "</a>" +
                  g.bolumler.map(function (b) {
                    const n = adet(b[0]);
                    const k = kilitSayisi(b[0]);
@@ -804,3 +812,9 @@ document.addEventListener("keydown", function (e) {
 });
 
 window.addEventListener("beforeunload", konumKaydet);
+
+/* 3.2: İçindekiler'de sayfa adına dokununca panel kapanır */
+document.addEventListener("click", function (ev) {
+  const a = ev.target.closest && ev.target.closest("#icindekiler [data-ic-sayfa]");
+  if (a) { const p = document.querySelector("#icindekiler"); if (p) { p.remove(); } }
+});
