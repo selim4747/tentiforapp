@@ -13,7 +13,7 @@ const KOK = new URL("..", import.meta.url).pathname;
 const HEDEF = process.env.PAKET_HEDEF || join(KOK, "dist");   /* PAKET_HEDEF: testler başka klasöre de üretebilsin */
 /* Sitenin kalıcı adresi: Cloudflare Pages'teki SITE_URL ortam değişkeni. */
 const SITE = (process.env.SITE_URL || "https://tentiforapp.pages.dev").replace(/\/$/, "");
-const KOPYALA = ["index.html", "veri.json", "sw.js", "manifest.webmanifest", "paylasim.png", "robots.txt", "_headers", "css", "js", "ikon", "yazitipi", "evrenler", ".well-known"];   /* .well-known/assetlinks.json: Play Store (TWA) uygulaması siteyle eşleşsin (uygulama/README.md) */
+const KOPYALA = ["index.html", "veri.json", "sw.js", "manifest.webmanifest", "paylasim.png", "robots.txt", "_headers", "css", "js", "ikon", "yazitipi", "evrenler", ".well-known", "google-dogrulama.txt"];   /* .well-known/assetlinks.json: Play Store (TWA) uygulaması siteyle eşleşsin (uygulama/README.md) */
 /* evrenler/: sitedeki fan evrenlerinin ayrı dosyaları (js/54-evren-dosyalari.js) */
 
 rmSync(HEDEF, { recursive: true, force: true });
@@ -32,7 +32,10 @@ cpSync(join(KOK, "uygulama/ac/index.html"), join(HEDEF, "uygulama/ac/index.html"
 
 /* Yönlendirmeler: Cloudflare Pages (ve benzerleri) _redirects dosyasını okur. */
 writeFileSync(join(HEDEF, "_redirects"),
-  "# Paylaşım hedefi: servis çalışanı yoksa sayfaya dön\n/paylasim-al  /#/fanAc  303\n");
+  "# Paylaşım hedefi: servis çalışanı yoksa sayfaya dön\n/paylasim-al  /#/fanAc  303\n" +
+  /* Google Search Console doğrulaması: .html dosyası Cloudflare'de uzantısız adrese yönlenir, Google bunu kabul etmeyebilir;
+     bu yüzden aynı adresten yönlendirmesiz (200) metin dosyası verilir */
+  "/googleda80bdd466b16c3e.html  /google-dogrulama.txt  200\n");
 
 /* Panelin kurulum yardımcısı (js/43-kurulum.js) telefondan kopyalayabilsin diye; gizli bilgi içermezler. */
 mkdirSync(join(HEDEF, "kurulum"), { recursive: true });
