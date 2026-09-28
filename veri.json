@@ -1154,7 +1154,18 @@
   ],
   "yoneticiOzet": "7b3b156ace4f030d8473274ec0e1555d7775a7251f9554bffc218123536696a4",
   "sinirliYoneticiOzet": "d3d18d3cdd5c548c640019f4de6c32fb75abb3d51931c62ba233869dc81c0f70",
-  "seviyeKodlari": [{"ozet": "e9d43529482468c1c15bfa4d405a4911e413327912c0f14f2c2d82a4f8825fb6", "ad": "Evrengezer kurma", "seviye": 10}, {"ozet": "8f6b1cc4e4b1df8b4a8d5c87b599600893f51fa0af94b25e46e571b13f3e3103", "ad": "Evren kurma", "seviye": 15}],
+  "seviyeKodlari": [
+    {
+      "ozet": "e9d43529482468c1c15bfa4d405a4911e413327912c0f14f2c2d82a4f8825fb6",
+      "ad": "Evrengezer kurma",
+      "seviye": 10
+    },
+    {
+      "ozet": "8f6b1cc4e4b1df8b4a8d5c87b599600893f51fa0af94b25e46e571b13f3e3103",
+      "ad": "Evren kurma",
+      "seviye": 15
+    }
+  ],
   "oduller": {
     "birOyun": "Pf8tRdrLk9ObqGIw",
     "tumOyunlar": "H6v/FCnpcuXjMzuP"
@@ -2600,14 +2611,16 @@
     "baslangic": 30,
     "boyutFiyat": 220,
     "testOdul": 25,
-    "birim": "eçka", "okumaSaniye": 0.25,
+    "birim": "eçka",
+    "okumaSaniye": 0.25,
     "gunlukTavan": {
       "cevirmen": 90,
       "vardiya": 100,
       "boyut": 90,
       "yazi": 80,
       "baloncuk": 80,
-      "supheli": 70, "okuma": 60
+      "supheli": 70,
+      "okuma": 60
     },
     "genelTavan": 300
   },
@@ -7163,30 +7176,302 @@
     }
   ],
   "degisiklik": [
-    {"surum": "2.9.0", "tarih": "2026-09-28", "maddeler": ["Çok daha hızlı açılış: sitenin 80 ayrı betiği 5 dosyada birleşti; yönetici araçları yalnızca panel açılınca iner", "İkinci açılış anında: sayfa ve veri cihazdaki kopyadan beklemeden gelir, yeni sürüm yayındaysa sayfa bir kez kendiliğinden yenilenir", "İlk ekran bekletmeden: yazı tipleri sitenin kendi sunucusundan, ilk görünen kısmın biçimi sayfaya gömülü; karanlık temada açılışta beyaz parlama yok", "Veri gelene kadar iskelet ekran; başka bir sayfa açılırken arşivin içeriği bir an görünmüyor", "Değişiklikler kendi sayfasında: sürümler seriye göre gruplu, aranabilir; son ziyaretinden beri gelenler işaretli. Eski sürümler yalnızca bu sayfa açılınca iner", "Evren Kurucu: kendi evreninde adım adım kurma (Temel, Dünya, Kişiler, Zaman, Belgeler, Görünüm, Paylaş) ve Tömye ölçeği — evreninin her yönü 24. Evren'le karşılaştırılır", "Evrenlerde yeni: kişi kayıtlarında yaş, yer, söz ve etiketler; bağlardan aile ağacı; çağlara ayrılan zaman çizelgesi; evrenin kendi takvimi (aylar, özel günler); mektup, günlük, alıntı gibi belgeler; uzun evrenlerde içindekiler", "Sıradaki ne olsun: seçenekleri yönetici panelden kurar (Listeler → Sıradaki ne olsun); eski liste temizlendi", "Daha hafif: giriş yapmış okurun her sayfa açılışındaki sunucu istekleri yarıdan fazla azaldı", "Android uygulaması: açılış ekranı sitenin ikonuyla, sayfa hazır olunca kalkar", "Panel: hata kayıtlarında birleşik dosyanın değil asıl dosyanın adı görünür"], "yeniler": []},
-    {"surum": "2.8.0", "tarih": "2026-09-28", "maddeler": ["Kesintisiz dinleme: sesli okuma cümle cümle, okunan cümle metinde işaretli; hız, uyku zamanlayıcısı (15/30 dk, bölüm sonu); metin bitince sonrakine, romanda sonraki bölüme geçer", "Harita Atlası: Harita Avı'nda bulduğun yerler atlasına işlenir; günün oyunu bitince XP'siz serbest turlarla tamamla, harita bitince unvanını al", "Haftanın Tömye bulmacası: sözlükten, kişilerden ve maddelerden her pazartesi yeni çapraz bulmaca; herkese aynı", "Okuma hedefi ve haftalık özet: günlük hedef, bu haftanın dakikaları ve paylaşılabilir “Bu hafta” kartı (Sen → Defterin)", "Kısayollar: uygulama simgesine ve ana ekran simgesine basılı tut: Kaldığın yer, Bugün, Harita Avı, Bulmaca. Uygulamada seri, okuma hedefi ve okuma yolu hatırlatmaları (sessiz saatlere uyar)", "Kendi okuma yolun: kutuları seç, sırala, adlandır; bağlantıyla paylaş", "Karakter penceresinde zaman çizgisi: adının geçtiği zaman adımları çağlarıyla, mektupları ve günlükleri", "Erişilebilirlik: Harita Avı ızgarayla da oynanır (klavye, ekran okuyucu); açılan kartlarda odak doğru yere gider", "Düzeltme: telefonda aramada her harften sonra klavye kapanıyordu (arama ve isim kartı kutuları artık yerinde kalıyor)", "Panel: yalnızca yayındaki sürümün hataları görünür (Supabase → kurulum.sql bir kez yeniden çalıştırılmalı)"], "yeniler": []},
-    {"surum": "2.7.1", "tarih": "2026-09-28", "maddeler": ["Güvenlik: evren stil kodu kaçış dizileri ya da image-set ile dış adrese istek gönderemez, sayfanın geri kalanını biçimleyemez", "Saek, Feil ve Kaelan'ın ilk adıyla imzalanan mektupları ve alıntıları artık rozetlerine ve okuma yollarına sayılıyor", "Düzeltme: seviyesi yetmeyen biri bir Evrengezeri yeni hikâyeye götürmek isteyince çıkan hata"], "yeniler": []},
-    {"surum": "2.7.0", "tarih": "2026-09-28", "maddeler": ["Okuma ayarları: uzun metinlerin üstündeki Aa ile yazı boyutu, satır aralığı, yazı tipi, kâğıt ya da gece zemini ve genişlik; bu cihazda saklanır", "Odak modu: çubuklar ve öbür bölümler gizlenir, okurken ekran kararmaz; Esc ya da telefonun geri tuşuyla çıkılır", "İsme dokun: metinde geçen karakter, kişi, madde ve yer adlarının altı noktalı; dokununca kim olduğu, okuyup okumadığın, kaydına git ve okuma yolu", "Altını çiz: vurgulama bütün okuma metinlerinde; vurguların metinde işaretli görünür, Defterin'de yerine dönülür, alıntı kartı olarak paylaşılır, silinir", "Oyunlar sayfasında Bugün kartı: günün oyunları ve üst üste oynadığın günlerin serisi; haftada bir kaçırılan gün seriyi bozmaz", "Yeni günlük oyun Harita Avı: ipucundan haritada yeri bul, 5 hak, yaklaştıkça ısınır; kazanınca oyun XP'si", "Daha hafif: liderlik tabloları Cloudflare üzerinden 10 dakikalık önbellekle gelir, Supabase'e her ziyaretçi ayrı gitmez"], "yeniler": []},
-    {"surum": "2.6.0", "tarih": "2026-09-28", "maddeler": ["Okuma yolları: bir karakteri ya da Claude evreni kişisini baştan sona sıralı kutularla oku; altta sıradaki kutu, yol bitince rozet", "Çevrimdışı okuma: sitedeki bütün fan evrenlerini tek dokunuşla cihaza indir; cihazda ne kadar yer tuttuğunu gör", "Ortak yazarlık: kim, ne zaman, hangi sekmede değiştirdi; değişiklik günlüğü; sürüm geçmişinde kimin değişikliğinden önceki hâl", "Panel: site sağlığı tek kutuda (kurulum, hatalar, bildirimler, yedek, yayındaki sürüm, çevrimdışı)", "Android uygulaması (APK): siteden indirilir, içerik her yayında kendiliğinden güncellenir, yeni uygulama sürümü çıkınca uygulama içinde haber verilir", "Android uygulamasında geri tuşu, dosya kaydetme, sesli okuma, günün kelimesi bildirimi, aşağı çekip yenileme; e-posta bağlantıları uygulamayı açar"], "yeniler": []},
-    {"surum": "2.5.0", "tarih": "2026-09-27", "maddeler": ["Ortak yazarlık: evrenini davet koduyla bir arkadaşınla birlikte yaz", "Sürüm geçmişi: evreninin son 20 hâli, tek dokunuşla geri al", "Evren istatistikleri ve ziyaretçi gözüyle önizleme", "Okuma listesi ve kaldığın yer; evren yazısı klavyesi (PNG olarak indir, paylaş)", "Bildirim ayarları tek yerde (Sen): yeni bölüm, günün kelimesi, takip, sessiz saatler, cihazdaki evrenler", "Fan evrenleri keşfinde önizleme kartı ve haftanın evreni", "İçerik bildirimi: uygunsuz evren ya da uygulamayı bildir", "Yönetim: tek kodla verilen yöneticiliğin ve evren yönetici kodunun yetkileri seçilir; yedek hatırlatması", "Kutu rozetleri: bütün evrenlerde her kutu bağlı olduğu kutulara bağlandı; kutuyu ve bağlı kutularını sonuna kadar okuyunca gümüş, konusuna fan hikâyesi yazınca altın rozet. Karakter rozetlerine evren maddeleri de girdi", "Çevrimdışı: internetsizken Giriş düğmesi boş pencere yerine ne olduğunu söylüyor", "Çevrimdışı: internet kesilince sayfanın dar bir kutuya sıkışması ve çift uyarı düzeldi; evren indirme hataları Türkçe ve anlaşılır", "Daha hafif: eşitleme 5 dakikada bir ve sekmeden çıkarken, sayaçlar tek istekte, tablolar kısa süre cihazda; oyunda hiçbir şey değişmedi"], "yeniler": []},
-    {"surum": "2.4.0", "tarih": "2026-09-27", "maddeler": ["Çevrimdışı: uygulama olarak yüklendiyse internetsiz açılır, zayıf bağlantıda son kopya hemen gelir; bağlantı gelince ilerleme eşitlenir", "Evren yazısını çözme oyunu, evren uygulamalarında puan tablosu, evren keşfi (ara, sırala) ve Cihazlarım", "Evren kurucuları: stil kodunda canlı önizleme, hazır şablonlar, sekmelerin sırası ve gizlenmesi, vitrinde {{harita}} {{roman}} {{yazi:metin}}", "Yönetim: davet bağlantısı (?kod=), süreli tek kodlar, panelde kurulum sürümü uyarısı ve hata özeti", "Telefonda arama penceresi kapanmıyordu: artık ✕ düğmesi, telefonun geri hareketi ve dışarı dokunmayla kapanır"], "yeniler": []},
-    {"surum": "2.3.0", "tarih": "2026-09-27", "maddeler": ["Kendi evreninde Stil kodu (CSS) ve Görünüm kodu (HTML): “{ } Kod ile stil” sekmesi; stil yalnızca o evrenin sayfasına uygulanır", "Görünüm koduyla evrenin Vitrin sayfası: yer tutucular {{ad}} {{kisiler}} {{yerler}}…; betik çalışmaz"], "yeniler": []},
-    {"surum": "2.2.0", "tarih": "2026-09-27", "maddeler": ["Sayfalar apayrı: sayfa numaraları ve alttaki sayfa çubuğu kalktı", "Kendi evreninde Görünüm: hazır görünümler (Gece, Parşömen, Okyanus, Orman, Neon, Kül), zemin deseni, yazı boyutu, başlık hizası", "Yazı çizimi ve görünüm artık evren sayfasının başında: “Evrenini kişiselleştir”"], "yeniler": []},
-    {"surum": "2.1.0", "tarih": "2026-09-27", "maddeler": ["Tek kullanımlık kodlar: evren kurma, Evrengezer kurma, sınırlı yönetici ve kişi erişimi için; her kod ilk girenin hesabına bağlanır, başkası giremez", "Çıkıp girince haklar hesaptan geri gelir", "Yönetici bağı silebilir (Panel → Bakım → Tek kodlar ya da Supabase); kişinin yaptıkları silinmez"], "yeniler": []},
-    {"surum": "2.0.2", "tarih": "2026-09-27", "maddeler": ["Düzeltme: oyunlar sayfasında yarış puanları yüklenirken çıkan hata (günlük oyun kartları sırayı kaydırıyordu)"], "yeniler": []},
-    {"surum": "2.0.1", "tarih": "2026-09-27", "maddeler": ["Düzeltme: yavaş bağlantıda sayfa açılırken çıkan “alintilar” hatası giderildi"], "yeniler": []},
-    {"surum": "2.0.0", "tarih": "2026-09-27", "maddeler": ["TentiforApp 2.0 — Çoklu Evren: başlangıç evreni Tentiforverse; başlıkta hangi evrende olduğun, E tuşu ya da ◎ ile hızlı geçiş, arama ve son girdiğin evrenler", "Ana sayfada evren şeridi; fan evrenleri üstüne gelince önceden iner", "Hesap eşitleme yenilendi: bilgisayarda kazandığın telefonda da görünür; iki cihazdaki ilerleme birleşir, eçka toplanır; bulutta daha az yer ve trafik", "Seviye kodları: Evrengezer ve evren kurmayı seviyeyi beklemeden açar", "Altın rozet kazandığın karakterin buz katmanları açılır", "Evrenine kodla oyun ve özellik yaz: Uygulamalar sekmesi, korumalı çerçeve, kazanana XP", "Evrenine yazı çiz: alfabe, hece yazısı ya da ünsüz ve ünlüsü ayrı çizilip birleşen yazı (24. Evren gibi)"], "yeniler": []},
-    {"surum": "1.18.0", "tarih": "2026-09-27", "maddeler": ["Claude'un Evreni'nin ilk romanı: Işık Postası — ulak Hıbır'ın yolculuğu, üç bölüm", "İki yeni hikâye (Dünün Ulağı, Tıkırtı), Sıssoz'un İşik'e mektubu, yeni terimler ve bir açık soru", "Evrende arama ve okuma ilerlemesi: kaç kutuyu okudun, sıradaki hangisi", "Kişi kartlarında geçtiği hikâyeler ve mektuplar; hepsini okuyana rozet", "Günlük oyunlar: Kim bu?, Sözlük bilmecesi, Hangisi önce? — kazanınca XP"], "yeniler": []},
-    {"surum": "1.17.0", "tarih": "2026-09-27", "maddeler": ["Günlük oyunlar (Oyunlar → Günlük · XP): Kim bu?, Madde bilmecesi, Doğru mu? — her gün yeni sorular, kazanınca 10 XP", "Her evrende iki yeni oyun: Doğru mu? ve Zaman sırası", "Bütün evrenlerden XP: oyunlar (günde en çok 80) ve okunan bölümler, roman bölümleri", "Yarışlarda günün ilk 3 puanlı oyunu XP verir", "Google ile girenlere kullanıcı adı hatırlatması"], "yeniler": []},
-    {"surum": "1.16.2", "tarih": "2026-09-27", "maddeler": ["Seviyeler daha uzun: her seviye için gereken XP arttı", "Okunan kutu 10 XP; her kutu bir kez sayılır (iki sayfada görünen madde tek kutu)", "Yazar notları da okuma kutusu"], "yeniler": []},
-    {"surum": "1.16.1", "tarih": "2026-09-27", "maddeler": ["Sonuna kadar okuduğun her kutu 15 XP (hesapta da sayılır)", "Evren maddeleri ve Claude'un Evreni hikâyeleri de okuma kutusu oldu"], "yeniler": []},
-    {"surum": "1.16.0", "tarih": "2026-09-27", "maddeler": ["Yeni gelenler için: başlangıç kodu kendiliğinden girilir, tanıtım ekranı kapatmaz, “Okumaya başla” okunabilir ilk adıma götürür", "Kilitli bölümlerde önizleme ve nasıl açıldığı; içeriği olmayan bölümler gizli", "Okuyarak kazan: kutuda okuması kadar dur (kelime başına çeyrek saniye), eçka ve kart öyle gelir", "Karakter rozetleri: hakkındaki her şeyi oku → gümüş; ona fan hikâyesi yaz → altın", "Seviye yolu: 5’te fan hikâyesi, 10’da Evrengezer, 15’te fan evreni; yan bölümler seviye geldikçe açılır", "Ana sayfada “Bugün”: kaldığın yer ve arşivin ne kadarı açık", "Terimler dokununca açıklanır; eçka penceresi sadeleşti", "Google ile giriş; “Bir sorun mu var?” geri bildirimi"], "yeniler": []},
-    {"surum": "1.15.0", "tarih": "2026-09-26", "maddeler": ["Haritalarda adlar artık üst üste binmiyor", "Sitenin haritalarında nehir, yol ve sınır çizgileri ile ölçek; Claude'un Evreni'nde Şafak Yolu, Tanık Ayna zinciri, “10 birim ≈ 1,3 ışık günü”", "Sebir'in şehir planı: Aynacılar Loncası, ilk ayna, Sırep'in Sahnesi, şimdi odaları", "İlişki ağı ve zaman çizelgesi: Claude'un Evreni'nde ve bütün fan evrenlerinde (yeni “Bağlar ve zaman” sekmesi)", "Canlı yolculuk: evren saatine göre karakter şu an nerede — Hıbır her gün yolda", "Yolculuğu Instagram hikâyesi kartı olarak paylaş", "Tömye karakterlerinin yolları da gün gün", "Panel: Kaydet'ten önce kırık bağlantılar denetlenir", "Site daha hızlı açılır: bütün betikler tek dosyada"], "yeniler": []},
-    {"surum": "1.14.0", "tarih": "2026-09-26", "maddeler": ["Günlük gezi: kişinin yolunu gün gün kur — şehirlerin adlarına sırayla dokun, her dokunuş ertesi gün; “aynı gün”, “bir gün daha kal”", "“Gün gün izle”: kişi haritada gün gün ilerler; kaydırıcıyla istediğin güne git", "Claude'un Evreni: yeni Yolculuklar sekmesi — karakterlerin gün gün yolları; haritada yer kartında “buradan geçenler”", "Claude'un Evreni'ne yeni karakter: Hıbır, her gün başka şehre haber taşıyan ulak; Gırçık'ın altı günlük yolculuğu"], "yeniler": []},
-    {"surum": "1.13.0", "tarih": "2026-09-26", "maddeler": ["Şehir haritaları: haritadaki bir yere tıkla, “Şehir haritası çiz” — binalar (ev, tapınak, pazar, han, kule…), caddeler, park, su, meydan ve surlar", "Gezi çizelgesi: kişinin yerden yere yolunu haritada çiz, her adıma zaman ve not yaz; gezegenler arası da olur", "Tömye ve kanon haritalarında da şehir planları", "Örnek: Sis Denizi'nde Arvel'in yolculuğu ve Liman şehrinin planı"], "yeniler": []},
-    {"surum": "1.12.0", "tarih": "2026-09-26", "maddeler": ["Sitedeki fan evrenleri ayrı dosyada: açılınca iner, “Telefona indir” ile internetsiz de açılır", "Günün kelimesi için her gün hatırlatma (Chrome'da uygulama olarak yüklüyken)", "Fan evrenlerini takip et: yeni bölüm eklenince haber", "Harita: nehir, yol ve sınır çizgileri, ölçek, PNG indirme; yerler başka evrenlere geçit olabilir", "Türle başla: fantastik, bilimkurgu, su dünyası, buz çağı, karanlık masal", "Örnek evrenler: Sis Denizi ve Kül Ormanı; örnek Evrengezer: Orlan Ivo", "Panel: Yayınla'dan sonra sitenin yayına çıktığını gösterir"], "yeniler": []},
-    {"surum": "1.11.0", "tarih": "2026-09-26", "maddeler": ["Ax-24 artık Tentiforverse'ün (24. Evren) bir gezegeni: Tömye ile aynı evrende", "Kendi evrenine birden fazla gezegen ekle: her birinin ayrı haritası", "Evren kurma yenilendi: ilk adımlar rehberi, hazır haritalar, sade evren sayfası", "Düzeltmeler: hesaba girince evren kaybolmaz, çıkınca cihaz misafire döner"], "yeniler": []},
-    {"surum": "1.10.0", "tarih": "2026-09-26", "maddeler": ["Günün kelimesi: kolay mod (karakter ve yer adları, hesapsız), seri ve dağılım, bitince kelimenin kartı", "Instagram hikâye kartları: günün kelimesi sonucu ve arşiv kartların", "Evrenine oyun ekle: günün kelimesi, evren sınavı, harita bulmacası — kendi kelimelerin, soruların ve ödülünle", "Evrenine roman yaz, çizim yükle", "Haftanın Evrengezeri, evren ziyaretçi defteri, “Nerelere gitti?” konuk haritası", "Hesabın yoksa ilerlemeni korumak için küçük bir hatırlatma"], "yeniler": []},
+    {
+      "surum": "2.9.0",
+      "tarih": "2026-09-28",
+      "maddeler": [
+        "Çok daha hızlı açılış: sitenin 80 ayrı betiği 5 dosyada birleşti; yönetici araçları yalnızca panel açılınca iner",
+        "İkinci açılış anında: sayfa ve veri cihazdaki kopyadan beklemeden gelir, yeni sürüm yayındaysa sayfa bir kez kendiliğinden yenilenir",
+        "İlk ekran bekletmeden: yazı tipleri sitenin kendi sunucusundan, ilk görünen kısmın biçimi sayfaya gömülü; karanlık temada açılışta beyaz parlama yok",
+        "Veri gelene kadar iskelet ekran; başka bir sayfa açılırken arşivin içeriği bir an görünmüyor",
+        "Değişiklikler kendi sayfasında: sürümler seriye göre gruplu, aranabilir; son ziyaretinden beri gelenler işaretli. Eski sürümler yalnızca bu sayfa açılınca iner",
+        "Evren Kurucu: kendi evreninde adım adım kurma (Temel, Dünya, Kişiler, Zaman, Belgeler, Görünüm, Paylaş) ve Tömye ölçeği — evreninin her yönü 24. Evren'le karşılaştırılır",
+        "Evrenlerde yeni: kişi kayıtlarında yaş, yer, söz ve etiketler; bağlardan aile ağacı; çağlara ayrılan zaman çizelgesi; evrenin kendi takvimi (aylar, özel günler); mektup, günlük, alıntı gibi belgeler; uzun evrenlerde içindekiler",
+        "Sıradaki ne olsun: seçenekleri yönetici panelden kurar (Listeler → Sıradaki ne olsun); eski liste temizlendi",
+        "Daha hafif: giriş yapmış okurun her sayfa açılışındaki sunucu istekleri yarıdan fazla azaldı",
+        "Android uygulaması: açılış ekranı sitenin ikonuyla, sayfa hazır olunca kalkar",
+        "Panel: hata kayıtlarında birleşik dosyanın değil asıl dosyanın adı görünür"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "2.8.0",
+      "tarih": "2026-09-28",
+      "maddeler": [
+        "Kesintisiz dinleme: sesli okuma cümle cümle, okunan cümle metinde işaretli; hız, uyku zamanlayıcısı (15/30 dk, bölüm sonu); metin bitince sonrakine, romanda sonraki bölüme geçer",
+        "Harita Atlası: Harita Avı'nda bulduğun yerler atlasına işlenir; günün oyunu bitince XP'siz serbest turlarla tamamla, harita bitince unvanını al",
+        "Haftanın Tömye bulmacası: sözlükten, kişilerden ve maddelerden her pazartesi yeni çapraz bulmaca; herkese aynı",
+        "Okuma hedefi ve haftalık özet: günlük hedef, bu haftanın dakikaları ve paylaşılabilir “Bu hafta” kartı (Sen → Defterin)",
+        "Kısayollar: uygulama simgesine ve ana ekran simgesine basılı tut: Kaldığın yer, Bugün, Harita Avı, Bulmaca. Uygulamada seri, okuma hedefi ve okuma yolu hatırlatmaları (sessiz saatlere uyar)",
+        "Kendi okuma yolun: kutuları seç, sırala, adlandır; bağlantıyla paylaş",
+        "Karakter penceresinde zaman çizgisi: adının geçtiği zaman adımları çağlarıyla, mektupları ve günlükleri",
+        "Erişilebilirlik: Harita Avı ızgarayla da oynanır (klavye, ekran okuyucu); açılan kartlarda odak doğru yere gider",
+        "Düzeltme: telefonda aramada her harften sonra klavye kapanıyordu (arama ve isim kartı kutuları artık yerinde kalıyor)",
+        "Panel: yalnızca yayındaki sürümün hataları görünür (Supabase → kurulum.sql bir kez yeniden çalıştırılmalı)"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "2.7.1",
+      "tarih": "2026-09-28",
+      "maddeler": [
+        "Güvenlik: evren stil kodu kaçış dizileri ya da image-set ile dış adrese istek gönderemez, sayfanın geri kalanını biçimleyemez",
+        "Saek, Feil ve Kaelan'ın ilk adıyla imzalanan mektupları ve alıntıları artık rozetlerine ve okuma yollarına sayılıyor",
+        "Düzeltme: seviyesi yetmeyen biri bir Evrengezeri yeni hikâyeye götürmek isteyince çıkan hata"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "2.7.0",
+      "tarih": "2026-09-28",
+      "maddeler": [
+        "Okuma ayarları: uzun metinlerin üstündeki Aa ile yazı boyutu, satır aralığı, yazı tipi, kâğıt ya da gece zemini ve genişlik; bu cihazda saklanır",
+        "Odak modu: çubuklar ve öbür bölümler gizlenir, okurken ekran kararmaz; Esc ya da telefonun geri tuşuyla çıkılır",
+        "İsme dokun: metinde geçen karakter, kişi, madde ve yer adlarının altı noktalı; dokununca kim olduğu, okuyup okumadığın, kaydına git ve okuma yolu",
+        "Altını çiz: vurgulama bütün okuma metinlerinde; vurguların metinde işaretli görünür, Defterin'de yerine dönülür, alıntı kartı olarak paylaşılır, silinir",
+        "Oyunlar sayfasında Bugün kartı: günün oyunları ve üst üste oynadığın günlerin serisi; haftada bir kaçırılan gün seriyi bozmaz",
+        "Yeni günlük oyun Harita Avı: ipucundan haritada yeri bul, 5 hak, yaklaştıkça ısınır; kazanınca oyun XP'si",
+        "Daha hafif: liderlik tabloları Cloudflare üzerinden 10 dakikalık önbellekle gelir, Supabase'e her ziyaretçi ayrı gitmez"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "2.6.0",
+      "tarih": "2026-09-28",
+      "maddeler": [
+        "Okuma yolları: bir karakteri ya da Claude evreni kişisini baştan sona sıralı kutularla oku; altta sıradaki kutu, yol bitince rozet",
+        "Çevrimdışı okuma: sitedeki bütün fan evrenlerini tek dokunuşla cihaza indir; cihazda ne kadar yer tuttuğunu gör",
+        "Ortak yazarlık: kim, ne zaman, hangi sekmede değiştirdi; değişiklik günlüğü; sürüm geçmişinde kimin değişikliğinden önceki hâl",
+        "Panel: site sağlığı tek kutuda (kurulum, hatalar, bildirimler, yedek, yayındaki sürüm, çevrimdışı)",
+        "Android uygulaması (APK): siteden indirilir, içerik her yayında kendiliğinden güncellenir, yeni uygulama sürümü çıkınca uygulama içinde haber verilir",
+        "Android uygulamasında geri tuşu, dosya kaydetme, sesli okuma, günün kelimesi bildirimi, aşağı çekip yenileme; e-posta bağlantıları uygulamayı açar"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "2.5.0",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "Ortak yazarlık: evrenini davet koduyla bir arkadaşınla birlikte yaz",
+        "Sürüm geçmişi: evreninin son 20 hâli, tek dokunuşla geri al",
+        "Evren istatistikleri ve ziyaretçi gözüyle önizleme",
+        "Okuma listesi ve kaldığın yer; evren yazısı klavyesi (PNG olarak indir, paylaş)",
+        "Bildirim ayarları tek yerde (Sen): yeni bölüm, günün kelimesi, takip, sessiz saatler, cihazdaki evrenler",
+        "Fan evrenleri keşfinde önizleme kartı ve haftanın evreni",
+        "İçerik bildirimi: uygunsuz evren ya da uygulamayı bildir",
+        "Yönetim: tek kodla verilen yöneticiliğin ve evren yönetici kodunun yetkileri seçilir; yedek hatırlatması",
+        "Kutu rozetleri: bütün evrenlerde her kutu bağlı olduğu kutulara bağlandı; kutuyu ve bağlı kutularını sonuna kadar okuyunca gümüş, konusuna fan hikâyesi yazınca altın rozet. Karakter rozetlerine evren maddeleri de girdi",
+        "Çevrimdışı: internetsizken Giriş düğmesi boş pencere yerine ne olduğunu söylüyor",
+        "Çevrimdışı: internet kesilince sayfanın dar bir kutuya sıkışması ve çift uyarı düzeldi; evren indirme hataları Türkçe ve anlaşılır",
+        "Daha hafif: eşitleme 5 dakikada bir ve sekmeden çıkarken, sayaçlar tek istekte, tablolar kısa süre cihazda; oyunda hiçbir şey değişmedi"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "2.4.0",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "Çevrimdışı: uygulama olarak yüklendiyse internetsiz açılır, zayıf bağlantıda son kopya hemen gelir; bağlantı gelince ilerleme eşitlenir",
+        "Evren yazısını çözme oyunu, evren uygulamalarında puan tablosu, evren keşfi (ara, sırala) ve Cihazlarım",
+        "Evren kurucuları: stil kodunda canlı önizleme, hazır şablonlar, sekmelerin sırası ve gizlenmesi, vitrinde {{harita}} {{roman}} {{yazi:metin}}",
+        "Yönetim: davet bağlantısı (?kod=), süreli tek kodlar, panelde kurulum sürümü uyarısı ve hata özeti",
+        "Telefonda arama penceresi kapanmıyordu: artık ✕ düğmesi, telefonun geri hareketi ve dışarı dokunmayla kapanır"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "2.3.0",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "Kendi evreninde Stil kodu (CSS) ve Görünüm kodu (HTML): “{ } Kod ile stil” sekmesi; stil yalnızca o evrenin sayfasına uygulanır",
+        "Görünüm koduyla evrenin Vitrin sayfası: yer tutucular {{ad}} {{kisiler}} {{yerler}}…; betik çalışmaz"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "2.2.0",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "Sayfalar apayrı: sayfa numaraları ve alttaki sayfa çubuğu kalktı",
+        "Kendi evreninde Görünüm: hazır görünümler (Gece, Parşömen, Okyanus, Orman, Neon, Kül), zemin deseni, yazı boyutu, başlık hizası",
+        "Yazı çizimi ve görünüm artık evren sayfasının başında: “Evrenini kişiselleştir”"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "2.1.0",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "Tek kullanımlık kodlar: evren kurma, Evrengezer kurma, sınırlı yönetici ve kişi erişimi için; her kod ilk girenin hesabına bağlanır, başkası giremez",
+        "Çıkıp girince haklar hesaptan geri gelir",
+        "Yönetici bağı silebilir (Panel → Bakım → Tek kodlar ya da Supabase); kişinin yaptıkları silinmez"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "2.0.2",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "Düzeltme: oyunlar sayfasında yarış puanları yüklenirken çıkan hata (günlük oyun kartları sırayı kaydırıyordu)"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "2.0.1",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "Düzeltme: yavaş bağlantıda sayfa açılırken çıkan “alintilar” hatası giderildi"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "2.0.0",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "TentiforApp 2.0 — Çoklu Evren: başlangıç evreni Tentiforverse; başlıkta hangi evrende olduğun, E tuşu ya da ◎ ile hızlı geçiş, arama ve son girdiğin evrenler",
+        "Ana sayfada evren şeridi; fan evrenleri üstüne gelince önceden iner",
+        "Hesap eşitleme yenilendi: bilgisayarda kazandığın telefonda da görünür; iki cihazdaki ilerleme birleşir, eçka toplanır; bulutta daha az yer ve trafik",
+        "Seviye kodları: Evrengezer ve evren kurmayı seviyeyi beklemeden açar",
+        "Altın rozet kazandığın karakterin buz katmanları açılır",
+        "Evrenine kodla oyun ve özellik yaz: Uygulamalar sekmesi, korumalı çerçeve, kazanana XP",
+        "Evrenine yazı çiz: alfabe, hece yazısı ya da ünsüz ve ünlüsü ayrı çizilip birleşen yazı (24. Evren gibi)"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "1.18.0",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "Claude'un Evreni'nin ilk romanı: Işık Postası — ulak Hıbır'ın yolculuğu, üç bölüm",
+        "İki yeni hikâye (Dünün Ulağı, Tıkırtı), Sıssoz'un İşik'e mektubu, yeni terimler ve bir açık soru",
+        "Evrende arama ve okuma ilerlemesi: kaç kutuyu okudun, sıradaki hangisi",
+        "Kişi kartlarında geçtiği hikâyeler ve mektuplar; hepsini okuyana rozet",
+        "Günlük oyunlar: Kim bu?, Sözlük bilmecesi, Hangisi önce? — kazanınca XP"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "1.17.0",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "Günlük oyunlar (Oyunlar → Günlük · XP): Kim bu?, Madde bilmecesi, Doğru mu? — her gün yeni sorular, kazanınca 10 XP",
+        "Her evrende iki yeni oyun: Doğru mu? ve Zaman sırası",
+        "Bütün evrenlerden XP: oyunlar (günde en çok 80) ve okunan bölümler, roman bölümleri",
+        "Yarışlarda günün ilk 3 puanlı oyunu XP verir",
+        "Google ile girenlere kullanıcı adı hatırlatması"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "1.16.2",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "Seviyeler daha uzun: her seviye için gereken XP arttı",
+        "Okunan kutu 10 XP; her kutu bir kez sayılır (iki sayfada görünen madde tek kutu)",
+        "Yazar notları da okuma kutusu"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "1.16.1",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "Sonuna kadar okuduğun her kutu 15 XP (hesapta da sayılır)",
+        "Evren maddeleri ve Claude'un Evreni hikâyeleri de okuma kutusu oldu"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "1.16.0",
+      "tarih": "2026-09-27",
+      "maddeler": [
+        "Yeni gelenler için: başlangıç kodu kendiliğinden girilir, tanıtım ekranı kapatmaz, “Okumaya başla” okunabilir ilk adıma götürür",
+        "Kilitli bölümlerde önizleme ve nasıl açıldığı; içeriği olmayan bölümler gizli",
+        "Okuyarak kazan: kutuda okuması kadar dur (kelime başına çeyrek saniye), eçka ve kart öyle gelir",
+        "Karakter rozetleri: hakkındaki her şeyi oku → gümüş; ona fan hikâyesi yaz → altın",
+        "Seviye yolu: 5’te fan hikâyesi, 10’da Evrengezer, 15’te fan evreni; yan bölümler seviye geldikçe açılır",
+        "Ana sayfada “Bugün”: kaldığın yer ve arşivin ne kadarı açık",
+        "Terimler dokununca açıklanır; eçka penceresi sadeleşti",
+        "Google ile giriş; “Bir sorun mu var?” geri bildirimi"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "1.15.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Haritalarda adlar artık üst üste binmiyor",
+        "Sitenin haritalarında nehir, yol ve sınır çizgileri ile ölçek; Claude'un Evreni'nde Şafak Yolu, Tanık Ayna zinciri, “10 birim ≈ 1,3 ışık günü”",
+        "Sebir'in şehir planı: Aynacılar Loncası, ilk ayna, Sırep'in Sahnesi, şimdi odaları",
+        "İlişki ağı ve zaman çizelgesi: Claude'un Evreni'nde ve bütün fan evrenlerinde (yeni “Bağlar ve zaman” sekmesi)",
+        "Canlı yolculuk: evren saatine göre karakter şu an nerede — Hıbır her gün yolda",
+        "Yolculuğu Instagram hikâyesi kartı olarak paylaş",
+        "Tömye karakterlerinin yolları da gün gün",
+        "Panel: Kaydet'ten önce kırık bağlantılar denetlenir",
+        "Site daha hızlı açılır: bütün betikler tek dosyada"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "1.14.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Günlük gezi: kişinin yolunu gün gün kur — şehirlerin adlarına sırayla dokun, her dokunuş ertesi gün; “aynı gün”, “bir gün daha kal”",
+        "“Gün gün izle”: kişi haritada gün gün ilerler; kaydırıcıyla istediğin güne git",
+        "Claude'un Evreni: yeni Yolculuklar sekmesi — karakterlerin gün gün yolları; haritada yer kartında “buradan geçenler”",
+        "Claude'un Evreni'ne yeni karakter: Hıbır, her gün başka şehre haber taşıyan ulak; Gırçık'ın altı günlük yolculuğu"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "1.13.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Şehir haritaları: haritadaki bir yere tıkla, “Şehir haritası çiz” — binalar (ev, tapınak, pazar, han, kule…), caddeler, park, su, meydan ve surlar",
+        "Gezi çizelgesi: kişinin yerden yere yolunu haritada çiz, her adıma zaman ve not yaz; gezegenler arası da olur",
+        "Tömye ve kanon haritalarında da şehir planları",
+        "Örnek: Sis Denizi'nde Arvel'in yolculuğu ve Liman şehrinin planı"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "1.12.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Sitedeki fan evrenleri ayrı dosyada: açılınca iner, “Telefona indir” ile internetsiz de açılır",
+        "Günün kelimesi için her gün hatırlatma (Chrome'da uygulama olarak yüklüyken)",
+        "Fan evrenlerini takip et: yeni bölüm eklenince haber",
+        "Harita: nehir, yol ve sınır çizgileri, ölçek, PNG indirme; yerler başka evrenlere geçit olabilir",
+        "Türle başla: fantastik, bilimkurgu, su dünyası, buz çağı, karanlık masal",
+        "Örnek evrenler: Sis Denizi ve Kül Ormanı; örnek Evrengezer: Orlan Ivo",
+        "Panel: Yayınla'dan sonra sitenin yayına çıktığını gösterir"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "1.11.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Ax-24 artık Tentiforverse'ün (24. Evren) bir gezegeni: Tömye ile aynı evrende",
+        "Kendi evrenine birden fazla gezegen ekle: her birinin ayrı haritası",
+        "Evren kurma yenilendi: ilk adımlar rehberi, hazır haritalar, sade evren sayfası",
+        "Düzeltmeler: hesaba girince evren kaybolmaz, çıkınca cihaz misafire döner"
+      ],
+      "yeniler": []
+    },
+    {
+      "surum": "1.10.0",
+      "tarih": "2026-09-26",
+      "maddeler": [
+        "Günün kelimesi: kolay mod (karakter ve yer adları, hesapsız), seri ve dağılım, bitince kelimenin kartı",
+        "Instagram hikâye kartları: günün kelimesi sonucu ve arşiv kartların",
+        "Evrenine oyun ekle: günün kelimesi, evren sınavı, harita bulmacası — kendi kelimelerin, soruların ve ödülünle",
+        "Evrenine roman yaz, çizim yükle",
+        "Haftanın Evrengezeri, evren ziyaretçi defteri, “Nerelere gitti?” konuk haritası",
+        "Hesabın yoksa ilerlemeni korumak için küçük bir hatırlatma"
+      ],
+      "yeniler": []
+    },
     {
       "surum": "1.9.1",
       "tarih": "2026-09-26",
@@ -7694,7 +7979,50 @@
         "unvan": "Hetire Hâkimi",
         "ozet": "Adı \"gerçek\" demektir. Tanık Ayna'dan şüphelenen ilk hâkim.",
         "detay": "Otuz yıldır Hetire mahkemesinde, zincirin ucundaki gözetleme odasında oturup geçmişi izleyerek hüküm veriyor. Gözleri yorgundur, ama hiçbir davada yanılmadı. En azından öyle biliniyordu.\n\nBir gün, beş yıl önce idama gönderdiği bir adamın davasını tekrar izledi ve aynadaki gölgenin açısının yanlış olduğunu fark etti. Kor dimdik yukarıdayken bir gölge eğik düşemezdi. Biri aynayı eğmişti.\n\nO günden beri gizlice eski davaları yeniden izliyor. Kimseye güvenmiyor; en çok da kendi gözlerine. Yelen'e yazdığı mektubu hiç göndermedi.",
-        "yol": [{"yer": "cl_hetire", "gun": 1, "zaman": "Kor dimdik yukarıdayken", "not": "Beş yıl önceki davayı yeniden izler: gölgenin açısı yanlış. Biri aynayı eğmiş."}, {"yer": "cl_hetire", "gun": 2, "zaman": "", "not": "Eski davaları gizlice izlemeyi sürdürür. Yelen'e bir mektup yazar, göndermez."}, {"yer": "cl_sebir", "gun": 3, "zaman": "", "not": "Aynacılar Loncası'na sorar. Kimse hemen cevap vermez; önce yüzün gelmesi beklenir."}, {"yer": "cl_liman", "gun": 4, "zaman": "Gece halkası geçerken", "not": "Sabah Limanı'nda şafak duvarını bekler."}, {"yer": "cl_liman", "gun": 5, "zaman": "Şafak duvarı kıyıya varınca", "not": "Yılkın'ın Sabah Kenarı'na biner. Tek kural: güvertede konuşulmaz."}, {"yer": "cl_deniz", "gun": 5, "zaman": "", "not": "Gemi ışıkla aynı hızda; güvertede her şey tam şimdi görünür. Gözlerini kapatır."}, {"yer": "cl_ayna", "gun": 6, "zaman": "", "not": "Ayna Adaları'na, zincirin ara halkalarına ulaşır."}]
+        "yol": [
+          {
+            "yer": "cl_hetire",
+            "gun": 1,
+            "zaman": "Kor dimdik yukarıdayken",
+            "not": "Beş yıl önceki davayı yeniden izler: gölgenin açısı yanlış. Biri aynayı eğmiş."
+          },
+          {
+            "yer": "cl_hetire",
+            "gun": 2,
+            "zaman": "",
+            "not": "Eski davaları gizlice izlemeyi sürdürür. Yelen'e bir mektup yazar, göndermez."
+          },
+          {
+            "yer": "cl_sebir",
+            "gun": 3,
+            "zaman": "",
+            "not": "Aynacılar Loncası'na sorar. Kimse hemen cevap vermez; önce yüzün gelmesi beklenir."
+          },
+          {
+            "yer": "cl_liman",
+            "gun": 4,
+            "zaman": "Gece halkası geçerken",
+            "not": "Sabah Limanı'nda şafak duvarını bekler."
+          },
+          {
+            "yer": "cl_liman",
+            "gun": 5,
+            "zaman": "Şafak duvarı kıyıya varınca",
+            "not": "Yılkın'ın Sabah Kenarı'na biner. Tek kural: güvertede konuşulmaz."
+          },
+          {
+            "yer": "cl_deniz",
+            "gun": 5,
+            "zaman": "",
+            "not": "Gemi ışıkla aynı hızda; güvertede her şey tam şimdi görünür. Gözlerini kapatır."
+          },
+          {
+            "yer": "cl_ayna",
+            "gun": 6,
+            "zaman": "",
+            "not": "Ayna Adaları'na, zincirin ara halkalarına ulaşır."
+          }
+        ]
       },
       {
         "id": "cl_yalan",
@@ -7779,7 +8107,67 @@
         "detay": "Yerin'de altmış yıldır ebelik yapıyor. Çocukları hep lambanın altında, şimdi adasında doğurtur; \"bir bebek geçmişe doğmasın\" der.\n\nKırk bir yıl önce bir doğumun ortasındayken pencereden Hıçkırık'ı gördü: gündüzün içinden dışarı yürüyen siyah çizgi. Bebeği tuttu, ışığa kaldırdı ve hıçkırığın saatini duvara kazıdı. O kayıt bugün Aynacılar Loncası'ndadır. O gece doğurttuğu kız yıllar sonra Ene'nin oğluyla evlendi; İşik onların çocuğudur.\n\nLoncanın Gelen'le ilgili gizli hesabını ilk başlatan da odur. Kırk yıl boyunca parlaklığı ölçtü; torunu İşik aynı şeyi keşfettiğinde ona gülümsedi ve sustu.\n\nİşik'e yazdığı mektubu, kendi ölümünden sonra açılsın diye lambanın altına sakladı.",
         "eklendi": "2026-09-26"
       },
-      {"id": "cl_haber", "ad": "Hıbır", "canli": {"tur": "dongu"}, "unvan": "Ulak", "ozet": "Adı \"haber\" demektir. Her gün başka bir şehirde; görüntüsünden önce varır.", "detay": "Yerin'den Dan'a haber taşır. Ulaklar koşar, çünkü bu dünyada koşan biri ışığı geçer: Hıbır bir kapıya vardığında kapıdaki kişi onu henüz yoldayken görmektedir. Sebirliler buna alışkındır; önce sesi gelir, sonra yüzü, en son da yolda koşan görüntüsü.\n\nBir şehirde bir günden fazla kalmaz. Haber bayatlamasın diye değil: Hıbır'a göre bir haber, geldiği yerin ışığı ona yetişince eskir.\n\nDenizi Yılkın'ın gemisiyle geçer. Güvertede konuşulmadığı için taşıdığı haberleri o yolculukta yalnızca dudaklarıyla, sessizce tekrar eder.", "eklendi": "2026-09-26", "yol": [{"yer": "cl_yerin", "gun": 1, "zaman": "Şafaktan önce", "not": "Yerin'in haberleriyle yola çıkar."}, {"yer": "cl_sebir", "gun": 2, "zaman": "", "not": "Haberi aynacılara okur. Önce sesi gelir, yüzü birkaç saniye sonra."}, {"yer": "cl_hetire", "gun": 3, "zaman": "", "not": "Mahkemeye mühürlü bir mektup bırakır."}, {"yer": "cl_liman", "gun": 4, "zaman": "Şafak duvarı kıyıya varınca", "not": "Sabah Kenarı'na son anda yetişir."}, {"yer": "cl_deniz", "gun": 4, "zaman": "", "not": "Güvertede konuşulmaz; haberleri dudaklarıyla, sessizce tekrar eder."}, {"yer": "cl_dan", "gun": 5, "zaman": "", "not": "Danlılar haberi dünyada en son duyar. Ona \"dünün ulağı\" derler."}, {"yer": "cl_tenik", "gun": 6, "zaman": "", "not": "Köyün ilk büyük aynasının önünden, bakmadan geçer."}, {"yer": "cl_dan", "gun": 7, "zaman": "Kor sönerken", "not": "Dönüş haberlerini toplar; ertesi sabah yeniden yola."}]}
+      {
+        "id": "cl_haber",
+        "ad": "Hıbır",
+        "canli": {
+          "tur": "dongu"
+        },
+        "unvan": "Ulak",
+        "ozet": "Adı \"haber\" demektir. Her gün başka bir şehirde; görüntüsünden önce varır.",
+        "detay": "Yerin'den Dan'a haber taşır. Ulaklar koşar, çünkü bu dünyada koşan biri ışığı geçer: Hıbır bir kapıya vardığında kapıdaki kişi onu henüz yoldayken görmektedir. Sebirliler buna alışkındır; önce sesi gelir, sonra yüzü, en son da yolda koşan görüntüsü.\n\nBir şehirde bir günden fazla kalmaz. Haber bayatlamasın diye değil: Hıbır'a göre bir haber, geldiği yerin ışığı ona yetişince eskir.\n\nDenizi Yılkın'ın gemisiyle geçer. Güvertede konuşulmadığı için taşıdığı haberleri o yolculukta yalnızca dudaklarıyla, sessizce tekrar eder.",
+        "eklendi": "2026-09-26",
+        "yol": [
+          {
+            "yer": "cl_yerin",
+            "gun": 1,
+            "zaman": "Şafaktan önce",
+            "not": "Yerin'in haberleriyle yola çıkar."
+          },
+          {
+            "yer": "cl_sebir",
+            "gun": 2,
+            "zaman": "",
+            "not": "Haberi aynacılara okur. Önce sesi gelir, yüzü birkaç saniye sonra."
+          },
+          {
+            "yer": "cl_hetire",
+            "gun": 3,
+            "zaman": "",
+            "not": "Mahkemeye mühürlü bir mektup bırakır."
+          },
+          {
+            "yer": "cl_liman",
+            "gun": 4,
+            "zaman": "Şafak duvarı kıyıya varınca",
+            "not": "Sabah Kenarı'na son anda yetişir."
+          },
+          {
+            "yer": "cl_deniz",
+            "gun": 4,
+            "zaman": "",
+            "not": "Güvertede konuşulmaz; haberleri dudaklarıyla, sessizce tekrar eder."
+          },
+          {
+            "yer": "cl_dan",
+            "gun": 5,
+            "zaman": "",
+            "not": "Danlılar haberi dünyada en son duyar. Ona \"dünün ulağı\" derler."
+          },
+          {
+            "yer": "cl_tenik",
+            "gun": 6,
+            "zaman": "",
+            "not": "Köyün ilk büyük aynasının önünden, bakmadan geçer."
+          },
+          {
+            "yer": "cl_dan",
+            "gun": 7,
+            "zaman": "Kor sönerken",
+            "not": "Dönüş haberlerini toplar; ertesi sabah yeniden yola."
+          }
+        ]
+      }
     ],
     "baglar": [
       {
@@ -8614,5 +9002,7 @@
     "acik": "BHwB1ZpVHtD3qgQneTUvCSljdwwVznhAk8Jkm398wH+vH9wg2JLjd1A8As2RpsoV0EoEYXQy8mr9KmY7oJj5fDk=",
     "tam": "/0rJO3/o5vR7yYP46onJu80kNZ36w9rYXREi5ZbIuOmqV44xHwDAZF4wdIXm/PIRAqOJcQidbbPqDHPQTUlH6VxM1pGyh+8qYWg860TdxP7VH0BNFvm1LnMT2HV4n5lSq2K9b3JWlOqBIuNUIrR55j51mFTvv0IveDBL4i5zMnqBmurj7PVi6cWSlSR3NyobLGA8nRTTliW83ok+OPfHVuqpj25PCREW+Buu6oJV/UAxIMzMXUiXYLTEFg1fFN9dz3v4ukdF7jU5RQBUDYYK28lOzr8=",
     "sinirli": "E6RanYfhgtcyNLaPBINy1D2OCTG3NwVnTu8OvEAn4Stc797tPz0P3AEUN7uBkYx0Yu/Dkd2744vaxZm3pNsFcMtVvMaKM5LMCbY1fqHkxnBHe/B+mwJWjn1EGvzthnIu38uJlA47sL/XXKqva5gsFtT20REV/pk2+usN1WPOjWzDGK6Ve4GdaCPzh3qHMTW6vMN/SFaqr1gfOl44JqD8cfYSgjWE3btms2ydDAJt1LepuVOUIpSLmURW9lEyySbm28vxtV0diIfUVgHdH2r2Pd/pAL8="
-  }
+  },
+  "iletisim": "BlackstoneSelim@gmail.com",
+  "fanEposta": "karatasselim340@gmail.com"
 }
