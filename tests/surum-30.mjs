@@ -278,11 +278,18 @@ export async function surum30Testleri({ adres, veritabani, dizin, kok }) {
     istekler.length = 0;
     await U.goto(adres + "/oyunlar/"); await bekle(U, 4000);
     const say = function (d) { return istekler.filter(function (x) { return d.test(x); }).length; };
-    ok("sayfa yenilenince kendi verin sunucuya yeniden sorulmaz (profil, seviye, yarış, yönetici)",
-      say(/^GET \/profiller/) === 0 && say(/^GET \/arsivci_seviyeleri/) === 0 && say(/^GET \/yaris_tablolari/) === 0 && say(/rpc\/yonetici_mi/) === 0, istekler);
-    ok("açılışta 12'den az sunucu isteği (" + istekler.length + ")", istekler.length < 12, istekler);
+    ok("sayfa yenilenince kendi verin sunucuya yeniden sorulmaz (seviye, yarış, yönetici)",
+      say(/^GET \/arsivci_seviyeleri/) === 0 && say(/^GET \/yaris_tablolari/) === 0 && say(/rpc\/yonetici_mi/) === 0, istekler);
+    /* eşitleme yazmaları gerekli; liderlik ve kulüp tabloları yayında Cloudflare'den gelir (functions/api/pano.js) */
+    const okumalar = istekler.filter(function (x) { return !/^(POST|PATCH) \/(ilerlemeler|profiller|rpc\/istatistik_gonder|rpc\/sayac_toplu)/.test(x) && !/^GET \/(liderlik|kulup_savasi)$/.test(x); });
+    ok("sayfa açılışında 10'dan az sunucu okuması (" + okumalar.length + "; 2.8'de ~20)", okumalar.length < 10, okumalar);
     await U.evaluate(function () { return hesapIstemci.from("profiller").update({ gorunen_ad: "Yük Ölçen 2" }).eq("id", hesapKullanici.id); }); await bekle(U, 300);
-    ok("bir yazma kalıcı okuma önbelleğini boşaltır", await U.evaluate(function () { return !sessionStorage.getItem("tf30_okuma"); }));
+    ok("profil yazması profil okumalarını eskitir, eşitleme yazmaları önbelleği boşaltmaz", await U.evaluate(function () {
+      const t = JSON.parse(sessionStorage.getItem("tf30_okuma") || "{}");
+      return !Object.keys(t).some(function (k) { return /\/rest\/v1\/profiller\?/.test(k); }) && Object.keys(t).length > 0;
+    }));
+    await U.evaluate(function () { return hesapIstemci.rpc("teori_bildir", { p_id: 0 }); }); await bekle(U, 300);
+    ok("tanınmayan bir yazma bütün kalıcı önbelleği boşaltır", await U.evaluate(function () { return !sessionStorage.getItem("tf30_okuma"); }));
 
     /* ---------- 8. uygulamanın açılış ekranı ---------- */
     console.log("3.0 uygulama açılış ekranı");
@@ -304,7 +311,7 @@ export async function surum30Testleri({ adres, veritabani, dizin, kok }) {
     await K.click("#evrenSecici [data-es-yeni]"); await bekle(K, 700);
     ok("yeni evren Kurucu'yla açılır: adımlar ve Tömye ölçeği", await K.evaluate(function () {
       return EVS.sekme === "kurucu" && document.querySelectorAll("#evrenSayfa .evr-adim").length === 7 && !!document.querySelector("#evrenSayfa .evr-olcek-halka") &&
-        document.querySelector('#evrenSayfa [data-evs-sekme="kurucu"]') === document.querySelector("#evrenSayfa .evs-sekmeler [data-evs-sekme]");
+        !!document.querySelector('#evrenSayfa .evs-sekmeler [data-evs-sekme="kurucu"].secili');
     }));
     const evId = await K.evaluate(function () { return EVS.id; });
     await K.fill('#evrenSayfa .evr-kurucu [data-fan-alan="ad"]', "Tuz Denizi"); await bekle(K, 450);
