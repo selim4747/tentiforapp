@@ -195,6 +195,13 @@ const hesapGozlenen = new WeakSet();
 function hesapGorununce(el, fn) {
   if (!el || !hesapEtkin()) { return; }
   if (el.closest(".kanon-kilitli")) { return; }
+  /* 3.2: internet yokken kütüphane denenmez (inemez, hata yazar); bağlantı gelince yeniden bakılır */
+  const internetsiz = function () {
+    if (navigator.onLine !== false) { return false; }
+    window.addEventListener("online", function () { hesapGorununce(el, fn); }, { once: true });
+    return true;
+  };
+  if (internetsiz()) { return; }
   if (typeof IntersectionObserver !== "function") { hesapGerekli().then(fn); return; }
   if (hesapGozlenen.has(el)) { return; }
   hesapGozlenen.add(el);
@@ -202,6 +209,7 @@ function hesapGorununce(el, fn) {
     if (!girdiler.some(function (x) { return x.isIntersecting; })) { return; }
     g.disconnect();
     hesapGozlenen.delete(el);
+    if (internetsiz()) { return; }
     hesapGerekli().then(fn);
   }, { rootMargin: "400px 0px" });
   g.observe(el);
