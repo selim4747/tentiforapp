@@ -312,6 +312,7 @@ const Y_LISTELER = {
   takvimEtkinlikleri: { ad: "Tömye takvimi etkinlikleri", ornek: { id: "", ad: "", ay: "Leg", gun: 1, sure: 1, tema: "", metin: "", alinti: "", gorev: { id: "yazi4", adet: 1, ad: "", odul: 30 } } },
   degisiklik:         { ad: "Değişiklik günlüğü",  ozel: true },
   oylama:             { ad: "Sıradaki ne olsun",   ozel: true },
+  kanonAday:          { ad: "Kanona aday evrenler", ozel: true },
   site:               { ad: "Site ayarları",       ozel: true }
 };
 
@@ -425,6 +426,7 @@ function yoneticiListeler() {
   if (yListe === "kelimeler") { return secici + yListeKelimeler(); }
   if (yListe === "degisiklik") { return secici + yListeDegisiklik(); }
   if (yListe === "oylama") { return secici + yListeOylama(); }
+  if (yListe === "kanonAday") { return secici + (typeof yListeKanonAday === "function" ? yListeKanonAday() : ""); }
   if (yListe === "site") { return secici + yListeSite(); }
 
   const liste = yDizi(yListe);

@@ -362,7 +362,8 @@ async function evrKartUret(e) {
   const sol = 110, gen = EN - 220;
   c.fillStyle = KART_RENK.deniz; c.fillRect(sol, 170, 6, 64);
   const s = evaStatu(e.ad);
-  kartEtiket(c, (e.kanon === true || s.tur === "kanon" ? "Kanon evren" : "Fan-made evren") + (e.yazar ? " · " + e.yazar : ""), sol + 26, 214, KART_RENK.murekkep2, 26);
+  const etiket = e.kanon === true || s.tur === "kanon" ? "Kanon evren" : (s.tur === "test" ? "Test evreni" : ((e.test === true || s.test) ? "Test · fan-made evren" : "Fan-made evren"));
+  kartEtiket(c, etiket + (e.yazar ? " · " + e.yazar : ""), sol + 26, 214, KART_RENK.murekkep2, 26);
   let y = 330, px = 124;
   c.fillStyle = KART_RENK.murekkep; c.font = KART_FONT.baslik(px);
   let sat = kartSar(c, e.ad || "Adsız evren", gen);

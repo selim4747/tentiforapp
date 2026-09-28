@@ -7,7 +7,7 @@
    Çevrimdışı: bağlantı durumu şeridi, bağlantı gelince eşitleme, "internetsiz de açılır" bildirimi (sw.js'te önbellek stratejisi).
    Uygulama: TentiforKopru — ileride Play Store / App Store kabuğu (TWA, Capacitor) için tek giriş noktası. */
 
-const KURULUM_BEKLENEN = "2.8";
+const KURULUM_BEKLENEN = "3.1";
 
 /* ==================== yönetim: SQL sürüm uyarısı ve hata özeti ==================== */
 

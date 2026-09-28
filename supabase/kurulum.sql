@@ -2270,6 +2270,11 @@ revoke all on public.tek_kodlar from anon, authenticated;
 create index if not exists tek_kodlar_kullanici on public.tek_kodlar (kullanici);
 -- süreli kod (2.4): bağlandıktan sonra kaç gün geçerli; boşsa süresiz
 alter table public.tek_kodlar add column if not exists sure_gun int check (sure_gun between 1 and 3650);
+-- 3.1: evren1 = tek seferlik bir evren kurma hakkı. Hesaba bağlanır; kişi bir evren kurunca harcanır (harcama dolar)
+--      ve hak listesinden düşer. Seviye 15'i beklemeden yalnızca bir evren.
+alter table public.tek_kodlar add column if not exists harcama timestamptz;
+alter table public.tek_kodlar drop constraint if exists tek_kodlar_tur_check;
+alter table public.tek_kodlar add constraint tek_kodlar_tur_check check (tur in ('evren', 'evren1', 'evrengezer', 'yonetici', 'kisi'));
 
 create table if not exists public.tek_kod_denemeleri (
   kullanici uuid not null references auth.users(id) on delete cascade,
@@ -2343,10 +2348,26 @@ begin
     where y.id = auth.uid() and y.tek_kod = t.ozet and t.sure_gun is not null and t.baglanma + make_interval(days => t.sure_gun) < now();
   return (select coalesce(jsonb_agg(jsonb_build_object('tur', tur, 'ad', ad, 'veri', veri,
       'bitis', case when sure_gun is null then null else baglanma + make_interval(days => sure_gun) end) order by baglanma), '[]'::jsonb)
-    from public.tek_kodlar where kullanici = auth.uid() and not iptal
+    from public.tek_kodlar where kullanici = auth.uid() and not iptal and harcama is null
       and (sure_gun is null or baglanma + make_interval(days => sure_gun) >= now()));
 end;
 $$;
+
+-- 3.1: tek seferlik hakkı harca (evren kuruldu). Bu hesaba bağlı, harcanmamış en eski evren1 kodu.
+create or replace function public.tek_kod_harca(p_tur text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare oz text;
+begin
+  if auth.uid() is null or p_tur <> 'evren1' then return false; end if;
+  select ozet into oz from public.tek_kodlar where kullanici = auth.uid() and tur = p_tur and not iptal and harcama is null
+    order by baglanma limit 1 for update;
+  if oz is null then return false; end if;
+  update public.tek_kodlar set harcama = now() where ozet = oz;
+  return true;
+end;
+$$;
+revoke execute on function public.tek_kod_harca(text) from public, anon;
+grant execute on function public.tek_kod_harca(text) to authenticated;
 
 -- yönetici: kod üret (kodların kendisi sitede üretilir; buraya yalnızca özetleri gelir)
 create or replace function public.tek_kod_olustur(p_kodlar jsonb) returns int
@@ -2369,7 +2390,7 @@ create or replace function public.tek_kod_listesi() returns jsonb
 language sql stable security definer set search_path = '' as $$
   select case when not public.tam_yonetici_mi() then null else coalesce(jsonb_agg(jsonb_build_object(
     'ozet', t.ozet, 'tur', t.tur, 'ad', t.ad, 'iptal', t.iptal, 'olusturma', t.olusturma, 'baglanma', t.baglanma,
-    'kullanici_adi', p.kullanici_adi, 'bagli', t.kullanici is not null, 'sure_gun', t.sure_gun,
+    'kullanici_adi', p.kullanici_adi, 'bagli', t.kullanici is not null, 'sure_gun', t.sure_gun, 'harcama', t.harcama,
     'bitis', case when t.sure_gun is null or t.baglanma is null then null else t.baglanma + make_interval(days => t.sure_gun) end)
     order by t.olusturma desc), '[]'::jsonb) end
   from public.tek_kodlar t left join public.profiller p on p.id = t.kullanici;
@@ -2401,7 +2422,7 @@ grant execute on function public.tek_kod_kullan(text), public.tek_kodlarim(), pu
 -- ---------- 2.4: kurulum sürümü ve evren uygulamalarının puan tabloları ----------
 -- Site, bu dosyanın Supabase'de çalıştırılmış sürümünü sorar; eskiyse panelde "kurulum.sql'i çalıştır" uyarısı çıkar.
 create or replace function public.kurulum_surumu() returns text
-language sql immutable set search_path = '' as $$ select '2.8'::text $$;
+language sql immutable set search_path = '' as $$ select '3.1'::text $$;
 grant execute on function public.kurulum_surumu() to anon, authenticated;
 
 -- Evren uygulamalarının (kurucunun kodla yazdığı oyunlar) en iyi puanları: her kişinin her oyundaki en iyisi.

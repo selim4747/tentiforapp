@@ -73,17 +73,23 @@
       <div class="hero-catlak"></div>
     </div>
     <div class="hero-ic">
-      <p class="hero-eyebrow">24. Evren · Tömye</p>
-      <h1 class="hero-baslik">Aysız bir gezegen,<br>ayları 28 gün çeken bir takvim.</h1>
-      <p class="hero-metin">
-        Tömye'nin gökyüzünde ay yoktur. Buna rağmen aylarını sayarlar — ve neden saydıklarını bilmezler.
-        Cevap, isyanda yakılmış bir dilde yazılıdır.
-      </p>
-      <div class="hero-eylem">
-        <button class="dugme" data-gez-git="sira">Okumaya başla</button>
-        <button class="dugme dugme-sade" data-gez-git="oyunlar">Oynamaya başla</button>
-        <button class="dugme dugme-sade" id="rastgeleHero">Rastgele keşfet</button>
-      </div>
+      <p class="hero-eyebrow">TentiforApp · evrenler</p>
+      <p class="ana-giris">Bir evrene gir: oku, oyna, Evrengezerlerle gez — ya da kendi evrenini kur.</p>
+      <!-- 3.1: ana sayfa evrenler sayfası. İlk evren (Tentiforverse · 24. Evren) büyük kart; ötekiler js/85-surum-31.js -->
+      <article class="ana-tomye">
+        <p class="ana-etiket">24. Evren · Tömye · kanon</p>
+        <h1 class="hero-baslik">Aysız bir gezegen,<br>ayları 28 gün çeken bir takvim.</h1>
+        <p class="hero-metin">
+          Tömye'nin gökyüzünde ay yoktur. Buna rağmen aylarını sayarlar — ve neden saydıklarını bilmezler.
+          Cevap, isyanda yakılmış bir dilde yazılıdır.
+        </p>
+        <div class="hero-eylem">
+          <button class="dugme" data-gez-git="sira">Okumaya başla</button>
+          <button class="dugme dugme-sade" data-gez-git="oyunlar">Oynamaya başla</button>
+          <button class="dugme dugme-sade" id="rastgeleHero">Rastgele keşfet</button>
+        </div>
+      </article>
+      <div class="ana-evrenler" id="anaEvrenler"></div>
     </div>
     <div class="hero-sayac" id="heroSayac"></div>
   </section>
@@ -892,6 +898,7 @@
 <script src="js/82-evren-kurucu.js"></script>
 <script src="js/83-evren-atolyesi.js"></script>
 <script src="js/84-evren-araclari.js"></script>
+<script src="js/85-surum-31.js"></script>
 <script src="js/24-arsiv-mantigi.js"></script>
 
 </body>

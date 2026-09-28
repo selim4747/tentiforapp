@@ -1,6 +1,7 @@
 /* Tek kullanımlık kodlar (2.1) — her kod bir kişi içindir ve ilk giren hesaba bağlanır.
 
-   Türler: evren (seviye 15'i beklemeden evren kurma), evrengezer (seviye 10), yonetici (sınırlı yönetici paneli),
+   Türler: evren (seviye 15'i beklemeden evren kurma), evren1 (3.1: tek seferlik, yalnızca bir evren; kurunca harcanır),
+   evrengezer (seviye 10), yonetici (sınırlı yönetici paneli),
    kisi (seçilen bölüm ve evrenler; istenirse buz katmanları).
    - Kod sunucuda yalnızca özetiyle durur (supabase/kurulum.sql: tek_kodlar). Girilince hesaba bağlanır; aynı hesap
      çıkıp girse de hakkı sürer (her girişte tek_kodlarim ile sunucudan gelir), başka hesap giremez.
@@ -9,7 +10,7 @@
    - Haklar yalnızca bellekte tutulur: hesapla gelir, hesaptan çıkınca gider; cihaza kalıcı yazılmaz. */
 
 const TEK = { haklar: [], surum: 0, yoneticiVerdi: false };
-const TEK_TURLER = { evren: "Evren kurma", evrengezer: "Evrengezer kurma", yonetici: "Sınırlı yönetici", kisi: "Kişi (bölüm ve evren erişimi)" };
+const TEK_TURLER = { evren: "Evren kurma", evren1: "Bir evren kurma (tek seferlik)", evrengezer: "Evrengezer kurma", yonetici: "Sınırlı yönetici", kisi: "Kişi (bölüm ve evren erişimi)" };
 
 function tekOzet(kod) {
   return onaltilik(sha256Bayt(metniBayta(String(kod || "").trim().toUpperCase() + "#tek")));
@@ -122,6 +123,7 @@ async function tekKodDene(kod, durum) {
     if (katman && typeof acilanlariKaydet === "function") { acilanlariKaydet(); }
   }
   yaz((d.veri && d.veri.selamlama) || ({ evren: "Evren kurma açıldı: seviyeyi beklemeden kurabilirsin.",
+    evren1: "Bir evren kurma hakkın açıldı: seviyeyi beklemeden bir evren kurabilirsin (Ana sayfa ya da Evren Atölyesi → Yeni evren kur).",
     evrengezer: "Evrengezer kurma açıldı: seviyeyi beklemeden kurabilirsin.",
     yonetici: "Sınırlı yönetici paneli açıldı (Sen → Yönetici).",
     kisi: "Sana ayrılan bölümler açıldı." + (katman ? " · " + katman + " buz katmanı" : "") })[d.tur] + " Kod hesabına bağlandı.", true);
@@ -182,7 +184,7 @@ function yoneticiTekKodlar() {
   const liste = t.liste && t.liste.hata ? '<p class="pencere-durum kotu">' + kacir(t.liste.hata) + "</p>" :
     (t.liste && t.liste.length ? '<div class="y-blok-liste">' + t.liste.map(function (x) {
       return '<div class="y-kisi-satir"><div class="y-kisi-ust"><span class="y-blok-baslik">' + kacir(TEK_TURLER[x.tur] || x.tur) + (x.ad ? " · " + kacir(x.ad) : "") + "</span>" +
-        '<span class="oyun-not">' + (x.sure_gun ? x.sure_gun + " gün · " : "") + (x.bitis ? "bitiş " + kacir(new Date(x.bitis).toLocaleDateString("tr-TR")) + " · " : "") + (x.iptal ? "iptal edildi" : (x.bagli ? "bağlı: @" + kacir(x.kullanici_adi || "?") + (x.baglanma ? " · " + kacir(new Date(x.baglanma).toLocaleDateString("tr-TR")) : "") : "henüz kullanılmadı")) +
+        '<span class="oyun-not">' + (x.sure_gun ? x.sure_gun + " gün · " : "") + (x.bitis ? "bitiş " + kacir(new Date(x.bitis).toLocaleDateString("tr-TR")) + " · " : "") + (x.harcama ? "harcandı · " + kacir(new Date(x.harcama).toLocaleDateString("tr-TR")) + " · " : "") + (x.iptal ? "iptal edildi" : (x.bagli ? "bağlı: @" + kacir(x.kullanici_adi || "?") + (x.baglanma ? " · " + kacir(new Date(x.baglanma).toLocaleDateString("tr-TR")) : "") : "henüz kullanılmadı")) +
         " · …" + kacir(String(x.ozet).slice(0, 6)) + "</span></div>" +
         '<div class="y-kisi-dugmeler">' + (x.bagli ? '<button class="dugme dugme-sade" data-tek-bagsil="' + kacir(x.ozet) + '">Bağı sil</button>' : "") +
         '<button class="dugme dugme-sade' + (x.iptal ? "" : " y-sil") + '" data-tek-iptal="' + kacir(x.ozet) + '" data-deger="' + (x.iptal ? "0" : "1") + '">' + (x.iptal ? "Yeniden aç" : "İptal et") + "</button></div></div>";
