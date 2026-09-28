@@ -11,6 +11,15 @@ const KABUK = { kontrol: "tentiforapp_apk_kontrol" };
 function kabukMu() { return typeof TentiforKopru !== "undefined" && TentiforKopru.ortam() === "capacitor"; }
 function kabukEklenti(ad) { return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[ad]; }
 
+/* 3.0 — uygulamanın açılış ekranı (APK'da @capacitor/splash-screen): sayfa hazır olunca kalkar; bir şey ters
+   giderse en geç 6 sn sonra kendiliğinden kalkar (uygulama/kabuk/capacitor.config.json). */
+function kabukAcilisKapat() {
+  const s = kabukEklenti("SplashScreen");
+  if (s && s.hide) { try { s.hide({ fadeOutDuration: 200 }); } catch (_) { /* yok */ } }
+}
+document.addEventListener("tf-veri-hazir", kabukAcilisKapat);
+if (document.documentElement.classList.contains("veri-hazir")) { kabukAcilisKapat(); }
+
 function kabukDisAc(url) {
   const b = kabukEklenti("Browser");
   if (b) { return b.open({ url: url }); }

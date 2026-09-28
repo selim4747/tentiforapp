@@ -17,6 +17,7 @@ import { surum26Testleri } from "./surum-26.mjs";
 import { uygulamaKabuguTestleri } from "./uygulama-kabugu.mjs";
 import { surum27Testleri } from "./surum-27.mjs";
 import { surum28Testleri } from "./surum-28.mjs";
+import { surum30Testleri } from "./surum-30.mjs";
 
 const KOK = new URL("..", import.meta.url).pathname;
 const DB = process.env.TEST_DB || "tentifor_test";
@@ -113,9 +114,11 @@ try {
   const s27 = await surum27Testleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN, kok: KOK });
   console.log("• sürüm 2.8");
   const s28 = await surum28Testleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
+  console.log("• sürüm 3.0");
+  const s30 = await surum30Testleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN, kok: KOK });
   console.log("• Android uygulama kabuğu");
   const ak = await uygulamaKabuguTestleri({ dizin: DIZIN });
-  console.log("\nHepsi geçti: " + sqlSayisi + " veritabanı + " + f + " fonksiyon + " + (n + s25 + yk + s26 + s27 + s28 + ak) + " tarayıcı + " + c + " çevrimdışı kontrolü.");
+  console.log("\nHepsi geçti: " + sqlSayisi + " veritabanı + " + f + " fonksiyon + " + (n + s25 + yk + s26 + s27 + s28 + s30 + ak) + " tarayıcı + " + c + " çevrimdışı kontrolü.");
 } catch (e) {
   console.error("\n" + (e.stack || e.message || e));
   process.exitCode = 1;

@@ -744,14 +744,32 @@ const veriKaynak = window.__VERI__
      (Ön yükleme denendi: içeriği 0,1 sn hızlandırıp ilk çizimi 0,1 sn geciktirdiği için kullanılmadı.) */
   : fetch("veri.json").then(function (y) {
       if (!y.ok) { throw new Error("veri.json okunamadı"); }
-      return y.json();
+      return y.text();
+    }).then(function (m) {
+      /* ham metin saklanır: panelin Kaydet koruması özeti ancak gerektiğinde çıkarır (22-yonetici.js) */
+      veriTabanHam = m;
+      return JSON.parse(m);
     });
 
+/* 3.0: yayında tam CSS bekletmeden iner (scripts/paketle.mjs, kritik CSS); veri çizimi onu bekler ki biçimsiz içerik
+   bir an bile görünmesin. En çok 4 sn: CSS inemezse de site açılır. */
+function cssBekle() {
+  const k = document.documentElement;
+  if (!document.getElementById("anaCss") || k.classList.contains("css-tam")) { return Promise.resolve(); }
+  return new Promise(function (coz) {
+    const bitti = function () { clearTimeout(sure); gozcu.disconnect(); coz(); };
+    const sure = setTimeout(bitti, 4000);
+    const gozcu = new MutationObserver(function () { if (k.classList.contains("css-tam")) { bitti(); } });
+    gozcu.observe(k, { attributes: true, attributeFilter: ["class"] });
+  });
+}
+
 veriKaynak
+  .then(function (d) { return cssBekle().then(function () { return d; }); })
   .then(function (d) {
     veri = d;
-    /* panelin Kaydet koruması: bu sayfanın GitHub'la aynı saydığı veri (22-yonetici.js) */
-    if (typeof veriOzeti === "function") { try { veriTabanOzeti = veriOzeti(d); } catch (_) { /* yok */ } }
+    /* panelin Kaydet koruması: özet her ziyaretçide değil, yalnızca yönetici kaydederken çıkarılır */
+    if (veriTabanHam === null) { try { veriTabanHam = JSON.stringify(d); } catch (_) { /* yok */ } }
 
     /* Her çizim ayrı korumada: biri patlarsa sayfanın kalanı yaşamaya devam eder.
        Eskiden tek bir hata bütün siteyi boşaltıyordu. */
@@ -805,12 +823,17 @@ veriKaynak
       }
     });
 
+    /* iskelet ekran kalkar (css: html:not(.veri-hazir)) */
+    document.documentElement.classList.add("veri-hazir");
+    try { document.dispatchEvent(new Event("tf-veri-hazir")); } catch (_) { /* eski tarayıcı */ }
+
     if (patlayan.length) {
       console.warn("[TentiforApp] çizilemeyen bölümler: " + patlayan.join(", "));
       if (typeof tanilamaGoster === "function") { tanilamaGoster("Çizilemeyen bölümler", patlayan.join(", ")); }
     }
   })
   .catch(function (hata) {
+    document.documentElement.classList.add("veri-hazir");
     if (typeof tanilamaGoster === "function") { tanilamaGoster("Veri yüklenemedi", String((hata && hata.message) || hata), hata && hata.stack); }
     $("#karakterIzgara").innerHTML =
       '<div class="bos">veri.json yüklenemedi.<br>' +

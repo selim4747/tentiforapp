@@ -45,13 +45,31 @@
     }
     if (document.body) { kur(); } else { document.addEventListener("DOMContentLoaded", kur); }
   };
+  /* 3.0: yayında betikler birkaç pakette birleşik (scripts/paketle.mjs). Hata yerini asıl dosya adıyla yaz:
+     "paket-2.js?v=…:14:803" → "28-hesap.js (paket-2.js:14:803)". Tabloyu her paketin ilk satırı kurar. */
+  function paketDosyasi(ad, satir) {
+    var t = (window.__PAKET__ || {})[ad];
+    if (!t) { return ""; }
+    var bulunan = "";
+    for (var i = 0; i < t.length; i++) { if (t[i][0] <= satir) { bulunan = t[i][1]; } }
+    return bulunan;
+  }
+  function yiginCevir(y) {
+    return String(y || "").replace(/(paket-\d+\.js)(?:\?v=\w+)?:(\d+)(?::(\d+))?/g, function (tam, ad, sat, sut) {
+      var d = paketDosyasi(ad, Number(sat));
+      return d ? d + " (" + ad + ":" + sat + (sut ? ":" + sut : "") + ")" : tam;
+    });
+  }
+  window.hataYeriCevir = yiginCevir;
   window.addEventListener("error", function (e) {
     if (!e.message) { return; }
-    window.tanilamaGoster("Hata", e.message + " (" + String(e.filename || "").split("/").pop() + ":" + e.lineno + ")",
-      e.error && e.error.stack ? String(e.error.stack).slice(0, 600) : "");
+    var ad = String(e.filename || "").split("/").pop().replace(/\?.*$/, "");
+    var d = paketDosyasi(ad, e.lineno);
+    window.tanilamaGoster("Hata", e.message + " (" + (d ? d + ", " + ad : ad) + ":" + e.lineno + ")",
+      e.error && e.error.stack ? yiginCevir(String(e.error.stack)).slice(0, 600) : "");
   });
   window.addEventListener("unhandledrejection", function (e) {
     var r = e.reason;
-    window.tanilamaGoster("Söz reddi", String((r && r.message) || r), r && r.stack ? String(r.stack).slice(0, 600) : "");
+    window.tanilamaGoster("Söz reddi", String((r && r.message) || r), r && r.stack ? yiginCevir(String(r.stack)).slice(0, 600) : "");
   });
 })();

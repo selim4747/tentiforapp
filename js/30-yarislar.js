@@ -228,13 +228,12 @@ function yarisPaketiUret() {
     oyun: (typeof OYUNLAR !== "undefined") ? OYUNLAR.length : 6
   };
 
-  /* sıradaki içerik oylaması: henüz başlanmamış yapımlar (yapımda/yazımda/yayında olanlar hariç) */
-  const baslanmis = /^(yapımda|yazımda|yayında|çıktı|tamamlandı)$/i;
+  /* sıradaki içerik oylaması (3.0): panelde elle kurulan liste (veri.oylama). Sunucu listede olmayanları
+     oylarıyla birlikte siler (kurulum.sql: yaris_icerik_yukle). */
   const yapimlar = [];
-  (veri.yapimlar || []).forEach(function (y) {
-    if (!y || !y.ad || baslanmis.test(String(y.durum || "").trim())) { return; }
-    const ad = yapimlar.indexOf(y.ad) === -1 ? y.ad : y.ad + " (" + y.tur + ")";
-    if (yapimlar.indexOf(ad) === -1) { yapimlar.push(ad.slice(0, 120)); }
+  (veri.oylama || []).forEach(function (ad) {
+    const a = String(ad || "").trim().slice(0, 120);
+    if (a && yapimlar.indexOf(a) === -1) { yapimlar.push(a); }
   });
 
   const govde = { banka: banka, kesif: kesif, sayilar: sayilar, yapimlar: yapimlar };
@@ -651,7 +650,8 @@ function gunKelimesiPaylas() {
 async function kulupSavasiCiz(hedef) {
   const alan = hedef || document.querySelector("#kulupSavasAlan");
   if (!alan || !yarisHazirMi()) { return; }
-  const { data } = await hesapIstemci.from("kulup_savasi").select("*");
+  /* herkese aynı tablo: önce Cloudflare önbelleği (functions/api/pano.js), olmazsa Supabase */
+  const data = await liderlikPano("kulup_savasi", async function () { return (await hesapIstemci.from("kulup_savasi").select("*")).data; });
   const liste = (data || []).map(function (k) { return { kisilik: k.kisilik, bu: Number(k.bu_hafta) || 0, gecen: Number(k.gecen_hafta) || 0, katilan: Number(k.katilan) || 0 }; })
     .sort(function (a, b) { return b.bu - a.bu; });
   const sampiyon = liste.slice().sort(function (a, b) { return b.gecen - a.gecen; })[0];

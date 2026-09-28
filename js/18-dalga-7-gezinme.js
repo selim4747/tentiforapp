@@ -44,7 +44,11 @@ const GEZINME = [
 
   { id: "proje", ad: "Proje", ikon: "▬", bolumler: [
     ["delilik", "Delilik"], ["yapimlar", "Yapımlar"], ["basin", "Basın kiti"],
-    ["moodboard", "Moodboard"], ["yazaraSor", "Yazara sor"], ["degisiklik", "Değişiklik günlüğü"] ] },
+    ["moodboard", "Moodboard"], ["yazaraSor", "Yazara sor"] ] },
+
+  /* 3.0: değişiklik günlüğü kendi sayfasında (/surumler/) */
+  { id: "surumler", ad: "Değişiklikler", ikon: "▣", bolumler: [
+    ["degisiklik", "Değişiklik günlüğü"] ] },
 
   { id: "sen", ad: "Sen", ikon: "▭", bolumler: [
     ["hesap", "Hesabın"], ["arsivci", "Arşivci kartın"], ["yilim", "Tömye Yılım"], ["koleksiyon", "Kart koleksiyonu"], ["defter", "Defterin"], ["basarim", "Başarımlar"],
@@ -52,11 +56,14 @@ const GEZINME = [
 ];
 
 /* Üst şerit: her düğme kendi sayfasını açar. Bölüm listesi İçindekiler'de. */
+let gezinmeSonHtml = "";
+let gezinmeKaydirSira = 0;
+
 function gezinmeCiz() {
   const alan = document.querySelector("#gezinme");
   if (!alan) { return; }
 
-  alan.innerHTML =
+  const html =
     '<button class="gez-btn" id="icindekilerBtn" aria-label="İçindekiler">☰ İçindekiler</button>' +
     GEZINME.map(function (g, i) {
       const bu = aktifSayfa === g.id;
@@ -68,11 +75,20 @@ function gezinmeCiz() {
     }).join("") +
     '<button class="komut-tetik" id="komutTetikBtn" aria-label="Hızlı arama (Ctrl+K)" title="Hızlı arama (Ctrl+K)">⌘K</button>';
 
-  /* seçili sayfa şeritte görünür kalsın (mobilde şerit yatay kayar) */
-  const bu = alan.querySelector(".bu-sayfa");
-  if (bu && bu.scrollIntoView && alan.scrollWidth > alan.clientWidth) {
-    alan.scrollLeft = Math.max(0, bu.offsetLeft - (alan.clientWidth - bu.offsetWidth) / 2);
-  }
+  /* 3.0: aynı menü yeniden kurulmaz (açılışta birkaç kez çağrılıyordu, her seferinde düzen ölçülüyordu) */
+  if (html === gezinmeSonHtml && alan.firstChild) { return; }
+  gezinmeSonHtml = html;
+  alan.innerHTML = html;
+
+  /* seçili sayfa şeritte görünür kalsın (mobilde şerit yatay kayar); ölçüm bir sonraki karede, tek sefer */
+  if (gezinmeKaydirSira) { return; }
+  gezinmeKaydirSira = requestAnimationFrame(function () {
+    gezinmeKaydirSira = 0;
+    const bu = alan.querySelector(".bu-sayfa");
+    if (bu && alan.scrollWidth > alan.clientWidth) {
+      alan.scrollLeft = Math.max(0, bu.offsetLeft - (alan.clientWidth - bu.offsetWidth) / 2);
+    }
+  });
 }
 
 /* ==================== İÇİNDEKİLER PANELİ ==================== */
@@ -491,7 +507,8 @@ function sayfaGoster(sayfa, kaydirma) {
     if (!dondu) { window.scrollTo({ top: 0, behavior: "auto" }); }
   }
 
-  aktifBolumIsaretle();
+  /* ölçüm bir sonraki karede: sayfa kurulurken düzeni zorla hesaplatmasın */
+  requestAnimationFrame(aktifBolumIsaretle);
 
   /* tarayıcı boşalınca bu sayfanın bölümlerini bir kez ölç: sonraki kaydırmalar doğru yere gitsin */
   (window.requestIdleCallback || function (f) { return setTimeout(f, 300); })(bolumleriOlc);

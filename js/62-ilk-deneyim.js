@@ -554,8 +554,11 @@ let ilkDenZaman = null;
 new MutationObserver(function () {
   if (ilkDenZaman) { return; }
   ilkDenZaman = setTimeout(function () {
-    ilkDenZaman = null;
-    try { terimleriIsaretle(); } catch (_) { /* yok */ }
+    /* 3.0: işaretleme tarayıcı boşken */
+    (window.requestIdleCallback || setTimeout)(function () {
+      ilkDenZaman = null;
+      try { terimleriIsaretle(); } catch (_) { /* yok */ }
+    }, { timeout: 1500 });
   }, 700);
 }).observe(document.documentElement, { childList: true, subtree: true });
 

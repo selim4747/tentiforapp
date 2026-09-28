@@ -1115,6 +1115,8 @@ function ayar25Ciz() {
   const h = document.querySelector("#hesap");
   const alan = document.querySelector("#hesapAlan");
   if (!h || !alan || !veri) { return; }
+  /* 3.0: Sen sayfası kapalıyken çizilmez (açılışta okuma yolları hesabı boşa gidiyordu); sayfaya gelince çizilir */
+  if (typeof aktifSayfa !== "undefined" && aktifSayfa !== "sen") { return; }
   let k = document.querySelector("#ayar25Alan");
   if (!k) { k = document.createElement("div"); k.id = "ayar25Alan"; alan.insertAdjacentElement("afterend", k); }
   const acik = Array.prototype.slice.call(k.querySelectorAll("details")).map(function (d) { return d.open; });
@@ -1138,6 +1140,12 @@ document.addEventListener("click", async function (e) {
 
 /* Sen sayfasına her gelişte güncel (okuma listesi, takip, indirilenler başka sayfalarda değişir) */
 window.addEventListener("hashchange", function () { if (typeof rota === "function" && rota().indexOf("#/sen") === 0) { setTimeout(ayar25Ciz, 60); } });
+
+/* Sen sayfası açılınca (adres, menü ya da ilk açılış) ayarlar çizilir */
+if (typeof sayfaGoster === "function") {
+  const eskiSG25 = sayfaGoster;
+  window.sayfaGoster = function () { const r = eskiSG25.apply(this, arguments); if (aktifSayfa === "sen") { ayar25Ciz(); } return r; };
+}
 
 if (typeof hesapCiz === "function") {
   const eskiHC25 = hesapCiz;

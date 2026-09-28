@@ -15,6 +15,16 @@
   "plugins": {
     "LocalNotifications": {
       "iconColor": "#3A7CA5"
+    },
+    "SplashScreen": {
+      "launchShowDuration": 6000,
+      "launchAutoHide": true,
+      "launchFadeOutDuration": 200,
+      "backgroundColor": "#F4F9FD",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": false,
+      "splashImmersive": false
     }
   }
 }

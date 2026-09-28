@@ -116,7 +116,7 @@ async function oylamaCiz() {
   oylarim = Array.isArray(b.data) ? b.data : [];
   const liste = (s.data || []).map(function (x) { return { yapim: x.yapim, oy: Number(x.oy) || 0 }; })
     .sort(function (a, c) { return c.oy - a.oy || a.yapim.localeCompare(c.yapim, "tr"); });
-  if (!liste.length) { alan.innerHTML = '<p class="oyun-not">Oylama, yönetici bir sonraki girişinde açılacak.</p>'; return; }
+  if (!liste.length) { alan.innerHTML = '<p class="oyun-not">Şu an oylamada bir şey yok; yeni seçenekler eklenince burada görünecek.</p>'; return; }
   const enCok = Math.max.apply(null, liste.map(function (x) { return x.oy; }).concat([1]));
 
   alan.innerHTML = '<p class="oyun-not">Sıradaki hangisi olsun? En çok 3 yapıma oy verebilirsin' +
@@ -244,7 +244,7 @@ async function toplulukMadalyaKontrol() {
   const [gk, ky, yt, ks, tr] = await Promise.all([
     hesapIstemci.rpc("gk_seri"),
     hesapIstemci.from("kyldo_toplam").select("toplam").eq("kullanici_adi", ad).maybeSingle(),
-    hesapIstemci.from("yaris_tablolari").select("yaris").eq("kapsam", "tum").eq("kullanici_adi", ad),
+    hesapIstemci.from("yaris_tablolari").select("yaris, puan").eq("kapsam", "tum").eq("kullanici_adi", ad),   /* 30-yarislar ile aynı sorgu: önbellekte tek istek */
     hesapIstemci.from("kasif_sayilari").select("ilk_on").eq("kullanici_adi", ad).maybeSingle(),
     hesapIstemci.from("teori_rozetleri").select("kanon").eq("kullanici_adi", ad).maybeSingle()
   ]);

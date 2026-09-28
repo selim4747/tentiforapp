@@ -62,7 +62,37 @@ function hesapKutuphaneYukle() {
    İlerleme (ilerlemeler) ve giriş işleri hiç önbelleğe girmez. */
 const OKUMA_ONBELLEK = new Map();
 const OKUMA_SURE = 90000;
-const OKUMA_RPC = ["uygulama_skor_tablosu", "gk_istatistik", "evren_defter_oku", "takip_ettiklerim", "tepkilerim", "oylarim", "haftalik_ilerleme", "evren_istatistik"];
+const OKUMA_RPC = ["uygulama_skor_tablosu", "gk_istatistik", "evren_defter_oku", "takip_ettiklerim", "tepkilerim", "oylarim", "haftalik_ilerleme", "evren_istatistik",
+  "yonetici_mi", "tek_kodlarim", "gk_durum", "gk_seri", "davet_durumum", "ortak_evrenlerim"];
+
+/* 3.0 — kendi verin sayfa yenilense de 5 dakika bu sekmede kalır (sessionStorage): her sayfa açılışında ~20 okuma
+   yerine yalnızca değişenler gider. Yalnızca senin satırların (id/kullanıcı adın süzgeçte) ve yalnızca senin
+   işlemlerinle değişen RPC'ler; herhangi bir yazma yine hepsini boşaltır, çıkışta silinir. */
+const OKUMA_KALICI = "tf30_okuma";
+const OKUMA_KALICI_SURE = 5 * 60000;
+const OKUMA_KALICI_RPC = ["yonetici_mi", "tek_kodlarim", "gk_durum", "gk_seri", "haftalik_ilerleme"];
+
+function okumaKaliciMi(url, yontem, rpc) {
+  if (rpc) { return yontem === "POST" && OKUMA_KALICI_RPC.indexOf(rpc) !== -1; }
+  if (yontem !== "GET" || !/\/rest\/v1\/(?:profiller|arsivci_seviyeleri|yaris_tablolari|kyldo_toplam|kasif_sayilari|istatistikler|liderlik)\?/.test(url)) { return false; }
+  const ben = [];
+  if (typeof hesapKullanici !== "undefined" && hesapKullanici && hesapKullanici.id) { ben.push("id=eq." + hesapKullanici.id); }
+  if (typeof hesapProfil !== "undefined" && hesapProfil && hesapProfil.kullanici_adi) { ben.push("kullanici_adi=eq." + encodeURIComponent(hesapProfil.kullanici_adi)); }
+  return ben.some(function (b) { return url.indexOf(b) !== -1 && /(?:^|[?&])(?:id|kullanici_adi)=eq\./.test(url); });
+}
+function okumaKaliciOku() {
+  try { return JSON.parse(sessionStorage.getItem(OKUMA_KALICI) || "{}") || {}; } catch (_) { return {}; }
+}
+function okumaKaliciYaz(anahtar, r) {
+  try {
+    const t = okumaKaliciOku();
+    const simdi = Date.now();
+    Object.keys(t).forEach(function (k) { if (simdi - t[k].zaman > OKUMA_KALICI_SURE) { delete t[k]; } });
+    t[anahtar] = { zaman: simdi, govde: r.govde, durum: r.durum, basliklar: r.basliklar };
+    sessionStorage.setItem(OKUMA_KALICI, JSON.stringify(t));
+  } catch (_) { /* dolu ya da kapalı: yalnızca bellek */ }
+}
+function okumaKaliciTemizle() { try { sessionStorage.removeItem(OKUMA_KALICI); } catch (_) { /* yok */ } }
 
 function hesapOnbellekliFetch(girdi, secenek) {
   const url = typeof girdi === "string" ? girdi : (girdi && girdi.url) || "";
@@ -71,13 +101,18 @@ function hesapOnbellekliFetch(girdi, secenek) {
   const rpc = (/\/rest\/v1\/rpc\/([a-z0-9_]+)/.exec(url) || [])[1];
   const okuma = rest && !window.__okumaOnbellegiKapali && !/\/rest\/v1\/ilerlemeler/.test(url) &&
     ((yontem === "GET" || yontem === "HEAD") ? !rpc : (yontem === "POST" && OKUMA_RPC.indexOf(rpc) !== -1));
-  if (rest && !okuma && yontem !== "GET" && yontem !== "HEAD") { OKUMA_ONBELLEK.clear(); }   /* yazma: önbellek boşalır */
+  if (rest && !okuma && yontem !== "GET" && yontem !== "HEAD") { OKUMA_ONBELLEK.clear(); okumaKaliciTemizle(); }   /* yazma: önbellek boşalır */
   if (!okuma) { return fetch(girdi, secenek); }
   let yetki = "";
   try { yetki = new Headers((secenek && secenek.headers) || {}).get("Authorization") || ""; } catch (_) { yetki = ""; }
   const anahtar = yontem + " " + url + " " + ((secenek && typeof secenek.body === "string") ? secenek.body : "") + " " + yetki.slice(-24);
-  const k = OKUMA_ONBELLEK.get(anahtar);
   const yanit = function (r) { return new Response(r.govde, { status: r.durum, headers: r.basliklar }); };
+  const kalici = okumaKaliciMi(url, yontem, rpc);
+  if (kalici && !OKUMA_ONBELLEK.has(anahtar)) {
+    const kk = okumaKaliciOku()[anahtar];
+    if (kk && Date.now() - kk.zaman < OKUMA_KALICI_SURE) { return Promise.resolve(yanit(kk)); }
+  }
+  const k = OKUMA_ONBELLEK.get(anahtar);
   if (k && Date.now() - k.zaman < OKUMA_SURE) {
     /* yoldaki istek de paylaşılır: aynı anda iki okuma tek istek olur */
     return k.soz.then(function (r) { return r ? yanit(r) : fetch(girdi, secenek); });
@@ -92,6 +127,7 @@ function hesapOnbellekliFetch(girdi, secenek) {
       const b = {}; y.headers.forEach(function (v, a) { b[a] = v; });
       const r = { govde: govde, durum: y.status, basliklar: b };
       coz(r);
+      if (kalici) { okumaKaliciYaz(anahtar, r); }
       return yanit(r);
     });
   }, function (e) { OKUMA_ONBELLEK.delete(anahtar); coz(null); throw e; });
@@ -500,6 +536,7 @@ async function hesapCikis() {
   hesapKullanici = null;               /* bundan sonra boş hâli hesaba yazmasın */
   hesapProfil = null;
   clearInterval(hesapEsitZamanlayici);
+  okumaKaliciTemizle();
   try { await hesapIstemci.auth.signOut(); } catch (_) { /* yoksay */ }
   /* hesaba yazılamadıysa (çevrimdışı) bu cihazdaki ilerleme silinmez: evrenler, eçka kaybolmasın */
   if (kaydedildi) { hesapYerelIlerlemeyiTemizle(); esitZamanSifirla(); }
@@ -1069,6 +1106,7 @@ async function hesapSil(form) {
   try {
     Object.keys(window.localStorage).forEach(function (k) { if (k.indexOf("sb-tentiforapp") === 0) { window.localStorage.removeItem(k); } });
   } catch (_) { /* yoksay */ }
+  okumaKaliciTemizle();
   await hesapIstemci.auth.signOut().catch(function () {});
   if (typeof perdeKapat === "function") { perdeKapat(); }
   hesapOturumAyarla(null, "SIGNED_OUT");

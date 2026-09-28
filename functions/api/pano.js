@@ -16,6 +16,7 @@ function sorgular(t) {
     return ["/rest/v1/liderlik?select=kullanici_adi,gorunen_ad," + t + "&" + t + "=gt.0&order=" + t + ".desc,guncelleme.asc&limit=" + SATIR];
   }
   if (t === "kulupler") { return ["/rest/v1/kulupler?select=*&order=haftalik.desc"]; }
+  if (t === "kulup_savasi") { return ["/rest/v1/kulup_savasi?select=*"]; }
   if (t === "topluluk") { return ["/rest/v1/kulupler?select=kisilik,uye", "/rest/v1/topluluk_roller?select=rol,sayi"]; }
   return null;
 }

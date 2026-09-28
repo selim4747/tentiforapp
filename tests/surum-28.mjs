@@ -12,7 +12,6 @@ const TEST_URL = "https://test.supabase.co";
 
 export async function surum28Testleri({ adres, veritabani, dizin }) {
   const sahte = yeniSahte(veritabani);
-  const hesapKod = readFileSync(dizin + "/js/28-hesap.js", "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL);
   const hatalar = [];
   let gecen = 0;
   const ok = function (ad, kosul, ek) {
@@ -52,7 +51,7 @@ export async function surum28Testleri({ adres, veritabani, dizin }) {
         } };
       }
     }, !!s.uygulama);
-    await ctx.route(/\/js\/28-hesap\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: hesapKod }); });
+    await ctx.route(/\/js\/(?:28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
     await ctx.route(TEST_URL + "/**", function (r) { return sahte.isle(r); });
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, function (r) { return r.abort(); });
     const p = await ctx.newPage();
