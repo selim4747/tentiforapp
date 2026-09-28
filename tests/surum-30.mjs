@@ -407,6 +407,78 @@ export async function surum30Testleri({ adres, veritabani, dizin, kok }) {
       const h = fanDuzenlenen("hikaye"); return aktifSayfa === "fan" && !!h && h.evren === "Tömye" && /Kanon evren/.test((document.querySelector(".eva-not") || {}).textContent || "");
     }));
 
+    /* ---------- 10b. evren araçları ve Evrengezerler ---------- */
+    console.log("3.0 evren araçları");
+    ok("tutarlılık denetçisi: yaş, olmayan ay, gün taşması, tarih sırası, eksik kişi", await K.evaluate(function () {
+      const l = evrDenetim({ ad: "X", ozet: "a", kisiler: [{ ad: "Mira", yas: "30" }, { ad: "Oren", yas: "20" }], baglar: [{ a: "Oren", b: "Mira", etiket: "baba" }, { a: "Kael", b: "Mira", etiket: "eş" }],
+        aylar: [{ ad: "Kar", gun: "30" }], etkinlikler: [{ ad: "G1", ay: "Tuz", gun: "3" }, { ad: "G2", ay: "Kar", gun: "40" }], tarih: [{ zaman: "10", olay: "a" }, { zaman: "5", olay: "b" }] }).map(function (x) { return x.mesaj; }).join("|");
+      return /yaşı \(20\)/.test(l) && /olmayan bir ayda: Tuz/.test(l) && /40\. gününde/.test(l) && /sırayı kontrol et/.test(l) && /“Kael” kişiler arasında yok/.test(l) &&
+        evrDenetim({ ad: "Y", ozet: "b", kisiler: [{ ad: "A", yas: "40" }, { ad: "B", yas: "10" }], baglar: [{ a: "A", b: "B", etiket: "anne" }] }).length === 0;
+    }));
+    ok("isim üretici evrenin kendi seslerinden yeni ve farklı adlar önerir", await K.evaluate(function () {
+      const l = evrIsimler({ kisiler: [{ ad: "Miralen" }, { ad: "Orensa" }], yerler: [{ ad: "Tuzkent" }] }, 8);
+      return l.length === 8 && l.every(function (a) { return /^[A-ZÇĞİÖŞÜ][a-zçğıöşü]{2,10}$/.test(a) && ["Miralen", "Orensa", "Tuzkent"].indexOf(a) === -1; }) && new Set(l).size === 8;
+    }));
+    await K.evaluate(function (id) { evrenSayfaKapat(); evrenSonrakiSekme = "kurucu"; location.hash = "#/ev/benim/" + id; }, evId); await bekle(K, 500);
+    await K.evaluate(function (id) { EVR_ADIM[id] = "kisiler"; evrenSayfaCiz(); }, evId); await bekle(K, 200);
+    await K.click('#evrenSayfa [data-fan-ekle="kisiler"]'); await bekle(K, 300);
+    await K.click("#evrenSayfa [data-evr-isim]"); await bekle(K, 100);
+    const onerilen = await K.evaluate(function () { const b = document.querySelector("#evrenSayfa [data-evr-isim-sec]"); b.click(); return b.getAttribute("data-evr-isim-sec"); }); await bekle(K, 500);
+    ok("önerilen isme dokununca boş ad kutusuna yazılır ve kaydedilir", await K.evaluate(function (a) { const e = evrenBenimBul(EVS.id); return e.kisiler.some(function (k) { return k.ad === a; }); }, onerilen));
+    await K.evaluate(function (id) { evrenBenimDegistir(id, function (e) { delete e.durum; }); EVR_ADIM[id] = "paylas"; evrenSayfaCiz(); }, evId); await bekle(K, 300);
+    ok("Paylaş adımında denetim ve evren kartı; fan-made'de izin yönetimi", await K.evaluate(function () {
+      return !!document.querySelector("#evrenSayfa .evr-denetim") && !!document.querySelector("#evrenSayfa [data-evr-kart]") && !!document.querySelector("#evrenSayfa [data-evr-izin-uret]");
+    }));
+    await K.fill("#evrIzinNot", "Ayşe"); await K.click("#evrenSayfa [data-evr-izin-uret]"); await bekle(K, 400);
+    const izin = await K.evaluate(function (id) {
+      const d = document.querySelector("#evrIzinDurum");
+      const kod = (/EG-[A-Z0-9]{4}-[A-Z0-9]{4}/.exec(d ? d.textContent : "") || [])[0];
+      const e = evrenBenimBul(id);
+      return { kod: kod, n: (e.egIzinleri || []).length, temiz: (fanTemizle(e).egIzinleri || []).length, not: (e.egIzinleri || [{}])[0].not };
+    }, evId);
+    ok("Evrengezer izni kodu üretilir, yalnızca özeti evrende saklanır", !!izin.kod && izin.n === 1 && izin.temiz === 1 && izin.not === "Ayşe", izin);
+    ok("izin kodu girilince fan-made evrene Evrengezer getirilebilir", await K.evaluate(function (a) {
+      const f = fanSiteListesi("evren")[0];
+      f.egIzinleri = [{ oz: evrEgIzinOzeti(f.id, a.kod), not: "Ayşe", t: "" }];
+      const once = evaEvrengezerIzni(f.ad).izin;
+      evrenSayfaKapat(); evrenSayfaAc("fan", f.id); EVS.sekme = "bilgi"; evrenSayfaCiz();
+      document.querySelector("#evrIzinKod").value = a.kod.toLowerCase(); document.querySelector("[data-evr-izin-gir]").click();
+      const sonra = evaEvrengezerIzni(f.ad).izin;
+      const k = JSON.parse(localStorage.getItem("tf30_eg_izin") || "{}"); delete k[f.id]; localStorage.setItem("tf30_eg_izin", JSON.stringify(k)); delete f.egIzinleri;
+      return !once && sonra;
+    }, izin));
+    ok("okur evren turu: ilk girişte açılır, kapatınca bir daha çıkmaz", await K.evaluate(async function () {
+      const f = fanSiteListesi("evren")[0];
+      localStorage.removeItem("tf30_tur_gorulen");
+      evrenSayfaKapat(); evrenSayfaAc("fan", f.id); evrenSayfaCiz();
+      await new Promise(function (r) { setTimeout(r, 1500); });   /* evrenin tam dosyası iner */
+      const var_ = !!document.querySelector("#evrenSayfa .evr-tur");
+      document.querySelector('#evrenSayfa [data-evr-tur="kapat"]').click();
+      const yok = !document.querySelector("#evrenSayfa .evr-tur");
+      evrenSayfaKapat(); evrenSayfaAc("fan", f.id); evrenSayfaCiz();
+      return var_ && yok && !document.querySelector("#evrenSayfa .evr-tur");
+    }));
+    ok("kanon evrende 'bu evrende yazılanlar' rafı taslağını ve sitedekileri gösterir", await K.evaluate(function () {
+      const h = evrRafHtml("Tömye");
+      return /Bu evrende yazılanlar/.test(h) && /taslağın/.test(h);
+    }));
+    ok("evren kartı (1080×1920) üretilir", await K.evaluate(async function (id) { const t = await evrKartUret(evrenBenimBul(id)); return !!t && t.width === 1080 && t.height === 1920; }, evId));
+    ok("her Evrengezer E25'te: başka evrende yaratılan ve eserlere konuk olanlar da", await K.evaluate(function () {
+      const l = fanEserlerim();
+      l.push({ bicim: "tentifor-eser", surum: 1, tur: "kisi", id: "egbaska1", evren: "e26", ad: "Başka Doğan", kisilik: [] });
+      const h = l.find(function (x) { return x.tur === "hikaye"; });
+      h.konuklar = [{ bicim: "tentifor-eser", tur: "kisi", id: "egkonuk1", ad: "Konuk Gezgin", evren: "e25", kisilik: [] }];
+      fanEserlerimYaz(l);
+      const adlar = e25Kisileri().map(function (x) { return x.e.ad; });
+      const kart = kisiKartHtml(e25Kisileri().find(function (x) { return x.e.id === "egkonuk1"; }));
+      return adlar.indexOf("Başka Doğan") !== -1 && adlar.indexOf("Konuk Gezgin") !== -1 && /E25’te doğdu/.test(kart) && /Göründüğü yerler/.test(kart) && !!kisiBul("site", "egkonuk1");
+    }));
+    ok("evrenler arası geçitler: harita geçidi ve Evrengezer yolculuğu", await K.evaluate(function (id) {
+      evrenBenimDegistir(id, function (e) { e.harita = e.harita || { yerler: [] }; e.harita.yerler.push({ id: "g1", ad: "Kapı", x: 10, y: 10, gecit: "#/ev/site/e26" }); });
+      const g = evrGecitAgi();
+      return g.baglar.some(function (b) { return b.tur === "gecit" && b.b === "site:e26"; }) && g.baglar.some(function (b) { return b.tur === "gezgin" && b.a === "site:e25"; }) && /<svg/.test(evrGecitSvg());
+    }, evId));
+
     /* ---------- 11. menüde Android uygulaması ---------- */
     const AN = await cihaz("android", { ctx: { userAgent: "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36" } });
     await AN.route("**/uygulama/indir/apk.json", function (r) { return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ kod: 142, surum: "2.9.0", boyut: 5242880 }) }); });
