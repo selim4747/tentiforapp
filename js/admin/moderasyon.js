@@ -65,8 +65,13 @@ document.addEventListener("click", async function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-mod-giris], [data-mod-cikis], [data-mod-onizle], [data-mod-indir], [data-mod-onay], [data-mod-red], [data-mod-kod-uret], [data-mod-kod-kapat], [data-pro-ver]");
   if (!b) { return; }
   const kart = b.closest("[data-mod-id]");
-  const durum = (kart && kart.querySelector(".pencere-durum")) || document.querySelector("#modDurum") || document.querySelector("#modKodDurum");
+  const yonetim = !!b.closest(".mod-yonetici");   /* moderatör kodları ve Pro: yönetici hesabıyla çalışır */
+  const durum = (kart && kart.querySelector(".pencere-durum")) || (yonetim ? document.querySelector("#modKodDurum") : document.querySelector("#modDurum")) || document.querySelector("#modKodDurum");
   const yaz = function (m, iyi) { if (durum) { durum.textContent = m; durum.className = "pencere-durum " + (iyi ? "iyi" : "kotu"); } };
+  if (yonetim && (typeof hesapKullanici === "undefined" || !hesapKullanici)) {
+    yaz("Bunun için yönetici hesabınla giriş yap (Sen → Hesabın), sonra bu sayfayı yenile.", false);
+    return;
+  }
   try {
     if (b.hasAttribute("data-mod-giris")) { await moderatorGiris((document.querySelector("#modKod") || {}).value); await moderatorDuzeyYukle(); return moderasyonCiz(); }
     if (b.hasAttribute("data-mod-cikis")) { moderatorCikis(); return moderasyonCiz(); }
@@ -163,6 +168,7 @@ async function moderatorKodListesiCiz() {
   const a = document.querySelector("#modKodListe");
   if (!a) { return; }
   const s = await tf4Istemci();
+  if (typeof hesapKullanici === "undefined" || !hesapKullanici) { a.innerHTML = '<p class="pencere-durum kotu">Kodları görmek için yönetici hesabınla giriş yap (Sen → Hesabın), sonra bu sayfayı yenile.</p>'; return; }
   const r = await s.rpc("moderator_kodlari_listesi");
   if (r.error) { a.innerHTML = '<p class="pencere-durum kotu">Okunamadı: ' + kacir(r.error.message) + "</p>"; return; }
   const l = r.data || [];
