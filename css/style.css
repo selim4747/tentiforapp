@@ -5141,3 +5141,220 @@ html[data-bildirim-var] .hesap-btn::before{content:"";position:absolute;top:-3px
 .alt-yasal a { color: inherit; opacity: .8; }
 .yasal-pencere { max-width: 720px; }
 .profil-eserler { margin-top: .8rem; }
+
+/* ==================== 4.4: 4. Boyut Galaktik Seyrüsefer & Gezegen Kaydırıcı ==================== */
+.boyut-modal-katman {
+  position: fixed; inset: 0; z-index: 10000;
+  background: radial-gradient(circle at center, #0B132B 0%, #050814 70%, #02040A 100%);
+  display: flex; flex-direction: column; overflow: hidden;
+  color: #E0F2FE; font-family: var(--govde, system-ui, sans-serif);
+  animation: boyutAcilis 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes boyutAcilis { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+.boyut-ust-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; background: rgba(11, 19, 43, 0.85);
+  border-bottom: 1px solid rgba(72, 202, 228, 0.3);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  z-index: 10;
+}
+.boyut-baslik-kutu { display: flex; flex-direction: column; gap: 2px; }
+.boyut-ana-baslik {
+  font-size: 17px; font-weight: 800; letter-spacing: 0.05em;
+  color: #48CAE4; text-shadow: 0 0 12px rgba(72, 202, 228, 0.6);
+  display: flex; align-items: center; gap: 8px;
+}
+.boyut-alt-bilgi { font-size: 12px; color: #8E9AAF; letter-spacing: 0.02em; }
+.boyut-ust-butonlar { display: flex; align-items: center; gap: 10px; }
+.boyut-kapat-btn {
+  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff; width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 16px; cursor: pointer;
+  transition: all 0.2s ease;
+}
+.boyut-kapat-btn:hover { background: rgba(230, 57, 70, 0.8); border-color: #E63946; }
+
+/* 4. Boyut Zaman Çizgileri Bandı & Tesseract */
+.boyut-4d-alan {
+  display: grid; grid-template-columns: auto 1fr; gap: 16px;
+  align-items: center; padding: 12px 20px;
+  background: rgba(7, 11, 26, 0.6); border-bottom: 1px solid rgba(58, 124, 165, 0.25);
+  z-index: 5;
+}
+@media (max-width: 680px) {
+  .boyut-4d-alan { grid-template-columns: 1fr; gap: 8px; padding: 8px 14px; }
+  .boyut-tesseract-kutu { display: none; }
+}
+.boyut-tesseract-kutu {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(13, 27, 42, 0.7); border: 1px solid rgba(72, 202, 228, 0.35);
+  padding: 6px 12px; border-radius: 8px;
+  box-shadow: inset 0 0 15px rgba(72, 202, 228, 0.15);
+}
+.boyut-tesseract-canvas { width: 44px; height: 44px; display: block; }
+.boyut-koordinat-bilgi { font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.4; color: #ADE8F4; }
+
+.boyut-zaman-cizgileri {
+  display: flex; gap: 8px; overflow-x: auto; padding: 4px 0;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.boyut-zaman-cizgileri::-webkit-scrollbar { display: none; }
+.boyut-cip {
+  flex-shrink: 0; padding: 8px 14px; border-radius: 20px;
+  background: rgba(27, 38, 59, 0.7); border: 1px solid rgba(142, 154, 175, 0.3);
+  color: #CBC0D3; font-size: 13px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; transition: all 0.25s ease;
+}
+.boyut-cip:hover { background: rgba(58, 124, 165, 0.4); border-color: #48CAE4; color: #fff; }
+.boyut-cip.aktif {
+  background: linear-gradient(135deg, rgba(58, 124, 165, 0.8), rgba(123, 44, 191, 0.8));
+  border-color: #48CAE4; color: #fff;
+  box-shadow: 0 0 16px rgba(72, 202, 228, 0.5);
+}
+
+/* Uzay Sahnesi & Gezegen Kaydırıcı */
+.boyut-uzay-sahnesi {
+  flex: 1; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center;
+  user-select: none; -webkit-user-select: none;
+  background:
+    radial-gradient(1.5px 1.5px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 140px 180px, #ADE8F4, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 250px 80px, #E0A96D, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 320px 220px, #ffffff, rgba(0,0,0,0));
+  background-size: 400px 300px;
+}
+.boyut-yildiz-nebulasi {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(circle at 60% 40%, rgba(123, 44, 191, 0.18) 0%, transparent 60%),
+              radial-gradient(circle at 30% 70%, rgba(58, 124, 165, 0.18) 0%, transparent 55%);
+}
+
+.boyut-kaydirici-alani {
+  position: relative; width: 100%; height: 260px;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: pan-y; cursor: grab;
+}
+.boyut-kaydirici-alani:active { cursor: grabbing; }
+
+.boyut-yorunge-cizgisi {
+  position: absolute; width: 90%; max-width: 900px; height: 180px;
+  border-radius: 50%; border: 1px dashed rgba(72, 202, 228, 0.25);
+  pointer-events: none; transform: rotateX(65deg);
+  box-shadow: 0 0 20px rgba(72, 202, 228, 0.08);
+}
+
+.boyut-gezegen-rayi {
+  display: flex; align-items: center; justify-content: center;
+  gap: 40px; position: relative; width: 100%; transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.boyut-gezegen-oge {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+  transform: scale(0.78); opacity: 0.55; flex-shrink: 0;
+}
+.boyut-gezegen-oge:hover { opacity: 0.85; transform: scale(0.88); }
+.boyut-gezegen-oge.aktif {
+  transform: scale(1.18); opacity: 1; z-index: 3;
+}
+
+.boyut-gezegen-kure {
+  width: 110px; height: 110px; border-radius: 50%;
+  position: relative; transition: all 0.35s ease;
+  box-shadow: inset -18px -18px 25px rgba(0, 0, 0, 0.85),
+              inset 8px 8px 18px rgba(255, 255, 255, 0.35),
+              0 0 25px rgba(72, 202, 228, 0.3);
+}
+.boyut-gezegen-oge.aktif .boyut-gezegen-kure {
+  box-shadow: inset -20px -20px 30px rgba(0, 0, 0, 0.9),
+              inset 10px 10px 22px rgba(255, 255, 255, 0.45),
+              0 0 35px var(--gezegen-hale, #48CAE4);
+}
+
+.boyut-gezegen-halka {
+  position: absolute; top: 50%; left: 50%;
+  width: 170px; height: 35px; border-radius: 50%;
+  border: 4px solid rgba(224, 159, 62, 0.6);
+  transform: translate(-50%, -50%) rotate(-25deg);
+  pointer-events: none; box-shadow: 0 0 10px rgba(224, 159, 62, 0.4);
+}
+
+.boyut-gezegen-ad-etiket {
+  font-size: 13px; font-weight: 700; color: #E0F2FE;
+  letter-spacing: 0.04em; text-align: center;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+}
+.boyut-gezegen-oge.aktif .boyut-gezegen-ad-etiket {
+  color: #48CAE4; font-size: 15px;
+  text-shadow: 0 0 10px rgba(72, 202, 228, 0.8);
+}
+
+/* Gezinme Okları */
+.boyut-ok {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(13, 27, 42, 0.75); border: 1px solid rgba(72, 202, 228, 0.4);
+  color: #ADE8F4; font-size: 22px; cursor: pointer;
+  display: grid; place-items: center; z-index: 10;
+  transition: all 0.2s ease;
+}
+.boyut-ok:hover { background: rgba(58, 124, 165, 0.85); color: #fff; box-shadow: 0 0 15px rgba(72,202,228,0.5); }
+.boyut-ok-sol { left: 16px; }
+.boyut-ok-sag { right: 16px; }
+
+/* Holo-HUD Bilgi Kartı */
+.boyut-hud-panel {
+  background: rgba(11, 19, 43, 0.88); border-top: 1px solid rgba(72, 202, 228, 0.3);
+  padding: 16px 24px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center;
+  z-index: 10;
+}
+@media (max-width: 720px) {
+  .boyut-hud-panel { grid-template-columns: 1fr; gap: 12px; padding: 12px 16px; }
+}
+.boyut-hud-sol { display: flex; flex-direction: column; gap: 6px; }
+.boyut-hud-baslik-sira { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.boyut-hud-ad { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: 0.03em; }
+.boyut-hud-sinif {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 2px 8px; border-radius: 4px;
+  background: rgba(72, 202, 228, 0.15); border: 1px solid rgba(72, 202, 228, 0.4);
+  color: #48CAE4;
+}
+.boyut-hud-metrikler {
+  display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #ADE8F4;
+  margin: 4px 0; font-family: ui-monospace, monospace;
+}
+.boyut-metrik-oge { display: flex; align-items: center; gap: 5px; }
+.boyut-hud-ozet { font-size: 13.5px; color: #CBC0D3; line-height: 1.45; max-width: 680px; }
+
+.boyut-inis-btn {
+  padding: 12px 24px; border-radius: 8px; border: none;
+  background: linear-gradient(135deg, #00B4D8 0%, #0077B6 100%);
+  color: #fff; font-size: 15px; font-weight: 700; letter-spacing: 0.03em;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.5);
+  transition: all 0.25s ease; flex-shrink: 0;
+}
+.boyut-inis-btn:hover {
+  transform: translateY(-2px); box-shadow: 0 0 30px rgba(72, 202, 228, 0.8);
+  background: linear-gradient(135deg, #48CAE4 0%, #0096C7 100%);
+}
+
+/* Hiperuzay Atlama Efekti */
+.boyut-warp-perdesi {
+  position: absolute; inset: 0; pointer-events: none; z-index: 100;
+  opacity: 0; transition: opacity 0.2s ease;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.9) 0%, rgba(72,202,228,0.7) 40%, rgba(11,19,43,0.95) 80%);
+}
+.boyut-warp-perdesi.warp-aktif {
+  opacity: 1; animation: warpStreak 0.4s cubic-bezier(0.8, 0, 0.2, 1);
+}
+@keyframes warpStreak {
+  0% { transform: scale(0.1); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+
