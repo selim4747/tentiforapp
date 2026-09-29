@@ -12,7 +12,9 @@ function moderasyonYoneticiHtml() {
   if (typeof yoneticiAcik !== "function" || !yoneticiAcik()) { return ""; }
   return '<details class="kutu-y mod-yonetici"><summary><b>Yönetici: moderatör kodları ve Pro</b></summary>' +
     '<label for="modKodAd">Moderatörün adı</label><input class="arac-giris" id="modKodAd" maxlength="60" placeholder="Ayşe">' +
-    '<div class="oyun-sira"><button type="button" class="dugme" data-mod-kod-uret>Kod üret</button><button type="button" class="dugme dugme-sade" data-mod-kod-kapat>Bütün kodları kapat</button></div>' +
+    '<label for="modKodDuzey">Yetkisi</label><select class="kod-giris arac-giris" id="modKodDuzey"><option value="fan">Fan moderatör: yalnızca fan-made onaylar</option><option value="kanon">Kanon moderatör: fan-made ve kanon onaylar</option></select>' +
+    '<div class="oyun-sira"><button type="button" class="dugme" data-mod-kod-uret>Kod üret</button><button type="button" class="dugme dugme-sade" data-mod-kod-liste>Kodları göster</button><button type="button" class="dugme dugme-sade" data-mod-kod-kapat>Bütün kodları kapat</button></div>' +
+    '<div id="modKodListe"></div>' +
     '<p class="pencere-durum" id="modKodDurum" role="status"></p>' +
     '<label for="proKadi">Elle Pro ver: kullanıcı adı</label><input class="arac-giris" id="proKadi" maxlength="40">' +
     '<label for="proGun">Gün</label><input class="arac-giris" id="proGun" type="number" min="1" max="3660" value="30">' +
@@ -39,7 +41,9 @@ async function moderasyonCiz() {
     if (r.error) { throw r.error; }
     l = r.data || [];
   } catch (e) { moderatorCikis(); return moderasyonCiz(); }
-  p.innerHTML = kabuk('<p class="pencere-alt">' + l.length + ' başvuru bekliyor · <button type="button" class="ic-bag" data-mod-cikis>çıkış</button></p>' +
+  const kanonYetki = moderatorDuzey() === "kanon";
+  p.innerHTML = kabuk('<p class="pencere-alt">' + (kanonYetki ? "Kanon moderatör" : "Fan moderatör") + " · " + l.length + ' başvuru bekliyor · <button type="button" class="ic-bag" data-mod-cikis>çıkış</button></p>' +
+    '<p class="oyun-not">Onaylanan evren GitHub deposuna yazılır (evrenler/ klasörü ve veri.json); yönetici Yayınla’ya basınca sitede görünür.</p>' +
     (l.length ? l.map(function (b) {
       return '<article class="kutu-y mod-basvuru" data-mod-id="' + kacir(b.id) + '"><b>' + (b.oncelik ? '<span class="eva-rozet">★ Pro</span> ' : "") + kacir(b.baslik) + "</b>" +
         '<p class="oyun-not">' + kacir(b.gonderen_eposta || "") + " · " + new Date(b.tarih).toLocaleString("tr-TR") + " · " + Math.max(1, Math.round((b.boyut || 0) / 1024)) + " KB</p>" +
@@ -47,9 +51,9 @@ async function moderasyonCiz() {
         '<div class="oyun-sira"><button type="button" class="dugme dugme-sade" data-mod-onizle>Güvenli önizleme</button><button type="button" class="dugme dugme-sade" data-mod-indir>İndir</button></div>' +
         '<label>Yayın adresi</label><input class="arac-giris" data-mod-slug value="' + kacir(slugYap(b.baslik)) + '" maxlength="60">' +
         '<label>Not (isteğe bağlı; gönderen görür)</label><input class="arac-giris" data-mod-not maxlength="400">' +
-        '<div class="oyun-sira"><button type="button" class="dugme" data-mod-onay="fan">Fan-made olarak onayla</button><button type="button" class="dugme" data-mod-onay="kanon">Kanon olarak onayla</button><button type="button" class="dugme dugme-sade" data-mod-red>Reddet</button></div>' +
+        '<div class="oyun-sira"><button type="button" class="dugme" data-mod-onay="fan">Fan-made olarak onayla</button>' + (kanonYetki ? '<button type="button" class="dugme" data-mod-onay="kanon">Kanon olarak onayla</button>' : "") + '<button type="button" class="dugme dugme-sade" data-mod-red>Reddet</button></div>' +
         '<p class="pencere-durum" role="status"></p></article>';
-    }).join("") : '<p class="oyun-not">Kuyruk boş.</p>') + await yayindakilerHtml() + moderasyonYoneticiHtml());
+    }).join("") : '<p class="oyun-not">Kuyruk boş.</p>') + yayindakilerHtml(kanonYetki) + moderasyonYoneticiHtml());
 }
 
 document.addEventListener("click", async function (ev) {
@@ -59,14 +63,15 @@ document.addEventListener("click", async function (ev) {
   const durum = (kart && kart.querySelector(".pencere-durum")) || document.querySelector("#modDurum") || document.querySelector("#modKodDurum");
   const yaz = function (m, iyi) { if (durum) { durum.textContent = m; durum.className = "pencere-durum " + (iyi ? "iyi" : "kotu"); } };
   try {
-    if (b.hasAttribute("data-mod-giris")) { await moderatorGiris((document.querySelector("#modKod") || {}).value); return moderasyonCiz(); }
+    if (b.hasAttribute("data-mod-giris")) { await moderatorGiris((document.querySelector("#modKod") || {}).value); await moderatorDuzeyYukle(); return moderasyonCiz(); }
     if (b.hasAttribute("data-mod-cikis")) { moderatorCikis(); return moderasyonCiz(); }
     if (b.hasAttribute("data-mod-kod-uret")) {
       const kod = moderatorKodUret(), s = await tf4Istemci();
-      const r = await s.rpc("moderator_kod_ekle", { p_ozet: await moderatorKodOzeti(kod), p_ad: (document.querySelector("#modKodAd") || {}).value || "" });
+      const duzey = (document.querySelector("#modKodDuzey") || {}).value === "kanon" ? "kanon" : "fan";
+      const r = await s.rpc("moderator_kod_ekle", { p_ozet: await moderatorKodOzeti(kod), p_ad: (document.querySelector("#modKodAd") || {}).value || "", p_duzey: duzey });
       if (r.error) { throw r.error; }
       const d = document.querySelector("#modKodDurum");
-      if (d) { d.className = "pencere-durum iyi"; d.textContent = "Kod (yalnızca şimdi görünür, moderatöre ilet): " + kod; }
+      if (d) { d.className = "pencere-durum iyi"; d.textContent = (duzey === "kanon" ? "Kanon" : "Fan") + " moderatör kodu (yalnızca şimdi görünür, moderatöre ilet): " + kod; }
       return;
     }
     if (b.hasAttribute("data-mod-kod-kapat")) {
@@ -96,13 +101,9 @@ document.addEventListener("click", async function (ev) {
     const onay = b.hasAttribute("data-mod-onay");
     if (!onay && !confirm("Bu başvuru reddedilsin ve dosyası silinsin mi?")) { return; }
     yaz(onay ? "Yayına alınıyor…" : "Reddediliyor…", true);
-    await tf4Fonksiyon("moderasyon", { islem: onay ? "onayla" : "reddet", token: token, id: id,
+    const r = await tf4Fonksiyon("moderasyon", { islem: onay ? "onayla" : "reddet", token: token, id: id, kanon: onay && b.getAttribute("data-mod-onay") === "kanon",
       slug: (kart.querySelector("[data-mod-slug]") || {}).value, not: (kart.querySelector("[data-mod-not]") || {}).value });
-    if (onay && b.getAttribute("data-mod-onay") === "kanon") {
-      const s = await tf4Istemci();
-      await s.rpc("yayin_kanon", { p_token: token, p_slug: String((kart.querySelector("[data-mod-slug]") || {}).value || "").toLowerCase(), p_kanon: true });
-    }
-    if (onay) { yayinListesiTazele(); }
+    if (onay && typeof eckaBildir === "function") { eckaBildir((r.kanon ? "Kanon" : "Fan-made") + " olarak GitHub'a yazıldı; yönetici Yayınla'ya basınca sitede görünür."); }
     moderasyonCiz();
   } catch (e) { yaz(e.message || String(e), false); }
 });
@@ -125,27 +126,60 @@ if (typeof hataSayfasiAc === "function") {
 }
 
 
-/* 4.0.2: yayındaki evrenler: kanon / fan-made arasında değiştirilebilir */
-function yayinListesiTazele() {
-  try { localStorage.removeItem(YAYIN_ONBELLEK); } catch (_) { /* yok */ }
-  if (typeof yayinListesiYukle === "function") { yayinListesiYukle(); }
+/* 4.0.3: moderatörün düzeyi (fan / kanon) bu sekmede saklanır; asıl denetim sunucuda (moderasyon fonksiyonu) */
+function moderatorDuzey() { try { return sessionStorage.getItem("tf4_mod_duzey") || "fan"; } catch (_) { return "fan"; } }
+async function moderatorDuzeyYukle() {
+  try {
+    const s = await tf4Istemci();
+    const r = await s.rpc("moderator_bilgi", { p_token: moderatorToken() });
+    if (r.data) { sessionStorage.setItem("tf4_mod_duzey", r.data.duzey === "kanon" ? "kanon" : "fan"); }
+  } catch (_) { /* yok */ }
 }
-async function yayindakilerHtml() {
-  let l = [];
-  try { l = await yayinlananEvrenler(true); } catch (_) { return ""; }
+
+/* yayındaki (sitedeki) fan evrenleri: kanon moderatör kanon / fan-made arasında değiştirir. Liste veri.json'dan (sunucu yok) */
+function yayindakilerHtml(kanonYetki) {
+  const l = typeof fanSiteListesi === "function" ? fanSiteListesi("evren").filter(function (x) { return x.test !== true; }) : [];
   if (!l.length) { return ""; }
-  return '<h4>Yayındaki evrenler</h4><ul class="mod-yayin">' + l.map(function (x) {
-    return '<li><b>' + kacir(x.baslik) + "</b> · " + (x.kanon ? "kanon" : "fan-made") +
-      ' <button type="button" class="ic-bag" data-mod-kanon="' + kacir(x.slug) + '" data-kanon="' + (x.kanon ? "0" : "1") + '">' + (x.kanon ? "Fan-made yap" : "Kanon yap") + "</button></li>";
-  }).join("") + "</ul>";
+  return '<h4>Sitedeki okur evrenleri</h4><ul class="mod-yayin">' + l.map(function (x) {
+    return "<li><b>" + kacir(x.ad || x.id) + "</b> · " + (x.kanon === true ? "kanon" : "fan-made") +
+      (kanonYetki ? ' <button type="button" class="ic-bag" data-mod-kanon="' + kacir(x.id) + '" data-kanon="' + (x.kanon === true ? "0" : "1") + '">' + (x.kanon === true ? "Fan-made yap" : "Kanon yap") + "</button>" : "") + "</li>";
+  }).join("") + "</ul>" + (kanonYetki ? '<p class="oyun-not">Değişiklik GitHub’a yazılır; yönetici Yayınla’ya basınca sitede görünür.</p>' : "");
 }
 document.addEventListener("click", async function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-mod-kanon]");
   if (!b) { return; }
+  b.disabled = true;
   try {
-    const s = await tf4Istemci();
-    const r = await s.rpc("yayin_kanon", { p_token: moderatorToken() || null, p_slug: b.getAttribute("data-mod-kanon"), p_kanon: b.getAttribute("data-kanon") === "1" });
-    if (r.error) { throw r.error; }
-    yayinListesiTazele(); moderasyonCiz();
-  } catch (e) { if (typeof eckaBildir === "function") { eckaBildir("Değiştirilemedi: " + (e.message || e)); } }
+    await tf4Fonksiyon("moderasyon", { islem: "kanon", token: moderatorToken(), slug: b.getAttribute("data-mod-kanon"), kanon: b.getAttribute("data-kanon") === "1" });
+    if (typeof eckaBildir === "function") { eckaBildir("GitHub'a yazıldı; yönetici Yayınla'ya basınca sitede görünür."); }
+    b.textContent = "Kaydedildi ✓";
+  } catch (e) { if (typeof eckaBildir === "function") { eckaBildir("Değiştirilemedi: " + (e.message || e)); } b.disabled = false; }
+});
+
+/* 4.0.3: yönetici kodları görür ve tek tek siler */
+async function moderatorKodListesiCiz() {
+  const a = document.querySelector("#modKodListe");
+  if (!a) { return; }
+  const s = await tf4Istemci();
+  const r = await s.rpc("moderator_kodlari_listesi");
+  if (r.error) { a.innerHTML = '<p class="pencere-durum kotu">Okunamadı: ' + kacir(r.error.message) + "</p>"; return; }
+  const l = r.data || [];
+  a.innerHTML = l.length ? '<ul class="mod-yayin">' + l.map(function (k) {
+    return "<li><b>" + kacir(k.ad || "adsız") + "</b> · " + (k.duzey === "kanon" ? "kanon" : "fan") + " moderatör" + (k.aktif ? "" : " · kapalı") +
+      ' <span class="oyun-not">#' + kacir(k.kisa) + " · " + new Date(k.olusturma).toLocaleDateString("tr-TR") + "</span>" +
+      ' <button type="button" class="ic-bag" data-mod-kod-sil="' + kacir(k.ozet) + '">Sil</button></li>';
+  }).join("") + "</ul>" : '<p class="oyun-not">Moderatör kodu yok.</p>';
+}
+document.addEventListener("click", async function (ev) {
+  const b = ev.target.closest && ev.target.closest("[data-mod-kod-liste], [data-mod-kod-sil]");
+  if (!b) { return; }
+  try {
+    if (b.hasAttribute("data-mod-kod-sil")) {
+      if (!confirm("Bu moderatör kodu silinsin mi? Açık oturumu da hemen düşer.")) { return; }
+      const s = await tf4Istemci();
+      const r = await s.rpc("moderator_kod_sil", { p_ozet: b.getAttribute("data-mod-kod-sil") });
+      if (r.error) { throw r.error; }
+    }
+    await moderatorKodListesiCiz();
+  } catch (e) { if (typeof eckaBildir === "function") { eckaBildir("Olmadı: " + (e.message || e)); } }
 });

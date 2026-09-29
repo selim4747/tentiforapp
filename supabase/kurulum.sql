@@ -3011,3 +3011,74 @@ end;
 $$;
 revoke execute on function public.yayin_kanon(text, text, boolean) from public;
 grant execute on function public.yayin_kanon(text, text, boolean) to anon, authenticated;
+
+-- 4.0.3: iki seviyeli moderatör. "fan": yalnızca fan-made onaylar; "kanon": fan-made ve kanon onaylar.
+-- Onaylanan evren Supabase'de tutulmaz: moderasyon fonksiyonu onu GitHub deposuna yazar (evrenler/<adres>.json + veri.json).
+alter table public.moderator_kodlari add column if not exists duzey text not null default 'fan';
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'moderator_kodlari_duzey_check') then
+    alter table public.moderator_kodlari add constraint moderator_kodlari_duzey_check check (duzey in ('fan', 'kanon'));
+  end if;
+end $$;
+
+drop function if exists public.moderator_kod_ekle(text, text);
+create or replace function public.moderator_kod_ekle(p_ozet text, p_ad text, p_duzey text default 'fan') returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  if p_ozet !~ '^[0-9a-f]{64}$' then raise exception 'özet geçersiz'; end if;
+  if coalesce(p_duzey, 'fan') not in ('fan', 'kanon') then raise exception 'düzey fan ya da kanon'; end if;
+  insert into public.moderator_kodlari (ozet, ad, duzey) values (p_ozet, left(coalesce(p_ad, ''), 60), coalesce(p_duzey, 'fan'))
+  on conflict (ozet) do update set aktif = true, ad = excluded.ad, duzey = excluded.duzey;
+end;
+$$;
+revoke execute on function public.moderator_kod_ekle(text, text, text) from public, anon;
+grant execute on function public.moderator_kod_ekle(text, text, text) to authenticated;
+
+-- oturumdaki moderatörün adı ve düzeyi (yoksa null)
+create or replace function public.moderator_bilgi(p_token text) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('ad', k.ad, 'duzey', k.duzey) from public.moderator_oturumlari o join public.moderator_kodlari k on k.ozet = o.kod_ozet
+    where o.token_ozet = public.mod_ozet(p_token, '#tok') and o.bitis > now() and k.aktif limit 1;
+$$;
+revoke execute on function public.moderator_bilgi(text) from public;
+grant execute on function public.moderator_bilgi(text) to anon, authenticated;
+
+-- karar: yalnızca başvuru satırı işlenir (vitrin artık GitHub'da; Supabase'e evren yazılmaz)
+create or replace function public.mod_karar(p_token text, p_id uuid, p_onay boolean, p_slug text, p_not text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare b public.basvurular;
+begin
+  if not public.moderator_dogrula(p_token) then raise exception 'moderatör oturumu yok'; end if;
+  select * into b from public.basvurular where id = p_id and durum = 'bekliyor' for update;
+  if b.id is null then raise exception 'başvuru yok ya da karar verilmiş'; end if;
+  update public.basvurular set durum = case when p_onay then 'onaylandi' else 'reddedildi' end,
+    karar_notu = left(coalesce(p_not, ''), 400), karar_tarihi = now() where id = p_id;
+  -- eski kayıtlar: başvuruların kararı verilmişse satır 60 gün sonra silinir (tablo büyümesin)
+  delete from public.basvurular where durum <> 'bekliyor' and karar_tarihi < now() - interval '60 days';
+  return jsonb_build_object('id', p_id, 'onay', p_onay);
+end;
+$$;
+
+-- 4.0.3: yönetici moderatör kodlarını görür ve tek tek siler (kodun kendisi hiçbir yerde saklanmaz; yalnızca özetin başı gösterilir)
+create or replace function public.moderator_kodlari_listesi() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('ozet', ozet, 'kisa', left(ozet, 8), 'ad', ad, 'duzey', duzey, 'aktif', aktif, 'olusturma', olusturma) order by olusturma desc)
+    from public.moderator_kodlari), '[]'::jsonb);
+end;
+$$;
+revoke execute on function public.moderator_kodlari_listesi() from public, anon;
+grant execute on function public.moderator_kodlari_listesi() to authenticated;
+
+create or replace function public.moderator_kod_sil(p_ozet text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  delete from public.moderator_kodlari where ozet = p_ozet;   -- oturumları da düşer (on delete cascade)
+  return found;
+end;
+$$;
+revoke execute on function public.moderator_kod_sil(text) from public, anon;
+grant execute on function public.moderator_kod_sil(text) to authenticated;
