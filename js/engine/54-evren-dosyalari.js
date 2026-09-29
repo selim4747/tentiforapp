@@ -211,3 +211,117 @@ async function yayinIzle() {
   }, 20000) };
 }
 
+/* ==================== 4.4: ÇEVRİMDIŞI YÖNETİCİ (OFFLINEMANAGER) ==================== */
+
+const tfOfflineManager = {
+  dbAdi: "tentifor_offline_db",
+  surum: 1,
+
+  async _dbAc() {
+    return new Promise(function (resolve, reject) {
+      const istek = indexedDB.open("tentifor_offline_db", 1);
+      istek.onupgradeneeded = function (e) {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains("evrenler")) {
+          db.createObjectStore("evrenler", { keyPath: "id" });
+        }
+      };
+      istek.onsuccess = function (e) { resolve(e.target.result); };
+      istek.onerror = function (e) { reject(e.target.error); };
+    });
+  },
+
+  async kaydet(evren) {
+    if (!evren || !evren.id) { throw new Error("Kaydedilecek geçerli bir evren yok."); }
+    const db = await this._dbAc();
+    return new Promise(function (resolve, reject) {
+      const tx = db.transaction("evrenler", "readwrite");
+      const store = tx.objectStore("evrenler");
+      const kopya = JSON.parse(JSON.stringify(evren));
+      kopya._offline_tarih = new Date().toISOString();
+      const r = store.put(kopya);
+      r.onsuccess = function () { resolve(kopya); };
+      r.onerror = function (e) { reject(e.target.error); };
+    });
+  },
+
+  async getir(id) {
+    const db = await this._dbAc();
+    return new Promise(function (resolve, reject) {
+      const tx = db.transaction("evrenler", "readonly");
+      const store = tx.objectStore("evrenler");
+      const r = store.get(id);
+      r.onsuccess = function () { resolve(r.result || null); };
+      r.onerror = function (e) { reject(e.target.error); };
+    });
+  },
+
+  async sil(id) {
+    const db = await this._dbAc();
+    return new Promise(function (resolve, reject) {
+      const tx = db.transaction("evrenler", "readwrite");
+      const store = tx.objectStore("evrenler");
+      const r = store.delete(id);
+      r.onsuccess = function () { resolve(true); };
+      r.onerror = function (e) { reject(e.target.error); };
+    });
+  },
+
+  async listele() {
+    const db = await this._dbAc();
+    return new Promise(function (resolve, reject) {
+      const tx = db.transaction("evrenler", "readonly");
+      const store = tx.objectStore("evrenler");
+      const r = store.getAll();
+      r.onsuccess = function () { resolve(r.result || []); };
+      r.onerror = function (e) { reject(e.target.error); };
+    });
+  },
+
+  /** Tek tıkla .tentifor dosyası olarak dışa aktar */
+  disaAktar(evren) {
+    if (!evren) { return; }
+    const paket = JSON.stringify(evren, null, 2);
+    const blob = new Blob([paket], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = (evren.id || "evren") + ".tentifor";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  /** .tentifor dosyasını içe aktar */
+  async iceAktar(dosya) {
+    const metin = await dosya.text();
+    const evren = JSON.parse(metin);
+    if (!evren || !evren.id) { throw new Error("Geçersiz .tentifor evren paketi."); }
+    await this.kaydet(evren);
+    if (typeof fanEseriKaydet === "function") { fanEseriKaydet(evren); }
+    return evren;
+  }
+};
+
+/* Çevrimdışı evren indirme butonu dinleyicisi */
+document.addEventListener("click", async function (e) {
+  const b = e.target.closest && e.target.closest("[data-evren-indir-offline]");
+  if (!b) { return; }
+  const id = b.getAttribute("data-evren-indir-offline");
+  const evren = (typeof EVS !== "undefined" && EVS && EVS.veri) ? EVS.veri : (typeof evrenBul === "function" ? evrenBul(id) : null);
+  if (!evren) { alert("Evren verisi bulunamadı."); return; }
+  try {
+    b.disabled = true;
+    b.textContent = "İndiriliyor...";
+    await tfOfflineManager.kaydet(evren);
+    tfOfflineManager.disaAktar(evren);
+    b.textContent = "✓ Çevrimdışı Hazır (.tentifor)";
+    alert("“" + (evren.ad || "Evren") + "” başarıyla çevrimdışı arşivinize (IndexedDB) kaydedildi ve .tentifor paketi indirildi!");
+  } catch (err) {
+    alert("Çevrimdışı kayıt başarısız: " + (err.message || err));
+    b.textContent = "Çevrimdışı İndir (.tentifor)";
+    b.disabled = false;
+  }
+});
+

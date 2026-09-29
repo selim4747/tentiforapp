@@ -41,3 +41,13 @@ function moderatorKodUret() {
   crypto.getRandomValues(r);
   return "MOD-" + Array.from(r).map(function (x) { return a[x % a.length]; }).join("").replace(/(.{5})(?=.)/g, "$1-");
 }
+
+/** 4.4 Çoklu Evren Çatallama (Fork) yetki kontrolü: moderatör, Pro üye, giriş yapmış yazar veya Sv10+ */
+function evrenCatallayabilirMi(e) {
+  if (TF4.moderator) { return true; }
+  if (typeof svkYonetici === "function" && svkYonetici()) { return true; }
+  if (typeof tf4ProMu === "function" && tf4ProMu()) { return true; }
+  if (typeof hesapKullanici !== "undefined" && hesapKullanici) { return true; }
+  if (typeof seviyeKoduSeviyesi === "function" && seviyeKoduSeviyesi() >= 10) { return true; }
+  return false;
+}

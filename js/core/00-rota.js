@@ -88,10 +88,43 @@ document.addEventListener("click", function (ev) {
   const a = ev.target.closest && ev.target.closest("a[href^='#']");
   if (!a || a.target === "_blank" || a.hasAttribute("download")) { return; }
   ev.preventDefault();
-  const h = a.getAttribute("href");
+  let h = a.getAttribute("href");
   if (h === "#" || h === rota()) { return; }   /* aynı yer: tarayıcı da bir şey yapmazdı */
+
+  /* 4.4: Oku veya Oyna'ya basıldığında aktif evren seçiliyse o evrenin okuma rehberi veya oyunlarına yönlendir */
+  if ((h === "#/okuma" || h === "#/oyunlar") && typeof state !== "undefined" && state.aktifEvrenId) {
+    const tur = h === "#/okuma" ? "oku" : "oyna";
+    const hedef = typeof state.aktifEvrenHedefi === "function" ? state.aktifEvrenHedefi(tur) : (typeof aktifEvrenHedefi === "function" ? aktifEvrenHedefi(tur) : null);
+    if (hedef && hedef.git) {
+      if (hedef.ce && typeof ceSekme !== "undefined") {
+        ceSekme = hedef.ce;
+      } else if (hedef.sekme && typeof evrenSonrakiSekme !== "undefined") {
+        evrenSonrakiSekme = hedef.sekme;
+      }
+      h = hedef.git;
+    }
+  }
+
   location.hash = h;
 }, true);
+
+/* Rota değiştiğinde evren rotasıysa aktif evreni senkronize et */
+window.addEventListener("hashchange", function () {
+  const r = rota();
+  if (typeof state !== "undefined" && state && typeof state.aktifEvrenId !== "undefined") {
+    if (r.indexOf("#/ev/site/") === 0) {
+      const id = r.replace("#/ev/site/", "").split("/")[0];
+      if (id && state.aktifEvrenId !== id) { state.aktifEvrenId = id; }
+    } else if (r.indexOf("#/ev/fan/") === 0) {
+      const id = r.replace("#/ev/fan/", "").split("/")[0];
+      if (id && state.aktifEvrenId !== id) { state.aktifEvrenId = id; }
+    } else if (r === "#/claude") {
+      if (state.aktifEvrenId !== "claude") { state.aktifEvrenId = "claude"; }
+    } else if (r === "#/ev/e99") {
+      if (state.aktifEvrenId !== "e99") { state.aktifEvrenId = "e99"; }
+    }
+  }
+});
 
 rotaYolaCevir();
 rotaSon = rota();

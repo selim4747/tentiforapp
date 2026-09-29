@@ -349,6 +349,7 @@ function evrKurucuHtml(v) {
       '<div class="oyun-sira">' +
         '<button class="dugme" data-fan-onizle="evren">👁 Okur gözüyle bak</button>' +
         '<button class="dugme dugme-sade" data-fan-indir="evren">Dosya olarak indir</button>' +
+        '<button class="dugme dugme-sade" data-evren-indir-offline="' + kacir(e.id) + '">💾 Çevrimdışı İndir (.tentifor)</button>' +
         '<button class="dugme dugme-sade" data-fan-paylas="evren">Paylaş</button>' +
         '<button class="dugme dugme-sade" data-fan-gonder="evren">Yazara gönder</button></div>' +
       '<p class="oyun-not" data-fan-kayit="evren"></p><div data-fan-gonder-alan="evren"></div>' +

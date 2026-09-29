@@ -653,3 +653,19 @@ document.addEventListener("change", function (e) {
   if (t.hasAttribute("data-y-kisi-bolum") || t.hasAttribute("data-y-kisi-evren") || t.hasAttribute("data-y-kisi-katman") ||
       t.id === "yKisiAd" || t.id === "yKisiSelam" || t.id === "yKisiOzel" || t.id === "yKisiKodOzel") { yoneticiKisiTaslakOku(); }
 });
+
+/** 4.4 Atölye ve Evren Kurucu için Kanon Paradoksu Bildirimi */
+function kanonParadokslariGoster(evren, hedefEl) {
+  if (!hedefEl) { return; }
+  const denetim = typeof kanonCeliskileriniDenetle === "function" ? kanonCeliskileriniDenetle(evren) : { paradokslar: [] };
+  if (!denetim.paradokslar || !denetim.paradokslar.length) {
+    hedefEl.innerHTML = '<div class="kutu-y" style="border-left: 3px solid #2ecc71; padding:.6rem .8rem; margin:.5rem 0;"><span style="color:#27ae60; font-weight:600;">✓ Kanon Tutarlı</span> <span class="oyun-not">Zaman çizgisi ve karakter katılım çelişkisi tespit edilmedi.</span></div>';
+    return;
+  }
+  hedefEl.innerHTML = '<div class="kutu-y" style="border-left: 3px solid #e74c3c; padding:.6rem .8rem; margin:.5rem 0; background:rgba(231,76,60,0.06);">' +
+    '<h5 style="margin:0 0 .4rem 0; color:#c0392b;">⚠️ Kanon Paradoksu Tespit Edildi (' + denetim.paradokslar.length + ')</h5>' +
+    '<ul style="margin:0; padding-left:1.2rem; font-size:13px; color:#962d22;">' +
+      denetim.paradokslar.map(function (p) { return '<li>' + kacir(p.metin) + '</li>'; }).join("") +
+    '</ul>' +
+  '</div>';
+}

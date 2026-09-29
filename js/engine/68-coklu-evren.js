@@ -216,3 +216,103 @@ function veriHazirOlunca(fn) {
 document.addEventListener("DOMContentLoaded", function () {
   veriHazirOlunca(function () { setTimeout(function () { evrenDugmesiGuncelle(); evrenSeritCiz(); }, 0); });
 });
+
+/* ==================== 4.4: ÇOKLU EVREN ÇATALLAMA (MULTIVERSE FORKING) ==================== */
+
+/** Bir evrenin kayıtlı tüm paralel boyutlarını / dallarını bulur */
+function evrenParalelDallari(evrenId) {
+  if (!evrenId) { return []; }
+  const liste = [];
+  const kaynaklar = [
+    typeof fanEserlerim === "function" ? fanEserlerim() : [],
+    (typeof veri !== "undefined" && veri.fanEserleri && veri.fanEserleri.evrenler) || []
+  ];
+  kaynaklar.forEach(function (kaynak) {
+    (Array.isArray(kaynak) ? kaynak : []).forEach(function (e) {
+      if (e && e.ana_evren_id === evrenId && !liste.some(function (x) { return x.id === e.id; })) {
+        liste.push(e);
+      }
+    });
+  });
+  return liste;
+}
+
+/** Evrenden yeni bir alternatif zaman çizgisi (fork) türetir */
+function evrenCatalla(orijinalEvren, dalAdi, yazarNotu) {
+  if (!orijinalEvren || !orijinalEvren.id) { throw new Error("Çatallanacak evren bulunamadı."); }
+  const yeniId = "fork-" + String(orijinalEvren.id).replace(/^fork-/, "").slice(0, 16) + "-" + Math.random().toString(36).slice(2, 7);
+  const kopya = JSON.parse(JSON.stringify(orijinalEvren));
+  kopya.id = yeniId;
+  kopya.tur = "evren";
+  kopya.ana_evren_id = orijinalEvren.id;
+  kopya.kok_zaman_cizgisi = orijinalEvren.kok_zaman_cizgisi || orijinalEvren.ad || "Kanon";
+  kopya.paralel_dal = String(dalAdi || "Alternatif Çizgi").trim();
+  kopya.ad = (orijinalEvren.ad || "Evren") + " [" + kopya.paralel_dal + "]";
+  kopya.ozet = (orijinalEvren.ozet || "") + (yazarNotu ? "\n\n[Alternatif Zaman Notu]: " + yazarNotu : "");
+  kopya.yazar_notu = String(yazarNotu || "").trim();
+  kopya.catallanma_tarihi = new Date().toISOString();
+
+  /* fan eserlerime kaydet */
+  if (typeof fanEseriKaydet === "function") {
+    fanEseriKaydet(kopya);
+  } else {
+    try {
+      const a = JSON.parse(localStorage.getItem("tentiforapp_fan_eserlerim") || "[]");
+      a.push(kopya);
+      localStorage.setItem("tentiforapp_fan_eserlerim", JSON.stringify(a));
+    } catch (_) {}
+  }
+  return kopya;
+}
+
+/** Evren kartı / sayfası için "Paralel Boyutlar" sekmesi HTML'i */
+function evrenParalelBoyutlarHtml(e) {
+  if (!e) { return ""; }
+  const dallar = evrenParalelDallari(e.id);
+  const kokAd = e.kok_zaman_cizgisi || e.ad || "Ana Kanon";
+  const anaId = e.ana_evren_id || null;
+  const yetkili = typeof evrenCatallayabilirMi === "function" ? evrenCatallayabilirMi(e) : true;
+
+  let h = '<div class="evs-paralel-boyutlar">' +
+    '<div class="kutu-y" style="border-left: 3px solid #3A7CA5; margin-bottom: 1rem;">' +
+      '<h4>🌌 Paralel Boyutlar & Çatallanma (Multiverse)</h4>' +
+      '<p class="oyun-not">Bu evrenin farklı olasılıklara göre ayrılan bağımsız alternatif zaman çizgileri.</p>' +
+      (anaId ? '<p class="oyun-not"><b>Kök Zaman Çizgisi:</b> <a href="#/ev/site/' + kacir(anaId) + '">#' + kacir(kokAd) + '</a></p>' : '<p class="oyun-not"><b>Durum:</b> Bu evren kök zaman çizgisidir (Kanon).</p>') +
+      (yetkili ? '<button type="button" class="dugme" data-evren-catalla="' + kacir(e.id) + '" style="margin-top: .5rem;">⚡ Bu Evrenden Alternatif Çizgi Yarat (Fork)</button>' : '<p class="oyun-not" style="opacity:.7;">Alternatif çizgi yaratmak için giriş yap veya Sv10 rozetine ulaş.</p>') +
+    '</div>';
+
+  if (dallar.length) {
+    h += '<h4>Dallanan Zaman Çizgileri (' + dallar.length + ')</h4><ul class="evs-dal-liste" style="list-style:none; padding-left: 1rem; border-left: 2px dashed #3A7CA5;">';
+    dallar.forEach(function (d) {
+      h += '<li style="margin-bottom: .8rem; position: relative;">' +
+        '<span style="display:inline-block; width:12px; height:2px; background:#3A7CA5; vertical-align:middle; margin-right:6px;"></span>' +
+        '<b>' + kacir(d.paralel_dal || d.ad) + '</b>' +
+        (d.yazar_notu ? ' <span class="oyun-not">— ' + kacir(d.yazar_notu) + '</span>' : '') +
+        ' <a class="ic-bag" href="#/ev/benim/' + kacir(d.id) + '">Boyuta Git →</a>' +
+      '</li>';
+    });
+    h += '</ul>';
+  } else {
+    h += '<p class="oyun-not" style="font-style: italic;">Henüz bu evrenden çatallanmış bir alternatif boyut yok.</p>';
+  }
+  h += '</div>';
+  return h;
+}
+
+/* Çatallama buton dinleyicisi */
+document.addEventListener("click", function (ev) {
+  const b = ev.target.closest && ev.target.closest("[data-evren-catalla]");
+  if (!b) { return; }
+  const id = b.getAttribute("data-evren-catalla");
+  const evren = (typeof EVS !== "undefined" && EVS && EVS.veri) ? EVS.veri : (typeof evrenBul === "function" ? evrenBul(id) : { id: id, ad: id });
+  const dalAdi = prompt("Yeni alternatif zaman çizgisinin dal adı ne olsun? (Örn: Saek İsyanı Başarılı, Karanlık Çağ):", "Alternatif Çizgi");
+  if (!dalAdi) { return; }
+  const not = prompt("Bu zaman çizgisine bir kurucu notu eklemek ister misin? (İsteğe bağlı):", "");
+  try {
+    const yeni = evrenCatalla(evren, dalAdi, not);
+    alert("Paralel boyut oluşturuldu! Yeni evren: " + yeni.ad);
+    location.hash = "#/ev/benim/" + yeni.id;
+  } catch (err) {
+    alert("Çatallama başarısız: " + (err.message || err));
+  }
+});

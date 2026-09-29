@@ -177,7 +177,10 @@ function agCiz() {
   const gizliSayisi = agGizliDugumler.size;
 
   alan.innerHTML =
-    '<div class="ag-filtre">' +
+    '<div class="ag-filtre" style="display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; margin-bottom:.8rem;">' +
+      '<button class="dugme' + (agKuvvetModu ? "" : " dugme-sade") + '" data-ag-kuvvet-gecis="1">' +
+        (agKuvvetModu ? "🌐 Dinamik Kuvvet Ağı (Aktif)" : "🌐 Dinamik İlişki Grafiği") +
+      "</button>" +
       '<button class="dugme dugme-sade" data-ag-filtre-ac="1">' +
         (agFiltreAcik ? "Listeyi kapat" : "Karakter göster/gizle") +
       "</button>" +
@@ -197,13 +200,20 @@ function agCiz() {
           }).join("") +
         "</div>"
       : "") +
-    '<div class="ag-tahta-sarici" tabindex="0" role="region" aria-label="Kişilik ağı (kaydırılabilir)">' +
-      '<svg viewBox="0 0 ' + genislik + " " + yukseklik + '" width="' + genislik + '" height="' + yukseklik +
-        '" class="ag-svg ag-tahta" role="img" aria-label="İlişki ağı">' +
-        '<rect width="' + genislik + '" height="' + yukseklik + '" class="ag-pano"/>' +
-        cizgiler + noktalar +
-      "</svg>" +
-    "</div>" +
+    (agKuvvetModu
+      ? '<div class="ag-kuvvet-kutusu" style="position:relative; width:100%; height:450px; background:#0B1017; border-radius:8px; overflow:hidden; border:1px solid #1f2e42;">' +
+          '<canvas id="agKuvvetCanvas" width="800" height="450" style="width:100%; height:100%; display:block; cursor:grab;"></canvas>' +
+          '<div style="position:absolute; bottom:8px; left:12px; font-size:12px; color:#fff; opacity:.85; display:flex; gap:12px; background:rgba(0,0,0,0.5); padding:4px 8px; border-radius:4px;">' +
+            '<span style="color:#2ecc71;">● Dostluk</span> <span style="color:#e74c3c;">● Düşmanlık</span> <span style="color:#3498db;">● Akrabalık</span>' +
+          '</div>' +
+        '</div>'
+      : '<div class="ag-tahta-sarici" tabindex="0" role="region" aria-label="Kişilik ağı (kaydırılabilir)">' +
+          '<svg viewBox="0 0 ' + genislik + " " + yukseklik + '" width="' + genislik + '" height="' + yukseklik +
+            '" class="ag-svg ag-tahta" role="img" aria-label="İlişki ağı">' +
+            '<rect width="' + genislik + '" height="' + yukseklik + '" class="ag-pano"/>' +
+            cizgiler + noktalar +
+          "</svg>" +
+        "</div>") +
     (secilenDugum
       ? '<div class="ag-bilgi"><h4>' + kacir(ad(secilenDugum)) + "</h4>" +
         (secili.length
@@ -214,12 +224,203 @@ function agCiz() {
             }).join("") + "</ul>"
           : "<p>Görünür bağ yok.</p>") +
         "</div>"
-      : '<p class="oyun-not">Bir isme dokun. Tahtayı sağa sola kaydırabilirsin. Kilitli bağlar kod çözdükçe belirir.</p>') +
-    '<div class="ag-aciklama"><span>tanışıklık</span>' +
-      '<span class="bilmez">bilmiyor</span></div>';
+      : '<p class="oyun-not">Bir isme dokun. Düğümleri çekip sürükleyebilirsin. Bağlar türüne göre parlar.</p>') +
+    '<div class="ag-aciklama"><span>yeşil: dostluk</span> <span>kırmızı: düşmanlık</span> <span>mavi: akrabalık</span></div>';
+
+  if (agKuvvetModu) {
+    setTimeout(function () {
+      const cvs = document.querySelector("#agKuvvetCanvas");
+      if (cvs) { agKuvvetSimulasyonBaslat(cvs, dugumler, gorunurBaglar); }
+    }, 20);
+  }
 }
 
+let agKuvvetModu = false;
+let agKuvvetAnimId = null;
+
+function agKuvvetSimulasyonBaslat(canvas, dugumler, baglar) {
+  if (agKuvvetAnimId) { cancelAnimationFrame(agKuvvetAnimId); agKuvvetAnimId = null; }
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+
+  const nodes = dugumler.map(function (d, i) {
+    const angle = (i / dugumler.length) * Math.PI * 2;
+    return {
+      id: d.id, ad: d.ad,
+      x: W / 2 + Math.cos(angle) * (W * 0.3) + (Math.random() * 20 - 10),
+      y: H / 2 + Math.sin(angle) * (H * 0.3) + (Math.random() * 20 - 10),
+      vx: 0, vy: 0, r: 18
+    };
+  });
+
+  const links = baglar.map(function (b) {
+    const s = nodes.find(function (n) { return n.id === b.a; });
+    const t = nodes.find(function (n) { return n.id === b.b; });
+    const et = String(b.etiket || "").toLowerCase();
+    let renk = "#2ecc71"; // dostluk
+    if (/düşman|hasım|nefret|rakip|isyan/.test(et)) { renk = "#e74c3c"; }
+    else if (/kardeş|anne|baba|çocuk|aile|soy|kan|akraba/.test(et)) { renk = "#3498db"; }
+    return { source: s, target: t, renk: renk, etiket: b.etiket };
+  }).filter(function (l) { return l.source && l.target; });
+
+  let suruklenen = null;
+
+  canvas.onpointerdown = function (e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (W / rect.width);
+    const y = (e.clientY - rect.top) * (H / rect.height);
+    for (let i = 0; i < nodes.length; i++) {
+      const dx = nodes[i].x - x, dy = nodes[i].y - y;
+      if (Math.hypot(dx, dy) < nodes[i].r + 6) {
+        suruklenen = nodes[i];
+        break;
+      }
+    }
+  };
+
+  window.addEventListener("pointermove", function (e) {
+    if (!suruklenen) { return; }
+    const rect = canvas.getBoundingClientRect();
+    suruklenen.x = Math.max(20, Math.min(W - 20, (e.clientX - rect.left) * (W / rect.width)));
+    suruklenen.y = Math.max(20, Math.min(H - 20, (e.clientY - rect.top) * (H / rect.height)));
+    suruklenen.vx = 0; suruklenen.vy = 0;
+  });
+
+  window.addEventListener("pointerup", function () { suruklenen = null; });
+
+  function tick() {
+    // Kuvvet hesaplamaları (itme & çekme)
+    for (let i = 0; i < nodes.length; i++) {
+      const n1 = nodes[i];
+      for (let j = i + 1; j < nodes.length; j++) {
+        const n2 = nodes[j];
+        let dx = n2.x - n1.x, dy = n2.y - n1.y;
+        let dist = Math.hypot(dx, dy) || 1;
+        if (dist < 180) {
+          const force = (180 - dist) / dist * 0.08;
+          if (n1 !== suruklenen) { n1.vx -= dx * force; n1.vy -= dy * force; }
+          if (n2 !== suruklenen) { n2.vx += dx * force; n2.vy += dy * force; }
+        }
+      }
+      // Merkeze çekim
+      if (n1 !== suruklenen) {
+        n1.vx += (W / 2 - n1.x) * 0.003;
+        n1.vy += (H / 2 - n1.y) * 0.003;
+        n1.x += n1.vx; n1.y += n1.vy;
+        n1.vx *= 0.85; n1.vy *= 0.85;
+      }
+    }
+
+    links.forEach(function (l) {
+      let dx = l.target.x - l.source.x, dy = l.target.y - l.source.y;
+      let dist = Math.hypot(dx, dy) || 1;
+      const targetDist = 90;
+      const force = (dist - targetDist) * 0.015;
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      if (l.source !== suruklenen) { l.source.vx += fx; l.source.vy += fy; }
+      if (l.target !== suruklenen) { l.target.vx -= fx; l.target.vy -= fy; }
+    });
+
+    // Çizim
+    ctx.clearRect(0, 0, W, H);
+
+    // Çizgiler (parlama efekti)
+    links.forEach(function (l) {
+      ctx.beginPath();
+      ctx.moveTo(l.source.x, l.source.y);
+      ctx.lineTo(l.target.x, l.target.y);
+      ctx.strokeStyle = l.renk;
+      ctx.lineWidth = 2;
+      ctx.shadowColor = l.renk;
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    });
+
+    // Düğümler
+    nodes.forEach(function (n) {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = n === suruklenen ? "#3A7CA5" : "#16324A";
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "#81CFE0";
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 11px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(n.ad.slice(0, 10), n.x, n.y);
+    });
+
+    agKuvvetAnimId = requestAnimationFrame(tick);
+  }
+
+  agKuvvetAnimId = requestAnimationFrame(tick);
+}
+
+/* ==================== 4.4: AKILLI TERİM DEDEKTÖRÜ (SMART TERM DETECTOR) ==================== */
+
+/** Metin içindeki anahtar sözcük ve karakterleri regex ile tarar ve dokunulabilir holo-kart etiketine çevirir */
+function akilliTerimDedektoru(metin, evren) {
+  if (!metin || typeof metin !== "string") { return metin; }
+  const sozluk = (typeof veri !== "undefined" && veri.sozluk) || [];
+  const karakterler = (typeof veri !== "undefined" && veri.karakterler) || [];
+  const evrenKisiler = (evren && evren.kisiler) || [];
+  const evrenYerler = (evren && evren.yerler) || [];
+
+  const kelimeler = new Map();
+  sozluk.forEach(function (s) { if (s && s.ad && s.ad.length >= 3) { kelimeler.set(s.ad, { tip: "Kavram", aciklama: s.anlam || s.ozet || "" }); } });
+  karakterler.forEach(function (k) { if (k && k.ad && k.ad.length >= 3) { kelimeler.set(k.ad, { tip: "Karakter", aciklama: (k.unvan ? k.unvan + " · " : "") + (k.ozet || "") }); } });
+  evrenKisiler.forEach(function (k) { if (k && k.ad && k.ad.length >= 3) { kelimeler.set(k.ad, { tip: "Evren Kişisi", aciklama: (k.unvan ? k.unvan + " · " : "") + (k.ozet || "") }); } });
+  evrenYerler.forEach(function (y) { if (y && y.ad && y.ad.length >= 3) { kelimeler.set(y.ad, { tip: "Mekan", aciklama: (y.tur ? y.tur + " · " : "") + (y.ozet || "") }); } });
+
+  if (!kelimeler.size) { return metin; }
+
+  const anahtarlar = Array.from(kelimeler.keys()).sort(function (a, b) { return b.length - a.length; }).slice(0, 40);
+  const regex = new RegExp('\\b(' + anahtarlar.map(function (k) { return k.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&'); }).join('|') + ')\\b', 'g');
+
+  return metin.replace(regex, function (eslesen) {
+    const info = kelimeler.get(eslesen);
+    if (!info) { return eslesen; }
+    return '<span class="akilli-terim" data-holo-ad="' + kacir(eslesen) + '" data-holo-tip="' + kacir(info.tip) + '" data-holo-aciklama="' + kacir(info.aciklama) + '" style="border-bottom: 2px dotted #3A7CA5; cursor: pointer; color: inherit; font-weight: 600; text-decoration: none;">' + eslesen + '</span>';
+  });
+}
+
+/* Holo-Kart / Tooltip açılışı */
 document.addEventListener("click", function (e) {
+  const t = e.target.closest && e.target.closest(".akilli-terim");
+  if (!t) {
+    const eski = document.querySelector("#holoKartTooltip");
+    if (eski && !e.target.closest("#holoKartTooltip")) { eski.remove(); }
+    return;
+  }
+  const ad = t.getAttribute("data-holo-ad");
+  const tip = t.getAttribute("data-holo-tip") || "Kavram";
+  const aciklama = t.getAttribute("data-holo-aciklama") || "Arşiv kaydı inceleniyor.";
+
+  let tooltip = document.querySelector("#holoKartTooltip");
+  if (tooltip) { tooltip.remove(); }
+
+  tooltip = document.createElement("div");
+  tooltip.id = "holoKartTooltip";
+  tooltip.style.cssText = "position:absolute; z-index:9999; width:260px; background:#0B1017; color:#E3EEF7; border:1px solid #3A7CA5; border-radius:8px; padding:10px 12px; box-shadow:0 8px 24px rgba(0,0,0,0.5); font-size:13px; line-height:1.4;";
+  tooltip.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">' +
+    '<b style="color:#81CFE0; font-size:14px;">' + kacir(ad) + '</b>' +
+    '<span style="font-size:10px; text-transform:uppercase; background:#16324A; color:#fff; padding:2px 5px; border-radius:3px;">' + kacir(tip) + '</span>' +
+  '</div>' +
+  '<p style="margin:0; opacity:.9;">' + kacir(aciklama) + '</p>' +
+  '<div style="text-align:right; margin-top:6px;"><button type="button" class="ic-bag" onclick="this.closest(\'#holoKartTooltip\').remove()" style="color:#81CFE0; font-size:11px;">Kapat</button></div>';
+
+  document.body.appendChild(tooltip);
+  const rect = t.getBoundingClientRect();
+  tooltip.style.left = Math.max(10, Math.min(window.innerWidth - 280, rect.left + window.scrollX)) + "px";
+  tooltip.style.top = (rect.bottom + window.scrollY + 6) + "px";
+});
+
+document.addEventListener("click", function (e) {
+  if (e.target.closest("[data-ag-kuvvet-gecis]")) { agKuvvetModu = !agKuvvetModu; agCiz(); return; }
   if (e.target.closest("[data-ag-filtre-ac]")) { agFiltreAcik = !agFiltreAcik; agCiz(); return; }
   if (e.target.closest("[data-ag-hepsi-goster]")) { agGizliDugumler.clear(); agFiltreKaydet(); agCiz(); }
 });

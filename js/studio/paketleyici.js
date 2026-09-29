@@ -9,6 +9,21 @@ async function eserPaketle(e) {
   const temiz = fanTemizle(JSON.parse(JSON.stringify(e)));
   if (!temiz || (temiz.tur !== "evren" && temiz.tur !== "hikaye")) { throw new Error("Eser okunamadı."); }
   delete temiz.lorlar; delete temiz.yoneticiOzet;   /* kilitli lore ve yönetici kodu kurucuya aittir */
+
+  /* 4.4 Şema Genişletmesi & Geriye Dönük Uyumluluk (Fallback) */
+  temiz.surum = temiz.surum || "4.4.0";
+  if (temiz.tur === "evren") {
+    temiz.ana_evren_id = temiz.ana_evren_id || null;
+    temiz.kok_zaman_cizgisi = temiz.kok_zaman_cizgisi || null;
+    temiz.paralel_dal = temiz.paralel_dal || null;
+    temiz.okuma_rehberi = Array.isArray(temiz.okuma_rehberi) ? temiz.okuma_rehberi : [];
+    if (temiz.roman && Array.isArray(temiz.roman.bolumler)) {
+      temiz.roman.bolumler.forEach(function (b) {
+        if (!b.kararlar) { b.kararlar = []; }
+      });
+    }
+  }
+
   const blob = await tf4Sikistir(JSON.stringify(temiz));
   if (blob.size > PAKET_SINIR) { throw new Error("Paket " + (blob.size / 1048576).toFixed(1) + " MB; en çok 3 MB olabilir (büyük görselleri küçült)."); }
   return { blob: blob, eser: temiz };
