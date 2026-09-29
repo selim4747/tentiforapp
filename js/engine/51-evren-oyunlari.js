@@ -779,10 +779,6 @@ function evcBuyut(id) {
   perde.hidden = false;
 }
 
-/* ==================== dosya görünümü: roman ve çizimler ==================== */
-
-/* ==================== evren sayfası: sekmeler ==================== */
-
 /* ==================== olaylar ==================== */
 
 document.addEventListener("click", function (ev) {

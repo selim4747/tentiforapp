@@ -12,9 +12,6 @@
 const ALT_MENU = [
   ["arsiv", "Ana sayfa", "▤"], ["okuma", "Oku", "▧"], ["oyunlar", "Oyna", "▩"], ["evren", "Evren", "◎"]
 ];
-const MOBIL_ENI = 760;
-
-function mobilMi() { return window.matchMedia ? window.matchMedia("(max-width: " + MOBIL_ENI + "px)").matches : window.innerWidth <= MOBIL_ENI; }
 
 function uygulamaKurulu() {
   return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;

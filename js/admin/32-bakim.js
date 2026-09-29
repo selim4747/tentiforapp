@@ -105,7 +105,6 @@ function hataGonder(kayit) {
 /* ==================== SESLİ OKUMA ==================== */
 
 const SESLI_SECICI = ".okuma-metin, .mektup-metin, .hikaye-metin, .detay-metin, .roman-metin";
-let sesliAktif = null;
 
 function sesliDestek() {
   return "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";

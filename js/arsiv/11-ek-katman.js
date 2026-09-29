@@ -266,14 +266,6 @@ function okumaUygula() {
   document.documentElement.setAttribute("data-ayar-okuma", String(okumaBoyut));
 }
 
-/** Roman penceresine yazı boyutu denetimi ekler. */
-function okumaDenetimi() {
-  return '<div class="okuma-denetim">' +
-           '<button class="okuma-btn" data-okuma="-1" aria-label="Yazıyı küçült">A−</button>' +
-           '<button class="okuma-btn" data-okuma="1" aria-label="Yazıyı büyüt">A+</button>' +
-         "</div>";
-}
-
 /* ==================== ALINTI KARTI ==================== */
 
 function alintiKarti(metin, kim) {

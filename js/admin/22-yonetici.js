@@ -57,18 +57,6 @@ function yoneticiCozTumu(dizi) {
   return dizi.map(function (g) { return yoneticiCoz(g) || ""; }).join(" ");
 }
 
-/** Bir kaydın kilitli bloklarından en az biri açılmış mı? */
-function herhangiBirAcik(dizi) {
-  if (!dizi || !dizi.length) { return false; }
-  return dizi.some(function (g) { return !!cozulenler[g.dogrulama]; });
-}
-
-/** Bir kaydın kilidi yoksa ya da TÜM blokları açılmışsa true döner. */
-function hepsiAcikMi(dizi) {
-  if (!dizi || !dizi.length) { return true; }
-  return dizi.every(function (g) { return !!cozulenler[g.dogrulama]; });
-}
-
 function yoneticiGiris(kod) {
   const temiz = String(kod).trim();
 

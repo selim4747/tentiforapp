@@ -125,12 +125,3 @@ window.addEventListener("load", function () {
 
 /* ---------- panel: eski sürümdeyken Kaydet yeni veriyi ezmesin ---------- */
 
-/** "1.7.0" > "1.6.1" gibi karşılaştırır. */
-function surumBuyukMu(a, b) {
-  const x = String(a || "0").split(".").map(Number), y = String(b || "0").split(".").map(Number);
-  for (let i = 0; i < Math.max(x.length, y.length); i++) {
-    const p = x[i] || 0, q = y[i] || 0;
-    if (p !== q) { return p > q; }
-  }
-  return false;
-}

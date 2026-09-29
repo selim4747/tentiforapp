@@ -28,13 +28,6 @@ const ESITLEME_DISI = [
   "tentiforapp_cihaz_id"
 ];
 
-/* Bu anahtarlardan biri varsa cihazda "gerçek" ilerleme var sayılır. (rol_gecmis ilk
-   açılışta kendiliğinden yazıldığı için burada yok; cüzdan yalnızca eçka oynayınca yazılır.) */
-const ILERLEME_ISARETLERI = [
-  "tentiforapp_cuzdan", "tentiforapp_cozulen", "tentiforapp_madalyalar", "tentiforapp_kanon_profiller",
-  "tentiforapp_okuma_gecmis", "tentiforapp_defter", "tentiforapp_notlar", "tentiforapp_vurgular", "tentiforapp_nobet_skor"
-];
-
 let hesapIstemci = null;
 let hesapKullanici = null;     /* Supabase kullanıcısı */
 let hesapProfil = null;        /* kendi profiller satırı */
@@ -691,10 +684,6 @@ function hesapGoruntuIzi(g) {
   return typeof ziyaretIz === "function" ? ziyaretIz(l) : JSON.stringify(l).length;
 }
 
-function hesapCihazAnlamli(g) {
-  return ILERLEME_ISARETLERI.some(function (k) { return g[k] && g[k] !== "[]" && g[k] !== "{}"; });
-}
-
 function hesapEsitKaydi() {
   const t = jsonOku(HESAP_ESIT_ANAHTAR, {}) || {};
   return (hesapKullanici && t[hesapKullanici.id]) || null;
@@ -947,16 +936,6 @@ function esitBildirimGoster() {
 document.addEventListener("click", function (e) {
   if (e.target.closest && e.target.closest("[data-esit-yenile]")) { hesapUzaktanCek(true); }
 });
-
-/** Hesapsız kurulan evrenler var olan hesaba girince kaybolmasın (birleştirme bunu da yapar; eski çağrılar için). */
-function hesapFanBirlestir(g) {
-  const k = "tentiforapp_fan_eserlerim";
-  const yerel = esitJson(window.localStorage.getItem(k) || "[]"), uzak = esitJson(g[k] || "[]");
-  if (!Array.isArray(yerel) || !yerel.length) { return false; }
-  const once = g[k];
-  g[k] = JSON.stringify(esitFanBirlestir(Array.isArray(uzak) ? uzak : [], yerel));
-  return g[k] !== once;
-}
 
 /** Buluttaki görüntüyü bu cihaza yazar ve sayfayı yeniler (eski çağrılar için; birleştirerek). */
 function hesapUzagiUygula(veriUzak) {

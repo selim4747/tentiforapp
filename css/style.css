@@ -1770,17 +1770,7 @@ html[data-ayar-kontrast="1"] :focus-visible{outline-width:3px}
 .yazi-secenek:hover{border-color:var(--deniz)}
 
 /* ================= TUR ================= */
-.tur-katman{
-  position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;
-  background:rgba(13,53,96,.42);backdrop-filter:blur(5px);padding:20px;
-}
-.tur-kutu{
-  background:var(--beyaz);border:1px solid var(--sig);border-radius:4px;
-  padding:28px 24px;max-width:420px;
-}
 .tur-sayac{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--deniz)}
-.tur-kutu h3{font-family:var(--display);font-size:26px;font-weight:400;margin:8px 0 10px}
-.tur-kutu p{color:var(--murekkep-2);font-size:15px;line-height:1.65;margin-bottom:18px}
 
 /* ================= YAZI TİPİ SEÇENEKLERİ ================= */
 html[data-ayar-yazitipi="serif"] body{font-family:Georgia,"Times New Roman",serif}
@@ -2100,10 +2090,6 @@ a.gez-btn{display:inline-block;flex-shrink:0;text-decoration:none}
 /* ================= SAYFA BAŞI ================= */
 .sayfa-basi{max-width:var(--en);margin:0 auto;padding:36px 22px 16px}
 .sayfa-basi[hidden]{display:none}
-.sayfa-no{
-  font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--deniz);margin-bottom:8px;
-}
 .sayfa-basi h1{font-family:var(--display);font-weight:400;font-size:clamp(38px,7vw,64px);line-height:1.05}
 .sayfa-icerik{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
 .sayfa-icerik-oge{

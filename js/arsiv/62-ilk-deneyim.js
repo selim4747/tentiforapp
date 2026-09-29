@@ -220,8 +220,6 @@ document.addEventListener("click", function (ev) {
   if (d && typeof karakterAc === "function") { karakterAc(Number(d.dataset.devamKar)); }
 });
 
-/* ==================== 4. tanıtım turu: ekranı kapatmayan ipucu ==================== */
-
 /* ==================== 6. terimler ==================== */
 
 const TERIMLER = {

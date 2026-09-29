@@ -209,7 +209,7 @@ function ceKronolojiOlaylari() {
   }).filter(function (x) { return x.metin && !/^Bugün/.test(x.metin); });
 }
 
-/* ==================== çizim: claudeEvrenCiz sarmalayıcı ==================== */
+/* ==================== olaylar: arama ve sekmeler ==================== */
 
 document.addEventListener("input", function (e) {
   if (e.target && e.target.id === "ceAra") { ceAraSonucCiz(e.target.value); }

@@ -59,6 +59,26 @@ adim("üst düzey ad çakışması", function () {
   console.log("  " + Object.keys(ad).length + " üst düzey ad, çakışma yok");
 });
 
+/* 4.3: bir fonksiyonun davranışı tek tanımında durur. Başka dosyadan "sarmak" (window.f = function … eski(…)) yasak:
+   bir özellik bir fonksiyonu genişletecekse o fonksiyonun tanımına eklenir ya da tanımdan adıyla çağrılır.
+   İzinli tek istisnalar tarayıcının kendi fonksiyonları (Android kabuğunda window.open) ve ilk tanımlar. */
+adim("sarmal yok", function () {
+  const izinli = ["open", "tanilamaGoster"];
+  const bulunan = [];
+  const html = readFileSync(join(KOK, "index.html"), "utf8");
+  const tembel = readFileSync(join(KOK, "js/admin/65-yonetici-yukle.js"), "utf8");
+  const dosyalar = [...new Set((html.match(/js\/(?!vendor\/)[^"?]+\.js/g) || []).concat(tembel.match(/js\/(?!vendor\/)[^"?]+\.js/g) || []))];
+  for (const f of dosyalar) {
+    const s = readFileSync(join(KOK, f), "utf8");
+    for (const m of s.matchAll(/window\.([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?function/g)) {
+      if (izinli.indexOf(m[1]) === -1) { bulunan.push(f + ": window." + m[1]); }
+    }
+    for (const m of s.matchAll(/window\[[^\]]+\]\s*=[^=]/g)) { bulunan.push(f + ": " + m[0].trim()); }
+  }
+  if (bulunan.length) { throw new Error("Sarmal bulundu (tanımın kendisine ekle): " + bulunan.join(", ")); }
+  console.log("  " + dosyalar.length + " dosyada sarmal yok");
+});
+
 /* 4.1: index.html'deki her betik dosyası var ve bağımlılık sırası doğru: çekirdek (core) önce, 4.0 modülleri
    (supabase → state → auth → odeme) motor, stüdyo ve yönetim modüllerinden önce; hepsi eski dosyalardan sonra */
 adim("betik bloğu: dosyalar ve sıra", function () {

@@ -211,8 +211,6 @@ function tohumAyarla(t) {
   tohumDurum = TOHUM || 0;
 }
 
-function tohumVar() { return TOHUM !== null; }
-
 /** 0..1 arası sayı. Tohum varsa deterministik. */
 function rast01() {
   if (TOHUM === null) { return Math.random(); }

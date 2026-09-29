@@ -54,10 +54,6 @@ function soTuval(tuval, boy) {
   return { c: c, en: en, boy: boy };
 }
 
-function soRenk(ad) {
-  return getComputedStyle(document.documentElement).getPropertyValue(ad).trim() || "#1C5C96";
-}
-
 /* ==================== 1. ŞAFAK YÜRÜYÜŞÜ ==================== */
 /* Şafak kenarı saniyede 1 an ilerler. Sabah bandında (kenarın hemen gerisinde) kal:
    kenarı geçersen karanlıkta Yeveş ölçeği dolar, geride kalırsan sabah kaçar. Zemin hızını değiştirir. */

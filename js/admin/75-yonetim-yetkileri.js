@@ -9,8 +9,6 @@
               (yeni bölüm, günün kelimesi, takip, sessiz saatler, cihazdaki evrenler).
    Uygulama:  mağaza için ekran görüntüleri ve .well-known (scripts/paketle.mjs), uygulama/README.md. */
 
-const Y25 = { okulmadi: true };
-
 function y25Hesap() { return typeof hesapIstemci !== "undefined" && hesapIstemci && typeof hesapKullanici !== "undefined" && hesapKullanici; }
 function y25Durum(sec, m, iyi) { const d = document.querySelector(sec); if (d) { d.textContent = m; d.className = "pencere-durum " + (iyi ? "iyi" : "kotu"); } }
 function y25Zaman(t) { const d = new Date(t); return isNaN(d) ? "?" : d.toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }); }

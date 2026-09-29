@@ -193,8 +193,6 @@ document.addEventListener("click", function (ev) {
   evrenSayfaCiz();
 });
 
-/* ==================== 4. Kurucu'ya bağlama ==================== */
-
 /* ==================== 5. okur: evren turu, yazılanlar rafı, izin kodu, kart ==================== */
 
 const EVR_TUR_GORULEN = "tf30_tur_gorulen";

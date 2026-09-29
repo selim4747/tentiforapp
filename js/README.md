@@ -2,8 +2,21 @@
 
 Bütün betikler **düz betik** (modül değil) olarak aynı küresel alanı paylaşır. Yükleme sırası `index.html`'deki
 `<script>` sırasıdır; yayında `scripts/paketle.mjs` bunları bu sırayla 4 pakete birleştirir (`js/paket-1…4.js`).
-Dosya adlarındaki numara bu **yükleme sırasını** gösterir: daha büyük numara, daha küçük numaralı dosyanın
-fonksiyonunu sarabilir (`const eski = f; window.f = function () { … eski.apply(this, arguments) … }`).
+Dosya adlarındaki numara bu **yükleme sırasını** gösterir.
+
+## Bir fonksiyon, bir tanım
+
+Bir fonksiyonun bütün davranışı **tek tanımındadır**: `evrenSayfaCiz`, `evrenEkSekmeler`, `fanEserGovde` gibi
+fonksiyonları okumak için tek bir yere bakmak yeter. Başka bir dosyadan fonksiyonu "sarmak"
+(`const eski = f; window.f = function () { … eski(…) … }`) yasaktır; test bunu denetler ("sarmal yok").
+
+Bir özellik var olan bir fonksiyonu genişletecekse:
+
+- Kısa ekleme: doğrudan tanımın içine yaz, yanına hangi özellik olduğunu not düş (ör. `/* şablon seçenekleri (87) */`).
+- Uzun ekleme: kendi dosyasında adlandırılmış bir fonksiyon yaz (ör. `gzYolSvg`, `kesifEkleri`, `egCuzdanBlogu`) ve
+  tanım onu adıyla çağırsın.
+- Çağrılar çalışma anında çözülür: tanım, sonra yüklenen bir dosyadaki fonksiyonu çağırabilir. Yükleme anında
+  (sayfa açılırken, veri gelmeden) çalışan kod yalnızca kendinden önce yüklenen dosyalara dayanmalı.
 
 ## Klasörler
 

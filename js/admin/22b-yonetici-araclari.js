@@ -1504,7 +1504,6 @@ document.addEventListener("change", function (e) {
    kıta vb.) ve haklarında bilgi girilebilir. */
 
 let yoneticiHaritaId = null;      /* düzenlenen haritanın id'si, null = liste görünümü */
-let yoneticiHaritaYeniAd = "";    /* yeni harita oluşturma girişi */
 let yoneticiHaritaNoktaDuzenle = null; /* null: kapalı, sayı: nokta indeksi, "yeni": yeni nokta */
 
 function yoneticiHaritaDuzen() {
