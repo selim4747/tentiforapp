@@ -512,6 +512,9 @@ function fanPencere(e, kaynak) {
         '<button class="dugme dugme-sade" data-fan-p="paylas">Paylaş</button>' +
         (kaynak === "site" ? '<button class="dugme dugme-sade" data-fan-p="baglanti">Bağlantıyı kopyala</button>' : "") +
         (kaynak !== "benim" ? '<button class="dugme dugme-sade" data-fan-p="kopyala">Taslaklarıma ekle</button>' : "") +
+        /* 4.2: kendi hikâyeni onaya gönder; sitedeki eseri bildir (js/studio/paketleyici.js) */
+        (kaynak === "benim" && e.tur === "hikaye" ? '<button class="dugme" data-fan-p="onaya">Onaya gönder</button>' : "") +
+        (kaynak === "site" ? '<button class="dugme dugme-sade" data-fan-p="sikayet">Bildir</button>' : "") +
         (e99Dosyasi ? '<button class="dugme" data-fan-p="e99">E99\'a ekle</button>' : "") +
         (yonetici && kaynak !== "site" && !e99Dosyasi ? '<button class="dugme" data-fan-p="siteye">' + (sitede ? "Sitedekini bununla güncelle" : "Siteye fanmade olarak ekle") + "</button>" : "") +
         (yonetici && kaynak === "site" ? '<button class="dugme dugme-sade y-sil" data-fan-p="kaldir">Siteden kaldır</button>' : "") +

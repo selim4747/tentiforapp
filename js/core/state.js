@@ -38,3 +38,65 @@ if (typeof tekHaklariYukle === "function") {
 }
 try { const o = JSON.parse(localStorage.getItem(TF4_UYELIK_ANAHTAR) || "null"); if (o && o.v) { TF4.uyelik = o.v; } } catch (_) { /* yok */ }
 tf4UyelikUygula();
+
+/* ==================== 4.2: bildirimler (site ve uygulama içi) ====================
+   Onay/red kararları, kurucu onayı istekleri: sunucudaki kullanici_bildirimleri. Girişte bir kez okunur (oturum başına),
+   Sen sayfası açılınca tazelenir. Okunmamış varsa hesap düğmesinde nokta; Android uygulamasında yerel bildirim. */
+const TF4_BILDIRIM = { liste: [], okundu_son: 0 };
+
+async function bildirimleriYukle() {
+  if (typeof hesapKullanici === "undefined" || !hesapKullanici || typeof hesapIstemci === "undefined" || !hesapIstemci) { return []; }
+  try {
+    const { data, error } = await hesapIstemci.rpc("bildirimlerim");
+    if (error) { throw error; }
+    TF4_BILDIRIM.liste = data || [];
+  } catch (_) { TF4_BILDIRIM.liste = []; }
+  bildirimleriCiz();
+  uygulamaBildirimi();
+  return TF4_BILDIRIM.liste;
+}
+
+function bildirimleriCiz() {
+  const okunmamis = TF4_BILDIRIM.liste.filter(function (b) { return !b.okundu; }).length;
+  document.documentElement.toggleAttribute("data-bildirim-var", okunmamis > 0);
+  const a = document.querySelector("#tf4BildirimAlan");
+  if (!a) { return; }
+  if (!TF4_BILDIRIM.liste.length) { a.innerHTML = ""; return; }
+  a.innerHTML = '<div class="kutu-y bildirim-kutu"><b>Bildirimlerin' + (okunmamis ? " · " + okunmamis + " yeni" : "") + "</b>" +
+    '<ul class="bildirim-liste">' + TF4_BILDIRIM.liste.slice(0, 10).map(function (b) {
+      return '<li class="' + (b.okundu ? "" : "yeni") + '">' + (b.baglanti ? '<a href="' + kacir(b.baglanti) + '">' + kacir(b.metin) + "</a>" : kacir(b.metin)) +
+        ' <span class="oyun-not">' + new Date(b.zaman).toLocaleDateString("tr-TR") + "</span></li>";
+    }).join("") + "</ul>" + (okunmamis ? '<button type="button" class="ic-bag" data-bildirim-okundu>Hepsini okundu say</button>' : "") + "</div>";
+}
+
+/* Android uygulamasında: yeni (bu cihazda henüz gösterilmemiş) bildirimler yerel bildirim olarak */
+function uygulamaBildirimi() {
+  const ln = typeof kabukEklenti === "function" && typeof kabukMu === "function" && kabukMu() ? kabukEklenti("LocalNotifications") : null;
+  if (!ln) { return; }
+  let son = 0;
+  try { son = Number(localStorage.getItem("tf4_bildirim_son")) || 0; } catch (_) { /* yok */ }
+  const yeni = TF4_BILDIRIM.liste.filter(function (b) { return !b.okundu && b.no > son; }).slice(0, 3);
+  if (!yeni.length) { return; }
+  try {
+    ln.schedule({ notifications: yeni.map(function (b) { return { id: 4200000 + (b.no % 100000), title: "TentiforApp", body: String(b.metin).slice(0, 180), extra: { adres: b.baglanti || "#/sen" } }; }) });
+    localStorage.setItem("tf4_bildirim_son", String(Math.max.apply(null, yeni.map(function (b) { return b.no; }))));
+  } catch (_) { /* izin yoksa sessizce geç */ }
+}
+
+document.addEventListener("click", async function (ev) {
+  const b = ev.target.closest && ev.target.closest("[data-bildirim-okundu]");
+  if (!b) { return; }
+  try { await hesapIstemci.rpc("bildirimleri_okundu"); TF4_BILDIRIM.liste.forEach(function (x) { x.okundu = true; }); bildirimleriCiz(); } catch (_) { /* yok */ }
+});
+
+/* girişte bir kez; Sen sayfası açılınca tazele */
+if (typeof tekHaklariYukle === "function") {
+  const eskiTHY42 = tekHaklariYukle;
+  window.tekHaklariYukle = async function () {
+    const r = await eskiTHY42.apply(this, arguments);
+    bildirimleriYukle();
+    if (typeof kurucuPaneliCiz === "function") { kurucuPaneliCiz(); }
+    return r;
+  };
+}
+window.addEventListener("hashchange", function () { if (typeof aktifSayfa !== "undefined" && aktifSayfa === "sen") { bildirimleriYukle(); } });

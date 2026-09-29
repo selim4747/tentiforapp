@@ -38,3 +38,18 @@ if (typeof kanonAdaylari === "function") {
   const eskiKA402 = kanonAdaylari;
   window.kanonAdaylari = function () { return eskiKA402.apply(this, arguments).filter(function (x) { return !(x.kaynak === "acilan" && /^(yayin|onizle|acilan)-/.test(x.e.id || "")); }); };
 }
+
+/* 4.2: sitedeki okur evreninde "Bildir" (şikâyet; moderatörlere gider) */
+if (typeof evaEylemHtml === "function") {
+  const eskiEEH42 = evaEylemHtml;
+  window.evaEylemHtml = function (v) {
+    const h = eskiEEH42.apply(this, arguments);
+    if (!h || typeof EVS === "undefined" || !EVS || EVS.kaynak !== "fan") { return h; }
+    return h.replace(/<\/div><\/div>$/, '<button class="dugme dugme-sade" data-evren-bildir="' + kacir(EVS.id) + '">Bildir</button></div></div>');
+  };
+}
+document.addEventListener("click", function (ev) {
+  const b = ev.target.closest && ev.target.closest("[data-evren-bildir]");
+  if (!b || typeof sikayetEt !== "function") { return; }
+  sikayetEt("evren", b.getAttribute("data-evren-bildir"), function (m) { if (typeof eckaBildir === "function") { eckaBildir(m); } });
+});

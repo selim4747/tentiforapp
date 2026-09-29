@@ -45,15 +45,20 @@ async function moderasyonCiz() {
   p.innerHTML = kabuk('<p class="pencere-alt">' + (kanonYetki ? "Kanon moderatör" : "Fan moderatör") + " · " + l.length + ' başvuru bekliyor · <button type="button" class="ic-bag" data-mod-cikis>çıkış</button></p>' +
     '<p class="oyun-not">Onaylanan evren GitHub deposuna yazılır (evrenler/ klasörü ve veri.json); yönetici Yayınla’ya basınca sitede görünür.</p>' +
     (l.length ? l.map(function (b) {
-      return '<article class="kutu-y mod-basvuru" data-mod-id="' + kacir(b.id) + '"><b>' + (b.oncelik ? '<span class="eva-rozet">★ Pro</span> ' : "") + kacir(b.baslik) + "</b>" +
+      const tur = b.tur === "hikaye" ? "hikâye" : (b.guncelle_slug ? "güncelleme" : "evren");
+      return '<article class="kutu-y mod-basvuru" data-mod-id="' + kacir(b.id) + '" data-mod-tur="' + kacir(b.tur || "evren") + '" data-mod-guncelle="' + kacir(b.guncelle_slug || "") + '">' +
+        '<span class="mod-tur">' + tur + "</span><b>" + (b.oncelik ? '<span class="eva-rozet">★ Pro</span> ' : "") + kacir(b.baslik) + "</b>" +
+        (b.tur === "hikaye" ? '<p class="oyun-not">Evren: ' + kacir(b.evren_slug || "Tömye ya da belirtilmemiş") + "</p>" : "") +
+        (b.guncelle_slug ? '<p class="oyun-not">Sitedeki “' + kacir(b.guncelle_slug) + '” evreninin yeni hâli. Kurucusu gönderdi. <button type="button" class="ic-bag" data-mod-fark>Neler değişti?</button></p><div class="mod-fark-alan"></div>' : "") +
         '<p class="oyun-not">' + kacir(b.gonderen_eposta || "") + " · " + new Date(b.tarih).toLocaleString("tr-TR") + " · " + Math.max(1, Math.round((b.boyut || 0) / 1024)) + " KB</p>" +
         (b.ozet ? "<p>" + kacir(b.ozet) + "</p>" : "") +
         '<div class="oyun-sira"><button type="button" class="dugme dugme-sade" data-mod-onizle>Güvenli önizleme</button><button type="button" class="dugme dugme-sade" data-mod-indir>İndir</button></div>' +
-        '<label>Yayın adresi</label><input class="arac-giris" data-mod-slug value="' + kacir(slugYap(b.baslik)) + '" maxlength="60">' +
+        (b.guncelle_slug ? "" : '<label>Yayın adresi</label><input class="arac-giris" data-mod-slug value="' + kacir(slugYap(b.baslik)) + '" maxlength="60">') +
         '<label>Not (isteğe bağlı; gönderen görür)</label><input class="arac-giris" data-mod-not maxlength="400">' +
         '<div class="oyun-sira"><button type="button" class="dugme" data-mod-onay="fan">Fan-made olarak onayla</button>' + (kanonYetki ? '<button type="button" class="dugme" data-mod-onay="kanon">Kanon olarak onayla</button>' : "") + '<button type="button" class="dugme dugme-sade" data-mod-red>Reddet</button></div>' +
         '<p class="pencere-durum" role="status"></p></article>';
-    }).join("") : '<p class="oyun-not">Kuyruk boş.</p>') + yayindakilerHtml(kanonYetki) + moderasyonYoneticiHtml());
+    }).join("") : '<p class="oyun-not">Kuyruk boş.</p>') + '<div id="modSikayetler"></div>' + yayindakilerHtml(kanonYetki) + moderasyonYoneticiHtml());
+  sikayetleriCiz(kanonYetki);
 }
 
 document.addEventListener("click", async function (ev) {
@@ -93,8 +98,16 @@ document.addEventListener("click", async function (ev) {
       const r = await tf4Fonksiyon("moderasyon", { islem: "onizle", token: token, id: id });
       const blob = await (await fetch(r.adres)).blob();
       if (b.hasAttribute("data-mod-indir")) { kartIndir(blob, slugYap(kart.querySelector("b").textContent) + ".json.gz"); yaz("İndirildi.", true); return; }
+      const metin = await tf4Ac(blob);
+      if (kart.getAttribute("data-mod-tur") === "hikaye") {
+        const h = fanTemizle(JSON.parse(metin));
+        const alan = kart.querySelector(".mod-okuma") || kart.appendChild(Object.assign(document.createElement("div"), { className: "kurucu-okuma mod-okuma" }));
+        alan.innerHTML = h ? '<div class="fan-oku">' + fanEserGovde(h, false, { tam: true }) + "</div>" : "<p>Okunamadı.</p>";
+        yaz("Hikâye aşağıda (cihaza kaydedilmedi).", true);
+        return;
+      }
       if (typeof perdeKapat === "function") { perdeKapat(); }
-      evrenMotoruAc(await tf4Ac(blob), { onizleme: true });
+      evrenMotoruAc(metin, { onizleme: true });
       if (typeof eckaBildir === "function") { eckaBildir("Güvenli önizleme: bu evren cihazına kaydedilmez. Karar için #/moderasyon"); }
       return;
     }
@@ -138,12 +151,18 @@ async function moderatorDuzeyYukle() {
 
 /* yayındaki (sitedeki) fan evrenleri: kanon moderatör kanon / fan-made arasında değiştirir. Liste veri.json'dan (sunucu yok) */
 function yayindakilerHtml(kanonYetki) {
-  const l = typeof fanSiteListesi === "function" ? fanSiteListesi("evren").filter(function (x) { return x.test !== true; }) : [];
-  if (!l.length) { return ""; }
-  return '<h4>Sitedeki okur evrenleri</h4><ul class="mod-yayin">' + l.map(function (x) {
-    return "<li><b>" + kacir(x.ad || x.id) + "</b> · " + (x.kanon === true ? "kanon" : "fan-made") +
-      (kanonYetki ? ' <button type="button" class="ic-bag" data-mod-kanon="' + kacir(x.id) + '" data-kanon="' + (x.kanon === true ? "0" : "1") + '">' + (x.kanon === true ? "Fan-made yap" : "Kanon yap") + "</button>" : "") + "</li>";
-  }).join("") + "</ul>" + (kanonYetki ? '<p class="oyun-not">Değişiklik GitHub’a yazılır; yönetici Yayınla’ya basınca sitede görünür.</p>' : "");
+  const evr = typeof fanSiteListesi === "function" ? fanSiteListesi("evren").filter(function (x) { return x.test !== true; }) : [];
+  const hik = typeof fanSiteListesi === "function" ? fanSiteListesi("hikaye") : [];
+  if (!evr.length && !hik.length) { return ""; }
+  const kaldir = function (tur, id) { return kanonYetki ? ' <button type="button" class="ic-bag" data-mod-kaldir="' + tur + ":" + kacir(id) + '">Yayından kaldır</button>' : ""; };
+  return (evr.length ? '<h4>Sitedeki okur evrenleri</h4><ul class="mod-yayin">' + evr.map(function (x) {
+      return "<li><b>" + kacir(x.ad || x.id) + "</b> · " + (x.kanon === true ? "kanon" : "fan-made") +
+        (kanonYetki ? ' <button type="button" class="ic-bag" data-mod-kanon="' + kacir(x.id) + '" data-kanon="' + (x.kanon === true ? "0" : "1") + '">' + (x.kanon === true ? "Fan-made yap" : "Kanon yap") + "</button>" : "") + kaldir("evren", x.id) + "</li>";
+    }).join("") + "</ul>" : "") +
+    (hik.length ? '<h4>Sitedeki fan hikâyeleri</h4><ul class="mod-yayin">' + hik.map(function (x) {
+      return "<li><b>" + kacir(x.baslik || x.id) + "</b>" + (x.evren ? ' <span class="oyun-not">· ' + kacir(x.evren) + "</span>" : "") + kaldir("hikaye", x.id) + "</li>";
+    }).join("") + "</ul>" : "") +
+    (kanonYetki ? '<p class="oyun-not">Değişiklikler GitHub’a yazılır; yönetici Yayınla’ya basınca sitede görünür.</p>' : "");
 }
 document.addEventListener("click", async function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-mod-kanon]");
@@ -182,4 +201,48 @@ document.addEventListener("click", async function (ev) {
     }
     await moderatorKodListesiCiz();
   } catch (e) { if (typeof eckaBildir === "function") { eckaBildir("Olmadı: " + (e.message || e)); } }
+});
+
+/* 4.2: güncellemede sitedeki hâl ile yeni hâl arasındaki fark */
+document.addEventListener("click", async function (ev) {
+  const b = ev.target.closest && ev.target.closest("[data-mod-fark]");
+  if (!b) { return; }
+  const kart = b.closest("[data-mod-id]"), alan = kart.querySelector(".mod-fark-alan");
+  try {
+    alan.textContent = "Karşılaştırılıyor…";
+    const r = await tf4Fonksiyon("moderasyon", { islem: "onizle", token: moderatorToken(), id: kart.getAttribute("data-mod-id") });
+    const yeni = JSON.parse(await tf4Ac(await (await fetch(r.adres)).blob()));
+    const eski = await (await fetch(r.eski || ("evrenler/" + kart.getAttribute("data-mod-guncelle") + ".json"), { cache: "no-cache" })).json();
+    const f = typeof evrFark === "function" ? evrFark(eski, yeni) : [];
+    alan.innerHTML = f.length ? '<ul class="mod-fark">' + f.slice(0, 60).map(function (x) { return "<li>" + kacir(x.tur) + " " + kacir(x.metin) + "</li>"; }).join("") + "</ul>" : '<p class="oyun-not">Görünür bir fark yok.</p>';
+  } catch (e) { alan.textContent = "Karşılaştırılamadı: " + (e.message || e); }
+});
+
+/* 4.2: şikâyetler ve yayından kaldırma (kaldırma yalnızca kanon moderatör) */
+async function sikayetleriCiz(kanonYetki) {
+  const a = document.querySelector("#modSikayetler");
+  if (!a) { return; }
+  try {
+    const r = await tf4Fonksiyon("moderasyon", { islem: "sikayetler", token: moderatorToken() });
+    const l = r.liste || [];
+    a.innerHTML = l.length ? "<h4>Şikâyetler</h4>" + l.map(function (x) {
+      return '<article class="kutu-y mod-basvuru"><span class="mod-tur">' + (x.tur === "hikaye" ? "hikâye" : "evren") + "</span><b>" + kacir(x.slug) + "</b> · " + x.sayi + " bildirim" +
+        '<ul class="mod-fark">' + (x.nedenler || []).slice(0, 5).map(function (n) { return "<li>" + kacir(n) + "</li>"; }).join("") + "</ul>" +
+        '<div class="oyun-sira"><button type="button" class="dugme dugme-sade" data-mod-sikayet-kapat="' + kacir(x.tur + ":" + x.slug) + '">Sorun yok, kapat</button>' +
+        (kanonYetki ? '<button type="button" class="dugme" data-mod-kaldir="' + kacir(x.tur + ":" + x.slug) + '">Yayından kaldır</button>' : "") + "</div></article>";
+    }).join("") : "";
+  } catch (_) { a.innerHTML = ""; }
+}
+document.addEventListener("click", async function (ev) {
+  const b = ev.target.closest && ev.target.closest("[data-mod-kaldir], [data-mod-sikayet-kapat]");
+  if (!b) { return; }
+  const kaldir = b.hasAttribute("data-mod-kaldir");
+  const p = b.getAttribute(kaldir ? "data-mod-kaldir" : "data-mod-sikayet-kapat").split(":");
+  if (kaldir && !confirm("Bu " + (p[0] === "hikaye" ? "hikâye" : "evren") + " yayından kaldırılsın mı? GitHub'dan silinir; Yayınla'dan sonra sitede görünmez.")) { return; }
+  b.disabled = true;
+  try {
+    await tf4Fonksiyon("moderasyon", { islem: kaldir ? "kaldir" : "sikayet_kapat", token: moderatorToken(), tur: p[0], slug: p.slice(1).join(":") });
+    if (typeof eckaBildir === "function") { eckaBildir(kaldir ? "Kaldırıldı; yönetici Yayınla'ya basınca sitede görünmez." : "Şikâyet kapatıldı."); }
+    moderasyonCiz();
+  } catch (e) { if (typeof eckaBildir === "function") { eckaBildir("Olmadı: " + (e.message || e)); } b.disabled = false; }
 });

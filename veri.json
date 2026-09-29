@@ -1,6 +1,6 @@
 {
-  "surum": "4.1.0",
-  "guncelleme": "2026-09-28",
+  "surum": "4.2.0",
+  "guncelleme": "2026-09-29",
   "delilik": {
     "baslik": "Delilik",
     "altbaslik": "Roman ve oyun",
@@ -7183,6 +7183,22 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "4.2.0",
+      "tarih": "2026-09-29",
+      "maddeler": [
+        "Fan hikâyeleri de moderasyondan geçer: onaylanan hikâye GitHub deposuna yazılır ve sitede yayına girer; moderatör notlu reddedebilir, yazar bildirim alır",
+        "Evren kurucusu isterse hikâye onayı: Sen sayfasından açılır; evrenine yazılan hikâye önce kurucuya düşer (bildirimle), onaylamadan yayına girmez. Kapalıysa hikâye doğrudan moderasyona gider",
+        "Bildirim merkezi: onay, ret ve kurucu kararları Sen sayfasında ve Android uygulamasında bildirim olarak gelir",
+        "Onaylı evrene güncelleme: kurucu değişiklikleri onaya gönderir; moderatör “Neler değişti?” ile farkı görür",
+        "Reddedilen başvuru düzeltilip yeniden gönderilebilir",
+        "Şikâyet ve yayından kaldırma: okur evren ve hikâyeleri “Bildir” ile şikâyet edilir; kanon moderatör yayından kaldırabilir",
+        "Yaratıcı profili: profilde kişinin sitede yayındaki evrenleri ve hikâyeleri",
+        "Yaratıcı Pro hediye/deneme kodu (30 gün)",
+        "Yasal sayfalar (mesafeli satış, iade, KVKK) ve Pro ödemesinden önce sözleşme onayı",
+        "Okur evrenleri ve hikâyeleri için paylaşım görselleri (günlük iş akışı)"
+      ]
+    },
     {
       "surum": "4.1.0",
       "tarih": "2026-09-29",

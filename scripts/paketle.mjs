@@ -298,7 +298,7 @@ function sayfaHtml(yol, baslik, aciklama, dizinleme) {
 /** /evren/e25/ → ikon/og/e25.png · /dunya/ → ikon/og/dunya.png (dosya varsa) */
 function ogGorseli(yol) {
   const p = yol.split("/").filter(Boolean);
-  const ad = !p.length ? "" : (p[0] === "evren" ? p[1] : (p[0] === "fan" ? "" : p[0]));
+  const ad = !p.length ? "" : (p[0] === "evren" ? p[1] : (p[0] === "fan" ? (p[1] === "hikaye" && p[2] ? "hikaye-" + p[2] : "") : p[0]));
   if (!ad) { return ""; }
   try { statSync(join(HEDEF, "ikon", "og", ad + ".png")); return "ikon/og/" + ad + ".png"; } catch (e) { return ""; }
 }
