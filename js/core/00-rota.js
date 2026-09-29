@@ -7,7 +7,7 @@
    olmayan yollar için Cloudflare Pages ana sayfayı verir, rota yine yoldan okunur. */
 
 /* bunlar veri taşır ya da tek seferliktir: adres çubuğunda "#" ile kalır */
-const ROTA_HASH_KALIR = /^#\/(kartpostal\/|fan\/paylasim)/;
+const ROTA_HASH_KALIR = /^#\/(kartpostal\/|fan\/paylasim|boyut|seyrusefer)/;
 
 /** "/evren/e25/" → "#/ev/site/e25" · "/arsiv/" → "#/arsiv" · "/" → "" */
 function yoldanRota(yol) {

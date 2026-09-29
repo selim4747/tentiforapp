@@ -68,7 +68,16 @@ function anaEvrenlerCiz() {
   const test = l.site.filter(function (x) { return x.git === "#/claude"; }).concat(l.fan.filter(function (x) { return /^test/.test(x.not || ""); }));
   const fan = l.fan.filter(function (x) { return !/^test/.test(x.not || ""); });
   const acik = uretimAcik("evren"), pro = tf4ProMu();
+  const boyutBanner =
+    '<div class="kutu-y" style="margin-bottom:14px; border:1px solid #48CAE4; border-radius:12px; background:linear-gradient(135deg,rgba(11,19,43,0.92),rgba(58,124,165,0.25)); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:12px 16px;">' +
+      '<div>' +
+        '<b style="color:#48CAE4; font-size:15px; display:flex; align-items:center; gap:6px;"><span>🌌</span> 4. Boyut Galaktik Seyrüsefer & Gezegenler</b>' +
+        '<span class="oyun-not" style="color:#ADE8F4; display:block; margin-top:2px;">Evrenleri 4D zaman çizgisi (W-Aksı) koordinatlarında seç, uzayda kaydırıp gezegenlere iniş yap.</span>' +
+      '</div>' +
+      '<button type="button" class="dugme" data-boyut-ac style="background:linear-gradient(135deg,#00B4D8,#0077B6); border:none; box-shadow:0 0 14px rgba(0,180,216,0.5); font-weight:700;">Uzayda Gezin →</button>' +
+    '</div>';
   alan.innerHTML =
+    boyutBanner +
     (site.length ? '<div class="ana-evren-grup"><span class="ana-etiket">Kanon evrenler</span><div class="ana-evren-liste">' + site.map(function (x) { return kart(x, "kanon"); }).join("") + "</div></div>" : "") +
     (fan.length ? '<div class="ana-evren-grup"><span class="ana-etiket">Okurların evrenleri</span><div class="ana-evren-liste">' + fan.map(function (x) { return kart(x, "fan"); }).join("") + "</div></div>" : "") +
     (test.length ? '<div class="ana-evren-grup"><span class="ana-etiket">Test evrenleri · özellikleri gör ve dene</span><div class="ana-evren-liste">' + test.map(function (x) { return kart(x, "test"); }).join("") + "</div></div>" : "") +

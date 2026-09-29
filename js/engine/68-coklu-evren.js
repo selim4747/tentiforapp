@@ -108,7 +108,11 @@ function evrenSeciciZenginlestir() {
   if (!panel || panel.querySelector("#esAra")) { return; }
   const son = sonEvrenler().filter(function (x) { return x.git !== simdikiEvren().git; }).slice(0, 4);
   const ust = panel.querySelector(".es-ust");
-  const html = '<div class="es-ara"><input class="kod-giris arac-giris" id="esAra" type="search" autocomplete="off" placeholder="Evren ara…" aria-label="Evren ara"></div>' +
+  const html = '<div class="es-boyut-cubuk" style="margin-bottom:8px;">' +
+    '<button type="button" class="dugme dugme-sade" data-boyut-ac style="width:100%; border:1px solid #48CAE4; background:linear-gradient(135deg,rgba(58,124,165,0.25),rgba(123,44,191,0.3)); color:#ADE8F4; font-weight:700; text-shadow:0 0 8px rgba(72,202,228,0.5); padding:8px 12px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:8px;">' +
+      '<span>🌌</span> <b>4. Boyut Galaktik Seyrüsefer</b> <span style="font-size:11px; opacity:.8;">(Uzayda Kaydır)</span>' +
+    '</button></div>' +
+    '<div class="es-ara"><input class="kod-giris arac-giris" id="esAra" type="search" autocomplete="off" placeholder="Evren ara…" aria-label="Evren ara"></div>' +
     (son.length ? '<div class="es-grup es-son"><div class="oyun-etiket">Son girdiklerin</div>' + son.map(function (x) {
       return '<button class="es-oge" data-evren-git="' + kacir(x.git) + '"><span class="es-ad">' + kacir(x.ad) + "</span></button>";
     }).join("") + "</div>" : "");
@@ -141,6 +145,7 @@ function evrenSeritHtml() {
   const benim = l.benim.slice(0, 3).map(function (x) { return oge(x, "senin"); }).join("");
   const fan = l.fan.slice(0, 4).map(function (x) { return oge(x, "fanmade"); }).join("");
   return '<div class="evren-serit-ic"><span class="oyun-etiket">Evrenler</span><div class="evren-serit-liste">' + site + benim + fan +
+    '<button class="es-serit-oge es-serit-boyut" data-boyut-ac style="border-color:#48CAE4; color:#48CAE4; font-weight:700;">🌌 4. Boyut Seyrüsefer</button>' +
     '<button class="es-serit-oge es-serit-tum" data-evren-sec>Hepsi · ara ◎</button></div></div>';
 }
 
@@ -316,3 +321,659 @@ document.addEventListener("click", function (ev) {
     alert("Çatallama başarısız: " + (err.message || err));
   }
 });
+
+/* ==================== 4.4: 4. Boyut Galaktik Seyrüsefer & Gezegen Kaydırıcı ==================== */
+
+const BOYUT_EVREN_TANIMLARI = {
+  tentifor: {
+    w: "W: 0.00 [Kanon]",
+    ad: "Tentiforverse",
+    renk: "#3A7CA5",
+    parlaklik: "#81C3D7",
+    ozet: "Tömye sistemi: Tömye ana dünyası ve Ax-24 kardeş gezegeni."
+  },
+  e25: {
+    w: "W: +1.00 [Kanon]",
+    ad: "E25 Evrengezer Yurdu",
+    renk: "#48CAE4",
+    parlaklik: "#ADE8F4",
+    ozet: "Evrengezerlerin evreni: Beyaz Taşlar, evrenler arası geçiş ve Evrengezer halkı."
+  },
+  e26: {
+    w: "W: +2.00 [Kanon]",
+    ad: "E26 Evreni",
+    renk: "#00F5D4",
+    parlaklik: "#7B2CBF",
+    ozet: "Herkesin saçına bağlı birkaç konuşma topu vardır; sesler bu toplardan yayılır."
+  },
+  claude: {
+    w: "W: -1.00 [Test]",
+    ad: "Claude Evreni",
+    renk: "#7209B7",
+    parlaklik: "#4CC9F0",
+    ozet: "Şomdo: Işığın yürüme hızında gittiği tek bir dünya."
+  }
+};
+
+/* Sadece evren külliyatında ve verisinde gerçekten var olan gezegenler */
+const BOYUT_GEZEGENLERI = {
+  tentifor: [
+    {
+      id: "tomye",
+      ad: "Tömye",
+      sinif: "Karasal Gezegen",
+      unvan: "Neot Kıtası & Başkent Blero",
+      renk: "#3A7CA5",
+      hale: "#81C3D7",
+      halka: false,
+      atmosfer: "1.02 atm (Oksijen/Azot)",
+      yercekimi: "0.98 g",
+      tehlike: "Kanon Dünya",
+      ozet: "Tentiforverse'ün kalbi. Aysız bir gezegen, ayları 28 gün çeker. Neot kıtası, antik kütüphaneler ve Blero, Yegim, Oseg şehirleri.",
+      git: "harita:tomye"
+    },
+    {
+      id: "ax24",
+      ad: "Ax-24",
+      sinif: "Kardeş Gezegen",
+      unvan: "Tömye Sistemi",
+      renk: "#8E9AAF",
+      hale: "#CBC0D3",
+      halka: true,
+      atmosfer: "0.14 atm",
+      yercekimi: "0.41 g",
+      tehlike: "Sıradan Hayat",
+      ozet: "Tömye ile aynı sistemdeki başka bir gezegen. Gücünü bırakan biri burada sıradan bir hayat sürüyor.",
+      git: "harita:ax24"
+    }
+  ],
+  e25: [
+    {
+      id: "e25",
+      ad: "E25",
+      sinif: "Evrengezerler Dünyası",
+      unvan: "Beyaz Taşlar",
+      renk: "#48CAE4",
+      hale: "#ADE8F4",
+      halka: false,
+      atmosfer: "Geçitler Biyosferi",
+      yercekimi: "1.00 g",
+      tehlike: "Kanon",
+      ozet: "Evrengezerlerin evreni: Beyaz Taşlar, evrenler arası geçiş ve Evrengezer halkı. Melezlerin (Sabıka soyu) bilgileri burada ve Tömye'de ortaktır; anıları ve hikâyeleri Tömye arşivinde kalır.",
+      git: "#/ev/site/e25"
+    }
+  ],
+  e26: [
+    {
+      id: "e26",
+      ad: "E26",
+      sinif: "Kanon Evren Dünyası",
+      unvan: "Konuşma Topları",
+      renk: "#00F5D4",
+      hale: "#7B2CBF",
+      halka: false,
+      atmosfer: "Ses Biyosferi",
+      yercekimi: "1.00 g",
+      tehlike: "Kanon",
+      ozet: "Herkesin saçına bağlı birkaç konuşma topu vardır; sesler bu toplardan yayılır. Biriyle konuşmak için top ona dokunur; karşıdaki sesi bu dokunuşla algılar.",
+      git: "harita:e26"
+    }
+  ],
+  claude: [
+    {
+      id: "somdo",
+      ad: "Şomdo",
+      sinif: "Işığın Yürüdüğü Dünya",
+      unvan: "Yekin Kıtası & Gecikme Denizi",
+      renk: "#7209B7",
+      hale: "#4CC9F0",
+      halka: true,
+      atmosfer: "Işık Hızı: 5 km/s",
+      yercekimi: "1.00 g",
+      tehlike: "Test Evreni",
+      ozet: "Şomdo adlı tek bir dünya: ortada Yekin kıtası, çevresinde Gecikme Denizi, dışta hilal biçimli Üzek kıtası ve en dışta ışığın döküldüğü Kıyı. Dört şehir, aynacılar, şafak yürüyücüleri ve gecikmede avlanan Yeveşler.",
+      git: "#/claude"
+    }
+  ]
+};
+
+let boyutTesseractAnimasyonId = null;
+let boyutAktifEvrenId = "tentifor";
+let boyutAktifGezegenIndex = 0;
+
+/** Yalnızca açık (kilitli olmayan) evrenleri 4. boyut listesine getirir */
+function boyutAcikEvrenleriGetir() {
+  const l = typeof evrenSeciciListesi === "function" ? evrenSeciciListesi() : { site: [], benim: [], fan: [] };
+  const chipler = [];
+
+  // 1. Sitedeki açık evrenler
+  (l.site || []).forEach(function(s, idx) {
+    if (s.kilitli) { return; }
+    let id = "tentifor";
+    let w = "W: 0.00";
+    let ad = s.ad.replace(" · 24. Evren", "");
+
+    if (s.git === "#/arsiv" || s.git === "harita:tomye") {
+      id = "tentifor";
+      w = "W: 0.00 [Kanon]";
+      ad = "Tentiforverse";
+    } else if (s.git.indexOf("e25") !== -1) {
+      id = "e25";
+      w = "W: +1.00 [Kanon]";
+      ad = "E25";
+    } else if (s.git.indexOf("e26") !== -1) {
+      id = "e26";
+      w = "W: +2.00 [Kanon]";
+      ad = "E26";
+    } else if (s.git.indexOf("claude") !== -1) {
+      id = "claude";
+      w = "W: -1.00 [Test]";
+      ad = "Şomdo (Claude)";
+    } else if (s.git.indexOf("e99") !== -1) {
+      id = "e99";
+      w = "W: +9.90 [Ortak]";
+      ad = "E99";
+    } else {
+      id = s.git.replace(/^#\/ev\/(site|fan|benim)\//, "").replace(/^harita:/, "");
+      w = "W: +" + (idx + 1) + ".00";
+    }
+
+    if (!chipler.some(function(c) { return c.id === id; })) {
+      chipler.push({ id: id, ad: ad, w: w, git: s.git });
+    }
+  });
+
+  // 2. Kullanıcının açık evrenleri (benim)
+  (l.benim || []).forEach(function(b, i) {
+    const id = b.git.replace("#/ev/benim/", "");
+    if (!chipler.some(function(c) { return c.id === id; })) {
+      chipler.push({ id: id, ad: b.ad, w: "W: +1." + (i + 4) + " [Senin]", git: b.git });
+    }
+  });
+
+  // 3. Okurların açık fan evrenleri
+  (l.fan || []).forEach(function(f, i) {
+    const id = f.git.replace("#/ev/fan/", "");
+    if (!chipler.some(function(c) { return c.id === id; })) {
+      chipler.push({ id: id, ad: f.ad, w: "W: +3." + (i + 1) + " [Fan]", git: f.git });
+    }
+  });
+
+  return chipler;
+}
+
+/** Web Audio prosedürel uzay hiper-atlama sesi */
+function boyutProsedurelWarpSesi() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) { return; }
+    const ctx = new AudioCtx();
+    if (ctx.state === "suspended") { ctx.resume(); }
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const now = ctx.currentTime;
+
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.35);
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(400, now);
+    filter.frequency.exponentialRampToValueAtTime(4000, now + 0.3);
+
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.25, now + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.45);
+  } catch (_) { /* sessiz geç */ }
+}
+
+/** 4D Tesseract (Hiperküp) stereografik projeksiyon çizimi */
+function boyutTesseractBaslat(canvas) {
+  if (!canvas) { return; }
+  const ctx = canvas.getContext("2d");
+  if (!ctx) { return; }
+  const w = canvas.width, h = canvas.height;
+  const cx = w / 2, cy = h / 2;
+
+  const vertices = [];
+  for (let i = 0; i < 16; i++) {
+    vertices.push([
+      (i & 1) ? 1 : -1,
+      (i & 2) ? 1 : -1,
+      (i & 4) ? 1 : -1,
+      (i & 8) ? 1 : -1
+    ]);
+  }
+
+  const edges = [];
+  for (let i = 0; i < 16; i++) {
+    for (let j = i + 1; j < 16; j++) {
+      let diff = i ^ j;
+      if ((diff & (diff - 1)) === 0) {
+        edges.push([i, j]);
+      }
+    }
+  }
+
+  let aci = 0;
+  function ciz() {
+    aci += 0.02;
+    ctx.clearRect(0, 0, w, h);
+
+    const cosA = Math.cos(aci), sinA = Math.sin(aci);
+    const cosB = Math.cos(aci * 0.7), sinB = Math.sin(aci * 0.7);
+
+    const projected = vertices.map(function(v) {
+      let x = v[0], y = v[1], z = v[2], w4 = v[3];
+      let x1 = x * cosA - w4 * sinA;
+      let w1 = x * sinA + w4 * cosA;
+      let y1 = y * cosB - z * sinB;
+      let z1 = y * sinB + z * cosB;
+
+      const d4 = 2.4;
+      const f4 = 1 / (d4 - w1);
+      let x2 = x1 * f4;
+      let y2 = y1 * f4;
+      let z2 = z1 * f4;
+
+      const d3 = 2.8;
+      const f3 = 1 / (d3 - z2);
+      return [
+        cx + x2 * f3 * (w * 0.9),
+        cy + y2 * f3 * (h * 0.9)
+      ];
+    });
+
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = "rgba(72, 202, 228, 0.7)";
+    ctx.beginPath();
+    edges.forEach(function(pair) {
+      ctx.moveTo(projected[pair[0]][0], projected[pair[0]][1]);
+      ctx.lineTo(projected[pair[1]][0], projected[pair[1]][1]);
+    });
+    ctx.stroke();
+
+    ctx.fillStyle = "#ADE8F4";
+    projected.forEach(function(p) {
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    boyutTesseractAnimasyonId = requestAnimationFrame(ciz);
+  }
+  ciz();
+}
+
+/** Evrenin gerçek gezegen listesini getirir */
+function boyutGezegenlerListesi(evrenId) {
+  if (BOYUT_GEZEGENLERI[evrenId]) {
+    return BOYUT_GEZEGENLERI[evrenId];
+  }
+  if (evrenId === "tomye") {
+    return BOYUT_GEZEGENLERI.tentifor;
+  }
+  const evren = (typeof evrenBul === "function" ? evrenBul(evrenId) : null) ||
+                (typeof evrenBenimBul === "function" ? evrenBenimBul(evrenId) : null) ||
+                { ad: evrenId || "Evren" };
+  const anaAd = evren.ad || "Evren Dünyası";
+  const git = evren.git || (evren.id ? (evren.id.indexOf("fork-") === 0 ? "#/ev/benim/" + evren.id : "#/ev/site/" + evren.id) : "#/");
+  const go = evren.gezegenOzellikleri || {};
+  const anaGezegen = {
+    id: evren.id || "dunya",
+    ad: evren.anaGezegen || anaAd,
+    sinif: go.sinif || "Özgün Dünya",
+    unvan: evren.yazar || "Evren Dünyası",
+    renk: go.renk || "#9D4EDD",
+    hale: go.hale || "#C77DFF",
+    halka: !!go.halka,
+    atmosfer: go.atmosfer || "Doğal",
+    yercekimi: go.yercekimi || "1.00 g",
+    tehlike: "Açık",
+    ozet: evren.ozet || "Bu evrenin kurucusu tarafından tanımlanmış bağımsız dünyası.",
+    git: git
+  };
+
+  const sonuc = [anaGezegen];
+  if (Array.isArray(evren.gezegenler) && evren.gezegenler.length) {
+    evren.gezegenler.forEach(function (g, idx) {
+      sonuc.push({
+        id: g.id || ("g_" + idx),
+        ad: g.ad || ("Gezegen " + (idx + 2)),
+        sinif: "Kardeş Dünya",
+        unvan: anaAd + " Sistemi",
+        renk: g.renk || (idx === 0 ? "#00F5D4" : "#F72585"),
+        hale: g.hale || (idx === 0 ? "#7B2CBF" : "#B5179E"),
+        halka: !!g.halka,
+        atmosfer: g.atmosfer || "0.85 atm",
+        yercekimi: g.yercekimi || "0.92 g",
+        tehlike: "Kardeş Dünya",
+        ozet: g.ad + " — " + anaAd + " sistemi içerisindeki diğer gezegen.",
+        git: git
+      });
+    });
+  }
+  return sonuc;
+}
+
+/** Uzayda seçili gezegeni odaklar ve Holo-HUD panelini günceller */
+function boyutGezegenSec(index) {
+  const gezegenler = boyutGezegenlerListesi(boyutAktifEvrenId);
+  if (!gezegenler.length) { return; }
+  boyutAktifGezegenIndex = Math.max(0, Math.min(gezegenler.length - 1, index));
+  const g = gezegenler[boyutAktifGezegenIndex];
+
+  const ogeler = document.querySelectorAll(".boyut-gezegen-oge");
+  ogeler.forEach(function(el, i) {
+    el.classList.toggle("aktif", i === boyutAktifGezegenIndex);
+  });
+
+  const ray = document.querySelector("#boyutGezegenRayi");
+  const alani = document.querySelector("#boyutKaydiriciAlani");
+  const seciliEl = ogeler[boyutAktifGezegenIndex];
+  if (gezegenler.length <= 1 && ray) {
+    ray.style.transform = "translateX(0px)";
+  } else if (ray && alani && seciliEl) {
+    const merkez = alani.offsetWidth / 2;
+    const elMerkez = seciliEl.offsetLeft + (seciliEl.offsetWidth / 2);
+    ray.style.transform = "translateX(" + (merkez - elMerkez) + "px)";
+  } else if (ray) {
+    const ofset = -1 * (boyutAktifGezegenIndex - Math.floor(gezegenler.length / 2)) * 140;
+    ray.style.transform = "translateX(" + ofset + "px)";
+  }
+
+  const hud = document.querySelector("#boyutHudPanel");
+  if (hud && g) {
+    hud.innerHTML =
+      '<div class="boyut-hud-sol">' +
+        '<div class="boyut-hud-baslik-sira">' +
+          '<span class="boyut-hud-ad">' + kacir(g.ad) + '</span>' +
+          '<span class="boyut-hud-sinif">' + kacir(g.sinif) + '</span>' +
+        '</div>' +
+        '<div class="boyut-hud-metrikler">' +
+          '<span class="boyut-metrik-oge">💨 ' + kacir(g.atmosfer) + '</span>' +
+          '<span class="boyut-metrik-oge">⚖️ ' + kacir(g.yercekimi) + '</span>' +
+          '<span class="boyut-metrik-oge">⚠️ ' + kacir(g.tehlike) + '</span>' +
+        '</div>' +
+        '<div class="boyut-hud-ozet">' + kacir(g.ozet) + '</div>' +
+      '</div>' +
+      '<button type="button" class="boyut-inis-btn" data-boyut-inis="' + kacir(g.git) + '">' +
+        '<span>🚀</span> <b>' + (gezegenler.length > 1 ? "Gezegene İniş Yap" : "Dünyaya İniş Yap") + '</b>' +
+      '</button>';
+  }
+}
+
+/** Gezegenleri yatayda bir adım kaydırır (yalnızca 1den fazla gezegen varsa) */
+function boyutGezegenKaydir(yon) {
+  const gezegenler = boyutGezegenlerListesi(boyutAktifEvrenId);
+  if (gezegenler.length <= 1) { return; }
+  let yeni = boyutAktifGezegenIndex + yon;
+  if (yeni < 0) { yeni = gezegenler.length - 1; }
+  if (yeni >= gezegenler.length) { yeni = 0; }
+  boyutGezegenSec(yeni);
+}
+
+/** 4. Boyut aksında evren değiştirir ve uzay sahnesini o evrenin dünyasına yönlendirir */
+function boyutEvrenSec(evrenId) {
+  boyutAktifEvrenId = evrenId;
+  boyutAktifGezegenIndex = 0;
+
+  document.querySelectorAll(".boyut-cip").forEach(function(el) {
+    el.classList.toggle("aktif", el.dataset.boyutEvren === evrenId);
+  });
+
+  const chipler = boyutAcikEvrenleriGetir();
+  const c = chipler.find(function(x) { return x.id === evrenId; });
+  const t = BOYUT_EVREN_TANIMLARI[evrenId] || (c ? { w: c.w } : { w: "W: +1.42 [Açık Evren]" });
+  const koord = document.querySelector("#boyutKoordinatMetin");
+  if (koord) {
+    koord.innerHTML = "<b>" + kacir(t.w) + "</b><br>Kuantum Kararlılık: %99.8";
+  }
+
+  const gezegenler = boyutGezegenlerListesi(evrenId);
+  const birdenFazla = gezegenler.length > 1;
+
+  // Sadece 1'den fazla gezegen olan evrenlerde okları göster
+  const solOk = document.querySelector("#boyutOkSol");
+  const sagOk = document.querySelector("#boyutOkSag");
+  if (solOk) { solOk.style.display = birdenFazla ? "grid" : "none"; }
+  if (sagOk) { sagOk.style.display = birdenFazla ? "grid" : "none"; }
+
+  const alani = document.querySelector("#boyutKaydiriciAlani");
+  if (alani) {
+    alani.style.cursor = birdenFazla ? "grab" : "default";
+  }
+
+  const ray = document.querySelector("#boyutGezegenRayi");
+  if (ray) {
+    ray.innerHTML = gezegenler.map(function(g, idx) {
+      return '<div class="boyut-gezegen-oge' + (idx === 0 ? " aktif" : "") + '" data-gezegen-idx="' + idx + '">' +
+        '<div class="boyut-gezegen-kure" style="background: radial-gradient(circle at 32% 32%, ' + g.hale + ' 0%, ' + g.renk + ' 55%, #0B132B 95%); --gezegen-hale:' + g.hale + ';">' +
+          (g.halka ? '<div class="boyut-gezegen-halka"></div>' : '') +
+        '</div>' +
+        '<div class="boyut-gezegen-ad-etiket">' + kacir(g.ad) + '</div>' +
+      '</div>';
+    }).join("");
+  }
+
+  boyutGezegenSec(0);
+}
+
+/** Gezegen sahnesinde dokunarak/sürükleyerek kaydırma dinleyicisi (sadece birden fazla gezegen varsa) */
+function boyutKaydiriciSurukleKur(alani) {
+  if (!alani) { return; }
+  let baslaX = 0, kaydiriyor = false;
+
+  const basla = function(clientX) {
+    const gezegenler = boyutGezegenlerListesi(boyutAktifEvrenId);
+    if (gezegenler.length <= 1) { return; }
+    kaydiriyor = true;
+    baslaX = clientX;
+  };
+  const bitir = function(clientX) {
+    if (!kaydiriyor) { return; }
+    kaydiriyor = false;
+    const fark = clientX - baslaX;
+    if (Math.abs(fark) > 35) {
+      if (fark < 0) {
+        boyutGezegenKaydir(1);
+      } else {
+        boyutGezegenKaydir(-1);
+      }
+    }
+  };
+
+  alani.addEventListener("pointerdown", function(e) { basla(e.clientX); });
+  alani.addEventListener("pointerup", function(e) { bitir(e.clientX); });
+  alani.addEventListener("pointercancel", function() { kaydiriyor = false; });
+
+  alani.addEventListener("touchstart", function(e) { if (e.touches && e.touches[0]) { basla(e.touches[0].clientX); } }, { passive: true });
+  alani.addEventListener("touchend", function(e) { if (e.changedTouches && e.changedTouches[0]) { bitir(e.changedTouches[0].clientX); } }, { passive: true });
+}
+
+/** Seçili gezegene/dünyaya hiperuzay atlaması yaparak iniş yapar */
+function boyutGezegeneInisYap(git) {
+  boyutProsedurelWarpSesi();
+
+  const perde = document.querySelector("#boyutWarpPerdesi");
+  if (perde) {
+    perde.classList.add("warp-aktif");
+  }
+
+  if (typeof aktifEvrenSec === "function") {
+    aktifEvrenSec(git, boyutAktifEvrenId);
+  }
+
+  setTimeout(function() {
+    boyutSeyruseferKapat();
+    if (git.indexOf("harita:") === 0) {
+      const hid = git.slice(7);
+      if (typeof haritaSeciliId !== "undefined") { haritaSeciliId = hid; }
+      if (location.hash !== "#/harita") {
+        location.hash = "#/harita";
+      } else if (typeof haritaCiz === "function") {
+        try { haritaCiz(); } catch (_) {}
+      }
+      setTimeout(function () { if (typeof haritaCiz === "function") { try { haritaCiz(); } catch (_) {} } }, 60);
+    } else {
+      if (location.hash === git) {
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
+      } else {
+        location.hash = git;
+      }
+    }
+  }, 320);
+}
+
+/** 4. Boyut Galaktik Seyrüsefer ve Gezegen Kaydırıcı modalını açar */
+function boyutSeyruseferAc(varsayilanEvrenId) {
+  if (document.querySelector("#boyutSeyruseferModal")) { return; }
+  if (typeof evrenSeciciKapat === "function") { evrenSeciciKapat(); }
+  if (typeof mobilMenuKapat === "function") { mobilMenuKapat(); }
+
+  const chipler = boyutAcikEvrenleriGetir();
+  boyutAktifEvrenId = varsayilanEvrenId || (typeof state !== "undefined" && state.aktifEvrenId) || "tentifor";
+  if (!chipler.some(function(c) { return c.id === boyutAktifEvrenId; })) {
+    boyutAktifEvrenId = chipler[0] ? chipler[0].id : "tentifor";
+  }
+
+  const modal = document.createElement("div");
+  modal.id = "boyutSeyruseferModal";
+  modal.className = "boyut-modal-katman";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-label", "4. Boyut Galaktik Seyrüsefer");
+
+  modal.innerHTML =
+    '<div class="boyut-warp-perdesi" id="boyutWarpPerdesi"></div>' +
+    '<div class="boyut-ust-bar">' +
+      '<div class="boyut-baslik-kutu">' +
+        '<div class="boyut-ana-baslik"><span>🌌</span> 4. BOYUT GALAKTİK SEYRÜSEFER</div>' +
+        '<div class="boyut-alt-bilgi">Zaman Çizgisi Koordinatları: W-Aksı & Açık Evrenler Arası Geçiş</div>' +
+      '</div>' +
+      '<div class="boyut-ust-butonlar">' +
+        '<button type="button" class="dugme dugme-sade" id="boyutKlasikListeBtn" style="font-size:12px; padding:6px 12px; border-color:rgba(72,202,228,0.4); color:#ADE8F4;">📋 Liste Görünümü</button>' +
+        '<button type="button" class="boyut-kapat-btn" id="boyutKapatBtn" aria-label="Kapat">✕</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="boyut-4d-alan">' +
+      '<div class="boyut-tesseract-kutu">' +
+        '<canvas class="boyut-tesseract-canvas" id="boyutTesseractCanvas" width="44" height="44"></canvas>' +
+        '<div class="boyut-koordinat-bilgi" id="boyutKoordinatMetin"><b>W: 0.00 [Kanon]</b><br>Kuantum Kararlılık: %99.8</div>' +
+      '</div>' +
+      '<div class="boyut-zaman-cizgileri">' +
+        chipler.map(function(c) {
+          return '<button type="button" class="boyut-cip' + (c.id === boyutAktifEvrenId ? " aktif" : "") + '" data-boyut-evren="' + kacir(c.id) + '">' +
+            '<span>' + kacir(c.w) + '</span> <b>' + kacir(c.ad) + '</b>' +
+          '</button>';
+        }).join("") +
+      '</div>' +
+    '</div>' +
+    '<div class="boyut-uzay-sahnesi" id="boyutUzaySahnesi">' +
+      '<div class="boyut-yildiz-nebulasi"></div>' +
+      '<button type="button" class="boyut-ok boyut-ok-sol" id="boyutOkSol" aria-label="Önceki Gezegen">‹</button>' +
+      '<div class="boyut-kaydirici-alani" id="boyutKaydiriciAlani">' +
+        '<div class="boyut-yorunge-cizgisi"></div>' +
+        '<div class="boyut-gezegen-rayi" id="boyutGezegenRayi"></div>' +
+      '</div>' +
+      '<button type="button" class="boyut-ok boyut-ok-sag" id="boyutOkSag" aria-label="Sonraki Gezegen">›</button>' +
+    '</div>' +
+    '<div class="boyut-hud-panel" id="boyutHudPanel"></div>';
+
+  document.body.appendChild(modal);
+
+  const canvas = modal.querySelector("#boyutTesseractCanvas");
+  if (canvas) { boyutTesseractBaslat(canvas); }
+
+  boyutEvrenSec(boyutAktifEvrenId);
+
+  const kaydirici = modal.querySelector("#boyutKaydiriciAlani");
+  if (kaydirici) { boyutKaydiriciSurukleKur(kaydirici); }
+}
+
+/** 4. Boyut Galaktik Seyrüsefer modalını kapatır */
+function boyutSeyruseferKapat() {
+  if (boyutTesseractAnimasyonId) {
+    cancelAnimationFrame(boyutTesseractAnimasyonId);
+    boyutTesseractAnimasyonId = null;
+  }
+  const modal = document.querySelector("#boyutSeyruseferModal");
+  if (modal) { modal.remove(); }
+}
+
+/* 4. Boyut arayüz tıklama dinleyicileri */
+document.addEventListener("click", function(ev) {
+  if (ev.target.closest("[data-boyut-ac]") || ev.target.closest("#boyutSeyruseferBtn")) {
+    ev.preventDefault();
+    boyutSeyruseferAc();
+    return;
+  }
+  if (ev.target.closest("#boyutKapatBtn")) {
+    boyutSeyruseferKapat();
+    return;
+  }
+  if (ev.target.closest("#boyutKlasikListeBtn")) {
+    boyutSeyruseferKapat();
+    if (typeof evrenSeciciAc === "function") { evrenSeciciAc(); }
+    return;
+  }
+  const cip = ev.target.closest("[data-boyut-evren]");
+  if (cip) {
+    const eid = cip.getAttribute("data-boyut-evren");
+    boyutEvrenSec(eid);
+    return;
+  }
+  const gOge = ev.target.closest(".boyut-gezegen-oge");
+  if (gOge) {
+    const idx = parseInt(gOge.getAttribute("data-gezegen-idx"), 10);
+    if (!isNaN(idx)) { boyutGezegenSec(idx); }
+    return;
+  }
+  if (ev.target.closest("#boyutOkSol")) {
+    boyutGezegenKaydir(-1);
+    return;
+  }
+  if (ev.target.closest("#boyutOkSag")) {
+    boyutGezegenKaydir(1);
+    return;
+  }
+  const inisBtn = ev.target.closest("[data-boyut-inis]");
+  if (inisBtn) {
+    const git = inisBtn.getAttribute("data-boyut-inis");
+    boyutGezegeneInisYap(git);
+    return;
+  }
+});
+
+/* Klavye okları & ESC desteği */
+window.addEventListener("keydown", function(e) {
+  const modal = document.querySelector("#boyutSeyruseferModal");
+  if (!modal) { return; }
+  if (e.key === "Escape") {
+    boyutSeyruseferKapat();
+  } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    const gezegenler = boyutGezegenlerListesi(boyutAktifEvrenId);
+    if (gezegenler.length > 1) {
+      boyutGezegenKaydir(e.key === "ArrowLeft" ? -1 : 1);
+    }
+  }
+});
+
+/* #/boyut veya #/seyrusefer rotası desteği */
+window.addEventListener("hashchange", function() {
+  if (location.hash === "#/boyut" || location.hash === "#/seyrusefer") {
+    boyutSeyruseferAc();
+  }
+});
+if (typeof window !== "undefined" && (location.hash === "#/boyut" || location.hash === "#/seyrusefer")) {
+  setTimeout(function() { boyutSeyruseferAc(); }, 120);
+}
+
