@@ -114,7 +114,10 @@
       "evrenler": [
         "tomye",
         "e25"
-      ]
+      ],
+      "ozellikler": {
+        "sehir": "Yegim"
+      }
     },
     {
       "id": "kaelan",
@@ -1730,7 +1733,7 @@
       "tur": "Çizim",
       "baslik": "Buz okyanusu",
       "aciklama": "Donmuş denizin üstünden geçen yol.",
-      "gorsel": "",
+      "gorsel": "gorseller/galeri1.png",
       "fiyat": 0
     },
     {
@@ -8990,9 +8993,9 @@
         "ad": "Contra",
         "unvan": "Ahiret gezgini",
         "ozet": "Cennet ve cehenneme istediği gibi çıkıp giren biri",
-        "yazar": "Anomaly21",
+        "yazar": "Selimoo",
         "olusturma": "2026-09-28T18:24:39.779Z",
-        "guncelleme": "2026-09-28T19:12:04.291Z",
+        "guncelleme": "2026-09-28T18:24:39.779Z",
         "kisilik": [
           {
             "ad": "Sakin",
@@ -9005,14 +9008,14 @@
         ],
         "imza": {
           "a": "BJcyEmrzs2Na9uRWu4IzmzMAmPYlOhTI5ftn9cQTkhjBNBMy0UbbcBwawtutMdLsaMWEaKlNaVmeTff1Dkvlgtc=",
-          "s": "PGZWmhzpDlJsXoUt6hD55glPHoW/+Zy3JpuBHeRNVRNbSe+QF4uKsqmFLLEHO2AAkuhnb281zEaWrvfGkMbeOQ=="
+          "s": "sBww9QkijGglBPee3NHB1CJVSXDkiCye5h2r8+2XvWPF7kNYexL2XtiasCpNvFIIn0fhNCvWSBUHWGCXRrwjDQ=="
         },
         "dogum": {
           "kapi": "",
           "soz": "Buralara geldiğim yer geçmiş",
           "t": "2026-09-28T18:24:39.786Z"
         },
-        "eklenme": "2026-09-29"
+        "eklenme": "2026-09-28"
       }
     ]
   },
