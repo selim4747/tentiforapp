@@ -1,5 +1,5 @@
 {
-  "surum": "4.0.3",
+  "surum": "4.1.0",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7183,6 +7183,15 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "4.1.0",
+      "tarih": "2026-09-29",
+      "maddeler": [
+        "Moderatör girişi sunucuda: kod “moderasyon” fonksiyonunda doğrulanır, tarayıcıya yalnızca 12 saatlik oturum anahtarı ve yetki seviyesi döner",
+        "Yaratıcı Pro her zaman ulaşılabilir: Sen sayfasında üyelik kartı (durum, bitiş tarihi, Pro'ya geç)",
+        "Betik düzeni denetleniyor: sayfadaki her betik dosyası var ve yükleme sırası doğru (çekirdek → üyelik/giriş/ödeme → motor, stüdyo, moderasyon)"
+      ]
+    },
     {
       "surum": "4.0.3",
       "tarih": "2026-09-29",

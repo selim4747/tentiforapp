@@ -57,3 +57,16 @@ function odemeDonusBak() {
 }
 window.addEventListener("hashchange", odemeDonusBak);
 document.addEventListener("tf-veri-hazir", odemeDonusBak);
+
+/* 4.1: Sen sayfasında Yaratıcı Pro kartı: üyelik durumu ve Pro'ya geç düğmesi (her zaman ulaşılabilir) */
+function proKartiCiz() {
+  const a = document.querySelector("#proAlan");
+  if (!a) { return; }
+  const pro = tf4ProMu();
+  a.innerHTML = '<div class="kutu-y pro-kart"><b>' + (pro ? "Yaratıcı Pro üyesisin ✓" : "Yaratıcı Pro") + "</b>" +
+    '<p class="oyun-not">' + (pro ? "Sınırsız evren, kuyrukta öncelik, reklamsız" + (TF4.uyelik.bitis ? " · " + new Date(TF4.uyelik.bitis).toLocaleDateString("tr-TR") + " tarihine kadar" : "") + "."
+      : "Sınırsız evren, onay kuyruğunda öncelik, reklamsız ve Pro rozeti · " + TF4_PRO_FIYAT + ".") + "</p>" +
+    '<div class="oyun-sira"><button type="button" class="dugme' + (pro ? " dugme-sade" : "") + '" data-pro-ac>' + (pro ? "Üyeliğini gör" : "Pro’ya geç") + "</button></div></div>";
+}
+document.addEventListener("tf-veri-hazir", function () { setTimeout(proKartiCiz, 0); });
+document.addEventListener("tf4-uyelik", proKartiCiz);
