@@ -1,5 +1,5 @@
 {
-  "surum": "4.2.0",
+  "surum": "4.2.1",
   "guncelleme": "2026-09-29",
   "delilik": {
     "baslik": "Delilik",
@@ -7183,6 +7183,14 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "4.2.1",
+      "tarih": "2026-09-29",
+      "maddeler": [
+        "Bakım: kod düzeni sadeleştirildi. Bir fonksiyonun bütün davranışı artık tek tanımında; başka dosyalardan üst üste sarılan 300'e yakın ek tanımlarına taşındı, kullanılmayan kod silindi",
+        "Küçük düzeltmeler: kilitli karaktere dokununca kod penceresine rozet kutusu eklenmiyor; yönetici paneli betikleri yüklenince panel eksiksiz yeniden çiziliyor"
+      ]
+    },
     {
       "surum": "4.2.0",
       "tarih": "2026-09-29",

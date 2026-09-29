@@ -59,7 +59,7 @@ adim("üst düzey ad çakışması", function () {
   console.log("  " + Object.keys(ad).length + " üst düzey ad, çakışma yok");
 });
 
-/* 4.3: bir fonksiyonun davranışı tek tanımında durur. Başka dosyadan "sarmak" (window.f = function … eski(…)) yasak:
+/* 4.2.1: bir fonksiyonun davranışı tek tanımında durur. Başka dosyadan "sarmak" (window.f = function … eski(…)) yasak:
    bir özellik bir fonksiyonu genişletecekse o fonksiyonun tanımına eklenir ya da tanımdan adıyla çağrılır.
    İzinli tek istisnalar tarayıcının kendi fonksiyonları (Android kabuğunda window.open) ve ilk tanımlar. */
 adim("sarmal yok", function () {
