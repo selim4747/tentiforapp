@@ -622,25 +622,47 @@ function boyutGezegenlerListesi(evrenId) {
   if (evrenId === "tomye") {
     return BOYUT_GEZEGENLERI.tentifor;
   }
-  const evren = (typeof evrenBul === "function" ? evrenBul(evrenId) : null) || { ad: evrenId || "Evren" };
+  const evren = (typeof evrenBul === "function" ? evrenBul(evrenId) : null) ||
+                (typeof evrenBenimBul === "function" ? evrenBenimBul(evrenId) : null) ||
+                { ad: evrenId || "Evren" };
   const anaAd = evren.ad || "Evren Dünyası";
   const git = evren.git || (evren.id ? (evren.id.indexOf("fork-") === 0 ? "#/ev/benim/" + evren.id : "#/ev/site/" + evren.id) : "#/");
-  return [
-    {
-      id: evren.id || "dunya",
-      ad: anaAd,
-      sinif: "Özgün Dünya",
-      unvan: evren.yazar || "Evren Dünyası",
-      renk: "#9D4EDD",
-      hale: "#C77DFF",
-      halka: false,
-      atmosfer: "Doğal",
-      yercekimi: "1.00 g",
-      tehlike: "Açık",
-      ozet: evren.ozet || "Bu evrenin kurucusu tarafından tanımlanmış bağımsız dünyası.",
-      git: git
-    }
-  ];
+  const go = evren.gezegenOzellikleri || {};
+  const anaGezegen = {
+    id: evren.id || "dunya",
+    ad: evren.anaGezegen || anaAd,
+    sinif: go.sinif || "Özgün Dünya",
+    unvan: evren.yazar || "Evren Dünyası",
+    renk: go.renk || "#9D4EDD",
+    hale: go.hale || "#C77DFF",
+    halka: !!go.halka,
+    atmosfer: go.atmosfer || "Doğal",
+    yercekimi: go.yercekimi || "1.00 g",
+    tehlike: "Açık",
+    ozet: evren.ozet || "Bu evrenin kurucusu tarafından tanımlanmış bağımsız dünyası.",
+    git: git
+  };
+
+  const sonuc = [anaGezegen];
+  if (Array.isArray(evren.gezegenler) && evren.gezegenler.length) {
+    evren.gezegenler.forEach(function (g, idx) {
+      sonuc.push({
+        id: g.id || ("g_" + idx),
+        ad: g.ad || ("Gezegen " + (idx + 2)),
+        sinif: "Kardeş Dünya",
+        unvan: anaAd + " Sistemi",
+        renk: g.renk || (idx === 0 ? "#00F5D4" : "#F72585"),
+        hale: g.hale || (idx === 0 ? "#7B2CBF" : "#B5179E"),
+        halka: !!g.halka,
+        atmosfer: g.atmosfer || "0.85 atm",
+        yercekimi: g.yercekimi || "0.92 g",
+        tehlike: "Kardeş Dünya",
+        ozet: g.ad + " — " + anaAd + " sistemi içerisindeki diğer gezegen.",
+        git: git
+      });
+    });
+  }
+  return sonuc;
 }
 
 /** Uzayda seçili gezegeni odaklar ve Holo-HUD panelini günceller */
