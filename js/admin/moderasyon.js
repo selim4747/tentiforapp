@@ -10,7 +10,11 @@ function slugYap(s) {
 
 function moderasyonYoneticiHtml() {
   if (typeof yoneticiAcik !== "function" || !yoneticiAcik()) { return ""; }
+  const hesap = typeof hesapKullanici !== "undefined" && hesapKullanici;
+  const kadi = hesap && typeof hesapProfil !== "undefined" && hesapProfil && hesapProfil.kullanici_adi;
   return '<details class="kutu-y mod-yonetici"><summary><b>Yönetici: moderatör kodları ve Pro</b></summary>' +
+    /* bu işlemler sitenin yönetici koduyla değil, yönetici hesabıyla yapılır: hangi hesapla gidildiği görünsün */
+    '<p class="oyun-not">' + (hesap ? "Hesap: " + kacir(kadi ? "@" + kadi : (hesap.email || "giriş açık")) : "Hesap girişi yok: önce Sen → Hesabın'dan yönetici hesabınla giriş yap.") + "</p>" +
     '<label for="modKodAd">Moderatörün adı</label><input class="arac-giris" id="modKodAd" maxlength="60" placeholder="Ayşe">' +
     '<label for="modKodDuzey">Yetkisi</label><select class="kod-giris arac-giris" id="modKodDuzey"><option value="fan">Fan moderatör: yalnızca fan-made onaylar</option><option value="kanon">Kanon moderatör: fan-made ve kanon onaylar</option></select>' +
     '<div class="oyun-sira"><button type="button" class="dugme" data-mod-kod-uret>Kod üret</button><button type="button" class="dugme dugme-sade" data-mod-kod-liste>Kodları göster</button><button type="button" class="dugme dugme-sade" data-mod-kod-kapat>Bütün kodları kapat</button></div>' +
