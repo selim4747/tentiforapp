@@ -76,6 +76,12 @@ function fanTemizle(ham) {
       });
     });
     e.harita = fanHaritaTemizle(ham.harita);
+    if (ham.kurucuKimligi) { e.kurucuKimligi = fanMetin(ham.kurucuKimligi, 120); }
+    if (ham.kurucuAnahtari) { e.kurucuAnahtari = fanMetin(ham.kurucuAnahtari, 120); }
+    if (ham.cihazKimligi) { e.cihazKimligi = fanMetin(ham.cihazKimligi, 120); }
+    if (ham.gezegenOzellikleri && typeof ham.gezegenOzellikleri === "object") {
+      e.gezegenOzellikleri = ham.gezegenOzellikleri;
+    }
     if (typeof evrenEkTemizle === "function") { evrenEkTemizle(ham, e); }
     const konuk = typeof konukTemizle === "function" ? konukTemizle(ham.konuklar) : [];
     if (konuk.length) { e.konuklar = konuk; }
@@ -539,6 +545,13 @@ async function fanDosyaAc(dosya) {
   const durum = document.querySelector("#fanAcDurum");
   try {
     const e = await fanDosyaOku(dosya);
+    if (e && e.tur === "evren" && typeof evrenKurucuDosyaKontrol === "function") {
+      const kurucuMu = evrenKurucuDosyaKontrol(e);
+      if (kurucuMu) {
+        fanAcCiz();
+        return;
+      }
+    }
     fanAcilanEkle(e);
     fanAcCiz();
     fanPencere(e, "acilan");
@@ -687,6 +700,9 @@ async function fanIndir(e) {
   const n = evaHikayeDenetle(e);   /* hikâyenin evreni buna izin vermiyorsa (83) */
   if (n) { eckaBildir(n); return; }
   await cizimleriIsit(e);
+  if (e && e.tur === "evren" && typeof evrenKurucuKimlikDamgala === "function") {
+    evrenKurucuKimlikDamgala(e);
+  }
   kartIndir(fanBlob(e), fanDosyaAdi(e));
 }
 

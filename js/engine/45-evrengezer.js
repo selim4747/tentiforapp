@@ -100,10 +100,24 @@ function evrenEkTemizle(ham, e) {
   /* gezegenler (53-evren-kurulum) */
   const ana = fanMetin(ham.anaGezegen, 60).trim();
   if (ana) { e.anaGezegen = ana; }
+  if (ham.gezegenOzellikleri && typeof ham.gezegenOzellikleri === "object") {
+    e.gezegenOzellikleri = {
+      renk: fanMetin(ham.gezegenOzellikleri.renk, 20) || "#9D4EDD",
+      hale: fanMetin(ham.gezegenOzellikleri.hale, 20) || "#C77DFF",
+      halka: !!ham.gezegenOzellikleri.halka,
+      atmosfer: fanMetin(ham.gezegenOzellikleri.atmosfer, 60) || "Doğal",
+      yercekimi: fanMetin(ham.gezegenOzellikleri.yercekimi, 30) || "1.00 g",
+      sinif: fanMetin(ham.gezegenOzellikleri.sinif, 60) || "Özgün Dünya"
+    };
+  }
+  if (ham.kurucuKimligi) { e.kurucuKimligi = fanMetin(ham.kurucuKimligi, 120); }
+  if (ham.kurucuAnahtari) { e.kurucuAnahtari = fanMetin(ham.kurucuAnahtari, 120); }
+  if (ham.cihazKimligi) { e.cihazKimligi = fanMetin(ham.cihazKimligi, 120); }
   if (Array.isArray(ham.gezegenler)) {
     const l = ham.gezegenler.slice(0, EVG_SINIR).map(function (g, i) {
       if (!g || typeof g !== "object") { return null; }
       return { id: fanMetin(g.id, 40).replace(/[^\w-]/g, "") || ("g" + i), ad: fanMetin(g.ad, 60).trim() || ("Gezegen " + (i + 2)),
+        renk: fanMetin(g.renk, 20), hale: fanMetin(g.hale, 20), halka: !!g.halka, atmosfer: fanMetin(g.atmosfer, 60), yercekimi: fanMetin(g.yercekimi, 30),
         harita: fanHaritaTemizle(g.harita) };
     }).filter(Boolean);
     if (l.length) { e.gezegenler = l; }
