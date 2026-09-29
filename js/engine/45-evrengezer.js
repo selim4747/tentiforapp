@@ -91,6 +91,12 @@ function evrenEkTemizle(ham, e) {
   /* evren içerikleri: sorular, oyunlar (51-evren-oyunlari) */
   evrenIcerikTemizle(ham, e);
 
+  /* 4.3: okuma rehberi (evren-motoru) ve oyun listesi (51) */
+  const rb = rehberTemizle(ham.okuma_rehberi);
+  if (rb.length) { e.okuma_rehberi = rb; }
+  const ol = oyunListesiTemizle(ham.oyun_listesi);
+  if (ol.length) { e.oyun_listesi = ol; }
+
   /* gezegenler (53-evren-kurulum) */
   const ana = fanMetin(ham.anaGezegen, 60).trim();
   if (ana) { e.anaGezegen = ana; }
@@ -632,22 +638,23 @@ function evrenBenimDegistir(id, fn) {
 function evrenEkSekmeler(v) {
   const k = EVS.kaynak, e = v.eser;
   let l = [];
+  /* 4.3: okuma rehberi ve oyunlar: içeriği varsa, kendi evreninse ya da alt menüden (Oku / Oyna) gelindiyse */
+  const rehber = evrenRehberi(e).length;
+  if (k === "benim" || rehber || EVS.sekme === "rehber") { l.push(["rehber", "📖 Okuma rehberi" + (rehber ? " (" + rehber + ")" : "")]); }
+  const oyun = evrenOyunSayisi(e);
+  if (k === "benim" || oyun || EVS.sekme === "oyunlar") { l.push(["oyunlar", "Oyunlar" + (oyun ? " (" + oyun + ")" : "")]); }
   if (k !== "site") {
     const lorlar = (e.lorlar || []).length;
     if (k === "benim" || lorlar) { l.push(["lore", "Kilitli lore" + (lorlar ? " (" + lorlar + ")" : "")]); }
     if (k === "benim") { l.push(["stil", "Stil ve para"]); l.push(["kod", "Kod"]); }
     if (e.alfabe && e.alfabe.harfler && k !== "benim") { l.push(["alfabe", "Alfabe"]); }
   }
-  if (k !== "site") {
-    /* oyunlar, roman, çizimler (51-evren-oyunlari); E99'da yalnızca oyunlar */
-    const oyun = evoOynanabilir(e).length;
-    if (k === "benim" || oyun) { l.push(["oyunlar", "Oyunlar" + (oyun ? " (" + oyun + ")" : "")]); }
-    if (k !== "e99") {
-      const bolum = ((e.roman || {}).bolumler || []).length;
-      if (k === "benim" || bolum) { l.push(["roman", "Roman" + (bolum ? " (" + bolum + ")" : "")]); }
-      const cizim = (e.cizimler || []).length;
-      if (k === "benim" || cizim) { l.push(["cizim", "Çizimler" + (cizim ? " (" + cizim + ")" : "")]); }
-    }
+  if (k !== "site" && k !== "e99") {
+    /* roman, çizimler (51-evren-oyunlari) */
+    const bolum = ((e.roman || {}).bolumler || []).length;
+    if (k === "benim" || bolum) { l.push(["roman", "Roman" + (bolum ? " (" + bolum + ")" : "")]); }
+    const cizim = (e.cizimler || []).length;
+    if (k === "benim" || cizim) { l.push(["cizim", "Çizimler" + (cizim ? " (" + cizim + ")" : "")]); }
   }
   if (evrenDefterAnahtari()) { l.push(["defter", "Ziyaretçi defteri"]); }
   if (["benim", "fan", "acilan"].indexOf(k) !== -1 &&
@@ -698,6 +705,7 @@ function evrenEkBolum(v) {
         '<div class="oyun-sira"><button class="dugme" data-yk-png>PNG indir</button><button class="dugme dugme-sade" data-yk-paylas>Paylaş</button></div>' +
         '<p class="oyun-not">Çizilmemiş harfler soluk görünür.</p></div>' : "");
   }
+  if (s === "rehber") { return evrenRehberBolumu(v); }
   if (s === "kodstil" && k === "benim") { return eksKodBolumu(v); }
   if (s === "vitrin") { return eksVitrinBolumu(v); }
   if (s === "oyunlar") { return evrenOyunlarBolumu(v); }

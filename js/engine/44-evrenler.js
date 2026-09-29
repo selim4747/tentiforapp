@@ -161,6 +161,7 @@ function evrenGit(git) {
   /* seçiciden gidilen evren "son gezilenler"e */
   const ad = document.querySelector('#evrenSecici [data-evren-git="' + CSS.escape(git) + '"] .es-ad, .evren-serit [data-evren-git="' + CSS.escape(git) + '"] .es-ad');
   if (ad && git.indexOf("harita:") !== 0) { sonEvrenEkle(ad.textContent.trim(), git); }
+  aktifEvrenSec(git, ad ? ad.textContent.trim() : "");   /* Oku ve Oyna bu evrene gider; Tentiforverse seçilince sıfırlanır */
   evrenSeciciKapat();
   if (git.indexOf("harita:") === 0) {
     const id = git.slice(7);
@@ -398,6 +399,9 @@ function evrenSayfaKur(kaynak, id) {
   EVS = { kaynak: kaynak, id: id, sekme: evrenSonrakiSekme || ((EVS && EVS.kaynak === kaynak && EVS.id === id) ? EVS.sekme : (haritasiz ? "bilgi" : "harita")), secili: null, mod: "sec", cizim: [] };
   evrenSonrakiSekme = null;
   evrenSayfaCiz();
+  /* açılan evren aktif evren olur (alt menüde Oku ve Oyna); dosyadan açılan ve önizleme olmaz */
+  const av = EVS && kaynak !== "acilan" && !onizlemeMi() ? evrenSayfaVerisi() : null;
+  if (av && av.eser) { aktifEvrenSec(kaynak === "e99" ? "#/ev/e99" : "#/ev/" + kaynak + "/" + id, av.eser.ad || "Adsız evren"); }
   if (EVS && typeof evrenZiyaretOdulu === "function") {
     if (evrenZiyaretOdulu() && document.querySelector("#evrenSayfa [data-evs-cuzdan]")) { evrenSayfaCiz(); }
   }
@@ -529,6 +533,7 @@ function evrenSayfaCiz() {
       if (n) { n.textContent = "Bu evren sitede (" + slug + "). Yaptığın değişiklikler moderatör onayından sonra sitedekinin yerine geçer."; }
     });
   }
+  if (document.querySelector("#altMenu")) { altMenuCiz(); }   /* Oku / Oyna: seçili sekme işaretli */
 }
 
 /** Evren sayfasının iskeleti ve seçili sekmenin içeriği, ardından sekmeye bağlı ekler. */

@@ -37,6 +37,15 @@ function altMenuCiz() {
       return '<button class="alt-oge' + (ev ? " bu" : "") + '" data-evren-sec aria-haspopup="dialog">' +
         '<span class="alt-ikon" aria-hidden="true">' + m[2] + "</span><span>" + kacir(m[1]) + "</span></button>";
     }
+    /* 4.3: Oku ve Oyna aktif evrene gider (evren seçili değilse Tentiforverse'in sayfaları) */
+    const tur = m[0] === "okuma" ? "oku" : (m[0] === "oyunlar" ? "oyna" : "");
+    const h = tur ? aktifEvrenHedefi(tur) : null;
+    if (h) {
+      const ev = h.ce ? rota().indexOf("#/claude") === 0 && ceSekme === h.ce
+        : rota().indexOf(h.git) === 0 && typeof EVS !== "undefined" && EVS && EVS.sekme === h.sekme;
+      return '<a class="alt-oge' + (ev ? " bu" : "") + '" href="' + kacir(h.git) + '" data-alt-hedef="' + tur + '"' + (ev ? ' aria-current="page"' : "") +
+        ' aria-label="' + kacir(m[1] + " · " + h.ad) + '"><span class="alt-ikon" aria-hidden="true">' + m[2] + "</span><span>" + kacir(m[1]) + "</span></a>";
+    }
     const yeni = (typeof ziyaretSayfaSayisi === "function") ? ziyaretSayfaSayisi(m[0]) : 0;
     return '<a class="alt-oge' + (bu === m[0] ? " bu" : "") + '" href="#/' + m[0] + '"' + (bu === m[0] ? ' aria-current="page"' : "") + ">" +
       '<span class="alt-ikon" aria-hidden="true">' + m[2] + "</span><span>" + kacir(m[1]) + "</span>" +
@@ -45,6 +54,24 @@ function altMenuCiz() {
     '<button class="alt-oge' + (acik || ALT_MENU.every(function (m) { return m[0] !== bu; }) ? " bu" : "") + '" data-mobil-menu aria-haspopup="dialog" aria-expanded="' + acik + '">' +
       '<span class="alt-ikon" aria-hidden="true">☰</span><span>Menü</span></button>';
 }
+
+/* 4.3: aktif evrende Oku / Oyna: evren sayfası okuma rehberi ya da oyunlar sekmesiyle açılır (Claude'un Evreni'nde
+   roman ya da oyunlar sekmesi) */
+document.addEventListener("click", function (ev) {
+  const a = ev.target.closest && ev.target.closest("[data-alt-hedef]");
+  if (!a) { return; }
+  const h = aktifEvrenHedefi(a.getAttribute("data-alt-hedef"));
+  if (!h) { return; }
+  ev.preventDefault();
+  if (h.ce) {
+    ceSekme = h.ce;
+    if (rota().indexOf("#/claude") === 0) { claudeEvrenCiz(); altMenuCiz(); } else { location.hash = h.git; }
+    return;
+  }
+  if (rota().indexOf(h.git) === 0 && EVS) { EVS.sekme = h.sekme; evrenSayfaCiz(); return; }
+  evrenSonrakiSekme = h.sekme;
+  if (rota() === h.git) { evrenAdresiAc(); } else { location.hash = h.git; }
+});
 
 /* ==================== menü sayfası ==================== */
 

@@ -234,15 +234,6 @@ function yaziCozBaslat(e) {
     }) };
 }
 
-document.addEventListener("click", function (ev) {
-  const b = ev.target.closest && ev.target.closest('[data-evo-basla="yazicoz"]');
-  if (!b || !EVS) { return; }
-  const v = evrenSayfaVerisi();
-  if (!v) { return; }
-  yaziCozBaslat(v.eser);
-  evrenSayfaCiz();
-});
-
 /* ==================== okur: uygulama puan tabloları ==================== */
 
 function evuSkorAnahtari(u) {

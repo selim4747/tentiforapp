@@ -1,7 +1,7 @@
 # TentiforApp
 
 Tentiforverse evren arşivi: Tömye'nin kayıtları, okur evrenleri (fan-made ve kanon), oyunlar, topluluk.
-Site: https://tentiforapp.pages.dev · Android uygulaması siteyi açan ince bir kabuktur (`uygulama/`).
+Sürüm: **4.3.0** · Site: https://tentiforapp.pages.dev · Android uygulaması siteyi açan ince bir kabuktur (`uygulama/`).
 
 ## Nasıl çalışır
 
