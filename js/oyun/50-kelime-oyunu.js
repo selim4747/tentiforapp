@@ -307,6 +307,7 @@ function gkKolayOyunu() {
       const a = "ko_tomye_" + koGun();
       if (typeof kilitAcik === "function" && !kilitAcik(a)) { cuzdan.acilan.push(a); eckaKazan(5, "Günün kelimesi (kolay)"); }
       hesapHatirlat("kelime");
+      oyunXpVer("tomye|kelime");   /* günlük oyun XP'si */
     }
   };
 }
@@ -342,42 +343,6 @@ function gkKelimeBilgi(k) {
   const ay = (((veri.takvim || {}).aylar) || []).find(function (x) { return esit(x.ad); });
   if (ay) { return koBilgiKutu("Takvim", ay.ad, "Tömye takviminde bir ay" + (ay.gun ? " (" + ay.gun + " gün)" : "") + ".", "", ""); }
   return "";
-}
-
-/* Günün Kelimesi bölümü: üstte mod seçimi, altında seçilen mod */
-if (typeof gunKelimesiYukle === "function") {
-  const eskiGkYukle = gunKelimesiYukle;
-  window.gunKelimesiYukle = function () {
-    const dis = document.querySelector("#gkAlan");
-    if (!dis) { return; }
-    const mod = gkModu();
-    const dugme = function (m, ad) {
-      return '<button class="dugme' + (mod === m ? "" : " dugme-sade") + '" role="tab" aria-selected="' + (mod === m) + '" data-gk-mod="' + m + '">' + ad + "</button>";
-    };
-    dis.innerHTML = '<div class="gk-modlar" role="tablist" aria-label="Günün kelimesi modu">' +
-      dugme("kolay", "Kolay · hesapsız") + dugme("zor", "Zor · herkesle yarış") + "</div>" +
-      '<div id="gkIc"><div class="gk"><span class="oyun-etiket">Günün kelimesi</span><p class="oyun-not">Yükleniyor…</p></div></div>';
-    if (mod === "kolay") { koCiz(document.querySelector("#gkIc"), gkKolayOyunu()); return; }
-    return eskiGkYukle.apply(this, arguments);
-  };
-}
-
-/* Zor mod bitince: kelimenin kartı, sunucudaki istatistik ve hikâye kartı */
-if (typeof gunKelimesiCiz === "function") {
-  const eskiGkCiz = gunKelimesiCiz;
-  window.gunKelimesiCiz = function () {
-    const r = eskiGkCiz.apply(this, arguments);
-    const d = typeof gkDurum !== "undefined" ? gkDurum : null;
-    const kutu = document.querySelector("#gkIc .gk") || document.querySelector("#gkAlan .gk");
-    if (!d || !d.bitti || !kutu || kutu.querySelector(".ko-bilgi, [data-gk-istat]")) { return r; }
-    const ek = document.createElement("div");
-    ek.innerHTML = (d.cevap ? gkKelimeBilgi(koNormal(d.cevap)) : "") + '<div data-gk-istat></div>' +
-      '<div class="oyun-sira ko-paylas"><button class="dugme" data-gk-hikaye>Hikâyende paylaş</button></div>';
-    const paylas = kutu.querySelector("[data-gk-paylas]");
-    while (ek.firstChild) { kutu.insertBefore(ek.firstChild, paylas ? paylas.nextSibling : null); }
-    gkIstatistikYukle();
-    return r;
-  };
 }
 
 async function gkIstatistikYukle() {
@@ -445,26 +410,6 @@ async function arsivKartHikayeUret(id) {
   return t;
 }
 
-if (typeof koleksiyonCiz === "function") {
-  const eskiKolCiz = koleksiyonCiz;
-  window.koleksiyonCiz = function () {
-    const r = eskiKolCiz.apply(this, arguments);
-    const alan = document.querySelector("#koleksiyonAlan");
-    const t = koleksiyonOku();
-    const sahip = (veri.karakterler || []).filter(function (k) { return t[k.id] && k.kart !== false; });
-    if (alan && sahip.length) {
-      const d = document.createElement("div");
-      d.className = "kutu-y kol-hikaye";
-      d.innerHTML = '<label for="kolHikayeSec">Bir kartını hikâyende paylaş</label>' +
-        '<div class="oyun-sira"><select id="kolHikayeSec" class="kod-giris">' + sahip.map(function (k) {
-          return '<option value="' + kacir(k.id) + '">' + kacir(k.ad) + (kartParlak(t[k.id]) ? " ✦" : "") + "</option>";
-        }).join("") + '</select><button class="dugme" data-kol-hikaye>Hikâye kartı</button></div>';
-      alan.insertBefore(d, alan.children[1] || null);
-    }
-    return r;
-  };
-}
-
 /* ==================== hesapsız ilerleme hatırlatması ==================== */
 
 const HH_METIN = {
@@ -502,35 +447,6 @@ function hesapHatirlat(neden) {
     }, 2600);
   } catch (_) { /* hatırlatma hiçbir şeyi bozmasın */ }
 }
-
-document.addEventListener("DOMContentLoaded", function () {
-  if (typeof madalyaVer === "function") {
-    const eskiMadalya = madalyaVer;
-    window.madalyaVer = function (id) {
-      const yeni = typeof madalyaVar === "function" && !madalyaVar(id);
-      const r = eskiMadalya.apply(this, arguments);
-      if (yeni) { hesapHatirlat("madalya"); }
-      return r;
-    };
-  }
-  if (typeof kartKazan === "function") {
-    const eskiKart = kartKazan;
-    window.kartKazan = function (id) {
-      const once = typeof kartSahip === "function" && kartSahip(id);
-      const r = eskiKart.apply(this, arguments);
-      if (!once && typeof kartSahip === "function" && kartSahip(id)) { hesapHatirlat("kart"); }
-      return r;
-    };
-  }
-  if (typeof evrenZiyaretOdulu === "function") {
-    const eskiZiyaret = evrenZiyaretOdulu;
-    window.evrenZiyaretOdulu = function () {
-      const n = eskiZiyaret.apply(this, arguments);
-      if (n) { hesapHatirlat("evren"); }
-      return n;
-    };
-  }
-});
 
 /* ==================== olaylar ==================== */
 

@@ -17,15 +17,6 @@ function iaBaglarTemizle(l) {
   }).filter(Boolean);
 }
 
-if (typeof evrenEkTemizle === "function") {
-  const eskiEk = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEk.apply(this, arguments);
-    const b = iaBaglarTemizle(ham.baglar);
-    if (b.length) { e.baglar = b; }
-  };
-}
-
 /* ---------- ilişki ağı ---------- */
 
 /** Düğümler çember üstünde; seçili düğümün bağları öne çıkar, ötekiler soluklaşır. */
@@ -143,23 +134,6 @@ function iaEvrenBolumu(v) {
     "</section>";
 }
 
-if (typeof evrenEkSekmeler === "function") {
-  const eskiSekmeler = evrenEkSekmeler;
-  window.evrenEkSekmeler = function (v) {
-    const l = eskiSekmeler.apply(this, arguments);
-    if (!EVS || ["benim", "fan", "acilan"].indexOf(EVS.kaynak) === -1) { return l; }
-    const e = v.eser;
-    const var_ = iaBaglarTemizle(e.baglar).length || (e.tarih || []).some(function (t) { return t && (t.zaman || t.olay); });
-    if (EVS.kaynak === "benim" || var_) { l.push(["ag", "Bağlar ve zaman"]); }
-    return l;
-  };
-  const eskiBolum = evrenEkBolum;
-  window.evrenEkBolum = function (v) {
-    if (EVS && EVS.sekme === "ag" && ["benim", "fan", "acilan"].indexOf(EVS.kaynak) !== -1) { return iaEvrenBolumu(v); }
-    return eskiBolum.apply(this, arguments);
-  };
-}
-
 document.addEventListener("click", function (ev) {
   const h = ev.target.closest("#evrenSayfa [data-ia-ekle], #evrenSayfa [data-ia-sil]");
   if (!h || !EVS || EVS.kaynak !== "benim") { return; }
@@ -190,26 +164,3 @@ document.addEventListener("click", function (ev) {
 
 /* ---------- Claude'un evreni ---------- */
 
-if (typeof claudeEvrenCiz === "function") {
-  const eskiCe = claudeEvrenCiz;
-  window.claudeEvrenCiz = function () {
-    const r = eskiCe.apply(this, arguments);
-    const c = veri.claudeEvreni;
-    const g = document.querySelector("#claudeEvrenAlan .ce-govde");
-    if (!g || !c || typeof ceSekme === "undefined") { return r; }
-    if (ceSekme === "kisiler" && (c.baglar || []).length) {
-      const dugumler = (c.kisiler || []).filter(function (k) { return (c.baglar || []).some(function (x) { return x.a === k.id || x.b === k.id; }); })
-        .map(function (k) { return { id: k.id, ad: k.ad }; });
-      g.insertAdjacentHTML("afterbegin", '<details class="kutu-y ia-bolum ce-ag" open><summary class="oyun-etiket">İlişki ağı</summary>' +
-        iaKutu("claude", dugumler, c.baglar) + "</details>");
-    }
-    if (ceSekme === "tarih") {
-      const olaylar = [];
-      (c.maddeler || []).filter(function (m) { return m.tur === "tarih"; }).forEach(function (m) { olaylar.push.apply(olaylar, zcMetindenOlaylar(m.metin)); });
-      if (olaylar.length) {
-        g.insertAdjacentHTML("afterbegin", '<section class="kutu-y zc-bolum"><div class="oyun-etiket">Zaman çizelgesi · Sebir\'e göre</div>' + zcHtml(olaylar) + "</section>");
-      }
-    }
-    return r;
-  };
-}

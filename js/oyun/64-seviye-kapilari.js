@@ -9,7 +9,7 @@
 const SEVIYE_URETIM = {
   hikaye: { seviye: 5, ad: "Fan hikâyesi yazmak" },
   kisi: { seviye: 10, ad: "Evrengezer yaratmak" },
-  evren: { seviye: 15, ad: "Fan evreni kurmak" }
+  evren: { seviye: 15, ad: "Fan evreni (1 taslak ücretsiz, Pro’da sınırsız)" }   /* 4.0: evren seviyeyle değil taslak hakkıyla (studio/editor) */
 };
 
 /* yan bölümler: bölüm kimliği → açıldığı seviye */
@@ -42,11 +42,14 @@ function yerelXp() {
 async function svkSunucuYukle() {
   if (SVK.istendi || typeof hesapIstemci === "undefined" || !hesapIstemci || typeof hesapProfil === "undefined" || !hesapProfil || !hesapProfil.kullanici_adi) { return; }
   SVK.istendi = true;
+  const once = SVK.sunucu;
   try {
     /* 31-topluluk.js'teki seviye kartıyla aynı sorgu: okuma önbelleğinde tek istek olur */
     const r = await hesapIstemci.from("arsivci_seviyeleri").select("xp, yil_xp, seviye, basamak, dokum").eq("kullanici_adi", hesapProfil.kullanici_adi).maybeSingle();
     if (r && r.data) { SVK.sunucu = Number(r.data.xp) || 0; SVK.onbellek = null; }
   } catch (_) { SVK.istendi = false; }
+  /* yalnızca XP değiştiyse (seviyeDurumu bunu her çağrıda tetikler: döngü olmasın) */
+  if (SVK.sunucu !== once) { try { anaEvrenlerCiz(); } catch (_) { /* yok */ } }
 }
 
 /** { seviye, xp, sonraki: sonraki seviyenin XP'si } */
@@ -68,7 +71,9 @@ function seviyeYeter(gereken) { return svkYonetici() || seviyeDurumu().seviye >=
 
 /** Üretim kapısı açık mı: seviye yetiyor ya da seviye kodu girilmiş (68-coklu-evren.js; kod kendi seviyesine
     kadarki bütün kapıları açar: evren kodu hikâye ve Evrengezer'i de). */
+/** Bu türde yeni eser yaratılabilir mi. Evren: ücretsiz 1 taslak ya da Pro (evrenTabanAcik), ya da tek seferlik evren hakkı. */
 function uretimAcik(tur) {
+  if (tur === "evren") { return evrenTabanAcik() || evren1Var(); }
   const x = SEVIYE_URETIM[tur];
   if (!x) { return true; }
   return seviyeYeter(x.seviye) || (typeof seviyeKoduSeviyesi === "function" && seviyeKoduSeviyesi() >= x.seviye);
@@ -93,6 +98,8 @@ const SVK_NASIL = "XP; kutuları sonuna kadar okuyarak (kutu başına 10, her ku
 
 /** Kapıya takılınca açılan küçük pencere. */
 function seviyeUyari(tur) {
+  /* evren sınırı seviye değil: ücretsiz 1 taslak, sonrası Pro */
+  if (tur === "evren") { proPencereAc("Ücretsiz planda 1 evren taslağı var; " + tf4EvrenSayisi() + " evrenin hazır. Daha fazlası için Yaratıcı Pro."); return; }
   const k = SEVIYE_URETIM[tur];
   if (!k || typeof perdeAc !== "function" && !document.querySelector("#perde")) { return; }
   const hesapYok = typeof hesapKullanici === "undefined" || !hesapKullanici;
@@ -114,40 +121,6 @@ function seviyeUyari(tur) {
 }
 
 /* ---------- üretim kapıları ---------- */
-
-if (typeof fanYeni === "function") {
-  const eskiFanYeni = fanYeni;
-  window.fanYeni = function (tur) {
-    if (SEVIYE_URETIM[tur] && !uretimAcik(tur)) { seviyeUyari(tur); return null; }
-    return eskiFanYeni.apply(this, arguments);
-  };
-}
-if (typeof evrenYeniKur === "function") {
-  const eskiKur = evrenYeniKur;
-  window.evrenYeniKur = function () {
-    if (!uretimAcik("evren")) { seviyeUyari("evren"); return null; }
-    return eskiKur.apply(this, arguments);
-  };
-}
-if (typeof kisiKaydet === "function") {
-  const eskiKisiKaydet = kisiKaydet;
-  window.kisiKaydet = function (id) {
-    /* yenisini yaratmak kapıda; var olanı düzenlemek serbest */
-    if (!id && !uretimAcik("kisi")) { seviyeUyari("kisi"); return Promise.resolve("Evrengezer yaratmak " + seviyeKapiMetni(SEVIYE_URETIM.kisi.seviye) + "."); }
-    return eskiKisiKaydet.apply(this, arguments);
-  };
-}
-if (typeof e25KisilerHtml === "function") {
-  const eskiE25 = e25KisilerHtml;
-  window.e25KisilerHtml = function () {
-    const h = eskiE25.apply(this, arguments);
-    if (uretimAcik("kisi")) { return h; }
-    /* "Evrengezerini ekle" formu yerine kapı */
-    return h.replace(/<details class="kutu-y"[^>]*><summary><b>\+ Evrengezerini ekle<\/b><\/summary>[\s\S]*?<\/details><\/div>$/,
-      '<div class="kutu-y svk-kapi"><b>🔒 Evrengezerini ekle</b><p class="oyun-not">' + kacir(seviyeKapiMetni(SEVIYE_URETIM.kisi.seviye)) + "</p>" +
-      seviyeCubukHtml(SEVIYE_URETIM.kisi.seviye) + "</div></div>");
-  };
-}
 
 /* düğmeler kilidi baştan göstersin; dokununca açıklama */
 const SVK_DUGMELER = [
@@ -199,24 +172,6 @@ function seviyeBolumleriUygula() {
       '<p class="oyun-not">' + kacir(SVK_NASIL) + "</p></div>";
     b.appendChild(y);
   });
-}
-
-if (typeof kanonKilitUygula === "function") {
-  const eskiKilit = kanonKilitUygula;
-  window.kanonKilitUygula = function () {
-    const r = eskiKilit.apply(this, arguments);
-    try { seviyeBolumleriUygula(); svkDugmeleriIsaretle(); } catch (_) { /* sayfa hazır değil */ }
-    return r;
-  };
-}
-
-/* menüde: seviyeyle açılan bölümün yanına "Sv 3" */
-if (typeof kanonKilitIsareti === "function") {
-  const eskiIsaret = kanonKilitIsareti;
-  window.kanonKilitIsareti = function (id) {
-    const h = eskiIsaret.apply(this, arguments);
-    return h || (seviyeBolumKilitli(id) ? ' <span class="gez-kilit svk-menu" title="Seviye ' + SEVIYE_BOLUMLER[id] + "'te açılır\">Sv " + SEVIYE_BOLUMLER[id] + "</span>" : "");
-  };
 }
 
 /* sayfa değişince fan ve evren düğmeleri de işaretlensin */

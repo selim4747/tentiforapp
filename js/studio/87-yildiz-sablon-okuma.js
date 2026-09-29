@@ -15,36 +15,6 @@ function yildizDegistir(git) {
   return i === -1;
 }
 
-/* ana sayfa: her evren kartına yıldız; yıldızlılar en üstte ayrı grupta */
-if (typeof anaEvrenlerCiz === "function") {
-  const eskiAEC33 = anaEvrenlerCiz;
-  window.anaEvrenlerCiz = function () {
-    const r = eskiAEC33.apply(this, arguments);
-    const alan = document.querySelector("#anaEvrenler");
-    if (!alan) { return r; }
-    alan.querySelectorAll(".ana-evren[data-evren-git]").forEach(function (k) {
-      if (k.parentNode.classList.contains("ana-evren-sar")) { return; }
-      const git = k.getAttribute("data-evren-git");
-      const s = document.createElement("div"); s.className = "ana-evren-sar";
-      k.parentNode.insertBefore(s, k); s.appendChild(k);
-      const y = yildizliMi(git);
-      s.insertAdjacentHTML("beforeend", '<button type="button" class="ana-yildiz' + (y ? " acik" : "") + '" data-yildiz="' + kacir(git) + '" aria-pressed="' + y + '" aria-label="' +
-        kacir((y ? "Yıldızı kaldır: " : "Yıldızla: ") + (k.querySelector(".ana-evren-ad") || k).textContent.replace(/^🔒\s*/, "")) + '">' + (y ? "★" : "☆") + "</button>");
-    });
-    const l = yildizlilar();
-    if (l.length) {
-      const kartlar = l.map(function (git) {
-        const k = alan.querySelector('.ana-evren-sar > .ana-evren[data-evren-git="' + (window.CSS && CSS.escape ? CSS.escape(git) : git) + '"]');
-        return k ? k.parentNode.outerHTML : "";
-      }).filter(Boolean);
-      if (kartlar.length) {
-        alan.insertAdjacentHTML("afterbegin", '<div class="ana-evren-grup ana-yildizli"><span class="ana-etiket">★ Yıldızladıkların</span><div class="ana-evren-liste">' + kartlar.join("") + "</div></div>");
-      }
-    }
-    return r;
-  };
-}
-
 document.addEventListener("click", function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-yildiz]");
   if (!b) { return; }
@@ -96,22 +66,6 @@ function tumEvrenlerCiz() {
   const odak = document.activeElement && document.activeElement.id === "tevAra";
   a.innerHTML = tumEvrenlerHtml();
   if (odak) { const g = a.querySelector("#tevAra"); g.focus(); g.setSelectionRange(g.value.length, g.value.length); }
-}
-
-/* ana sayfada "Tüm evrenler" katlı bölümü: evrenlerin altında, kurma kartının üstünde */
-if (typeof anaEvrenlerCiz === "function") {
-  const eskiAEC33b = anaEvrenlerCiz;
-  window.anaEvrenlerCiz = function () {
-    const r = eskiAEC33b.apply(this, arguments);
-    const alan = document.querySelector("#anaEvrenler");
-    const kur = alan && alan.querySelector(".ana-kur");
-    if (kur && !alan.querySelector("#tumEvrenlerKutu")) {
-      kur.insertAdjacentHTML("beforebegin", '<details class="kesif-daha tev-kutu" id="tumEvrenlerKutu"><summary><span class="kesif-daha-ad">Tüm evrenler</span><span class="kesif-daha-not">ara · süz · sırala · yıldızla</span></summary><div class="kesif-daha-ic" id="tumEvrenler"></div></details>');
-      const d = alan.querySelector("#tumEvrenlerKutu");
-      d.addEventListener("toggle", function () { if (d.open) { tumEvrenlerCiz(); } });
-    }
-    return r;
-  };
 }
 
 document.addEventListener("click", function (ev) {
@@ -208,14 +162,6 @@ function evrenDolulukHtml(e) {
     '<span class="svk-cubuk" aria-hidden="true"><i style="width:' + Math.max(3, d.oran) + '%"></i></span></div>';
 }
 
-if (typeof evrKurucuHtml === "function") {
-  const eskiEKH33 = evrKurucuHtml;
-  window.evrKurucuHtml = function (v) {
-    const h = eskiEKH33.apply(this, arguments);
-    try { return evrenDolulukHtml(v && v.eser) + h; } catch (_) { return h; }
-  };
-}
-
 /* ==================== 5. şablonla başla: türler kişi, tarih ve belgeyle gelir ==================== */
 if (typeof EVT_TURLER !== "undefined") {
   EVT_TURLER.push(
@@ -244,34 +190,15 @@ const EVT_DERIN = {
   mitoloji: { kisiler: [["Kâhin", "kehanet", "Kehaneti söyler ama anlamını bilmez."], ["Yarı tanrı", "kahraman", "Annesi tanrıça, babası çoban; iki dünyaya da ait değil."], ["Unutulan tanrı", "tanrı", "Adına sunak kalmamış; yine de dinliyor."]] }
 };
 
-if (typeof evtUygula === "function") {
-  const eskiEvtUygula33 = evtUygula;
-  window.evtUygula = function (id, turId) {
-    const r = eskiEvtUygula33.apply(this, arguments);
-    const d = Object.assign({}, EVT_DERIN._genel, EVT_DERIN[turId] || {});
-    evrenBenimDegistir(id, function (e) {
-      const bos = function (l, alan) { return !(l || []).some(function (x) { return x && String(x[alan] || "").trim(); }); };
-      if (bos(e.kisiler, "ad")) { e.kisiler = d.kisiler.map(function (k) { return { ad: k[0], rol: k[1], aciklama: k[2] }; }); }
-      if (bos(e.tarih, "olay")) { e.tarih = d.tarih.map(function (k) { return { zaman: k[0], cag: k[1], olay: k[2] }; }); }
-      if (bos(e.belgeler, "metin")) { e.belgeler = d.belgeler.map(function (k) { return { tur: k[0], baslik: k[1], kimden: k[2], kime: k[3], metin: k[4] }; }); }
-    });
-    return r;
-  };
-}
-
-/* Kurucu'nun ilk adımında da tür seçimi (boş evrende) */
-if (typeof evrKurucuHtml === "function") {
-  const eskiEKH33b = evrKurucuHtml;
-  window.evrKurucuHtml = function (v) {
-    const h = eskiEKH33b.apply(this, arguments);
-    const e = v && v.eser;
-    if (!e || typeof EVT_TURLER === "undefined" || h.indexOf("data-evt-tur") !== -1) { return h; }
-    if ((typeof EVR_ADIM !== "undefined" ? EVR_ADIM[e.id] || "temel" : "temel") !== "temel") { return h; }
-    const bos = !(e.kurallar || []).some(function (x) { return x && String(x.ad || "").trim(); }) && !(e.kisiler || []).some(function (x) { return x && String(x.ad || "").trim(); });
-    if (!bos) { return h; }
-    return h + '<div class="evt-turler"><span class="oyun-not">Şablonla başla: kurallar, kişiler, tarih, belge ve harita gelir; yalnızca boş alanları doldurur, hepsini sonra değiştirirsin.</span>' +
-      EVT_TURLER.map(function (t) { return '<button class="evt-tur" data-evt-tur="' + t.id + '"><b>' + kacir(t.ad) + "</b><small>" + kacir(t.ozet) + "</small></button>"; }).join("") + "</div>";
-  };
+/** Şablonun derin içeriği: boş olan kişiler, tarih ve belgeler doldurulur. */
+function evtDerinUygula(id, turId) {
+  const d = Object.assign({}, EVT_DERIN._genel, EVT_DERIN[turId] || {});
+  evrenBenimDegistir(id, function (e) {
+    const bos = function (l, alan) { return !(l || []).some(function (x) { return x && String(x[alan] || "").trim(); }); };
+    if (bos(e.kisiler, "ad")) { e.kisiler = d.kisiler.map(function (k) { return { ad: k[0], rol: k[1], aciklama: k[2] }; }); }
+    if (bos(e.tarih, "olay")) { e.tarih = d.tarih.map(function (k) { return { zaman: k[0], cag: k[1], olay: k[2] }; }); }
+    if (bos(e.belgeler, "metin")) { e.belgeler = d.belgeler.map(function (k) { return { tur: k[0], baslik: k[1], kimden: k[2], kime: k[3], metin: k[4] }; }); }
+  });
 }
 
 /* ==================== 9. Evrengezer yolculuk şablonu ==================== */
@@ -285,18 +212,3 @@ function yolculukIskeleti(kisi, evren) {
     "6. Dönüş\nE25’e döndüğünde pasaportunda yeni bir damga var: " + yer + ". Ama yanında getirdiği şey …";
 }
 
-if (typeof kisiGotur === "function") {
-  const eskiKG33 = kisiGotur;
-  window.kisiGotur = function (kisi, hedef) {
-    const r = eskiKG33.apply(this, arguments);
-    if (r && r.id && /^yeni-hikaye@/.test(String(hedef || ""))) {
-      const l = fanEserlerim(), h = l.find(function (x) { return x.id === r.id; });
-      if (h && !String(h.metin || "").trim()) {
-        h.metin = yolculukIskeleti(kisi, String(hedef).slice("yeni-hikaye@".length) || h.evren);
-        if (!String(h.baslik || "").trim()) { h.baslik = ((kisi && kisi.ad) || "Evrengezer") + "’ın yolculuğu"; }
-        fanEserlerimYaz(l);
-      }
-    }
-    return r;
-  };
-}

@@ -147,22 +147,6 @@ const EVR_EG_IZIN = "tf30_eg_izin";   /* { evrenId: true } bu cihazda Evrengezer
 function evrEgIzinOzeti(eid, kod) { return dogrulamaOzeti("egizin|" + eid + "|" + String(kod || "").trim().toUpperCase()); }
 function evrEgIzinVar(eid) { const d = jsonOku(EVR_EG_IZIN, {}) || {}; return !!d[eid]; }
 
-if (typeof evrenEkTemizle === "function") {
-  const eskiEk30c = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEk30c.apply(this, arguments);
-    const l = (Array.isArray(ham.egIzinleri) ? ham.egIzinleri : []).slice(0, 20).filter(function (x) { return x && /^[0-9a-f]{64}$/.test(x.oz || ""); })
-      .map(function (x) { return { oz: x.oz, not: fanMetin(x.not, 40), t: fanMetin(x.t, 30) }; });
-    if (l.length) { e.egIzinleri = l; }
-  };
-}
-
-/* izin kodu girmiş kişi de "yetkili" sayılır (83-evren-atolyesi.js) */
-if (typeof evaYetkili === "function") {
-  const eskiYet30 = evaYetkili;
-  window.evaYetkili = function (s) { return eskiYet30.apply(this, arguments) || !!(s && s.id && evrEgIzinVar(s.id)); };
-}
-
 function evrEgIzinYonetHtml(e) {
   if (e.durum === "kanonAday") { return ""; }
   const l = e.egIzinleri || [];
@@ -209,29 +193,6 @@ document.addEventListener("click", function (ev) {
   evrenSayfaCiz();
 });
 
-/* ==================== 4. Kurucu'ya bağlama ==================== */
-
-if (typeof evrKurucuHtml === "function") {
-  const eskiKH30b = evrKurucuHtml;
-  window.evrKurucuHtml = function (v) {
-    let h = eskiKH30b.apply(this, arguments);
-    const e = v.eser;
-    const adim = EVR_ADIM[e.id] || "temel";
-    /* başlıkta denetim sayısı */
-    const n = evrDenetim(e).filter(function (x) { return x.seviye !== "bilgi"; }).length;
-    if (n) { h = h.replace('<nav class="evr-adimlar"', '<button type="button" class="evr-denetim-rozet" data-evr-adim="paylas">⚠ ' + n + " tutarlılık notu</button><nav class=\"evr-adimlar\""); }
-    if (adim === "kisiler" || adim === "dunya") { h = h.replace('<div class="fan-form evr-form"', evrIsimHtml(e) + '<div class="fan-form evr-form"'); }
-    if (adim === "paylas") {
-      const i = h.indexOf('<div class="eva-yollar">');
-      const ek = evrDenetimHtml(e) + '<div class="oyun-sira"><button type="button" class="dugme dugme-sade" data-evr-kart="benim:' + kacir(e.id) + '">🖼 Evren kartı (hikâye)</button></div>';
-      h = i === -1 ? h + ek : h.slice(0, i) + ek + h.slice(i);
-      const j = h.indexOf('<div class="oyun-sira"><button class="dugme" data-fan-onizle');
-      if (j !== -1 && e.durum !== "kanonAday") { h = h.slice(0, j) + evrEgIzinYonetHtml(e) + h.slice(j); }
-    }
-    return h;
-  };
-}
-
 /* ==================== 5. okur: evren turu, yazılanlar rafı, izin kodu, kart ==================== */
 
 const EVR_TUR_GORULEN = "tf30_tur_gorulen";
@@ -274,22 +235,6 @@ function evrTurHtml(v) {
 function evrTurKey() { return EVS ? EVS.kaynak + ":" + EVS.id : ""; }
 function evrTurGoruldu() { const d = jsonOku(EVR_TUR_GORULEN, {}) || {}; return !!d[evrTurKey()]; }
 
-if (typeof evrenSayfaCiz === "function") {
-  const eskiESC30 = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    const r = eskiESC30.apply(this, arguments);
-    try {
-      if (!EVS || ["fan", "acilan"].indexOf(EVS.kaynak) === -1 || (EVS.turAcik !== true && evrTurGoruldu())) { return r; }
-      const v = evrenSayfaVerisi();
-      const g = document.querySelector("#evrenSayfa .evs-govde");
-      if (!v || v.kilitli || !g || g.querySelector(".evr-tur")) { return r; }
-      const h = evrTurHtml(v);
-      if (h) { g.insertAdjacentHTML("afterbegin", h); }
-    } catch (_) { /* tur olmadan devam */ }
-    return r;
-  };
-}
-
 document.addEventListener("click", function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-evr-tur], [data-evr-tur-ac], [data-evr-tur-git]");
   if (!b || !EVS) { return; }
@@ -331,23 +276,6 @@ document.addEventListener("click", function (ev) {
   location.hash = "#/fan";
   setTimeout(function () { fanHikayeCiz(); const a = document.querySelector("#fanHikayeAlan"); if (a) { a.scrollIntoView({ block: "start" }); } }, 150);
 });
-
-if (typeof evaEylemHtml === "function") {
-  const eskiEE30 = evaEylemHtml;
-  window.evaEylemHtml = function (v) {
-    const h = eskiEE30.apply(this, arguments);
-    if (!h) { return h; }
-    const ad = evaEvrenAdi(v);
-    const s = EVS.kaynak === "fan" ? evaStatu(ad) : { tur: "kanon" };
-    const izin = s.tur === "fan" && !evaYetkili(s) && (s.eser && (s.eser.egIzinleri || []).length)
-      ? '<details class="evr-izin-gir"><summary>Evrengezer izni kodun var mı?</summary><div class="oyun-sira"><input class="kod-giris" id="evrIzinKod" placeholder="EG-…" aria-label="Evrengezer izni kodu">' +
-        '<button type="button" class="dugme dugme-sade" data-evr-izin-gir>Gir</button></div><p class="pencere-durum" id="evrIzinGirDurum" role="status"></p></details>'
-      : (s.tur === "fan" && evaYetkili(s) ? '<p class="oyun-not">✓ Bu evrene Evrengezer getirme iznin var.</p>' : "");
-    const ek = '<div class="oyun-sira">' + (EVS.kaynak === "fan" ? '<button type="button" class="dugme dugme-sade" data-evr-tur-ac>🧭 Evren turu</button>' : "") +
-      '<button type="button" class="dugme dugme-sade" data-evr-kart="' + kacir(EVS.kaynak + ":" + EVS.id) + '">🖼 Evren kartı</button></div>';
-    return h.replace(/<\/div>$/, izin + evrRafHtml(ad) + ek + "</div>");
-  };
-}
 
 /* evren kartı: Instagram hikâyesi (1080×1920) */
 async function evrKartUret(e) {
@@ -410,7 +338,19 @@ document.addEventListener("click", async function (ev) {
 /* ==================== 6. Evrengezerler: hepsi E25'te ==================== */
 
 /** Bütün eserlerdeki konuk Evrengezerler (sitedeki hikâye ve evrenler, senin taslakların, açtığın dosyalar). */
+/* 3.1.1: konuk havuzu bir çizimde onlarca kez isteniyor (her kart, salon, sıralama): aynı iş parçasında bir kez hesaplanır,
+   taslak yazılınca hemen tazelenir (fanEserlerimYaz) */
+let evrHavuzBellek = null;
+
+/** Eserlere konuk olarak götürülmüş Evrengezerler. */
 function evrKonukHavuzu() {
+  if (evrHavuzBellek) { return evrHavuzBellek; }
+  evrHavuzBellek = evrKonukHavuzuHesapla();
+  setTimeout(function () { evrHavuzBellek = null; }, 0);
+  return evrHavuzBellek;
+}
+
+function evrKonukHavuzuHesapla() {
   const l = [];
   const tara = function (liste, nerede) {
     (liste || []).forEach(function (x) { (x.konuklar || []).forEach(function (k) { l.push({ k: k, eser: x, nerede: nerede }); }); });
@@ -419,35 +359,6 @@ function evrKonukHavuzu() {
   tara(fanEserlerim().filter(function (x) { return x.tur !== "kisi"; }), "benim");
   tara(typeof fanAcilanlar === "function" ? fanAcilanlar() : [], "acilan");
   return l;
-}
-
-if (typeof e25Kisileri === "function") {
-  window.e25Kisileri = function () {
-    const gorulen = {};
-    const l = [];
-    const ekle = function (e, kaynak, konuk) {
-      if (!e || e.tur !== "kisi" || !e.id || gorulen[e.id]) { return; }
-      gorulen[e.id] = true;
-      l.push({ e: e, kaynak: kaynak, konuk: !!konuk });
-    };
-    /* nerede yaratılmış olursa olsun (e.evren) her Evrengezer E25'te doğar ve burada görünür */
-    fanEserlerim().forEach(function (e) { ekle(e, "benim"); });
-    fanSiteListesi("kisi").forEach(function (e) { ekle(e, "site"); });
-    fanAcilanlar().forEach(function (e) { ekle(e, "acilan"); });
-    evrKonukHavuzu().forEach(function (x) { ekle(typeof kisiTemizle === "function" ? kisiTemizle(x.k) : x.k, "site", true); });
-    return l;
-  };
-}
-
-/* konuk olarak bulunan Evrengezer: kisiBul onu da bulsun (götür, kart) */
-if (typeof kisiBul === "function") {
-  const eskiKB30 = kisiBul;
-  window.kisiBul = function (kaynak, id) {
-    const e = eskiKB30.apply(this, arguments);
-    if (e) { return e; }
-    const x = evrKonukHavuzu().find(function (y) { return y.k && y.k.id === id; });
-    return x ? (typeof kisiTemizle === "function" ? kisiTemizle(x.k) : x.k) : null;
-  };
 }
 
 function evrKonukYerleri(id) {
@@ -460,29 +371,6 @@ function evrKonukYerleri(id) {
   return l;
 }
 
-if (typeof kisiKartHtml === "function") {
-  const eskiKK30 = kisiKartHtml;
-  window.kisiKartHtml = function (x) {
-    let h = eskiKK30.apply(this, arguments);
-    if (x.konuk) { h = h.replace(" · sitede · ", " · bir esere konuk olarak geldi · "); }
-    const yerler = evrKonukYerleri(x.e.id);
-    const dogdu = '<p class="oyun-not evr-dogdu">E25’te doğdu' + (x.e.evren && x.e.evren !== "e25" ? " · ilk göründüğü evren: " + kacir(String(x.e.evren).toUpperCase()) : "") + "</p>";
-    const gez = yerler.length ? '<p class="oyun-not evr-gezdi"><b>Göründüğü yerler:</b> ' + yerler.slice(0, 8).map(kacir).join(" · ") + (yerler.length > 8 ? " …" : "") + "</p>" : "";
-    return h.replace(/<\/div>$/, dogdu + gez + "</div>");
-  };
-}
-
-/* E25 listesi kalabalıklaşınca: ara */
-if (typeof e25KisilerHtml === "function") {
-  const eskiE25H = e25KisilerHtml;
-  window.e25KisilerHtml = function () {
-    const h = eskiE25H.apply(this, arguments);
-    const n = e25Kisileri().length;
-    if (n < 6) { return h; }
-    return h.replace('<h3 class="evs-ara-baslik">Okurların Evrengezerleri</h3>', '<h3 class="evs-ara-baslik">Okurların Evrengezerleri · ' + n + "</h3>" +
-      '<input class="kod-giris e25-ara" id="e25Ara" type="search" placeholder="Evrengezer ara (ad, unvan, yaratan)" aria-label="Evrengezer ara">');
-  };
-}
 document.addEventListener("input", function (ev) {
   if (!ev.target || ev.target.id !== "e25Ara") { return; }
   const q = ev.target.value.trim().toLocaleLowerCase("tr");
@@ -548,12 +436,3 @@ function evrGecitSvg() {
     }).join("") + "</ul></figure>";
 }
 
-if (typeof evrenAtolyeCiz === "function") {
-  const eskiAC30 = evrenAtolyeCiz;
-  window.evrenAtolyeCiz = function () {
-    eskiAC30.apply(this, arguments);
-    const a = document.querySelector("#evrenAtolyeAlan");
-    if (a && !a.querySelector(".evr-gecit, .evr-gecit-bos")) { a.insertAdjacentHTML("beforeend", '<h3 class="eva-bolum">Evrenler arası geçitler</h3><div class="evr-gecit-bos">' + evrGecitSvg() + "</div>"); }
-  };
-  if (typeof GEC_CIZILENLER !== "undefined") { GEC_CIZILENLER.evrenAtolye = "evrenAtolyeCiz"; }
-}

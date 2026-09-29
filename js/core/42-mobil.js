@@ -12,9 +12,6 @@
 const ALT_MENU = [
   ["arsiv", "Ana sayfa", "▤"], ["okuma", "Oku", "▧"], ["oyunlar", "Oyna", "▩"], ["evren", "Evren", "◎"]
 ];
-const MOBIL_ENI = 760;
-
-function mobilMi() { return window.matchMedia ? window.matchMedia("(max-width: " + MOBIL_ENI + "px)").matches : window.innerWidth <= MOBIL_ENI; }
 
 function uygulamaKurulu() {
   return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
@@ -179,17 +176,6 @@ if ("launchQueue" in window && window.launchQueue && window.launchQueue.setConsu
 }
 
 /* ==================== bağlama ==================== */
-
-/* gezinme her çizildiğinde alt menü de güncellensin */
-(function () {
-  const eski = window.gezinmeCiz;
-  if (typeof eski !== "function") { return; }
-  window.gezinmeCiz = function () {
-    const r = eski.apply(this, arguments);
-    try { altMenuCiz(); } catch (e) { /* alt menü asıl gezinmeyi bozmasın */ }
-    return r;
-  };
-})();
 
 window.addEventListener("hashchange", function () {
   if (rota().indexOf("#/fan/paylasim") === 0) { paylasilanDosyaAc(); }

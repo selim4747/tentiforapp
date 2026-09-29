@@ -131,7 +131,6 @@ function arsivciCiz() {
   if (typeof arsivciKartOnizle === "function") { arsivciKartOnizle(); }
 }
 
-
 /* Kartın görseli (önizleme, paylaş, indir) 27-kartlar.js'te çizilir. */
 
 /* ==================== TEMA MAĞAZASI ==================== */

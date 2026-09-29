@@ -24,6 +24,7 @@ function cuzdanYukle() {
   if (!cuzdan.gunluk) { cuzdan.gunluk = {}; }
   gunuTazele();
   istatistikHazirla();
+  baslangicKendiliginden();   /* yeni gelen: başlangıç kodu kendiliğinden açılır (62-ilk-deneyim) */
 }
 
 function cuzdanKaydet() {
@@ -43,12 +44,17 @@ function gecmiseYaz(miktar, kaynak) {
 }
 
 function eckaKazan(miktar, kaynak) {
-  if (miktar <= 0) { return; }
-  cuzdan.ecka += miktar;
-  cuzdan.kazanilan += miktar;
-  gecmiseYaz(miktar, kaynak);
-  cuzdanKaydet();
-  eckaBildir("+" + miktar + " " + birim() + (kaynak ? " · " + kaynak : ""));
+  const ilk = eckaYeniMi();
+  if (miktar > 0) {
+    yilGuncelle(function (y) { y.ecka += miktar; });   /* yılın özeti (39) */
+    cuzdan.ecka += miktar;
+    cuzdan.kazanilan += miktar;
+    gecmiseYaz(miktar, kaynak);
+    cuzdanKaydet();
+    eckaBildir("+" + miktar + " " + birim() + (kaynak ? " · " + kaynak : ""));
+  }
+  eckaGostergesiAyarla();
+  if (ilk && miktar > 0 && !eckaYeniMi()) { setTimeout(eckaIlkBalon, 600); }   /* ilk eçkan: ne işe yaradığını anlatan balon */
 }
 
 /** Harcama dener. Yetmezse false döner ve hiçbir şey değişmez. */
@@ -173,6 +179,7 @@ function kilitAc(anahtar, fiyat) {
 function cuzdanGoster() {
   const el = document.querySelector("#cuzdanTutar");
   if (el) { el.textContent = cuzdan.ecka + " " + birim(); }
+  eckaGostergesiAyarla();
 }
 
 let bildirimZaman = null;
@@ -220,11 +227,17 @@ function katmanAc(kod, ad) {
   cozulenler[ozet] = kod;
   acilanlariKaydet();
   eckaBildir(ad + " katmanı çözüldü: " + kod);
+  /* İlk Kâşif (30-yarislar) */
+  (veri.katmanlar || []).forEach(function (k) { if (k.dogrulama === ozet) { kesifKaydet("katman:" + k.id); } });
   return true;
 }
 
 /** Bir oyun ilk kez bitirildiğinde çağrılır. */
 function oyunBitti(oyun) {
+  /* yılın özeti, ilk hafta görevleri, Nöbet'te görevlinin kartı (39) */
+  yilGuncelle(function (y) { y.oyun[oyun] = (y.oyun[oyun] || 0) + 1; });
+  ilkHaftaIsaretle("oyun");
+  if (oyun === "nobet" && typeof O !== "undefined" && O && O.gorevli) { kartKazan(O.gorevli, "nobet"); }
   if (basariVar(oyun)) { return; }
 
   cuzdan.acilan.push("bitirdi_" + oyun);
@@ -299,6 +312,8 @@ function gorevIlerle(id, miktar) {
      görünüyordu. Artık her ilerlemede kendini tazeliyor. */
   if (typeof gorevCiz === "function") { gorevCiz(); }
   if (typeof gunlukOzetCiz === "function") { gunlukOzetCiz(); }
+  if (id === "yazi4") { ilkHaftaIsaretle("yazi"); }   /* ilk hafta, etkinlik görevleri (39) */
+  etkinlikGorevKontrol();
 }
 
 function gorevDurum(id) {

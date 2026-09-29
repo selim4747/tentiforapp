@@ -68,7 +68,13 @@ const GEZINME_ANA = ["arsiv", "tomye", "okuma", "atolye", "fan", "oyunlar", "sen
 let gezinmeSonHtml = "";
 let gezinmeKaydirSira = 0;
 
+/** Üst gezinme; telefonda alt menü de (42-mobil). */
 function gezinmeCiz() {
+  gezinmeTemelCiz();
+  try { altMenuCiz(); } catch (e) { /* alt menü asıl gezinmeyi bozmasın */ }
+}
+
+function gezinmeTemelCiz() {
   const alan = document.querySelector("#gezinme");
   if (!alan) { return; }
 
@@ -370,6 +376,7 @@ const GEC_CIZILENLER = {
   hikaye: "hikayeCiz", defter: "defterCiz", arsivci: "arsivciCiz",
   bag: "bagCiz", sira: "siraCiz", basarim: "basarimCiz",
   degisiklik: "degisiklikCiz", kayip: "kayipCiz", yapimlar: "cizYapimlar", liderlik: "liderlikCiz", yarislar: "yarislarCiz", claudeEvren: "claudeEvrenCiz", av: "avCiz", kartpostal: "kartpostalCiz", ortakDefter: "ortakDefterCiz", yazaraSor: "yazaraSorCiz", kulup: "kulupCiz", okurBulmaca: "okurBulmacaCiz", yilim: "yilimCiz", koleksiyon: "koleksiyonCiz", fanHikaye: "fanHikayeCiz", fanEvren: "fanEvrenCiz", fanAc: "fanAcCiz",
+  evrenAtolye: "evrenAtolyeCiz",
 };
 
 const cizildi = {};
@@ -524,6 +531,7 @@ function sayfaGoster(sayfa, kaydirma) {
 
   /* tarayıcı boşalınca bu sayfanın bölümlerini bir kez ölç: sonraki kaydırmalar doğru yere gitsin */
   (window.requestIdleCallback || function (f) { return setTimeout(f, 300); })(bolumleriOlc);
+  if (aktifSayfa === "sen") { ayar25Ciz(); }   /* okur ayarları */
 }
 
 /** Adresi okur ve sayfayı açar. Bilinmeyen adres 404'e gider. */
@@ -617,7 +625,18 @@ const YOK_METINLERI = [
            "ya da hiç var olmadı. İkisini ayırt etmenin bir yolu kalmadı." },
 ];
 
+/** Bilinmeyen adres: 404. Sayfa olmayan özel adresler de buradan açılır (Arşiv'in üstünde pencere olarak):
+    #/moderasyon, #/yayin/<adres> (eski paylaşım), #/yasal/<tür>. */
 function hataSayfasiAc(istenen) {
+  const adres = String(istenen || "");
+  const yasal = /^yasal/.test(adres) ? /^#\/yasal\/([a-z]+)/.exec(rota()) : null;   /* yönlendirici yalnızca ilk parçayı verir */
+  const ozel = /^moderasyon/.test(adres) ? moderasyonCiz : (/^yayin\//.test(adres) ? yayinAdresiBak
+    : (yasal && TF4_YASAL[yasal[1]] ? function () { yasalSayfaCiz(yasal[1]); } : null));
+  if (ozel) {
+    if (!aktifSayfa) { sayfaGoster("arsiv", false); }
+    setTimeout(ozel, 0);
+    return;
+  }
   hataSayfasiKapat();
 
   const s = YOK_METINLERI[Math.floor(Math.random() * YOK_METINLERI.length)];
@@ -745,11 +764,12 @@ function sayfaBasiCiz(sayfa) {
   const i = SAYFA_SIRASI.indexOf(sayfa);
   const g = GEZINME[i];
   c.hidden = !g || sayfa === "arsiv";
+  /* bölümlerin gizlenip açılması aynı karede biter: başlık tekrarı ölçümü bir sonraki karede */
+  requestAnimationFrame(function () { try { sadeBaslikTekrari(sayfa); } catch (_) { /* yok */ } });
   if (c.hidden) { return; }
 
   c.innerHTML =
     '<div class="sayfa-bas-ust"><div class="sayfa-bas-yazi">' +
-      '<p class="sayfa-no">Sayfa ' + (i + 1) + " / " + SAYFA_SIRASI.length + "</p>" +
       "<h1>" + kacir(g.ad) + "</h1></div>" +
       '<button class="dugme dugme-sade sayfa-paylas" data-sayfa-paylas="' + sayfa + '"><span aria-hidden="true">↗</span> Paylaş</button></div>' +
     '<div class="sayfa-icerik" role="navigation" aria-label="Bu sayfada">' +
@@ -760,37 +780,10 @@ function sayfaBasiCiz(sayfa) {
     "</div>";
 }
 
-function sayfalamaCiz(sayfa) {
-  let c = document.querySelector("#sayfalama");
-  if (!c) {
-    const ana = document.querySelector("main");
-    if (!ana) { return; }
-    c = document.createElement("nav");
-    c.id = "sayfalama";
-    c.className = "sayfalama";
-    c.setAttribute("aria-label", "Sayfalar");
-    ana.appendChild(c);
-  }
-  c.hidden = false;
-
-  const i = SAYFA_SIRASI.indexOf(sayfa);
-  const onceki = SAYFA_SIRASI[i - 1];
-  const sonraki = SAYFA_SIRASI[i + 1];
-
-  c.innerHTML =
-    (onceki
-      ? '<button class="sayfalama-yon" data-sayfa="' + onceki + '">← ' + kacir(SAYFA_BASLIK[onceki]) + "</button>"
-      : '<span class="sayfalama-yon bos"></span>') +
-    '<div class="sayfalama-no">' +
-      SAYFA_SIRASI.map(function (s, n) {
-        return '<button class="sayfalama-sayi' + (s === sayfa ? " bu" : "") + '" data-sayfa="' + s + '"' +
-               ' title="' + kacir(SAYFA_BASLIK[s]) + '"' +
-               (s === sayfa ? ' aria-current="page"' : "") + ">" + (n + 1) + "</button>";
-      }).join("") +
-    "</div>" +
-    (sonraki
-      ? '<button class="sayfalama-yon" data-sayfa="' + sonraki + '">' + kacir(SAYFA_BASLIK[sonraki]) + " →</button>"
-      : '<span class="sayfalama-yon bos"></span>');
+/** Sayfa altı "önceki / sonraki" şeridi: 3.2'den beri gizli (gezinme üstteki menüden). */
+function sayfalamaCiz() {
+  const c = document.querySelector("#sayfalama");
+  if (c) { c.hidden = true; c.innerHTML = ""; }
 }
 
 /* ==================== KLAVYE İLE SAYFA GEÇİŞİ ====================

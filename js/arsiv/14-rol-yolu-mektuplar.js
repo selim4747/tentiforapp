@@ -627,35 +627,26 @@ function turBaslat() {
 
 function turBitir() {
   kayitYaz(TUR_ANAHTAR, "bitti");
-  const k = document.querySelector("#turKatman");
+  const k = document.querySelector("#turIpucu");
   if (k) { k.remove(); }
 }
 
 function turCiz() {
   const liste = veri.tur || [];
   if (!liste.length || turAdim >= liste.length) { turBitir(); return; }
-
-  let k = document.querySelector("#turKatman");
+  let k = document.querySelector("#turIpucu");
   if (!k) {
     k = document.createElement("div");
-    k.id = "turKatman";
-    k.className = "tur-katman";
+    k.id = "turIpucu";
+    k.className = "tur-ipucu";
+    k.setAttribute("role", "status");
     document.body.appendChild(k);
   }
-
   const a = liste[turAdim];
-
-  k.innerHTML =
-    '<div class="tur-kutu" role="dialog" aria-modal="true">' +
-      '<div class="tur-sayac">' + (turAdim + 1) + " / " + liste.length + "</div>" +
-      "<h3>" + kacir(a.baslik) + "</h3>" +
-      "<p>" + kacir(a.metin) + "</p>" +
-      '<div class="oyun-sira">' +
-        '<button class="dugme" data-tur="ileri">' +
-          (turAdim === liste.length - 1 ? "Başla" : "Devam") + "</button>" +
-        '<button class="dugme dugme-sade" data-tur="atla">Geç</button>' +
-      "</div>" +
-    "</div>";
+  k.innerHTML = '<div class="tur-ipucu-ust"><span class="tur-sayac">' + (turAdim + 1) + " / " + liste.length + "</span>" +
+    '<button class="tur-kapat" data-tur="atla" aria-label="Turu kapat">✕</button></div>' +
+    "<b>" + kacir(a.baslik) + "</b><p>" + kacir(a.metin) + "</p>" +
+    '<button class="dugme" data-tur="ileri">' + (turAdim === liste.length - 1 ? "Başla" : "Sonraki") + "</button>";
 }
 
 /* ==================== olaylar ==================== */

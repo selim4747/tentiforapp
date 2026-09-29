@@ -165,7 +165,6 @@ function base64tenBayt(b64) {
   return bayt;
 }
 
-
 /* Panoya kopyalama — her ortamda çalışır.
    navigator.clipboard yalnızca güvenli bağlamda (https) tanımlıdır; file:// ile
    açıldığında yoktur. Eskiden bu durumda düğmeler sessizce patlıyordu. */
@@ -211,8 +210,6 @@ function tohumAyarla(t) {
   TOHUM = (t === null || t === undefined) ? null : (t >>> 0);
   tohumDurum = TOHUM || 0;
 }
-
-function tohumVar() { return TOHUM !== null; }
 
 /** 0..1 arası sayı. Tohum varsa deterministik. */
 function rast01() {

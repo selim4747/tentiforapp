@@ -27,6 +27,11 @@ function tkpFanEvren(id) {
 
 /** Servis çalışanının ayarını tazeler; bölüm sayılarında büyük olan kalır (iki taraf da günceller). */
 async function swAyarEsitle(ek) {
+  /* uygulamada: bugün oynandı → hatırlatmalar yeniden kurulur */
+  if (kabukMu() && ek && ek.oynanan) {
+    try { localStorage.setItem(KABUK_BLD.oynanan, kabukBugun()); } catch (_) { /* yok */ }
+    kabukHatirlatmaKur();
+  }
   if (typeof caches === "undefined") { return; }
   try {
     const c = await caches.open("tf-ayar");
@@ -43,7 +48,9 @@ async function swAyarEsitle(ek) {
 }
 
 /** Günlük arka plan kontrolünü kaydeder. Hata varsa açıklamasını döner. */
+/** Günlük hatırlatmayı kurar; boş dize ya da neden kurulamadığı. Android uygulamasında yerel bildirimle (78). */
 async function gunlukKontrolKaydet(izinIste) {
+  if (kabukMu() && kabukEklenti("LocalNotifications")) { return kabukGunlukKur(izinIste); }
   if (!("Notification" in window) || !("serviceWorker" in navigator)) { return "Bu tarayıcı bildirim göstermiyor."; }
   let reg = null;
   try { reg = await Promise.race([navigator.serviceWorker.ready, new Promise(function (c) { setTimeout(function () { c(null); }, 3000); })]); } catch (_) { reg = null; }
@@ -65,6 +72,7 @@ async function gunlukKontrolKaydet(izinIste) {
 }
 
 async function gunlukKontrolKaldirGerekirse() {
+  if (kabukMu()) { kabukHatirlatmaKur(); }   /* uygulamada yerel bildirimler yeniden kurulur */
   if (jsonOku(HTR_ANAHTAR, false) === true || Object.keys(tkpListe()).length) { return; }
   try { const reg = await navigator.serviceWorker.ready; if (reg.periodicSync) { await reg.periodicSync.unregister("tf-gunluk"); } } catch (_) { /* yok */ }
 }
@@ -89,15 +97,6 @@ function htrSatirCiz(mesaj) {
   if (modlar) { modlar.insertAdjacentHTML("afterend", yeni); }
 }
 
-if (typeof gunKelimesiYukle === "function") {
-  const eskiGk = gunKelimesiYukle;
-  window.gunKelimesiYukle = function () {
-    const r = eskiGk.apply(this, arguments);
-    htrSatirCiz();
-    return r;
-  };
-}
-
 /* kelime bitince servis çalışanına "bugün oynandı" (hatırlatma gelmesin) */
 document.addEventListener("submit", function (ev) {
   if (!ev.target.closest || !ev.target.closest("#gkAlan")) { return; }
@@ -117,24 +116,6 @@ function tkpKutusu(id) {
       : "Takip et: bu evrene yeni roman bölümü eklenince haberin olsun.") + "</p>" +
     '<div class="oyun-sira"><button class="dugme' + (takipte ? " dugme-sade" : "") + '" data-tkp="' + kacir(id) + '">' + (takipte ? "Takibi bırak" : "☆ Takip et") + "</button></div>" +
     '<p class="pencere-durum" id="tkpDurum" role="status"></p></div>';
-}
-
-if (typeof evrenSayfaCiz === "function") {
-  const eskiCiz = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    const r = eskiCiz.apply(this, arguments);
-    if (!EVS || EVS.kaynak !== "fan") { return r; }
-    const e = tkpFanEvren(EVS.id);
-    if (!e) { return r; }
-    /* açılan takipli evren: yeni bölümler görüldü */
-    const l = tkpListe();
-    if (EVS.id in l && tkpBolumSayisi(e) > l[EVS.id]) { l[EVS.id] = tkpBolumSayisi(e); jsonYaz(TKP_ANAHTAR, l); swAyarEsitle(); }
-    if (EVS.sekme === "bilgi") {
-      const g = document.querySelector("#evrenSayfa .evs-govde");
-      if (g) { g.insertAdjacentHTML("beforeend", tkpKutusu(EVS.id)); }
-    }
-    return r;
-  };
 }
 
 /** Ana sayfa: takip edilen evrenlerde yeni bölüm. */

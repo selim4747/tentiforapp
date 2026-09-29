@@ -711,7 +711,10 @@ function haritaSahne(h, w, hh, cx, cy, k, sec) {
       '<rect x="' + solX + '" y="0" width="' + (sagX - solX) + '" height="9" fill="url(#hmKu-' + kimlik + ')"/>' +
       '<rect x="' + solX + '" y="91" width="' + (sagX - solX) + '" height="9" fill="url(#hmKa-' + kimlik + ')"/>' +
     "</g>" +
-    yol + kitaAd.join("") + isaretler.join("") + ustte.join("") + tutamac;
+    /* nehir, yol, sınır çizgileri: zeminin üstünde, işaretlerin ve adların altında (59-harita-ekleri) */
+    heCizgilerSvg(h, w, hh, cx, cy, k) +
+    yol + kitaAd.join("") + isaretler.join("") + ustte.join("") + tutamac +
+    (sec && sec.kimlik === "tam" ? heOlcekSvg(h, w, hh, k) : "");   /* ölçek çubuğu */
 }
 
 /* ---------- bölümdeki küçük önizleme ---------- */
@@ -802,6 +805,7 @@ function haritaCiz() {
 
   haritaOnizlemeGozle();
   if (HT.acik) { haritaTamYenile(); }
+  gzkHaritaSatiri(alan, h);   /* karakterlerin yolculukları (58-yolculuklar) */
 }
 
 /* ---- tam ekran harita ---- */
@@ -1046,6 +1050,13 @@ function haritaEvrenDegistir(id, yerId) {
 }
 
 function haritaDokun(px, py) {
+  /* çizgi aracı: dokunulan nokta çizgiye eklenir */
+  if (HT.duzen && HT.arac === "cizgi" && haritaYonetici()) {
+    HE.cizim.push(heNokta(px, py));
+    haritaDuzenCubuguCiz();
+    haritaCizHemen();
+    return;
+  }
   const el = document.elementFromPoint(px, py);
   if (el && el.closest && el.closest("[data-hnokta],[data-hmid],[data-hmerkez]")) { return; }   /* tutamaç: seçimi bozma */
   const g = el && el.closest ? el.closest("[data-hyer]") : null;
@@ -1099,6 +1110,32 @@ function haritaBilgiCiz() {
   if (yeniSecim) { el.scrollTop = 0; }
   HT.bilgiId = s.id; HT.bilgiDuzen = HT.duzen;
   haritaIpucuGizle();
+
+  /* şehir haritası düğmesi (düzenlemede en üstte, kapat düğmesinin ardından) */
+  if (s.sehir || HT.duzen) {
+    const d = '<button type="button" class="dugme ' + (HT.duzen ? "dugme-sade " : "") + 'sh-ac" data-sh-kanon="1">🏙 ' +
+      (HT.duzen ? (s.sehir ? "Şehir haritasını düzenle" : "Şehir haritası çiz") : "Şehir haritasını aç") + "</button>";
+    const kapatB = HT.duzen && el.querySelector(".ht-bilgi-kapat");
+    if (kapatB) { kapatB.insertAdjacentHTML("afterend", d); } else { el.insertAdjacentHTML("beforeend", d); }
+  }
+  /* bu yerden geçen karakterler (yolculuklar) */
+  if (h && !HT.duzen && gzkKisiListesi(h)) {
+    const gecenler = [];
+    gzkKarakterler(h).forEach(function (x) {
+      const gunler = gzGunler(x.yol);
+      const bu = [];
+      x.yol.forEach(function (a, j) { if (a.yer === s.id && a.g === h.id && bu.indexOf(gunler[j]) === -1) { bu.push(gunler[j]); } });
+      if (bu.length) { gecenler.push({ x: x, gunler: bu }); }
+    });
+    if (gecenler.length) {
+      el.insertAdjacentHTML("beforeend", '<div class="gzk-gecenler"><span class="oyun-etiket">buradan geçenler</span>' +
+        gecenler.map(function (g) {
+          const yazi = g.gunler.length > 4 ? g.gunler.slice(0, 4).join(", ") + "…" : g.gunler.join(", ");
+          return '<button type="button" class="hp-mini" data-gzk-ac="' + kacir(h.id) + '" data-gzk-kisi="' + g.x.i + '" data-gzk-gun="' + g.gunler[0] + '">' +
+            kacir(g.x.ad) + " · " + yazi + ". gün</button>";
+        }).join("") + "</div>");
+    }
+  }
 }
 
 function haritaYerFormu(h, y) {
@@ -1309,6 +1346,7 @@ function haritaPanelCiz() {
       '<p class="hp-not">Yerleri sürükle, kıta kıyısını çiz, yer ekle, karakter yolu çiz. Değişiklikler bellekte tutulur; işin bitince Kaydet\'e bas.</p></section>';
   }
   el.innerHTML = s;
+  gzkPanelBolumu(el, h);   /* yolculuklar (58-yolculuklar) */
 }
 
 function haritaYolListesi(kar, duzenle) {
@@ -1380,13 +1418,16 @@ function haritaZamanTazele(panelYenile) {
 function haritaDuzenCubuguCiz() {
   const el = HT.kutu.querySelector("#htDuzen");
   el.hidden = !(HT.duzen && haritaYonetici());
+  el.classList.toggle("he-acik", !el.hidden && HT.arac === "cizgi");
   if (el.hidden) { return; }
   const araclar = [["tasi", "Taşı"], ["yerekle", "+ Yer"], ["yol", "Yol çiz"]];
   el.innerHTML = araclar.map(function (a) {
       return '<button type="button" class="hl-oge' + (HT.arac === a[0] ? " secili" : "") + '" data-ht="arac" data-arac="' + a[0] + '" aria-pressed="' + (HT.arac === a[0]) + '">' + a[1] + "</button>";
     }).join("") +
     '<button type="button" class="hl-oge" data-ht="geri-al">↶ Geri al</button>' +
+    '<button type="button" class="hl-oge' + (HT.arac === "cizgi" ? " secili" : "") + '" data-he="arac" aria-pressed="' + (HT.arac === "cizgi") + '">Çizgi</button>' +
     '<button type="button" class="hl-oge kaydet" data-ht="kaydet">Kaydet' + (HT.kirli ? " (" + HT.kirli + ")" : "") + "</button>";
+  if (HT.arac === "cizgi") { el.insertAdjacentHTML("beforeend", heAracHtml()); }   /* çizgi aracı (59-harita-ekleri) */
 }
 
 function haritaKirli() {
@@ -2065,7 +2106,6 @@ function haritaDuzenAc(ac) {
   if (HT.duzen) { haritaToast("Geliştirici modu açık: yerleri sürükleyebilirsin"); }
 }
 
-
 /** Karakter kartına "yolunu haritada göster" düğmesi (yolu varsa). */
 function karakterYoluDugmesi(k) {
   if (!k.yol || !k.yol.length) { return ""; }
@@ -2157,26 +2197,6 @@ function basinCiz() {
                  kacir(l.ad) + "</a>";
         }).join("") + "</div>"
       : "");
-}
-
-/* ==================== DEĞİŞİKLİK GÜNLÜĞÜ ==================== */
-
-function degisiklikCiz() {
-  const alan = document.querySelector("#degisiklikAlan");
-  if (!alan || !veri.degisiklik) { return; }
-
-  alan.innerHTML = '<div class="madde-liste">' + veri.degisiklik.map(function (d, i) {
-    return '<div class="madde' + (i === 0 ? " acik" : "") + '">' +
-             '<button class="madde-bas">' +
-               '<span class="madde-bolum">' + kacir(d.surum) + "</span>" +
-               '<span class="madde-baslik">' + kacir(d.tarih) + "</span>" +
-               '<span class="madde-ok">›</span>' +
-             "</button>" +
-             '<div class="madde-govde"><ul class="y-bosluk">' +
-               d.maddeler.map(function (m) { return "<li>" + kacir(m) + "</li>"; }).join("") +
-             "</ul></div>" +
-           "</div>";
-  }).join("") + "</div>";
 }
 
 /* ==================== olaylar ==================== */

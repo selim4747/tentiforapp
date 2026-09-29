@@ -177,16 +177,25 @@ function vurguListesi() {
   try { return JSON.parse(kayitOku(VURGU_ANAHTAR) || "[]"); } catch (e) { return []; }
 }
 
+/** Vurguyu kaydeder; nerede okunduğu (bağlam: sayfa, kutu, roman bölümü) da yazılır, "Yerinde oku" oraya döner. */
 function vurguKaydet(metin, kaynak) {
+  const b = vurguBaglami();
   const liste = vurguListesi();
-  if (liste.some(function (v) { return v.metin === metin; })) { return; }
-
-  liste.push({ metin: metin, kaynak: kaynak || "", t: Date.now() });
-  if (liste.length > 100) { liste.shift(); }
+  let v = liste.find(function (x) { return x.metin === metin; });
+  if (!v) {
+    v = { metin: metin, kaynak: kaynak || b.baslik || "", t: Date.now() };
+    liste.push(v);
+    if (liste.length > 100) { liste.shift(); }
+  }
+  if (!v.git && !v.roman) {
+    if (b.git) { v.git = b.git; }
+    if (b.oku) { v.oku = b.oku; }
+    if (b.roman) { v.roman = b.roman; }
+    if (!v.kaynak && b.baslik) { v.kaynak = b.baslik; }
+  }
   kayitYaz(VURGU_ANAHTAR, JSON.stringify(liste));
-
-  /* Deftereki diğer listeler gibi bu da kaydedilince kendini tazelemeli. */
-  if (typeof vurgularimCiz === "function") { vurgularimCiz(); }
+  vurgularimCiz();
+  setTimeout(isaretleriTazele, 50);   /* metindeki işaretler */
 }
 
 let vurguBalonu = null;
@@ -194,24 +203,18 @@ let vurguBalonu = null;
 function vurguSecimDenetle() {
   const secim = window.getSelection ? window.getSelection() : null;
   if (!secim || secim.isCollapsed || !secim.toString().trim()) { vurguBalonuKapat(); return; }
-
-  const metin = secim.toString().trim();
+  const metin = secim.toString().replace(/\s+/g, " ").trim();
   if (metin.length < 4 || metin.length > 400) { vurguBalonuKapat(); return; }
-
-  const kapsayici = secim.anchorNode && secim.anchorNode.parentElement;
-  const okumaAlani = kapsayici && kapsayici.closest &&
-    kapsayici.closest(".okuma-metin, .detay-metin, .madde-govde, .mektup-metin");
-  if (!okumaAlani) { vurguBalonuKapat(); return; }
-
-  const aralik = secim.getRangeAt(0);
-  const kutu = aralik.getBoundingClientRect();
-
+  const kapsayici = secim.anchorNode && (secim.anchorNode.nodeType === 1 ? secim.anchorNode : secim.anchorNode.parentElement);
+  const okumaAlani = kapsayici && kapsayici.closest && kapsayici.closest(VURGU_SECICI);
+  if (!okumaAlani || okumaAlani.closest("[contenteditable], textarea")) { vurguBalonuKapat(); return; }
+  const kutu = secim.getRangeAt(0).getBoundingClientRect();
   vurguBalonuKapat();
   const b = document.createElement("button");
   b.className = "vurgu-balon";
-  b.textContent = "vurgula";
-  b.style.top = (window.scrollY + kutu.top - 38) + "px";
-  b.style.left = (window.scrollX + kutu.left + kutu.width / 2 - 32) + "px";
+  b.textContent = "✎ altını çiz";
+  b.style.top = Math.max(window.scrollY + 4, window.scrollY + kutu.top - 42) + "px";
+  b.style.left = Math.max(8, Math.min(window.scrollX + kutu.left + kutu.width / 2 - 48, window.scrollX + document.documentElement.clientWidth - 110)) + "px";
   b.dataset.vurguMetin = metin;
   document.body.appendChild(b);
   vurguBalonu = b;
@@ -224,16 +227,19 @@ function vurguBalonuKapat() {
 function vurgularimCiz() {
   const alan = document.querySelector("#vurguAlan");
   if (!alan) { return; }
-
   const liste = vurguListesi().slice().reverse();
-
   alan.innerHTML = liste.length
-    ? '<div class="alinti-izgara">' + liste.map(function (v) {
-        return '<figure class="alinti"><blockquote>' + kacir(v.metin) + "</blockquote>" +
-               (v.kaynak ? "<figcaption>" + kacir(v.kaynak) + "</figcaption>" : "") +
-             "</figure>";
+    ? '<div class="alinti-izgara vurgu-liste">' + liste.map(function (v) {
+        const tarih = v.t ? new Date(v.t).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : "";
+        return '<figure class="alinti vurgu-kart"><blockquote>' + kacir(v.metin) + "</blockquote>" +
+          "<figcaption>" + kacir([v.kaynak, tarih].filter(Boolean).join(" · ")) + "</figcaption>" +
+          '<div class="vurgu-eylem">' +
+            (v.git || v.roman ? '<button type="button" class="dugme dugme-sade y-kucuk" data-vurgu-git="' + kacir(v.t) + '">↗ Yerinde oku</button>' : "") +
+            '<button type="button" class="dugme dugme-sade y-kucuk" data-vurgu-kart="' + kacir(v.t) + '">🖼 Kart</button>' +
+            '<button type="button" class="dugme dugme-sade y-kucuk" data-vurgu-sil="' + kacir(v.t) + '" aria-label="Vurguyu sil">✕</button>' +
+          "</div></figure>";
       }).join("") + "</div>"
-    : '<p class="oyun-not">Metin içinde bir cümle seç, çıkan "vurgula" düğmesine bas.</p>';
+    : '<p class="oyun-not">Okurken bir cümle seç, çıkan "✎ altını çiz" düğmesine bas. Vurguların metinde işaretli görünür, buradan yerine dönersin.</p>';
 }
 
 /* ==================== RASTGELE BRİFİNG ==================== */
@@ -337,6 +343,7 @@ window.addEventListener("resize", function () {
    duruyordu. Bu widget üçünü tek bakışta gösteren bir "Bugün" kartı. */
 
 function gunlukOzetCiz() {
+  try { bugunKartiCiz(); } catch (_) { /* yok */ }   /* Keşif'te "bugün" kartı (62-ilk-deneyim) */
   const alan = document.querySelector("#gunlukOzetAlan");
   if (!alan) { return; }
 

@@ -137,8 +137,6 @@ function kimlikSonucBul() {
   return enIyi;
 }
 
-function kimlikTekrarla() { kimlikBaslat(); }
-
 /* ---------- çizim ---------- */
 
 function kimlikCiz() {

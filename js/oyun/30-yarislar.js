@@ -388,6 +388,13 @@ async function yarisBitir() {
 
 /** Günde bir kez, yarışı bitirene küçük bir eçka ödülü (bu ayın yarışında iki katı). */
 function yarisOdul(id, puan) {
+  if (puan) {   /* yılın özeti, ilk hafta (39) */
+    yilGuncelle(function (y) {
+      y.yaris++;
+      if (!y.enIyi || puan > y.enIyi.puan) { y.enIyi = { ad: YARIS_AD[id] || id, puan: puan }; }
+    });
+    ilkHaftaIsaretle("yaris");
+  }
   if (!puan || typeof kilitAcik !== "function") { return; }
   const anahtar = "yaris_" + id + "_" + bugununAdi();
   if (kilitAcik(anahtar)) { return; }
@@ -569,7 +576,25 @@ function yarisMeydanBitti(skor) {
 
 let gkDurum = null;
 
-async function gunKelimesiYukle() {
+/** Günün kelimesi: kolay (hesapsız, cihazda) ve zor (herkesle yarış, sunucuda) modları. */
+function gunKelimesiYukle() {
+  const dis = document.querySelector("#gkAlan");
+  let r;
+  if (dis) {
+    const mod = gkModu();
+    const dugme = function (m, ad) {
+      return '<button class="dugme' + (mod === m ? "" : " dugme-sade") + '" role="tab" aria-selected="' + (mod === m) + '" data-gk-mod="' + m + '">' + ad + "</button>";
+    };
+    dis.innerHTML = '<div class="gk-modlar" role="tablist" aria-label="Günün kelimesi modu">' +
+      dugme("kolay", "Kolay · hesapsız") + dugme("zor", "Zor · herkesle yarış") + "</div>" +
+      '<div id="gkIc"><div class="gk"><span class="oyun-etiket">Günün kelimesi</span><p class="oyun-not">Yükleniyor…</p></div></div>';
+    if (mod === "kolay") { koCiz(document.querySelector("#gkIc"), gkKolayOyunu()); } else { r = gunKelimesiZorYukle(); }
+  }
+  htrSatirCiz();   /* hatırlatma satırı */
+  return r;
+}
+
+async function gunKelimesiZorYukle() {
   const alan = document.querySelector("#gkIc") || document.querySelector("#gkAlan");
   if (!alan || !yarisHazirMi()) { return; }
   if (!hesapKullanici) {
@@ -609,12 +634,16 @@ function gunKelimesiCiz(uyari) {
     '<div class="gk-izgara">' + satirlar.join("") + "</div>" +
     (d.bitti
       ? '<p class="gk-son">' + (d.cozuldu ? "Buldun! " + d.tahminler.length + "/" + d.hak : "Bugünkü kelime: <b>" + kacir(String(d.cevap || "").toLocaleUpperCase("tr")) + "</b>") + "</p>" +
-        '<button class="dugme dugme-sade" data-gk-paylas="1">Sonucu paylaş</button>'
+        '<button class="dugme dugme-sade" data-gk-paylas="1">Sonucu paylaş</button>' +
+        /* kelimenin anlamı, istatistik, hikâyede paylaş (50-kelime-oyunu) */
+        (d.cevap ? gkKelimeBilgi(koNormal(d.cevap)) : "") + '<div data-gk-istat></div>' +
+        '<div class="oyun-sira ko-paylas"><button class="dugme" data-gk-hikaye>Hikâyende paylaş</button></div>'
       : '<form data-gk-form="1" class="yaris-form"><input class="kod-giris yaris-giris" id="gkGiris" maxlength="' + d.uzunluk + '" ' +
           'autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="' + d.uzunluk + ' harfli bir kelime"><button class="dugme" type="submit">Dene</button></form>' +
         '<p class="oyun-not">Mavi: doğru yerde · sarı: kelimede var · gri: yok. Tentiforverse\'ün kendi adlarından biri.</p>') +
     (uyari ? '<p class="pencere-durum kotu">' + kacir(uyari) + "</p>" : "") +
     "</div>";
+  if (d.bitti) { gkIstatistikYukle(); }
 }
 
 async function gunKelimesiTahmin(k) {
@@ -676,32 +705,6 @@ function kesifKaydet(anahtar) {
   if (!yarisHazirMi() || !hesapKullanici) { return; }
   hesapIstemci.rpc("kesif_kaydet", { p: anahtar }).then(function () {}, function () {});
 }
-
-/* karakterAc 24-arsiv-mantigi.js'te, bu dosyadan sonra yüklenir: sarmalamayı sayfa hazır olunca yap */
-function kesifBagla() {
-  /* karakter kartı açılınca */
-  if (typeof karakterAc === "function") {
-    const eski = karakterAc;
-    window.karakterAc = function (i) {
-      const r = eski.apply(this, arguments);
-      const k = (veri.karakterler || [])[i];
-      if (k) { kesifKaydet("karakter:" + k.id); }
-      return r;
-    };
-  }
-  /* buz katmanı çözülünce */
-  if (typeof katmanAc === "function") {
-    const eskiK = katmanAc;
-    window.katmanAc = function () {
-      const once = {};
-      (veri.katmanlar || []).forEach(function (k) { once[k.id] = !!cozulenler[k.dogrulama]; });
-      const r = eskiK.apply(this, arguments);
-      (veri.katmanlar || []).forEach(function (k) { if (!once[k.id] && cozulenler[k.dogrulama]) { kesifKaydet("katman:" + k.id); } });
-      return r;
-    };
-  }
-}
-if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", kesifBagla); } else { kesifBagla(); }
 
 /* evren maddesi açılınca */
 document.addEventListener("click", function (e) {

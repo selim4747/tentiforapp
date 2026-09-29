@@ -128,6 +128,7 @@ function kartpostalOlustur() {
     '<input class="kod-giris arac-giris" readonly value="' + kacir(adres) + '" id="kpAdres">' +
     '<button class="dugme" data-kp-paylas>Paylaş</button> <button class="dugme dugme-sade" data-kp-onizle>Önizle</button>' +
     (kilit === "sifre" ? '<p class="oyun-not">Şifreyi bağlantıyla aynı yerden gönderme.</p>' : "") + "</div>";
+  ilkHaftaIsaretle("kartpostal");   /* ilk hafta (39) */
 }
 
 function kartpostalAc(ham) {
@@ -308,20 +309,15 @@ document.addEventListener("submit", function (e) {
 
 document.addEventListener("DOMContentLoaded", hickirikBaslat);
 
-/* Profilde hıçkırık tanıklığı */
-document.addEventListener("DOMContentLoaded", function () {
-  if (typeof toplulukProfilEk !== "function") { return; }
-  const eski = toplulukProfilEk;
-  window.toplulukProfilEk = async function (p) {
-    await eski.apply(this, arguments);
-    const el = document.querySelector("#profilTopluluk .profil-topluluk");
-    if (!el || typeof hesapIstemci === "undefined" || !hesapIstemci || !p || !p.kullanici_adi) { return; }
-    const { data } = await hesapIstemci.from("hickirik_sayilari").select("tanik").eq("kullanici_adi", p.kullanici_adi).maybeSingle();
-    if (data && Number(data.tanik)) {
-      const s = document.createElement("div");
-      s.className = "hesap-madalya";
-      s.innerHTML = "<span>◑ " + Number(data.tanik) + " kez Hıçkırık tanığı</span>";
-      el.appendChild(s);
-    }
-  };
-});
+/** Profilde Hıçkırık tanıklığı rozeti. */
+async function hickirikRozeti(p) {
+  const el = document.querySelector("#profilTopluluk .profil-topluluk");
+  if (!el || typeof hesapIstemci === "undefined" || !hesapIstemci || !p || !p.kullanici_adi) { return; }
+  const { data } = await hesapIstemci.from("hickirik_sayilari").select("tanik").eq("kullanici_adi", p.kullanici_adi).maybeSingle();
+  if (data && Number(data.tanik)) {
+    const s = document.createElement("div");
+    s.className = "hesap-madalya";
+    s.innerHTML = "<span>◑ " + Number(data.tanik) + " kez Hıçkırık tanığı</span>";
+    el.appendChild(s);
+  }
+}

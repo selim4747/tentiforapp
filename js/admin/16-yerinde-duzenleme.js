@@ -35,7 +35,6 @@ function duzenlemeTazele() {
   arsiviTazele();
 }
 
-
 function duzenlemeUygula() {
   document.documentElement.setAttribute("data-ayar-duzenleme", duzenlemeAcikMi() ? "1" : "0");
 }

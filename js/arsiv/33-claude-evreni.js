@@ -3,7 +3,7 @@
 
 const CE_SEKMELER = [
   ["genel", "Genel"], ["fizik", "Fizik"], ["dunya", "Dünya"], ["toplum", "Toplum"], ["tarih", "Tarih"],
-  ["kisiler", "Kişiler"], ["hikayeler", "Hikâyeler"], ["belgeler", "Belgeler"], ["sozluk", "Sözlük"], ["sorular", "Açık sorular"], ["oyunlar", "Oyunlar"]
+  ["kisiler", "Kişiler"], ["hikayeler", "Hikâyeler"], ["roman", "Roman"], ["gezi", "Yolculuklar"], ["belgeler", "Belgeler"], ["sozluk", "Sözlük"], ["sorular", "Açık sorular"], ["oyunlar", "Oyunlar"]
 ];
 let ceSekme = "genel";
 
@@ -127,6 +127,52 @@ function claudeEvrenCiz() {
       return '<button class="filtre-btn' + (ceSekme === s[0] ? " secili" : "") + '" data-ce-sekme="' + s[0] + '">' + kacir(s[1]) + "</button>";
     }).join("") + "</div>" +
     '<div class="ce-govde">' + (govde ? govde() : ceMaddeListesi(ceMaddeler(ceSekme), false)) + "</div>";
+
+  const c = veri.claudeEvreni;
+  const g = alan.querySelector(".ce-govde");
+  /* yolculuklar sekmesi ve kişilerin yolculuk düğmeleri (58-yolculuklar) */
+  const h = gzkHarita(c.harita);
+  if (h && ceSekme === "gezi") {
+    g.innerHTML = '<p class="oyun-giris">Karakterlerin Şomdo\'daki yolculukları, gün gün. Birini seç, “Gün gün izle”ye bas: haritada nerede olduğunu görürsün.</p>' +
+      '<div id="ceGezi" class="gzk-kok"></div>';
+    const onceki = GZK && GZK.harita === h.id ? GZK.secili : null;
+    gzkAc(h.id, onceki, null, "#ceGezi");
+  } else if (h && ceSekme === "kisiler") {
+    gzkKarakterler(h).forEach(function (x) {
+      const k = c.kisiler[x.i];
+      const d = k && k.id && g.querySelector("#ce-" + CSS.escape(k.id));
+      if (!d || !x.yol.length) { return; }
+      const son = gzGunler(x.yol)[x.yol.length - 1];
+      d.insertAdjacentHTML("beforeend", '<button type="button" class="dugme dugme-sade ce-gezi-dugme" data-ce-gezi="' + x.i + '">🧭 Yolculuğunu gün gün izle (' + son + " gün)</button>");
+    });
+  }
+  /* ilişki ağı ve zaman çizelgesi (60-ag-zaman) */
+  if (ceSekme === "kisiler" && (c.baglar || []).length) {
+    const dugumler = (c.kisiler || []).filter(function (k) { return (c.baglar || []).some(function (x) { return x.a === k.id || x.b === k.id; }); })
+      .map(function (k) { return { id: k.id, ad: k.ad }; });
+    g.insertAdjacentHTML("afterbegin", '<details class="kutu-y ia-bolum ce-ag" open><summary class="oyun-etiket">İlişki ağı</summary>' +
+      iaKutu("claude", dugumler, c.baglar) + "</details>");
+  }
+  if (ceSekme === "tarih") {
+    const olaylar = [];
+    (c.maddeler || []).filter(function (m) { return m.tur === "tarih"; }).forEach(function (m) { olaylar.push.apply(olaylar, zcMetindenOlaylar(m.metin)); });
+    if (olaylar.length) {
+      g.insertAdjacentHTML("afterbegin", '<section class="kutu-y zc-bolum"><div class="oyun-etiket">Zaman çizelgesi · Sebir\'e göre</div>' + zcHtml(olaylar) + "</section>");
+    }
+  }
+  /* arama, roman, ilerleme, zengin kişiler, günlük oyunlar (67-claude-evreni-ii) */
+  const sek = alan.querySelector(".ce-sekmeler");
+  if (sek && !alan.querySelector("#ceAra")) {
+    sek.insertAdjacentHTML("beforebegin", '<div class="ce-ara"><input class="kod-giris arac-giris" id="ceAra" type="search" placeholder="Bu evrende ara: kişi, yer, terim, olay…" aria-label="Claude\'un Evreni\'nde ara" autocomplete="off">' +
+      '<div id="ceAraSonuc" role="status"></div></div>');
+  }
+  if (ceSekme === "roman") { g.innerHTML = ceRomanHtml(); }
+  else if (ceSekme === "genel") { g.insertAdjacentHTML("afterbegin", ceIlerlemeHtml()); }
+  else if (ceSekme === "kisiler") { ceKisileriZenginlestir(); }
+  else if (ceSekme === "oyunlar") {
+    g.insertAdjacentHTML("afterbegin", '<div class="kutu-y ce-gunluk"><span class="oyun-etiket">Günlük oyunlar · XP</span><div id="ceGunlukAlan"></div></div>');
+    goEvrenCiz("claude");
+  }
 }
 
 document.addEventListener("click", function (e) {

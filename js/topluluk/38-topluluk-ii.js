@@ -266,30 +266,6 @@ async function davetKutusuCiz() {
 
 /* ==================== bağlar ==================== */
 
-document.addEventListener("DOMContentLoaded", function () {
-  /* hesapta davet kutusu; girişte davet kaydı */
-  if (typeof toplulukHesapEk === "function") {
-    const eskiH = toplulukHesapEk;
-    window.toplulukHesapEk = async function () { await eskiH.apply(this, arguments); davetKaydetDene(); davetKutusuCiz(); };
-  }
-  /* profilde rehberlik rozeti */
-  if (typeof toplulukProfilEk === "function") {
-    const eskiP = toplulukProfilEk;
-    window.toplulukProfilEk = async function (p) {
-      await eskiP.apply(this, arguments);
-      const el = document.querySelector("#profilTopluluk .profil-topluluk");
-      if (!el || !t2Hazir() || !p || !p.kullanici_adi) { return; }
-      const { data } = await hesapIstemci.from("rehber_sayilari").select("rehber").eq("kullanici_adi", p.kullanici_adi).maybeSingle();
-      if (data && Number(data.rehber)) {
-        const s = document.createElement("div");
-        s.className = "hesap-madalya";
-        s.innerHTML = "<span>☍ " + Number(data.rehber) + " kişiye rehberlik etti</span>";
-        el.appendChild(s);
-      }
-    };
-  }
-});
-
 document.addEventListener("submit", async function (e) {
   const f = e.target.closest("[data-defter-form], [data-soru-form], [data-kulup-form], [data-ob-form], [data-ob-coz]");
   if (!f) { return; }
@@ -361,3 +337,16 @@ window.addEventListener("hashchange", function () {
   const f = T2_BOLUMLER[ad];
   if (f && typeof window[f] === "function" && t2Hazir()) { window[f](); }
 });
+
+/** Profilde rehberlik rozeti (davet ettiği kişiler). */
+async function rehberlikRozeti(p) {
+  const el = document.querySelector("#profilTopluluk .profil-topluluk");
+  if (!el || !t2Hazir() || !p || !p.kullanici_adi) { return; }
+  const { data } = await hesapIstemci.from("rehber_sayilari").select("rehber").eq("kullanici_adi", p.kullanici_adi).maybeSingle();
+  if (data && Number(data.rehber)) {
+    const s = document.createElement("div");
+    s.className = "hesap-madalya";
+    s.innerHTML = "<span>☍ " + Number(data.rehber) + " kişiye rehberlik etti</span>";
+    el.appendChild(s);
+  }
+}

@@ -213,6 +213,7 @@ function kartParlak(k) { return !!k && (k.gunler || []).length >= ((veri.koleksi
 
 /** Kart kazanma/ilerletme. kaynak: okuma | test | nobet */
 function kartKazan(id, kaynak) {
+  if (kaynak === "okuma" && !OKU.okumaIzni) { return; }   /* okuma kartı yalnızca okumaBitti'den */
   const kar = (veri.karakterler || []).find(function (k) { return k.id === id; });
   if (!kar || kar.kart === false) { return; }
   const t = koleksiyonOku();
@@ -225,6 +226,7 @@ function kartKazan(id, kaynak) {
   jsonYaz(KOLEKSIYON_ANAHTAR, t);
 
   if (yeni) {
+    hesapHatirlat("kart");   /* hesabı yoksa: kazandığını kaybetme */
     eckaKazan(5, "Karakter kartı: " + kar.ad);
     yilGuncelle(function (y) { if (y.kart.indexOf(id) === -1) { y.kart.push(id); } });
     ilkHaftaIsaretle("kart");
@@ -274,9 +276,31 @@ function koleksiyonCiz() {
   const sahip = Object.keys(t).length;
   const tamam = tamamlananSetler();
 
-  alan.innerHTML =
+  /* karakter rozetleri: her karakterin kutularını okuyunca */
+  const rl = (veri.karakterler || []).filter(function (k) { return k.id && k.kart !== false && okuErisim(null, k.gizli); });
+  const rozetOzet = '<div class="kutu-y rozet-ozet"><div class="oyun-etiket">Karakter rozetleri · ' + rl.filter(function (k) { return rozetDurumu(k); }).length + " / " + rl.length + "</div>" +
+    '<div class="rozet-izgara">' + rl.map(function (k) {
+      const r = rozetDurumu(k), o = karakterOkunanlar(k);
+      return '<button type="button" class="rozet-oge ' + (r || "yok") + '" data-rozet-kar="' + kacir(k.id) + '" title="' + kacir(k.ad + " · " + o.okunan.length + "/" + o.l.length) + '">' +
+        '<span class="rozet-simge" aria-hidden="true">' + (r ? ROZET_SIMGE[r] : "○") + "</span><span>" + kacir(k.ad) + "</span>" +
+        '<small>' + o.okunan.length + "/" + o.l.length + "</small></button>";
+    }).join("") + "</div></div>";
+  /* kutu rozetleri: bir kutuyu ve bağlı kutularını okuyunca gümüş, konusuna hikâye yazınca altın */
+  let rbToplam = 0;
+  try { rbAg().forEach(function (d, k) { if (!/^kar:/.test(k) && rbErisir(d.kutu) && rbBaglar(k).length) { rbToplam++; } }); } catch (_) { rbToplam = 0; }
+  const rbOzet = '<div class="kutu-y rb-ozet"><div class="oyun-etiket">Kutu rozetleri · 🥈 ' + cuzdan.acilan.filter(function (x) { return /^rozetk:/.test(x); }).length +
+    " · 🥇 " + cuzdan.acilan.filter(function (x) { return /^rozetk_altin:/.test(x); }).length + " / " + rbToplam + "</div>" +
+    '<p class="oyun-not">Bir kutuyu ve bağlı olduğu her kutuyu okuyunca gümüş; konusuna fan hikâyesi yazınca altın. Bağlı kutular her kutunun altında.</p></div>';
+  /* sahip olunan bir kartı hikâyede paylaş */
+  const sahipK = (veri.karakterler || []).filter(function (k) { return t[k.id] && k.kart !== false; });
+  const kolHikaye = sahipK.length ? '<div class="kutu-y kol-hikaye"><label for="kolHikayeSec">Bir kartını hikâyende paylaş</label>' +
+    '<div class="oyun-sira"><select id="kolHikayeSec" class="kod-giris">' + sahipK.map(function (k) {
+      return '<option value="' + kacir(k.id) + '">' + kacir(k.ad) + (kartParlak(t[k.id]) ? " ✦" : "") + "</option>";
+    }).join("") + '</select><button class="dugme" data-kol-hikaye>Hikâye kartı</button></div></div>' : "";
+
+  alan.innerHTML = rozetOzet + rbOzet +
     '<p class="oyun-giris">Bir karakterin kaydını açtığında kartı senin olur; üç farklı günde açarsan kart parlar. ' +
-      "“Hangi karaktersin?” testinin sonucu ve Nöbet'i bitirdiğin görevli de kart verir. Bir seti tamamlayınca o setin unvanını alırsın.</p>" +
+      "“Hangi karaktersin?” testinin sonucu ve Nöbet'i bitirdiğin görevli de kart verir. Bir seti tamamlayınca o setin unvanını alırsın.</p>" + kolHikaye +
     '<p class="oyun-not">' + sahip + " / " + toplam + " kart · " + tamam.length + " / " + Object.keys(setler).length + " set</p>" +
     (tamam.length ? '<div class="kol-unvanlar">' + tamam.map(function (g) {
       return '<span class="kol-unvan">' + kacir(setUnvani(g)) + "</span>";
@@ -603,68 +627,6 @@ function ilkHaftaCiz() {
         (bitti ? '<span class="ih-tik">✓</span>' : "") + "</li>";
     }).join("") + "</ol></div>";
 }
-
-/* ==================== KANCALAR ==================== */
-
-/* Tanımları 24-arsiv-mantigi.js'ten sonra da geçerli kalsın diye sarmalama sayfa yüklenince yapılır. */
-function yilKancalariKur() {
-  const sar = function (ad, sonra) {
-    const eski = window[ad];
-    if (typeof eski !== "function") { return; }
-    window[ad] = function () {
-      const r = eski.apply(this, arguments);
-      try { sonra.apply(this, [r].concat(Array.prototype.slice.call(arguments))); } catch (e) { /* kanca asıl işi bozmasın */ }
-      return r;
-    };
-  };
-
-  sar("eckaKazan", function (r, miktar) {
-    if (miktar > 0) { yilGuncelle(function (y) { y.ecka += miktar; }); }
-  });
-  sar("madalyaVer", function (r, id) {
-    yilGuncelle(function (y) { if (y.madalya.indexOf(id) === -1) { y.madalya.push(id); } });
-  });
-  sar("karakterAc", function (r, i) {
-    const k = veri.karakterler[i];
-    if (!k || !bolumErisimi("arsiv")) { return; }
-    yilGuncelle(function (y) { y.okuma++; y.okunan[k.id] = (y.okunan[k.id] || 0) + 1; });
-    kartKazan(k.id, "okuma");
-  });
-  sar("oyunBitti", function (r, oyun) {
-    yilGuncelle(function (y) { y.oyun[oyun] = (y.oyun[oyun] || 0) + 1; });
-    ilkHaftaIsaretle("oyun");
-    if (oyun === "nobet" && typeof O !== "undefined" && O && O.gorevli) { kartKazan(O.gorevli, "nobet"); }
-  });
-  sar("testSec", function () {
-    if (typeof T !== "undefined" && T && T.sonuc && !kartSahip(T.sonuc)) { kartKazan(T.sonuc, "test"); }
-  });
-  sar("yarisOdul", function (r, id, puan) {
-    if (!puan) { return; }
-    yilGuncelle(function (y) {
-      y.yaris++;
-      if (!y.enIyi || puan > y.enIyi.puan) { y.enIyi = { ad: YARIS_AD[id] || id, puan: puan }; }
-    });
-    ilkHaftaIsaretle("yaris");
-  });
-  sar("gorevIlerle", function (r, id) {
-    if (id === "yazi4") { ilkHaftaIsaretle("yazi"); }
-    etkinlikGorevKontrol();
-  });
-  sar("isimCalistir", function () {
-    const g = document.querySelector("#isimGiris");
-    if (g && g.value.trim()) { ilkHaftaIsaretle("isim"); }
-  });
-  sar("meydanBitir", function () { ilkHaftaIsaretle("yaris"); });
-  sar("fanYeni", function (r, tur) { if (tur === "hikaye") { ilkHaftaIsaretle("defter"); } });
-  sar("kartpostalOlustur", function () {
-    if (document.querySelector("#kpAdres")) { ilkHaftaIsaretle("kartpostal"); }
-  });
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  if (typeof veri === "undefined") { return; }
-  yilKancalariKur();
-});
 
 /** Veri yüklenince (24-arsiv-mantigi.js hepsiniCiz'den sonra çağırır). */
 function yilKoleksiyonBasla() {

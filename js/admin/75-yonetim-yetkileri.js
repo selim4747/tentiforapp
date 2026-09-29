@@ -9,8 +9,6 @@
               (yeni bölüm, günün kelimesi, takip, sessiz saatler, cihazdaki evrenler).
    Uygulama:  mağaza için ekran görüntüleri ve .well-known (scripts/paketle.mjs), uygulama/README.md. */
 
-const Y25 = { okulmadi: true };
-
 function y25Hesap() { return typeof hesapIstemci !== "undefined" && hesapIstemci && typeof hesapKullanici !== "undefined" && hesapKullanici; }
 function y25Durum(sec, m, iyi) { const d = document.querySelector(sec); if (d) { d.textContent = m; d.className = "pencere-durum " + (iyi ? "iyi" : "kotu"); } }
 function y25Zaman(t) { const d = new Date(t); return isNaN(d) ? "?" : d.toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }); }
@@ -40,31 +38,16 @@ function y25YetkiSekmeleri() {
   return Object.keys(s);
 }
 
-if (typeof yoneticiSekmeleri === "function") {
-  const eskiYS = yoneticiSekmeleri;
-  window.yoneticiSekmeleri = function (grup) {
-    const l = eskiYS.apply(this, arguments);
-    if (typeof yoneticiAcik === "function" && yoneticiAcik()) { return l; }
-    const izin = y25YetkiSekmeleri();
-    return izin ? l.filter(function (s) { return izin.indexOf(s) !== -1; }) : l;
-  };
-}
-
 /* panelde üretirken: yönetici koduna verilecek yetkiler */
 const TEK25 = { yetkiler: null };
-if (typeof yoneticiTekKodlar === "function") {
-  const eskiTK = yoneticiTekKodlar;
-  window.yoneticiTekKodlar = function () {
-    const h = eskiTK.apply(this, arguments);
-    if (typeof TEK_PANEL === "undefined" || TEK_PANEL.tur !== "yonetici") { return h; }
-    const secili = TEK25.yetkiler || SINIRLI_SEKMELER.slice();
-    const kutu = '<label>Yetkiler (sınırlı yönetici yalnızca bu sekmeleri görür; sunucu da denetler)</label><div class="y-alan-izgara">' +
-      SINIRLI_SEKMELER.map(function (s) {
-        return '<label class="y-alan-secim"><input type="checkbox" data-tek-yetki="' + s + '"' + (secili.indexOf(s) !== -1 ? " checked" : "") + "> " + kacir(Y25_SEKME_ADLARI[s] || s) + "</label>";
-      }).join("") + '</div><div class="oyun-sira"><button class="dugme dugme-sade y-kucuk" data-tek-yetki-hepsi="1">Hepsini seç</button>' +
-      '<button class="dugme dugme-sade y-kucuk" data-tek-yetki-hepsi="0">Hiçbiri</button></div>';
-    return h.replace('<div class="y-kisi-dugmeler"><button class="dugme" data-tek-uret>', kutu + '<div class="y-kisi-dugmeler"><button class="dugme" data-tek-uret>');
-  };
+/** Tek kodla verilecek sınırlı yöneticiliğin sekme yetkileri. */
+function tekYetkiKutusu() {
+  const secili = TEK25.yetkiler || SINIRLI_SEKMELER.slice();
+  return '<label>Yetkiler (sınırlı yönetici yalnızca bu sekmeleri görür; sunucu da denetler)</label><div class="y-alan-izgara">' +
+    SINIRLI_SEKMELER.map(function (s) {
+      return '<label class="y-alan-secim"><input type="checkbox" data-tek-yetki="' + s + '"' + (secili.indexOf(s) !== -1 ? " checked" : "") + "> " + kacir(Y25_SEKME_ADLARI[s] || s) + "</label>";
+    }).join("") + '</div><div class="oyun-sira"><button class="dugme dugme-sade y-kucuk" data-tek-yetki-hepsi="1">Hepsini seç</button>' +
+    '<button class="dugme dugme-sade y-kucuk" data-tek-yetki-hepsi="0">Hiçbiri</button></div>';
 }
 
 function tek25YetkiOku() {
@@ -80,22 +63,20 @@ document.addEventListener("click", function (e) {
 }, false);
 document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("[data-tek-uret]")) { tek25YetkiOku(); } }, true);
 
-if (typeof tekKodlariOlustur === "function") {
-  const eskiOlustur = tekKodlariOlustur;
-  window.tekKodlariOlustur = async function (tur, ad, adet, secim) {
-    if (tur !== "yonetici") { return eskiOlustur.apply(this, arguments); }
-    const yetkiler = (TEK25.yetkiler || SINIRLI_SEKMELER.slice()).filter(function (s) { return SINIRLI_SEKMELER.indexOf(s) !== -1; });
-    if (!yetkiler.length) { throw new Error("En az bir yetki seç."); }
-    const kodlar = [], satirlar = [];
-    for (let i = 0; i < adet; i++) {
-      const kod = kod10();
-      kodlar.push(kod);
-      satirlar.push({ ozet: tekOzet(kod), tur: tur, ad: ad, veri: { yetkiler: yetkiler }, sure_gun: Number(secim.sure) || null });
-    }
-    const r = await hesapIstemci.rpc("tek_kod_olustur", { p_kodlar: satirlar });
-    if (r.error) { throw r.error; }
-    return kodlar;
-  };
+/** Sınırlı yönetici kodları: seçilen sekme yetkileriyle. */
+async function tekYoneticiKodlari(ad, adet, secim) {
+  const tur = "yonetici";
+  const yetkiler = (TEK25.yetkiler || SINIRLI_SEKMELER.slice()).filter(function (s) { return SINIRLI_SEKMELER.indexOf(s) !== -1; });
+  if (!yetkiler.length) { throw new Error("En az bir yetki seç."); }
+  const kodlar = [], satirlar = [];
+  for (let i = 0; i < adet; i++) {
+    const kod = kod10();
+    kodlar.push(kod);
+    satirlar.push({ ozet: tekOzet(kod), tur: tur, ad: ad, veri: { yetkiler: yetkiler }, sure_gun: Number(secim.sure) || null });
+  }
+  const r = await hesapIstemci.rpc("tek_kod_olustur", { p_kodlar: satirlar });
+  if (r.error) { throw r.error; }
+  return kodlar;
 }
 
 /* ==================== 2. evren yönetici kodunun yetkileri ==================== */
@@ -107,86 +88,29 @@ function evy25Yetki(e) { return (e && e.yoneticiYetki) || { sekmeler: false, ipu
 /** Bu cihazda bu evrenin yönetici kodu girildi ve kod bu yetkiyi veriyor mu? */
 function evy25Var(e, yetki) { return !!(e && e.yoneticiOzet && evy25Acik(e.id) && evy25Yetki(e)[yetki]); }
 
-if (typeof evrenEkTemizle === "function") {
-  const eskiEk25 = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEk25.apply(this, arguments);
-    const y = ham.yoneticiYetki;
-    if (y && typeof y === "object") {
-      const t = { sekmeler: y.sekmeler === true, ipucu: y.ipucu === true };
-      if (Array.isArray(y.lorlar)) { t.lorlar = y.lorlar.map(String).filter(function (x) { return /^[\w-]{1,40}$/.test(x); }).slice(0, 200); }
-      e.yoneticiYetki = t;
-    }
-    if (ham.ortak === true) { e.ortak = true; }
-  };
+/** Evren yönetici kodunun yetkileri: hangi lorelar, gizli sekmeler, bedava ipucu. */
+function evy25YetkiKutusu(e) {
+  const y = evy25Yetki(e);
+  const lorlar = e.lorlar || [];
+  const secili = function (id) { return !Array.isArray(y.lorlar) || y.lorlar.indexOf(id) !== -1; };
+  return '<div class="evy-yetki"><span class="oyun-etiket">Bu kodun yetkileri</span>' +
+    (lorlar.length ? '<p class="oyun-not">Açacağı kilitli lorelar:</p><div class="y-alan-izgara">' + lorlar.map(function (l) {
+      return '<label class="y-alan-secim"><input type="checkbox" data-evy-lore="' + kacir(l.id) + '"' + (secili(l.id) ? " checked" : "") + "> " + kacir(l.baslik || l.id) + "</label>";
+    }).join("") + "</div>" : '<p class="oyun-not">Evrende henüz kilitli lore yok; eklenince bu kod hepsini açar.</p>') +
+    '<label class="hf-onay"><input type="checkbox" id="evyYetkiSekme"' + (y.sekmeler ? " checked" : "") + "> Ziyaretçilerden gizlediğin sekmeleri görsün</label>" +
+    '<label class="hf-onay"><input type="checkbox" id="evyYetkiIpucu"' + (y.ipucu ? " checked" : "") + "> Lore ipuçlarını parasız alsın</label>" +
+    '<p class="oyun-not">Yetkiler, kodu kurunca ya da değiştirince uygulanır.</p></div>';
 }
 
-if (typeof evrenYoneticiKoduHtml === "function") {
-  const eskiEYH = evrenYoneticiKoduHtml;
-  window.evrenYoneticiKoduHtml = function (e, kodlar) {
-    const h = eskiEYH.apply(this, arguments);
-    const y = evy25Yetki(e);
-    const lorlar = e.lorlar || [];
-    const secili = function (id) { return !Array.isArray(y.lorlar) || y.lorlar.indexOf(id) !== -1; };
-    const kutu = '<div class="evy-yetki"><span class="oyun-etiket">Bu kodun yetkileri</span>' +
-      (lorlar.length ? '<p class="oyun-not">Açacağı kilitli lorelar:</p><div class="y-alan-izgara">' + lorlar.map(function (l) {
-        return '<label class="y-alan-secim"><input type="checkbox" data-evy-lore="' + kacir(l.id) + '"' + (secili(l.id) ? " checked" : "") + "> " + kacir(l.baslik || l.id) + "</label>";
-      }).join("") + "</div>" : '<p class="oyun-not">Evrende henüz kilitli lore yok; eklenince bu kod hepsini açar.</p>') +
-      '<label class="hf-onay"><input type="checkbox" id="evyYetkiSekme"' + (y.sekmeler ? " checked" : "") + "> Ziyaretçilerden gizlediğin sekmeleri görsün</label>" +
-      '<label class="hf-onay"><input type="checkbox" id="evyYetkiIpucu"' + (y.ipucu ? " checked" : "") + "> Lore ipuçlarını parasız alsın</label>" +
-      '<p class="oyun-not">Yetkiler, kodu kurunca ya da değiştirince uygulanır.</p></div>';
-    return h.replace('<p class="pencere-durum" id="evyDurum"', kutu + '<p class="pencere-durum" id="evyDurum"');
-  };
+/** Evren yönetici kodu formunda seçilen yetkiler. */
+function evy25SeciliYetki(e) {
+  const kutular = document.querySelectorAll("[data-evy-lore]");
+  const lorlar = kutular.length ? Array.prototype.slice.call(kutular).filter(function (c) { return c.checked; }).map(function (c) { return c.getAttribute("data-evy-lore"); }) : null;
+  const yetki = { sekmeler: !!(document.querySelector("#evyYetkiSekme") || {}).checked, ipucu: !!(document.querySelector("#evyYetkiIpucu") || {}).checked };
+  if (lorlar && lorlar.length < (e.lorlar || []).length) { yetki.lorlar = lorlar; }
+  return yetki;
 }
 
-if (typeof evrenYoneticiKoduKur === "function") {
-  const eskiEYK = evrenYoneticiKoduKur;
-  window.evrenYoneticiKoduKur = function (e, kod) {
-    const kutular = document.querySelectorAll("[data-evy-lore]");
-    const lorlar = kutular.length ? Array.prototype.slice.call(kutular).filter(function (c) { return c.checked; }).map(function (c) { return c.getAttribute("data-evy-lore"); }) : null;
-    const yetki = { sekmeler: !!(document.querySelector("#evyYetkiSekme") || {}).checked, ipucu: !!(document.querySelector("#evyYetkiIpucu") || {}).checked };
-    if (lorlar && lorlar.length < (e.lorlar || []).length) { yetki.lorlar = lorlar; }
-    const s = eskiEYK.apply(this, arguments);
-    if (s && s.hata) { return s; }
-    let cikan = 0;
-    evrenBenimDegistir(e.id, function (x) {
-      x.yoneticiYetki = yetki;
-      if (yetki.lorlar) { (x.lorlar || []).forEach(function (l) { if (yetki.lorlar.indexOf(l.id) === -1 && l.sy) { delete l.sy; cikan++; } }); }
-    });
-    if (s) { s.sarilan = Math.max(0, (s.sarilan || 0) - cikan); }
-    return s;
-  };
-}
-
-if (typeof evrenKodDene === "function") {
-  const eskiEKD = evrenKodDene;
-  window.evrenKodDene = async function (e) {
-    const s = await eskiEKD.apply(this, arguments);
-    if (s && s.tur === "evren" && e && e.id) { const d = jsonOku(EVY25, {}) || {}; d[e.id] = true; jsonYaz(EVY25, d); }
-    return s;
-  };
-}
-
-/* gizli sekmeler: yetkili evren yöneticisine görünür */
-if (typeof evrenEkSekmeler === "function") {
-  const eskiSek25 = evrenEkSekmeler;
-  window.evrenEkSekmeler = function (v) {
-    if (v && v.eser && v.eser.sekmeDuzen && evy25Var(v.eser, "sekmeler")) {
-      const e2 = Object.assign({}, v.eser); delete e2.sekmeDuzen;
-      return eskiSek25.call(this, Object.assign({}, v, { eser: e2 }));
-    }
-    return eskiSek25.apply(this, arguments);
-  };
-}
-if (typeof evrenDuzeni === "function") {
-  const eskiDuz25 = evrenDuzeni;
-  window.evrenDuzeni = function () {
-    const d = eskiDuz25.apply(this, arguments);
-    const v = typeof evrenSayfaVerisi === "function" ? evrenSayfaVerisi() : null;
-    if (d && v && evy25Var(v.eser, "sekmeler")) { return d.ilk ? { ilk: d.ilk } : null; }
-    return d;
-  };
-}
 /* bedava ipucu */
 document.addEventListener("click", function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-evl-ipucu]");
@@ -330,26 +254,6 @@ document.addEventListener("click", function (ev) {
 const YEDEK25 = "tentiforapp_son_yedek";   /* bu cihazda son yedek (hesapla eşitlenmez) */
 document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("[data-y-yedek-al]")) { try { localStorage.setItem(YEDEK25, String(Date.now())); } catch (_) { /* yok */ } } }, true);
 
-if (typeof yon24Serit === "function") {
-  const eskiSerit = yon24Serit;
-  window.yon24Serit = function () {
-    let h = eskiSerit.apply(this, arguments);
-    if (typeof yoneticiAcik === "function" && yoneticiAcik()) {
-      let son = 0;
-      try { son = Number(localStorage.getItem(YEDEK25)) || 0; } catch (_) { son = 0; }
-      const gun = son ? Math.floor((Date.now() - son) / 86400000) : null;
-      if (gun === null || gun >= 7) {
-        h += '<div class="y-uyari"><b>' + (gun === null ? "Bu cihazdan hiç yedek alınmadı." : gun + " gündür yedek alınmadı.") + "</b> Haftada bir yedek al: " +
-          '<button class="dugme dugme-sade y-kucuk" data-y25-yedek>Yedeğe git</button></div>';
-      }
-    }
-    if (IB_SAYI.yeni > 0 && typeof yoneticiSekmeleri === "function" && yoneticiSekmeleri("bakim").indexOf("icbildirim") !== -1) {
-      h += '<div class="y-uyari"><b>' + IB_SAYI.yeni + " yeni içerik bildirimi</b> " +
-        '<button class="dugme dugme-sade y-kucuk" data-y25-ib>Bak</button></div>';
-    }
-    return h;
-  };
-}
 const IB_SAYI = { yeni: 0, soruldu: false };
 function ibSayiSor() {
   if (IB_SAYI.soruldu || !y25Hesap()) { return; }
@@ -366,37 +270,6 @@ document.addEventListener("click", function (ev) {
   yoneticiGrup = "bakim"; yoneticiSekme = b.hasAttribute("data-y25-yedek") ? "yedek" : "icbildirim";
   yoneticiCiz();
 });
-
-/* yeni sekmelerin gövdesi (22'deki zincir bilmediği sekmede listeye düşer) ve adları */
-if (typeof yoneticiListe === "function") {
-  const eskiListe = yoneticiListe;
-  window.yoneticiListe = function () {
-    if (yoneticiSekme === "icbildirim") { return yoneticiIcerikBildirimleri(); }
-    if (yoneticiSekme === "vitrin") { return yoneticiVitrin(); }
-    return eskiListe.apply(this, arguments);
-  };
-}
-if (typeof yoneticiForm === "function") {
-  const eskiForm = yoneticiForm;
-  window.yoneticiForm = function () {
-    if (yoneticiSekme === "icbildirim") { return yoneticiIcerikBildirimleri(); }
-    if (yoneticiSekme === "vitrin") { return yoneticiVitrin(); }
-    return eskiForm.apply(this, arguments);
-  };
-}
-if (typeof yoneticiCiz === "function") {
-  const eskiYC25 = yoneticiCiz;
-  window.yoneticiCiz = function () {
-    if (yoneticiSekme === "icbildirim" || yoneticiSekme === "vitrin") { yoneticiSecili = null; }
-    const r = eskiYC25.apply(this, arguments);
-    Object.keys(Y25_YENI_SEKMELER).forEach(function (s) {
-      const b = document.querySelector('#yoneticiAlan [data-y-sekme="' + s + '"]');
-      if (b) { b.textContent = Y25_YENI_SEKMELER[s]; }
-    });
-    if (typeof panelAcik === "function" && panelAcik()) { ibSayiSor(); }
-    return r;
-  };
-}
 
 /* ==================== 5. sürüm geçmişi (bu cihazda, IndexedDB) ==================== */
 
@@ -487,6 +360,12 @@ async function gcmListeCiz(id) {
     return '<li><span><b>' + kacir(y25Zaman(x.zaman)) + "</b> · " + kacir(x.neden) + '<span class="oyun-not"> · ' + kacir(x.ad || "Adsız") + " · " + kacir(ozet) + "</span></span>" +
       '<button class="dugme dugme-sade y-kucuk" data-gcm-don="' + x.zaman + '">Bu hâle dön</button></li>';
   }).join("") + "</ol>" : '<p class="oyun-not">Henüz kayıtlı hâl yok. Evrenini değiştirdikçe burada birikir.</p>';
+  /* her sürümde "Şimdikiyle karşılaştır" (85) */
+  document.querySelectorAll("#gcmListe [data-gcm-don]").forEach(function (b) {
+    if (!b.parentNode.querySelector("[data-gcm-fark]")) {
+      b.insertAdjacentHTML("beforebegin", '<button type="button" class="dugme dugme-sade y-kucuk" data-gcm-fark="' + b.getAttribute("data-gcm-don") + '">Şimdikiyle karşılaştır</button>');
+    }
+  });
 }
 
 document.addEventListener("toggle", function (ev) {
@@ -518,7 +397,13 @@ function ortakTaban(id, deger) {
 }
 
 /** Sunucuya giden hâl: evrenin kendisi (yerel işaretler hariç). */
-function ortakGonderim(e) { const o = JSON.parse(JSON.stringify(e)); delete o.ortak; return o; }
+/** Ortak yazara giden kopya: ortaklık bilgisi çıkar, kimin hangi sekmede değiştirdiği (iz) eklenir. */
+function ortakGonderim(e) {
+  const o = JSON.parse(JSON.stringify(e));
+  delete o.ortak;
+  o.ortakIz = { kim: oiBenimAdim(), sekme: EVS && EVS.id === e.id ? String(EVS.sekme || "") : "", zaman: new Date().toISOString() };
+  return o;
+}
 
 /** Sunucudan gelen hâl: sitedeki fan evrenleri gibi temizlenir. */
 function ortakTemizle(ham, id) {
@@ -565,11 +450,22 @@ async function ortakYaz(id) {
 }
 
 /** Başka yazarın hâlini uygular; bu cihazdaki hâl önce sürüm geçmişine konur. */
+/** Öbür yazarın hâlini uygular: önceki hâl sürüm geçmişine, değişen alanlar ortak günlüğe. */
 async function ortakUzaktanUygula(id, d, catisma) {
   const t = ortakTemizle(d.veri || {}, id);
   if (!t) { return; }
-  await gcmKaydet(id, "ortak yazardan önce", true);
+  const once = evrenBenimBul(id);
+  const eskiKopya = once ? JSON.parse(JSON.stringify(once)) : null;
+  const iz = (d.veri && d.veri.ortakIz) || {};
+  const kim = iz.kim || d.guncelleyen || "Ortak yazar";
+  await gcmKaydet(id, kim + "'in değişikliğinden önce", true);
   ortakYerelYaz(id, t);
+  const alanlar = oiDegisenAlanlar(eskiKopya, evrenBenimBul(id));
+  if (eskiKopya && alanlar.length) {
+    const g = jsonOku(ORTAK_GUNLUK, {}) || {};
+    g[id] = [{ kim: kim, zaman: iz.zaman || d.guncelleme || new Date().toISOString(), sekme: iz.sekme || "", alanlar: alanlar }].concat(g[id] || []).slice(0, 30);
+    jsonYaz(ORTAK_GUNLUK, g);
+  }
   ORTAK.bekleyen[id] = false;
   ortakTaban(id, d.guncelleme);
   if (typeof eckaBildir === "function" && catisma) {
@@ -593,16 +489,6 @@ async function ortakCek(id) {
 }
 
 function ortakDurumYaz(m, iyi) { y25Durum("#ortakDurum", m, iyi); }
-
-if (typeof evrenBenimDegistir === "function") {
-  const eskiBD = evrenBenimDegistir;
-  window.evrenBenimDegistir = function (id) {
-    if (!ORTAK.uyguluyor) { gcmKaydet(id, "otomatik"); }
-    const r = eskiBD.apply(this, arguments);
-    if (!ORTAK.uyguluyor) { ortakYazZamanla(id); }
-    return r;
-  };
-}
 
 async function ortakAc(id) {
   const e = evrenBenimBul(id);
@@ -646,25 +532,6 @@ async function ortakKatil(kod, durum) {
   } catch (_) { yaz("Sunucuya ulaşılamadı.", false); }
 }
 
-if (typeof sonraSar === "function") {
-  sonraSar("kodDene", function (eski) {
-    return function (ham) {
-      const kod = String(ham || "").trim().toUpperCase();
-      if (/^ORT-[A-Z0-9]{8,}$/.test(kod)) { ortakKatil(kod, document.querySelector("#kodDurum")); return; }
-      return eski.apply(this, arguments);
-    };
-  });
-}
-
-/* girişte: başka cihazda katıldığın ortak evrenler bu cihaza da gelsin */
-if (typeof hesapProfilYukle === "function") {
-  const eskiPY25 = hesapProfilYukle;
-  window.hesapProfilYukle = async function () {
-    const r = await eskiPY25.apply(this, arguments);
-    setTimeout(ortakEvrenlerimiCek, 1500);
-    return r;
-  };
-}
 async function ortakEvrenlerimiCek() {
   if (!y25Hesap()) { return; }
   try {
@@ -721,6 +588,7 @@ function ortakKutusu(e) {
       '<input class="kod-giris arac-giris" readonly value="' + kacir(davet) + '" id="ortakDavetKod">' +
       '<input class="kod-giris arac-giris" readonly value="' + kacir(typeof tekDavetBaglantisi === "function" ? tekDavetBaglantisi(davet) : davet) + '" id="ortakDavetBag">' +
       '<button class="dugme dugme-sade" data-ortak-kopyala>Bağlantıyı kopyala</button></div>' : "") +
+    oiGunlukHtml(e.id) +   /* kim ne değiştirdi (77) */
     '<p class="pencere-durum" id="ortakDurum" role="status"></p></div>';
 }
 
@@ -779,18 +647,7 @@ function evrenSay(ad) {
 }
 
 let eviSonSekme = "";
-if (typeof evrenSayfaCiz === "function") {
-  const eskiCiz25 = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    const r = eskiCiz25.apply(this, arguments);
-    if (typeof EVS !== "undefined" && EVS) {
-      const k = EVS.kaynak + ":" + EVS.id + ":" + EVS.sekme;
-      if (k !== eviSonSekme) { eviSonSekme = k; evrenSay("ziyaret"); evrenSay("sekme:" + String(EVS.sekme).replace(/[^a-z0-9]/g, "").slice(0, 30)); }
-      y25EvrenEkleri();
-    } else { eviSonSekme = ""; }
-    return r;
-  };
-}
+
 document.addEventListener("click", function (ev) {
   const o = ev.target.closest && ev.target.closest("[data-evo-basla], [data-evu-ac]");
   if (!o) { return; }
@@ -850,34 +707,6 @@ function eviKutusu(e) {
 const ONZ = { bekleyen: null };
 function onizlemeMi() { return typeof EVS !== "undefined" && !!EVS && EVS.kaynak === "fan" && (EVS.onizle === true || ONZ.bekleyen === EVS.id); }
 
-if (typeof evrenSayfaVerisi === "function") {
-  const eskiSV = evrenSayfaVerisi;
-  window.evrenSayfaVerisi = function () {
-    if (onizlemeMi()) {
-      const e = evrenBenimBul(EVS.id);
-      return e ? { eser: e, duzenle: false, rozet: "Önizleme · ziyaretçiler böyle görür", onizle: true } : null;
-    }
-    return eskiSV.apply(this, arguments);
-  };
-}
-if (typeof evrenSayfaAc === "function") {
-  const eskiAcOnz = evrenSayfaAc;
-  window.evrenSayfaAc = function (kaynak, id) {
-    if (kaynak !== "onizle") { return eskiAcOnz.apply(this, arguments); }
-    if (!evrenBenimBul(id)) { return eskiAcOnz.call(this, "benim", id); }
-    ONZ.bekleyen = id;
-    try { eskiAcOnz.call(this, "fan", id); } finally { ONZ.bekleyen = null; }
-    if (EVS && EVS.id === id) { EVS.onizle = true; evrenSayfaCiz(); }
-  };
-}
-if (typeof evoOdulEngeli === "function") {
-  const eskiOE = evoOdulEngeli;
-  window.evoOdulEngeli = function () {
-    if (onizlemeMi()) { return "Önizlemede ödül yok; ziyaretçiler oynayınca kazanır."; }
-    return eskiOE.apply(this, arguments);
-  };
-}
-
 /** Evren sayfasına 2.5 kutuları: kurucuya (bilgi sekmesi) ve okura. */
 function y25EvrenEkleri() {
   const g = document.querySelector("#evrenSayfa .evs-govde");
@@ -910,28 +739,6 @@ document.addEventListener("click", function (ev) {
   evrenSayfaAc(b.hasAttribute("data-ev-onizle") ? "onizle" : "benim", id);
   const s = document.querySelector("#evrenSayfa"); if (s) { s.scrollTop = 0; }
 });
-
-/* kişiselleştir kutusuna önizleme düğmesi */
-if (typeof evrenBilgiBolumu === "function") {
-  const eskiBilgi25 = evrenBilgiBolumu;
-  window.evrenBilgiBolumu = function () {
-    const h = eskiBilgi25.apply(this, arguments);
-    return h.replace('<button class="dugme dugme-sade" data-evs-sekme="uygulama">⌨ Uygulama ekle</button>',
-      '<button class="dugme dugme-sade" data-evs-sekme="uygulama">⌨ Uygulama ekle</button><button class="dugme dugme-sade" data-ev-onizle>👁 Ziyaretçi gibi gör</button>');
-  };
-}
-
-/* uygulama çerçevesinin altında bildir */
-if (typeof evuCalistir === "function") {
-  const eskiEvu = evuCalistir;
-  window.evuCalistir = function (kap, e, u) {
-    const r = eskiEvu.apply(this, arguments);
-    if (typeof EVS !== "undefined" && EVS && EVS.kaynak === "fan" && !onizlemeMi() && kap && kap.parentNode && !kap.parentNode.querySelector(".ib-uygulama")) {
-      kap.insertAdjacentHTML("afterend", '<p class="oyun-not ib-uygulama">' + ibDugme("uygulama", "fan:" + EVS.id + "/" + u.id, u.ad) + "</p>");
-    }
-    return r;
-  };
-}
 
 /* keşif: önizleme kartı, cihazda işareti, haftanın evreni */
 function kesif25Onizle(id) {
@@ -974,29 +781,25 @@ document.addEventListener("click", async function (ev) {
   if (typeof kesifCiz === "function") { kesifCiz(); }
 });
 
-if (typeof kesifCiz === "function") {
-  const eskiKC = kesifCiz;
-  window.kesifCiz = function () {
-    const r = eskiKC.apply(this, arguments);
-    const indirilen = typeof evdIndirilenler === "function" ? evdIndirilenler() : {};
-    document.querySelectorAll("#evrenKesif .kesif-kart").forEach(function (k) {
-      const m = /#\/ev\/fan\/([\w-]+)$/.exec(k.getAttribute("data-evren-git") || "");
-      if (!m || k.parentNode.classList.contains("kesif-sar")) { return; }
-      const sar = document.createElement("div");
-      sar.className = "kesif-sar";
-      k.parentNode.insertBefore(sar, k);
-      sar.appendChild(k);
-      sar.insertAdjacentHTML("beforeend", '<div class="kesif-alt">' + (indirilen[m[1]] ? '<span class="oyun-not">📥 cihazda</span>' : "<span></span>") +
-        '<button class="ic-bag" data-kesif-onizle="' + kacir(m[1]) + '">Önizle</button></div>');
-    });
-    const kutu = document.querySelector("#evrenKesif");
-    if (kutu) {
-      const eski = kutu.querySelector(".hafta-evren"); if (eski) { eski.remove(); }
-      const h = haftaninEvreniHtml();
-      if (h) { kutu.insertAdjacentHTML("afterbegin", h); }
-    }
-    return r;
-  };
+/** Keşif kartlarına "Önizle" ve "cihazda"; üstte haftanın evreni. */
+function kesifEkleri() {
+  const indirilen = typeof evdIndirilenler === "function" ? evdIndirilenler() : {};
+  document.querySelectorAll("#evrenKesif .kesif-kart").forEach(function (k) {
+    const m = /#\/ev\/fan\/([\w-]+)$/.exec(k.getAttribute("data-evren-git") || "");
+    if (!m || k.parentNode.classList.contains("kesif-sar")) { return; }
+    const sar = document.createElement("div");
+    sar.className = "kesif-sar";
+    k.parentNode.insertBefore(sar, k);
+    sar.appendChild(k);
+    sar.insertAdjacentHTML("beforeend", '<div class="kesif-alt">' + (indirilen[m[1]] ? '<span class="oyun-not">📥 cihazda</span>' : "<span></span>") +
+      '<button class="ic-bag" data-kesif-onizle="' + kacir(m[1]) + '">Önizle</button></div>');
+  });
+  const kutu = document.querySelector("#evrenKesif");
+  if (kutu) {
+    const eski = kutu.querySelector(".hafta-evren"); if (eski) { eski.remove(); }
+    const h = haftaninEvreniHtml();
+    if (h) { kutu.insertAdjacentHTML("afterbegin", h); }
+  }
 }
 
 /* ==================== 9. okuma listesi ve kaldığın yer ==================== */
@@ -1005,42 +808,36 @@ const OKL = "tentiforapp_okuma_listem";   /* { anahtar: { ad, git, bolum, sira, 
 if (typeof ESIT_BIRLESIM !== "undefined" && ESIT_BIRLESIM.indexOf(OKL) === -1) { ESIT_BIRLESIM.push(OKL); }
 
 let oklAcilis = null, oklDevamBolum = null;
-if (typeof evrenSayfaKapat === "function") {
-  const eskiKapatOkl = evrenSayfaKapat;
-  window.evrenSayfaKapat = function () { oklAcilis = null; return eskiKapatOkl.apply(this, arguments); };
-}
 
 function oklOku() { const d = jsonOku(OKL, {}); return d && typeof d === "object" && !Array.isArray(d) ? d : {}; }
 function oklAnahtar() { return EVS.kaynak + ":" + EVS.id; }
 
-if (typeof evrenRomanBolumu === "function") {
-  const eskiRB = evrenRomanBolumu;
-  window.evrenRomanBolumu = function (v) {
-    const okur = (EVS.kaynak !== "benim" || (typeof evrDurum === "function" && evrDurum().onizle));
-    const kaydet = !onizlemeMi() && EVS.kaynak !== "benim";
-    if (!okur || EVS.kaynak === "e99") { return eskiRB.apply(this, arguments); }
-    const d = evrDurum();
-    const k = oklAnahtar();
-    const l = oklOku();
-    const bolumler = ((v.eser.roman || {}).bolumler) || [];
-    if (d.secili === null && l[k] && l[k].bolum && bolumler.some(function (b) { return b.id === l[k].bolum; })) { d.secili = l[k].bolum; }
-    /* evren her açıldığında ilk roman görünümünde: kaldığın yer */
-    if (oklAcilis !== k) {
-      oklAcilis = k;
-      oklDevamBolum = kaydet && l[k] && l[k].bolum === d.secili && l[k].sira > 0 ? d.secili : null;
-    }
-    const devam = !!oklDevamBolum && oklDevamBolum === d.secili;   /* başka bölüme geçene kadar */
-    const h = eskiRB.apply(this, arguments);
-    if (!bolumler.length) { return h; }
-    const i = Math.max(0, bolumler.findIndex(function (b) { return b.id === d.secili; }));
-    const o = l[k] || {};
-    const kayit = { ad: v.eser.ad || "Evren", git: "#/ev/" + EVS.kaynak + "/" + EVS.id, bolum: bolumler[i].id, sira: i, toplam: bolumler.length,
-      zaman: Date.now(), liste: !!o.liste, bitti: !!o.bitti || i === bolumler.length - 1 };
-    if (kaydet && (o.bolum !== kayit.bolum || o.toplam !== kayit.toplam || o.bitti !== kayit.bitti)) { l[k] = kayit; jsonYaz(OKL, l); }
-    const listede = !!(l[k] && l[k].liste);
-    return '<div class="okl-serit">' + (devam ? '<span class="oyun-not">📖 Kaldığın yerden: ' + (i + 1) + ". bölüm</span>" : '<span class="oyun-not">' + (i + 1) + " / " + bolumler.length + "</span>") +
-      (!kaydet ? "" : '<button class="dugme dugme-sade y-kucuk" data-okl-liste>' + (listede ? "✓ Okuma listende" : "+ Okuma listeme ekle") + "</button>") + "</div>" + h;
-  };
+/** Evrenin roman sekmesi; okurda üstte okuma listesi şeridi ve kaldığın yer. */
+function evrenRomanBolumu(v) {
+  const okur = (EVS.kaynak !== "benim" || (typeof evrDurum === "function" && evrDurum().onizle));
+  const kaydet = !onizlemeMi() && EVS.kaynak !== "benim";
+  if (!okur || EVS.kaynak === "e99") { return evrenRomanGovde(v); }
+  const d = evrDurum();
+  const k = oklAnahtar();
+  const l = oklOku();
+  const bolumler = ((v.eser.roman || {}).bolumler) || [];
+  if (d.secili === null && l[k] && l[k].bolum && bolumler.some(function (b) { return b.id === l[k].bolum; })) { d.secili = l[k].bolum; }
+  /* evren her açıldığında ilk roman görünümünde: kaldığın yer */
+  if (oklAcilis !== k) {
+    oklAcilis = k;
+    oklDevamBolum = kaydet && l[k] && l[k].bolum === d.secili && l[k].sira > 0 ? d.secili : null;
+  }
+  const devam = !!oklDevamBolum && oklDevamBolum === d.secili;   /* başka bölüme geçene kadar */
+  const h = evrenRomanGovde(v);
+  if (!bolumler.length) { return h; }
+  const i = Math.max(0, bolumler.findIndex(function (b) { return b.id === d.secili; }));
+  const o = l[k] || {};
+  const kayit = { ad: v.eser.ad || "Evren", git: "#/ev/" + EVS.kaynak + "/" + EVS.id, bolum: bolumler[i].id, sira: i, toplam: bolumler.length,
+    zaman: Date.now(), liste: !!o.liste, bitti: !!o.bitti || i === bolumler.length - 1 };
+  if (kaydet && (o.bolum !== kayit.bolum || o.toplam !== kayit.toplam || o.bitti !== kayit.bitti)) { l[k] = kayit; jsonYaz(OKL, l); }
+  const listede = !!(l[k] && l[k].liste);
+  return '<div class="okl-serit">' + (devam ? '<span class="oyun-not">📖 Kaldığın yerden: ' + (i + 1) + ". bölüm</span>" : '<span class="oyun-not">' + (i + 1) + " / " + bolumler.length + "</span>") +
+    (!kaydet ? "" : '<button class="dugme dugme-sade y-kucuk" data-okl-liste>' + (listede ? "✓ Okuma listende" : "+ Okuma listeme ekle") + "</button>") + "</div>" + h;
 }
 
 document.addEventListener("click", function (ev) {
@@ -1092,11 +889,16 @@ function ayar25Html() {
   const takip = typeof tkpListe === "function" ? tkpListe() : {};
   const indirilen = typeof evdIndirilenler === "function" ? evdIndirilenler() : {};
   const evAd = function (id) { const e = ((veri.fanEserleri || {}).evrenler || []).find(function (x) { return x.id === id; }); return e ? e.ad : id; };
-  return '<details class="kutu-y ayar25" open><summary><b>Okuma listem</b></summary>' + oklHtml() + "</details>" +
+  const hatirlat = hatirlatmaAcik();
+  return '<details class="kutu-y ayar25"><summary><b>Okuma yolları</b></summary>' + yollarHtml() + "</details>" +
+    '<details class="kutu-y ayar25" open><summary><b>Okuma listem</b></summary>' + oklHtml() + "</details>" +
     '<details class="kutu-y ayar25"><summary><b>Bildirimler</b></summary>' +
       '<div class="ayar25-satir"><span>Yeni roman bölümü</span>' + (!push ? '<span class="oyun-not">site henüz kurmadı</span>' :
         (aboneMi ? '<button class="dugme dugme-sade y-kucuk" data-bildirim="kapat">Kapat</button>' : '<button class="dugme y-kucuk" data-bildirim="ac">Aç</button>')) + "</div>" +
       '<div class="ayar25-satir"><span>Günün kelimesi hatırlatması</span>' + (htr ? '<button class="dugme dugme-sade y-kucuk" data-htr="kapat">Kapat</button>' : '<button class="dugme y-kucuk" data-htr="ac">Aç</button>') + "</div>" +
+      '<div class="ayar25-satir"><span>Seri, okuma hedefi ve okuma yolu hatırlatmaları' +
+        '<span class="oyun-not"> · ' + (kabukMu() ? "telefon bildirimiyle" : "tarayıcıda site açıkken şerit olarak; telefon bildirimi uygulamada") + "</span></span>" +
+        (hatirlat ? '<button class="dugme dugme-sade y-kucuk" data-hatirlat28="kapat">Kapat</button>' : '<button class="dugme y-kucuk" data-hatirlat28="ac">Aç</button>') + "</div>" +
       '<div class="ayar25-satir"><span>Takip ettiğin evrenler</span><span class="oyun-not">' + (Object.keys(takip).length || "yok") + "</span></div>" +
       (Object.keys(takip).length ? '<ul class="ayar25-liste">' + Object.keys(takip).map(function (id) {
         return "<li>" + kacir(evAd(id)) + ' <button class="ic-bag" data-tkp="' + kacir(id) + '">takibi bırak</button></li>';
@@ -1104,7 +906,7 @@ function ayar25Html() {
       '<div class="ayar25-satir"><span>Sessiz saatler</span><span class="ayar25-saat">' + saat("sessizBas", sessiz.bas) + " – " + saat("sessizBit", sessiz.bit) + "</span></div>" +
       '<p class="oyun-not">Sessiz saatlerde günlük hatırlatma gelmez; yeni bölüm bildirimi sessiz (titreşimsiz) gelir.</p>' +
       "</details>" +
-    '<details class="kutu-y ayar25"><summary><b>Cihazdaki evrenler</b> · ' + Object.keys(indirilen).length + "</summary>" +
+    '<details class="kutu-y ayar25"><summary><b>Çevrimdışı okuma</b> · ' + Object.keys(indirilen).length + "</summary>" + paketKutusuHtml() +
       (Object.keys(indirilen).length ? '<ul class="ayar25-liste">' + Object.keys(indirilen).map(function (id) {
         return "<li>" + kacir(evAd(id)) + ' <span class="oyun-not">· ' + kacir(new Date(indirilen[id]).toLocaleDateString("tr-TR")) + '</span> <button class="ic-bag" data-ayar25-evd-sil="' + kacir(id) + '">kaldır</button></li>';
       }).join("") + "</ul>" : '<p class="oyun-not">Fan evrenleri keşfinde “Önizle → Cihaza indir” ile bir evreni internetsiz okumak için indirebilirsin.</p>') +
@@ -1141,32 +943,7 @@ document.addEventListener("click", async function (e) {
 /* Sen sayfasına her gelişte güncel (okuma listesi, takip, indirilenler başka sayfalarda değişir) */
 window.addEventListener("hashchange", function () { if (typeof rota === "function" && rota().indexOf("#/sen") === 0) { setTimeout(ayar25Ciz, 60); } });
 
-/* Sen sayfası açılınca (adres, menü ya da ilk açılış) ayarlar çizilir */
-if (typeof sayfaGoster === "function") {
-  const eskiSG25 = sayfaGoster;
-  window.sayfaGoster = function () { const r = eskiSG25.apply(this, arguments); if (aktifSayfa === "sen") { ayar25Ciz(); } return r; };
-}
-
-if (typeof hesapCiz === "function") {
-  const eskiHC25 = hesapCiz;
-  /* 3.0: Sen sayfası kapalıyken çizilmez (açılışta okuma yolları hesabı boşa gidiyordu); sayfaya gelince çizilir */
-  window.hesapCiz = function () { const r = eskiHC25.apply(this, arguments); if (ayar25Gorunur()) { ayar25Ciz(); } return r; };
-}
-
 /* ==================== 11. evren yazısı klavyesi ==================== */
-
-if (typeof evrenEkBolum === "function") {
-  const eskiEB25 = evrenEkBolum;
-  window.evrenEkBolum = function (v) {
-    const h = eskiEB25.apply(this, arguments);
-    if (!EVS || EVS.sekme !== "yazi" || !v || !v.eser || typeof eyDolu !== "function" || !eyDolu(v.eser.yazi)) { return h; }
-    return (h || "") + '<div class="kutu-y yk-kutu"><label for="ykMetin">Yazı klavyesi · kendi mesajını bu evrenin yazısıyla yaz</label>' +
-      '<textarea class="kod-giris arac-giris" id="ykMetin" rows="2" maxlength="160" placeholder="' + kacir(v.eser.ad || "Merhaba") + '"></textarea>' +
-      '<div class="yk-onizle" id="ykOnizle">' + eyYaziSvg(v.eser.ad || "", v.eser.yazi, 48) + "</div>" +
-      '<div class="oyun-sira"><button class="dugme" data-yk-png>PNG indir</button><button class="dugme dugme-sade" data-yk-paylas>Paylaş</button></div>' +
-      '<p class="oyun-not">Çizilmemiş harfler soluk görünür.</p></div>';
-  };
-}
 
 document.addEventListener("input", function (e) {
   if (!e.target || e.target.id !== "ykMetin") { return; }
@@ -1229,14 +1006,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const bekle = typeof veriHazirOlunca === "function" ? veriHazirOlunca : function (f) { setTimeout(f, 1500); };
   bekle(function () { haftaninEvreniCiz(); if (ayar25Gorunur()) { ayar25Ciz(); } });
 });
-/* açık bir ortak evrene girince güncel hâli çek */
-if (typeof evrenSayfaAc === "function") {
-  const eskiAc25 = evrenSayfaAc;
-  window.evrenSayfaAc = function (kaynak, id) {
-    const r = eskiAc25.apply(this, arguments);
-    if (kaynak === "benim") { const e = evrenBenimBul(id); if (e && e.ortak) { ortakCek(id); } }
-    return r;
-  };
-}
+
 /* bağlantı gelince bekleyen ortak kayıtlar */
 window.addEventListener("online", function () { Object.keys(ORTAK.bekleyen).forEach(function (id) { if (ORTAK.bekleyen[id]) { ortakYaz(id); } }); });

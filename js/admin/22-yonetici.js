@@ -57,18 +57,6 @@ function yoneticiCozTumu(dizi) {
   return dizi.map(function (g) { return yoneticiCoz(g) || ""; }).join(" ");
 }
 
-/** Bir kaydın kilitli bloklarından en az biri açılmış mı? */
-function herhangiBirAcik(dizi) {
-  if (!dizi || !dizi.length) { return false; }
-  return dizi.some(function (g) { return !!cozulenler[g.dogrulama]; });
-}
-
-/** Bir kaydın kilidi yoksa ya da TÜM blokları açılmışsa true döner. */
-function hepsiAcikMi(dizi) {
-  if (!dizi || !dizi.length) { return true; }
-  return dizi.every(function (g) { return !!cozulenler[g.dogrulama]; });
-}
-
 function yoneticiGiris(kod) {
   const temiz = String(kod).trim();
 
@@ -237,7 +225,9 @@ function yoneticiDurum(mesaj, iyi) {
   el.className = "pencere-durum " + (iyi ? "iyi" : "kotu");
 }
 
-function yoneticiDisaAktar() {
+async function yoneticiDisaAktar() {
+  /* veri.json'un bütün parçaları gelmeden dışa aktarılmaz (yoksa eksik) */
+  try { await veriParcalariTam(); } catch (e) { yoneticiDurum("Dışa aktarılamadı: " + e.message, false); return; }
   const metin = JSON.stringify(veri, null, 2);
 
   panoyaKopyala(metin).then(function () {
@@ -265,12 +255,34 @@ const Y_GRUPLARI = {
 
 let yoneticiGrup = "icerik";
 
+/** Gruptaki sekmeler; sınırlı yönetici yalnızca izinli olanları (tek kodla verilen yetkiler) görür. */
 function yoneticiSekmeleri(grup) {
   const l = Y_GRUPLARI[grup || yoneticiGrup].sekmeler;
-  return yoneticiAcik() ? l : l.filter(function (s) { return SINIRLI_SEKMELER.indexOf(s) !== -1; });
+  if (yoneticiAcik()) { return l; }
+  const sinirli = l.filter(function (s) { return SINIRLI_SEKMELER.indexOf(s) !== -1; });
+  const izin = y25YetkiSekmeleri();
+  return izin ? sinirli.filter(function (s) { return izin.indexOf(s) !== -1; }) : sinirli;
 }
 
+/** Yönetici paneli. Yayında panel betikleri (22b, 25, 43) ayrı yüklenir: yüklenene kadar panel eksik sekmelerle
+    çizilir, yüklenince yeniden. */
 function yoneticiCiz() {
+  if (yoneticiSekme === "icbildirim" || yoneticiSekme === "vitrin") { yoneticiSecili = null; }
+  if ((panelAcik() || yoneticiAcik()) && !yoneticiBetikleriHazir()) {
+    yoneticiBetikleriYukle().then(yoneticiTemelCiz);
+    try { yoneticiTemelCiz(); } catch (_) { /* eksik betik */ }
+  } else {
+    yoneticiTemelCiz();
+  }
+  if (document.querySelector("#yoneticiAlan") && panelAcik()) { yon24Sor(); yon24SeritKoy(); }   /* kurulum şeridi */
+  Object.keys(Y25_YENI_SEKMELER).forEach(function (s) {
+    const b = document.querySelector('#yoneticiAlan [data-y-sekme="' + s + '"]');
+    if (b) { b.textContent = Y25_YENI_SEKMELER[s]; }
+  });
+  if (panelAcik()) { ibSayiSor(); }   /* içerik bildirimi sayısı */
+}
+
+function yoneticiTemelCiz() {
   const alan = document.querySelector("#yoneticiAlan");
   if (!alan) { return; }
 
@@ -366,6 +378,8 @@ function yoneticiCiz() {
 }
 
 function yoneticiListe() {
+  if (yoneticiSekme === "icbildirim") { return yoneticiIcerikBildirimleri(); }   /* 75-yonetim-yetkileri */
+  if (yoneticiSekme === "vitrin") { return yoneticiVitrin(); }
   const liste = yoneticiKayitlar();
   const karakterMi = yoneticiSekme === "karakterler";
 
@@ -388,6 +402,8 @@ function yoneticiListe() {
 }
 
 function yoneticiForm() {
+  if (yoneticiSekme === "icbildirim") { return yoneticiIcerikBildirimleri(); }   /* 75-yonetim-yetkileri */
+  if (yoneticiSekme === "vitrin") { return yoneticiVitrin(); }
   const liste = yoneticiKayitlar();
   const o = liste[yoneticiSecili];
   const karakterMi = yoneticiSekme === "karakterler";
@@ -948,6 +964,15 @@ async function githubShaOku() {
 
 /** veri.json'u doğrudan depoya yazar. Çakışma (409) olursa dosyayı yeniden okuyup bir kez daha dener. */
 async function githubGonder() {
+  /* veri.json'un bütün parçaları gelmeden kaydedilmez (yoksa eksik veri yazılır) */
+  if (!veriParcalariHazir()) {
+    yoneticiDurum("Verinin tamamı hazırlanıyor…", true);
+    try { await veriParcalariTam(); } catch (e) {
+      yoneticiDurum("Kaydedilmedi: verinin bir kısmı indirilemedi (" + e.message + "). İnternetini kontrol edip tekrar dene.", false);
+      return;
+    }
+  }
+  if (!veriDenetimOnayi()) { return; }   /* veri denetimi uyarı verdiyse yöneticiye sorulur */
   if (!githubHazir()) {
     yoneticiDurum("Önce kullanıcı adı, depo ve anahtar gir", false);
     return;

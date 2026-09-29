@@ -15,15 +15,6 @@ function evrTakvimTemizle(t) {
   return (o.yil.trim() || o.hafta.trim() || o.bugun.trim()) ? o : null;
 }
 
-if (typeof evrenEkTemizle === "function") {
-  const eskiEk30 = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEk30.apply(this, arguments);
-    const t = evrTakvimTemizle(ham.takvim);
-    if (t) { e.takvim = t; }
-  };
-}
-
 /* ==================== yardımcılar ==================== */
 
 function evrDolu(x) { return !!x && Object.keys(x).some(function (k) { return typeof x[k] === "string" && x[k].trim(); }); }
@@ -118,7 +109,8 @@ function evrAileSvg(e) {
 
 /* ==================== okur görünümleri ==================== */
 
-function evrKisilerCiz(liste, e) {
+/** Kişi kartları; evren sayfasında adına dokununca kişi sayfası açılır (dosyada düz ad). */
+function evrKisilerCiz(liste, e, dosya) {
   if (!liste.length) { return ""; }
   if (liste.some(function (x) { return x.kutu; })) { return null; }   /* E25 konuk kutuları: eski görünüm */
   const baglar = Array.isArray(e.baglar) ? e.baglar : [];
@@ -128,7 +120,8 @@ function evrKisilerCiz(liste, e) {
       return (g.a === x.ad ? g.b : g.a) + (g.etiket ? " (" + g.etiket + ")" : "");
     });
     const et = String(x.etiketler || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 8);
-    return '<article class="evr-kisi"><h3>' + kacir(x.ad || "Adsız") + "</h3>" +
+    const ad = kacir(x.ad || "Adsız");
+    return '<article class="evr-kisi"><h3>' + (dosya ? ad : '<button type="button" class="evr-kisi-ad" data-evr-kisi="' + ad + '">' + ad + "</button>") + "</h3>" +
       (ust.length ? '<p class="evr-kisi-ust">' + ust.map(kacir).join(" · ") + "</p>" : "") +
       paragraf(x.aciklama) +
       (String(x.soz || "").trim() ? '<blockquote class="evr-soz">“' + kacir(x.soz.trim()) + "”</blockquote>" : "") +
@@ -221,23 +214,6 @@ function evrTakvimCiz(aylar, e) {
   /* özel günler takvimin içinde gösterilir */
   if (g("etkinlikler")) { g("etkinlikler").ciz = function () { return ""; }; }
 })();
-
-/* içindekiler şeridi: uzun evrenlerde bölümler arasında tek dokunuşla */
-if (typeof fanEserGovde === "function") {
-  const eskiGovde30 = fanEserGovde;
-  window.fanEserGovde = function (e, dosya) {
-    const h = eskiGovde30.apply(this, arguments);
-    if (dosya || !e || e.tur !== "evren") { return h; }
-    const bolumler = [];
-    h.replace(/<section class="fan-grup" data-grup="([a-zA-Z]+)"><h2>([^<]*)<\/h2>/g, function (t, k, ad) { bolumler.push([k, ad]); return t; });
-    if (bolumler.length < 3) { return h; }
-    const nav = '<nav class="evr-icindekiler" aria-label="Bu evrende">' + bolumler.map(function (b) {
-      return '<button type="button" class="evg-cip" data-evr-git="' + b[0] + '">' + b[1] + "</button>";
-    }).join("") + "</nav>";
-    const i = h.indexOf('<section class="fan-grup" data-grup="');
-    return i === -1 ? h : h.slice(0, i) + nav + h.slice(i);
-  };
-}
 
 document.addEventListener("click", function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-evr-git]");
@@ -355,7 +331,8 @@ function evrKurucuHtml(v) {
               fanGirdi("takvim.bugun", (e.takvim || {}).bugun, "Evrenin bugünü (ör. “412, Kar ayının 3. günü”)") + "</fieldset>") +
             (evrListe(e, "aylar").length || evrListe(e, "etkinlikler").length ? '<details class="evr-onizleme"><summary>Takvimin okurdaki görünümü</summary>' + evrTakvimCiz(evrListe(e, "aylar"), e) + "</details>" : "")
           : "";
-    govde = ek + form(a.gruplar.map(function (k) { return fanEvrenGrupHtml(e, evrGrup(k), { katla: true }); }).join(""));
+    govde = ek + (a.id === "kisiler" || a.id === "dunya" ? evrIsimHtml(e) : "") +   /* isim üretici */
+      form(a.gruplar.map(function (k) { return fanEvrenGrupHtml(e, evrGrup(k), { katla: true }); }).join(""));
   } else if (a.id === "gorunum") {
     govde = '<div class="evr-kartlar">' +
       [["stil", "🎨 Görünüm", "Renk, desen, yazı tipi, para"], ["yazi", "✎ Yazı çiz", "Kendi harflerini çiz"], ["lore", "🔒 Kilitli lore", "Kodla açılan gizli katmanlar"],
@@ -366,7 +343,10 @@ function evrKurucuHtml(v) {
   } else {
     const o = evrOlcek(e);
     const zayif = o.satir.filter(function (r) { return r.oran < 1; }).sort(function (x, y) { return x.oran - y.oran; }).slice(0, 3);
-    govde = '<div class="oyun-sira">' +
+    /* paylaş adımı: tutarlılık denetimi, evren kartı, evrenin yolu (fan / kanona aday), Evrengezer izinleri */
+    govde = evrDenetimHtml(e) + '<div class="oyun-sira"><button type="button" class="dugme dugme-sade" data-evr-kart="benim:' + kacir(e.id) + '">🖼 Evren kartı (hikâye)</button></div>' +
+      evaYolHtml(e) + (e.durum !== "kanonAday" ? evrEgIzinYonetHtml(e) : "") +
+      '<div class="oyun-sira">' +
         '<button class="dugme" data-fan-onizle="evren">👁 Okur gözüyle bak</button>' +
         '<button class="dugme dugme-sade" data-fan-indir="evren">Dosya olarak indir</button>' +
         '<button class="dugme dugme-sade" data-fan-paylas="evren">Paylaş</button>' +
@@ -377,8 +357,12 @@ function evrKurucuHtml(v) {
       }).join(" · ") + "</div>" : "") + evrOlcekHtml(e, true);
   }
 
-  return '<section class="evr-kurucu" aria-label="Evren Kurucu">' +
+  const denetim = evrDenetim(e).filter(function (x) { return x.seviye !== "bilgi"; }).length;
+  let doluluk = "";
+  try { doluluk = evrenDolulukHtml(e); } catch (_) { /* doluluk olmadan */ }
+  const h = doluluk + '<section class="evr-kurucu" aria-label="Evren Kurucu">' +
     '<div class="evr-kurucu-ust">' + evrOlcekHtml(e, false) +
+      (denetim ? '<button type="button" class="evr-denetim-rozet" data-evr-adim="paylas">⚠ ' + denetim + " tutarlılık notu</button>" : "") +
       '<nav class="evr-adimlar" aria-label="Kurma adımları">' + EVR_ADIMLAR.map(function (x) {
         const n = evrAdimSayi(e, x);
         return '<button type="button" class="evr-adim' + (x.id === a.id ? " secili" : "") + (n ? " dolu" : "") + '" data-evr-adim="' + x.id + '"' +
@@ -391,6 +375,14 @@ function evrKurucuHtml(v) {
       (i > 0 ? '<button type="button" class="dugme dugme-sade" data-evr-adim="' + EVR_ADIMLAR[i - 1].id + '">← ' + kacir(EVR_ADIMLAR[i - 1].ad) + "</button>" : "<span></span>") +
       (i < EVR_ADIMLAR.length - 1 ? '<button type="button" class="dugme" data-evr-adim="' + EVR_ADIMLAR[i + 1].id + '">' + kacir(EVR_ADIMLAR[i + 1].ad) + " →</button>" : "") +
     "</div></section>";
+  /* boş evrende ilk adımda şablon seçenekleri */
+  if (a.id === "temel" && h.indexOf("data-evt-tur") === -1 &&
+      !(e.kurallar || []).some(function (x) { return x && String(x.ad || "").trim(); }) && !(e.kisiler || []).some(function (x) { return x && String(x.ad || "").trim(); })) {
+    return h + '<div class="evt-turler"><span class="oyun-not">Şablonla başla: kurallar, kişiler, tarih, belge ve harita gelir; yalnızca boş alanları doldurur, hepsini sonra değiştirirsin.</span>' +
+      EVT_TURLER.map(function (t) { return '<button class="evt-tur" data-evt-tur="' + t.id + '"><b>' + kacir(t.ad) + "</b><small>" + kacir(t.ozet) + "</small></button>"; }).join("") + "</div>";
+  }
+  /* son adımda sitede yayına gönderme (onay kuyruğu) */
+  return a.id === "paylas" ? h + teslimHtml() : h;
 }
 
 /* takvim alanları yazılabilsin: fanAlanYaz "takvim.yil" için nesnenin var olmasını ister */
@@ -399,35 +391,6 @@ function evrTakvimHazirla(id) {
   if (e && (!e.takvim || typeof e.takvim !== "object") && typeof evrenBenimDegistir === "function") {
     evrenBenimDegistir(id, function (x) { x.takvim = { yil: "", hafta: "", bugun: "" }; });
   }
-}
-
-/* sekme: kendi evreninde en başta */
-if (typeof evrenEkSekmeler === "function") {
-  const eskiSek30 = evrenEkSekmeler;
-  window.evrenEkSekmeler = function (v) {
-    const l = eskiSek30.apply(this, arguments);
-    if (typeof EVS !== "undefined" && EVS && EVS.kaynak === "benim" && !(v && v.onizle)) { l.unshift(["kurucu", "🧭 Kurucu"]); }
-    return l;
-  };
-}
-if (typeof evrenEkBolum === "function") {
-  const eskiBol30 = evrenEkBolum;
-  window.evrenEkBolum = function (v) {
-    if (typeof EVS !== "undefined" && EVS && EVS.sekme === "kurucu" && EVS.kaynak === "benim") {
-      if ((EVR_ADIM[v.eser.id] || "temel") === "zaman") { evrTakvimHazirla(v.eser.id); }
-      return evrKurucuHtml(v);
-    }
-    return eskiBol30.apply(this, arguments);
-  };
-}
-/* alan eklenip çıkarılınca kurucu da yeniden çizilir (44-evrenler.js yalnızca bilgi sekmesini yeniliyor) */
-if (typeof fanCiz === "function") {
-  const eskiFanCiz30 = fanCiz;
-  window.fanCiz = function (tur) {
-    const r = eskiFanCiz30.apply(this, arguments);
-    if (tur === "evren" && typeof EVS !== "undefined" && EVS && EVS.sekme === "kurucu") { try { evrenSayfaCiz(); } catch (_) { /* kapalı */ } }
-    return r;
-  };
 }
 
 document.addEventListener("click", function (ev) {

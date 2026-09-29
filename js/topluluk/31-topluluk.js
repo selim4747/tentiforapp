@@ -87,18 +87,6 @@ async function teoriGonder(form) {
   if (data && data.durum === "tamam") { teoriCiz(); hesapBildir(m); } else { yaz(m || "Paylaşılamadı."); }
 }
 
-/* bilinmeyenler bölümü çizildikten sonra teoriler de çizilsin */
-function teoriBagla() {
-  if (typeof bilinmeyenCiz === "function") {
-    const eski = bilinmeyenCiz;
-    window.bilinmeyenCiz = function () { const r = eski.apply(this, arguments); teoriCiz(); return r; };
-  }
-  if (typeof cizYapimlar === "function") {
-    const eskiY = cizYapimlar;
-    window.cizYapimlar = function () { const r = eskiY.apply(this, arguments); oylamaCiz(); return r; };
-  }
-}
-
 /* ==================== İÇERİK OYLAMASI ==================== */
 
 let oylarim = [];
@@ -197,6 +185,9 @@ async function toplulukProfilEk(p) {
       eserler[1].map(function (x) { return '<li><a href="#/fan/hikaye/' + encodeURIComponent(x.id) + '"><b>' + kacir(x.baslik || x.id) + "</b></a> · hikâye" + (x.evren ? " · " + kacir(x.evren) : "") + "</li>"; }).join("") + "</ul></div>";
   }
   el.innerHTML = html + "</div>";
+  /* rozetler: Hıçkırık tanıklığı (36), rehberlik (38) */
+  await hickirikRozeti(p);
+  await rehberlikRozeti(p);
 }
 
 /* ==================== SEVİYE ==================== */
@@ -214,7 +205,14 @@ function seviyeUnvani(s) {
 function seviyeXp(s) { return 60 * (s - 1) * (s - 1); }
 
 /** Sen → Hesabın bölümünün altı: seviye ve madalya kontrolü. */
+/** Hesap kartına topluluk ekleri; ardından davet kaydı ve davet kutusu (38). */
 async function toplulukHesapEk() {
+  await toplulukHesapTemel();
+  davetKaydetDene();
+  davetKutusuCiz();
+}
+
+async function toplulukHesapTemel() {
   const el = document.querySelector("#hesapTopluluk");
   if (!el || !toplulukGirisli() || !hesapProfil || !hesapProfil.kullanici_adi) { return; }
   const { data } = await hesapIstemci.from("arsivci_seviyeleri").select("xp, yil_xp, seviye, basamak, dokum").eq("kullanici_adi", hesapProfil.kullanici_adi).maybeSingle();
@@ -399,4 +397,3 @@ document.addEventListener("click", function (e) {
   if (h) { haftalikOdulAl(h.dataset.haftalikAl, h.dataset.hafta); }
 });
 
-if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", teoriBagla); } else { teoriBagla(); }

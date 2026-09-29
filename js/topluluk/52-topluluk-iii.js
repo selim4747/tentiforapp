@@ -179,21 +179,6 @@ async function evrenDefterYaz() {
   evrenDefterYukle();
 }
 
-/* evren sayfasına "Defter" sekmesi (kilitli evrende sekmeler zaten görünmez) */
-if (typeof evrenEkSekmeler === "function") {
-  const eskiSekmeler = evrenEkSekmeler;
-  window.evrenEkSekmeler = function (v) {
-    const l = eskiSekmeler.apply(this, arguments);
-    if (evrenDefterAnahtari()) { l.push(["defter", "Ziyaretçi defteri"]); }
-    return l;
-  };
-  const eskiBolum = evrenEkBolum;
-  window.evrenEkBolum = function (v) {
-    if (EVS && EVS.sekme === "defter") { return evrenDefterBolumu(); }
-    return eskiBolum.apply(this, arguments);
-  };
-}
-
 /* ==================== panel: bu hafta ==================== */
 
 async function haftaOzetiCiz() {
@@ -250,17 +235,6 @@ function defterEvrenAdi(a) {
   const k = (veri.kanonEvrenleri || {})[a];
   return k && k.ad ? k.ad : a.toUpperCase();
 }
-
-document.addEventListener("DOMContentLoaded", function () {
-  if (typeof yoneticiIstatistikYukle === "function") {
-    const eski = yoneticiIstatistikYukle;
-    window.yoneticiIstatistikYukle = async function () {
-      const r = await eski.apply(this, arguments);
-      try { await haftaOzetiCiz(); } catch (_) { /* özet panelin kalanını bozmasın */ }
-      return r;
-    };
-  }
-});
 
 /* ==================== olaylar ==================== */
 

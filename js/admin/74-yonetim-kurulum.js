@@ -42,8 +42,10 @@ function yon24SeritKoy() {
   if (h) { alan.insertAdjacentHTML("afterbegin", '<div class="y24-serit">' + h + "</div>"); }
 }
 
+/** Panelin üstündeki uyarı şeridi: site sağlığı, kurulum sürümü, hatalar, yedek, içerik bildirimleri. */
 function yon24Serit() {
   const l = [];
+  if (yoneticiAcik()) { l.push(saglikHtml()); }
   if (YON24.surum && YON24.surum !== KURULUM_BEKLENEN) {
     /* 2.8: hataların sürüme göre ayrılması da buna bağlı */
     l.push('<div class="y-uyari kotu"><b>Supabase kurulumu güncel değil</b> (sunucuda: ' + kacir(YON24.surum === "yok" ? "2.4 öncesi" : YON24.surum) +
@@ -55,20 +57,20 @@ function yon24Serit() {
       kacir(String(YON24.hata[0].mesaj || "").slice(0, 120)) + "” ×" + YON24.hata[0].sayi +
       ' <button class="dugme dugme-sade y-kucuk" data-y24-hatalar>Hatalara bak</button></div>');
   }
-  return l.join("");
-}
-
-if (typeof yoneticiCiz === "function") {
-  const eskiYC = yoneticiCiz;
-  window.yoneticiCiz = function () {
-    const r = eskiYC.apply(this, arguments);
-    const alan = document.querySelector("#yoneticiAlan");
-    if (alan && typeof panelAcik === "function" && panelAcik()) {
-      yon24Sor();
-      yon24SeritKoy();
+  if (yoneticiAcik()) {
+    let son = 0;
+    try { son = Number(localStorage.getItem(YEDEK25)) || 0; } catch (_) { son = 0; }
+    const gun = son ? Math.floor((Date.now() - son) / 86400000) : null;
+    if (gun === null || gun >= 7) {
+      l.push('<div class="y-uyari"><b>' + (gun === null ? "Bu cihazdan hiç yedek alınmadı." : gun + " gündür yedek alınmadı.") + "</b> Haftada bir yedek al: " +
+        '<button class="dugme dugme-sade y-kucuk" data-y25-yedek>Yedeğe git</button></div>');
     }
-    return r;
-  };
+  }
+  if (IB_SAYI.yeni > 0 && yoneticiSekmeleri("bakim").indexOf("icbildirim") !== -1) {
+    l.push('<div class="y-uyari"><b>' + IB_SAYI.yeni + " yeni içerik bildirimi</b> " +
+      '<button class="dugme dugme-sade y-kucuk" data-y25-ib>Bak</button></div>');
+  }
+  return l.join("");
 }
 
 document.addEventListener("click", function (ev) {
@@ -126,16 +128,6 @@ function davetOturumBekleniyor() {
 }
 const DAVET_OTURUM = { bekle: true };
 
-if (typeof hesapProfilYukle === "function") {
-  const eskiPY24 = hesapProfilYukle;
-  window.hesapProfilYukle = async function () {
-    const r = await eskiPY24.apply(this, arguments);
-    YON24.soruldu = false;
-    setTimeout(davetKoduDene, 600);
-    return r;
-  };
-}
-
 /* ==================== evren kurucu: canlı önizleme, sekme düzeni, şablonlar ==================== */
 
 document.addEventListener("input", function (ev) {
@@ -167,60 +159,17 @@ function sekmeDuzenTemizle(d) {
   return Object.keys(o).length ? o : null;
 }
 
-if (typeof evrenEkTemizle === "function") {
-  const eskiEk24 = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEk24.apply(this, arguments);
-    const d = sekmeDuzenTemizle(ham.sekmeDuzen);
-    if (d) { e.sekmeDuzen = d; } else { delete e.sekmeDuzen; }
-  };
-}
-
+/** Kurucunun sekme düzeni (ilk sekme, gizliler); sekme yetkisi olan yönetici gizlenenleri de görür. */
 function evrenDuzeni() {
-  const v = typeof evrenSayfaVerisi === "function" ? evrenSayfaVerisi() : null;
-  return (v && v.eser && v.eser.sekmeDuzen) || null;
-}
-
-if (typeof evrenEkSekmeler === "function") {
-  const eskiSek24 = evrenEkSekmeler;
-  window.evrenEkSekmeler = function (v) {
-    const l = eskiSek24.apply(this, arguments);
-    const d = v && v.eser && v.eser.sekmeDuzen;
-    if (!d || !EVS || EVS.kaynak === "benim" || !Array.isArray(d.gizli)) { return l; }
-    return l.filter(function (x) { return d.gizli.indexOf(x[0]) === -1; });
-  };
+  const v = evrenSayfaVerisi();
+  const d = (v && v.eser && v.eser.sekmeDuzen) || null;
+  if (d && evy25Var(v.eser, "sekmeler")) { return d.ilk ? { ilk: d.ilk } : null; }
+  return d;
 }
 
 let sekmeDuzenSon = null;   /* ilk sekme yalnızca evren açılırken bir kez (yeniden çizimlerde okurun seçtiği kalır) */
 
 function haritaGizliMi(d) { return !!(d && EVS && EVS.kaynak !== "benim" && (d.gizli || []).indexOf("harita") !== -1); }
-
-if (typeof evrenSayfaCiz === "function") {
-  const eskiCiz24 = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    if (typeof EVS === "undefined" || !EVS) { sekmeDuzenSon = null; return eskiCiz24.apply(this, arguments); }
-    const d = evrenDuzeni();
-    const anahtar = EVS.kaynak + ":" + EVS.id;
-    if (sekmeDuzenSon !== anahtar) {
-      sekmeDuzenSon = anahtar;
-      const gizli = EVS.kaynak !== "benim" ? ((d && d.gizli) || []) : [];
-      if (d && d.ilk && (EVS.sekme === "harita" || EVS.sekme === "bilgi") && gizli.indexOf(d.ilk) === -1) { EVS.sekme = d.ilk; }
-    }
-    if (haritaGizliMi(d) && EVS.sekme === "harita") { EVS.sekme = "bilgi"; }
-    let r = eskiCiz24.apply(this, arguments);
-    /* seçilen sekme bu evrende yoksa çizim haritaya düşer; harita gizliyse bilgiye */
-    if (haritaGizliMi(d) && EVS && EVS.sekme === "harita") { EVS.sekme = "bilgi"; r = eskiCiz24.apply(this, arguments); }
-    if (haritaGizliMi(d)) {
-      const b = document.querySelector('#evrenSayfa [data-evs-sekme="harita"]'); if (b) { b.remove(); }
-    }
-    return r;
-  };
-}
-
-if (typeof evrenSayfaKapat === "function") {
-  const eskiKapat24 = evrenSayfaKapat;
-  window.evrenSayfaKapat = function () { sekmeDuzenSon = null; return eskiKapat24.apply(this, arguments); };
-}
 
 const EKS_SABLONLAR = [
   { ad: "Dergi", stil: ".eks-vitrin h1{font-size:2.6em;line-height:1;margin:0 0 6px;letter-spacing:-.02em}\n.eks-vitrin .ust{font-family:var(--mono);text-transform:uppercase;letter-spacing:.2em;font-size:12px}\n.eks-vitrin .kolon{columns:2 260px;column-gap:28px}\n.eks-vitrin .kolon h3{break-after:avoid;border-top:3px solid currentColor;padding-top:6px}",
@@ -249,11 +198,6 @@ function eksDuzenKutusu(e) {
       '<p class="oyun-not">Sen her sekmeyi görmeye devam edersin; gizleme ziyaretçiler içindir.</p></div>';
 }
 
-if (typeof eksKodBolumu === "function") {
-  const eskiEks = eksKodBolumu;
-  window.eksKodBolumu = function (v) { return eksDuzenKutusu(v.eser) + eskiEks.apply(this, arguments); };
-}
-
 document.addEventListener("change", function (ev) {
   const t = ev.target;
   if (!t || !EVS || EVS.kaynak !== "benim" || typeof evrenBenimDegistir !== "function") { return; }
@@ -278,20 +222,6 @@ document.addEventListener("click", function (ev) {
 function yaziCozKelimeleri(e) {
   if (!e || !e.yazi || typeof eyDolu !== "function" || !eyDolu(e.yazi) || typeof evoKelimeler !== "function") { return []; }
   return evoKelimeler(e).filter(function (k) { return eyParcala(k, e.yazi).every(function (p) { return !!p.isaret; }); });
-}
-
-if (typeof EVO_OYUNLAR !== "undefined" && !EVO_OYUNLAR.some(function (g) { return g.id === "yazicoz"; })) {
-  EVO_OYUNLAR.push({ id: "yazicoz", ad: "Yazıyı çöz", ozet: "Evrenin kendi yazısıyla yazılmış adı bul. İşaretler Yazı sekmesinde." });
-  EVO_EN_AZ.yazicoz = 4;
-  EVO_SORU_OYUNU.yazicoz = true;
-  const eskiDurum = evoDurumlari;
-  window.evoDurumlari = function (e) {
-    return eskiDurum.apply(this, arguments).map(function (d) {
-      if (d.id !== "yazicoz") { return d; }
-      const n = yaziCozKelimeleri(e).length;
-      return Object.assign({}, d, { sayi: n, yeter: n >= EVO_EN_AZ.yazicoz });
-    });
-  };
 }
 
 function yaziCozBaslat(e) {
@@ -394,11 +324,7 @@ function kesifCiz() {
       (e.ozet ? "<span>" + kacir(String(e.ozet).slice(0, 140)) + "</span>" : "") +
       '<span class="kesif-sayi">' + [[s.kisi, "kişi"], [s.yer, "yer"], [s.bolum, "bölüm"]].filter(function (x) { return x[0]; }).map(function (x) { return x[0] + " " + x[1]; }).join(" · ") + "</span></button>";
   }).join("") : '<p class="oyun-not">Aramana uyan evren yok.</p>';
-}
-
-if (typeof fanEvrenCiz === "function") {
-  const eskiFE = fanEvrenCiz;
-  window.fanEvrenCiz = function () { const r = eskiFE.apply(this, arguments); kesifCiz(); return r; };
+  kesifEkleri();   /* önizle, cihazda, haftanın evreni (75) */
 }
 
 document.addEventListener("input", function (e) { if (e.target && e.target.id === "kesifAra") { KESIF.ara = e.target.value; kesifCiz(); } });
@@ -422,22 +348,6 @@ function buCihazAdi() {
   return sis + " · " + tar + (TentiforKopru.ortam() !== "web" ? " (uygulama)" : "");
 }
 
-if (typeof esitBulutaYaz === "function") {
-  const eskiBY = esitBulutaYaz;
-  window.esitBulutaYaz = function (g) {
-    try {
-      const o = JSON.parse(g[CIHAZLAR] || "{}") || {};
-      o[buCihazId()] = { ad: buCihazAdi(), son: new Date().toISOString() };
-      /* en çok 12 cihaz: en eskiler düşer */
-      const k = Object.keys(o).sort(function (a, b) { return String(o[b].son).localeCompare(String(o[a].son)); });
-      k.slice(12).forEach(function (x) { delete o[x]; });
-      g[CIHAZLAR] = JSON.stringify(o);
-      localStorage.setItem(CIHAZLAR, g[CIHAZLAR]);
-    } catch (_) { /* yoksay */ }
-    return eskiBY.apply(this, arguments);
-  };
-}
-
 function cihazlarimHtml() {
   let o = {};
   try { o = JSON.parse(localStorage.getItem(CIHAZLAR) || "{}") || {}; } catch (_) { o = {}; }
@@ -449,18 +359,6 @@ function cihazlarimHtml() {
     return "<li><b>" + kacir(o[x].ad || "Cihaz") + "</b>" + (x === id ? " · bu cihaz" : "") +
       '<span class="oyun-not"> · son eşitleme ' + kacir(isNaN(d) ? "?" : d.toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" })) + "</span></li>";
   }).join("") + '</ul><p class="oyun-not">Bir cihazda kazandığın, öteki cihaz açılınca birleşir.</p></details>';
-}
-
-if (typeof hesapCiz === "function") {
-  const eskiHC = hesapCiz;
-  window.hesapCiz = function () {
-    const r = eskiHC.apply(this, arguments);
-    const kap = document.querySelector("#hesapAlan .hesap-esit");
-    if (kap && !document.querySelector(".cihazlarim") && typeof hesapKullanici !== "undefined" && hesapKullanici) {
-      kap.insertAdjacentHTML("afterend", cihazlarimHtml());
-    }
-    return r;
-  };
 }
 
 /* ==================== arşiv araması: telefonda sonuç kutusu kapanabilsin ==================== */
@@ -494,28 +392,6 @@ window.addEventListener("online", function () {
   cevrimdisiSerit();
   if (typeof tekHaklariYukle === "function") { tekHaklariYukle(); }
 });
-
-/* internetsizken giriş: hesap kütüphanesi henüz inmediyse pencere boş kalıyordu; ne olduğunu söyle */
-if (typeof hesapPencere === "function") {
-  const eskiHP = hesapPencere;
-  window.hesapPencere = function () {
-    const kutuphane = window.supabase && window.supabase.createClient;
-    if (navigator.onLine === false && !kutuphane) {
-      const p = document.querySelector("#perde");
-      if (p) {
-        p.innerHTML = '<div class="pencere" role="dialog" aria-modal="true" aria-labelledby="cdHesapBaslik">' +
-          '<button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button>' +
-          '<h3 id="cdHesapBaslik">Çevrimdışısın</h3>' +
-          '<p class="pencere-alt">Giriş yapmak ya da hesap açmak için internet gerekir.</p>' +
-          '<p class="oyun-not">Okuduğun, oynadığın ve kazandığın her şey bu cihazda duruyor. Bağlantı gelince giriş yaparsan hesabınla birleşir.</p>' +
-          '<button class="dugme" data-kapat="1">Tamam</button></div>';
-        p.hidden = false;
-      }
-      return;
-    }
-    return eskiHP.apply(this, arguments);
-  };
-}
 
 function cevrimdisiHazirBildir() {
   if (!("serviceWorker" in navigator)) { return; }

@@ -249,7 +249,13 @@ function gununCiz() {
     "</a>";
 }
 
+/** "Bugünün kaydı" açıldı: ödül okuyunca verilir (okumaBitti → gununOdulu). */
 function gununOkundu() {
+  GUNUN_BEKLER = Date.now();
+  eckaBildir("Bugünün kaydı: sonuna kadar oku, ödülü okuyunca al");
+}
+
+function gununOdulu() {
   const anahtar = GUNUN_ANAHTAR + "_" + bugunAnahtari();
   if (kilitAcik(anahtar)) { return; }
 
@@ -431,7 +437,6 @@ async function sonucPaylas(sonucId) {
 }
 
 /* ==================== DERİN BAĞLANTI ==================== */
-
 
 /** Bir bölüme yumuşak kaydırır. (Bir düzenlemede kazara silinmişti.) */
 function bolumeGit(id) {

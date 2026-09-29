@@ -11,15 +11,6 @@
 
 const EVA_DURUMLAR = ["fan", "kanonAday"];
 
-if (typeof evrenEkTemizle === "function") {
-  const eskiEk30b = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEk30b.apply(this, arguments);
-    if (EVA_DURUMLAR.indexOf(ham.durum) !== -1) { e.durum = ham.durum; }
-    if (ham.izinler && typeof ham.izinler === "object" && ham.izinler.hikaye === "sahip") { e.izinler = { hikaye: "sahip" }; }
-  };
-}
-
 /* ==================== statü ==================== */
 
 function evaAd(s) { return String(s || "").trim().toLocaleLowerCase("tr"); }
@@ -56,7 +47,8 @@ function evaStatu(ad) {
 }
 
 /** Bu cihazda bu evrenin yetkilisi mi (evren yönetici kodu girildi)? */
-function evaYetkili(s) { return !!(s && s.id && typeof evy25Acik === "function" && evy25Acik(s.id)); }
+/** Bu fan-made evrene Evrengezer getirebilir mi: evren yöneticisi ya da Evrengezer izni kodu (84). */
+function evaYetkili(s) { return !!(s && s.id && (evy25Acik(s.id) || evrEgIzinVar(s.id))); }
 
 /** Evrengezer (konuk kişi) bu evrende yer alabilir mi? */
 function evaEvrengezerIzni(ad) {
@@ -107,60 +99,6 @@ function evaStatuNotu(ad) {
 
 /* ==================== Evrengezer götürme ==================== */
 
-if (typeof kisiGoturHtml === "function") {
-  const eskiGH30 = kisiGoturHtml;
-  window.kisiGoturHtml = function (e, anahtar) {
-    const h = eskiGH30.apply(this, arguments);
-    const kanon = [];
-    (veri.haritalar || []).forEach(function (x) { if (x && x.ad && x.id !== "claude" && (typeof kanonEvrenErisimi !== "function" || kanonEvrenErisimi(x.id))) { kanon.push(x.ad); } });
-    (typeof fanSiteListesi === "function" ? fanSiteListesi("evren") : []).forEach(function (x) { if (x.kanon === true && x.ad) { kanon.push(x.ad); } });
-    const claude = (veri.haritalar || []).find(function (x) { return x && x.id === "claude"; });
-    const secenek = kanon.filter(function (x, i, a) { return a.indexOf(x) === i; }).map(function (a) {
-      return '<option value="yeni-hikaye@' + kacir(a) + '">Kanon evrende yeni hikâye: ' + kacir(a) + "</option>";
-    }).join("") + (claude ? '<option value="yeni-hikaye@' + kacir(claude.ad) + '">Test evreninde deneme hikâyesi: ' + kacir(claude.ad) + "</option>" : "");
-    return h.replace("</select>", secenek + "</select>")
-      .replace('<p class="oyun-not">Kişi oraya konuk olarak girer.', '<p class="oyun-not">Kanon evrenlerde herkes Evrengezer hikâyesi yazabilir; fan-made evrenlere Evrengezeri yalnızca sahibi ve yetkilileri getirir. Kişi oraya konuk olarak girer.');
-  };
-}
-
-if (typeof kisiGotur === "function") {
-  const eskiGotur30 = kisiGotur;
-  window.kisiGotur = function (kisi, hedef) {
-    let evrenAdi = null;
-    if (/^yeni-hikaye@/.test(hedef || "")) { evrenAdi = hedef.slice("yeni-hikaye@".length); hedef = "yeni-hikaye"; }
-    if (/^hikaye:/.test(hedef || "")) {
-      const h = fanEserlerim().find(function (x) { return x.tur === "hikaye" && x.id === hedef.slice(7); });
-      const g = h ? evaEvrengezerIzni(h.evren) : { izin: true };
-      if (!g.izin) { if (typeof eckaBildir === "function") { eckaBildir(g.neden); } return null; }
-    }
-    const r = eskiGotur30.call(this, kisi, hedef);
-    if (r && evrenAdi && r.tur === "hikaye") {
-      const l = fanEserlerim();
-      const h = l.find(function (x) { return x.id === r.id; });
-      if (h) { h.evren = evrenAdi; fanEserlerimYaz(l); }
-    }
-    return r;
-  };
-}
-
-/* hikâye dosyası indirilirken, paylaşılırken, gönderilirken kurallar */
-["fanIndir", "fanPaylas"].forEach(function (ad) {
-  const eski = window[ad];
-  if (typeof eski !== "function") { return; }
-  window[ad] = function (e) {
-    const n = evaHikayeDenetle(e);
-    if (n) { if (typeof eckaBildir === "function") { eckaBildir(n); } return ad === "fanPaylas" ? Promise.resolve(n) : undefined; }
-    return eski.apply(this, arguments);
-  };
-});
-if (typeof fanGonderBilgi === "function") {
-  const eskiGB30 = fanGonderBilgi;
-  window.fanGonderBilgi = function (e) {
-    const n = evaHikayeDenetle(e);
-    return n ? '<p class="pencere-durum kotu" role="alert">' + kacir(n) + "</p>" : eskiGB30.apply(this, arguments);
-  };
-}
-
 /* hikâye düzenleyicisinde: seçilen evrenin kuralı evren alanının hemen altında */
 function evaHikayeNotuYaz() {
   const g = document.querySelector('[data-fan-form="hikaye"] [data-fan-alan="evren"]');
@@ -172,14 +110,7 @@ function evaHikayeNotuYaz() {
   const sorun = evaHikayeDenetle(h);
   n.innerHTML = evaStatuNotu(g.value) + (sorun ? ' <b class="eva-uyari">' + kacir(sorun) + "</b>" : "");
 }
-if (typeof fanCiz === "function") {
-  const eskiFC30b = fanCiz;
-  window.fanCiz = function (tur) {
-    const r = eskiFC30b.apply(this, arguments);
-    if (tur === "hikaye") { try { evaHikayeNotuYaz(); } catch (_) { /* yok */ } }
-    return r;
-  };
-}
+
 document.addEventListener("input", function (ev) {
   if (ev.target && ev.target.matches && ev.target.matches('[data-fan-form="hikaye"] [data-fan-alan="evren"]')) { evaHikayeNotuYaz(); }
 });
@@ -223,27 +154,17 @@ function evaEylemHtml(v) {
       (hk.izin ? '<button class="dugme" data-eva-hikaye="' + kacir(ad) + '">✎ Bu evrende hikâye yaz</button>' : '<span class="oyun-not">' + kacir(hk.neden) + "</span>") +
       (s.tur === "kanon" ? '<button class="dugme dugme-sade" data-eva-evrengezer>Evrengezer getir</button>' : "") +
       (yon ? '<button class="dugme dugme-sade" data-eva-kanon="' + kacir(EVS.id) + '">' + (s.tur === "kanon" ? "Kanondan çıkar" : "Kanona al") + "</button>" : "") +
-    "</div></div>";
-}
-
-if (typeof evrenBilgiBolumu === "function") {
-  const eskiBB30 = evrenBilgiBolumu;
-  window.evrenBilgiBolumu = function (v) { return evaEylemHtml(v) + eskiBB30.apply(this, arguments); };
-}
-
-/* rozet: fan evrenlerinde statü, kendi evreninde seçtiği yol */
-if (typeof evrenSayfaVerisi === "function") {
-  const eskiSV30 = evrenSayfaVerisi;
-  window.evrenSayfaVerisi = function () {
-    const v = eskiSV30.apply(this, arguments);
-    if (!v || !EVS) { return v; }
-    if (EVS.kaynak === "fan" && !v.onizle) {
-      const oz = fanSiteListesi("evren").find(function (x) { return x.id === EVS.id; }) || v.eser || {};
-      v.rozet = oz.kanon === true ? "Kanon evren · herkes hikâye yazabilir" : (oz.test === true ? "Test · fan-made evren (örnek)" : "Fan-made evren");
-    }
-    if (EVS.kaynak === "benim" && v.eser && v.eser.durum === "kanonAday") { v.rozet += " · kanona aday"; }
-    return v;
-  };
+    "</div>" +
+    /* fan-made evrende Evrengezer izni kodu */
+    (s.tur === "fan" && !evaYetkili(s) && (s.eser && (s.eser.egIzinleri || []).length)
+      ? '<details class="evr-izin-gir"><summary>Evrengezer izni kodun var mı?</summary><div class="oyun-sira"><input class="kod-giris" id="evrIzinKod" placeholder="EG-…" aria-label="Evrengezer izni kodu">' +
+        '<button type="button" class="dugme dugme-sade" data-evr-izin-gir>Gir</button></div><p class="pencere-durum" id="evrIzinGirDurum" role="status"></p></details>'
+      : (s.tur === "fan" && evaYetkili(s) ? '<p class="oyun-not">✓ Bu evrene Evrengezer getirme iznin var.</p>' : "")) +
+    evrRafHtml(ad) +
+    '<div class="oyun-sira">' + (EVS.kaynak === "fan" ? '<button type="button" class="dugme dugme-sade" data-evr-tur-ac>🧭 Evren turu</button>' : "") +
+      '<button type="button" class="dugme dugme-sade" data-evr-kart="' + kacir(EVS.kaynak + ":" + EVS.id) + '">🖼 Evren kartı</button>' +
+      /* okur evrenini şikâyet et (moderatörlere gider) */
+      (EVS.kaynak === "fan" ? '<button class="dugme dugme-sade" data-evren-bildir="' + kacir(EVS.id) + '">Bildir</button>' : "") + "</div></div>";
 }
 
 document.addEventListener("click", function (ev) {
@@ -295,36 +216,6 @@ function evaYolHtml(e) {
       secim("sahip", "Hikâyeleri yalnızca ben yazarım", "Başkaları bu evrende hikâye yazamaz.", !!kapali, "data-eva-izin") + "</div>"
       : '<p class="oyun-not">Aşağıdaki “Yazara gönder” ile gönder; yazar onaylayıp yayınlarsa evrenin kanona girer.</p>') +
     "</div>";
-}
-if (typeof evrKurucuHtml === "function") {
-  const eskiKH30 = evrKurucuHtml;
-  window.evrKurucuHtml = function (v) {
-    const h = eskiKH30.apply(this, arguments);
-    if ((EVR_ADIM[v.eser.id] || "temel") !== "paylas") { return h; }
-    const i = h.indexOf('<div class="oyun-sira">');
-    return i === -1 ? h : h.slice(0, i) + evaYolHtml(v.eser) + h.slice(i);
-  };
-}
-
-/* evren seçicide: fan evrenlerinin statüsü */
-if (typeof evrenSeciciListesi === "function") {
-  const eskiESL30 = evrenSeciciListesi;
-  window.evrenSeciciListesi = function () {
-    const r = eskiESL30.apply(this, arguments);
-    const site = (veri.fanEserleri || {}).evrenler || [];
-    (r.fan || []).forEach(function (x) {
-      const e = site.find(function (y) { return "#/ev/fan/" + y.id === x.git; });
-      x.not = (e && e.kanon === true ? "kanon" : (e && e.test === true ? "test · fan-made" : "fan-made")) + (x.not ? " · " + x.not : "");
-    });
-    /* Claude'un Evreni: test evreni (kanon değil) */
-    (r.site || []).forEach(function (x) { if (x.git === "#/claude") { x.not = "test evreni"; } });
-    const benim = typeof fanEserlerim === "function" ? fanEserlerim() : [];
-    (r.benim || []).forEach(function (x) {
-      const e = benim.find(function (y) { return "#/ev/benim/" + y.id === x.git; });
-      if (e && e.durum === "kanonAday") { x.not += " · kanona aday"; }
-    });
-    return r;
-  };
 }
 
 /* ==================== Evren Atölyesi sayfası (#/atolye) ==================== */
@@ -384,6 +275,9 @@ function evrenAtolyeCiz() {
       '<p class="oyun-not">Kanon değil: sitenin özelliklerinin denendiği ve gösterildiği evrenler. Bakıp öğren, kendi evreninde uygula.</p><div class="eva-kartlar">' +
       (claude ? evaEvrenKarti(claude.ad, "Test evreni", "#/claude", evaStatuRozeti({ tur: "test" }), '<button class="dugme dugme-sade y-kucuk" data-eva-hikaye="' + kacir(claude.ad) + '">✎ Deneme hikâyesi</button>') : "") +
       testler.map(function (e) { return evaEvrenKarti(e.ad, kacir(e.yazar || "örnek"), "#/ev/fan/" + e.id, evaStatuRozeti({ tur: "fan", test: true }), ""); }).join("") + "</div>" : "");
+  /* evrenler arası geçitler (84) */
+  const a = document.querySelector("#evrenAtolyeAlan");
+  if (a && !a.querySelector(".evr-gecit, .evr-gecit-bos")) { a.insertAdjacentHTML("beforeend", '<h3 class="eva-bolum">Evrenler arası geçitler</h3><div class="evr-gecit-bos">' + evrGecitSvg() + "</div>"); }
 }
 if (typeof GEC_CIZILENLER !== "undefined") { GEC_CIZILENLER.evrenAtolye = "evrenAtolyeCiz"; }
 
@@ -397,11 +291,3 @@ document.addEventListener("click", function (ev) {
 /* sayfaya her gelişte güncel (kendi evrenlerin başka sayfada değişir) */
 window.addEventListener("hashchange", function () { if (typeof rota === "function" && rota().indexOf("#/atolye") === 0) { setTimeout(evrenAtolyeCiz, 30); } });
 
-/* kanona alınmış fan evreninin okur sayfasında etiket */
-if (typeof fanEserGovde === "function") {
-  const eskiGovde30b = fanEserGovde;
-  window.fanEserGovde = function (e) {
-    const h = eskiGovde30b.apply(this, arguments);
-    return e && e.tur === "evren" && e.kanon === true && !e.etiket ? h.replace("Fan evreni · kanon dışı", "Kanon evren · okurların kurduğu") : h;
-  };
-}

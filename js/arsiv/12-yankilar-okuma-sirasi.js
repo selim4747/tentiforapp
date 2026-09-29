@@ -249,6 +249,7 @@ function siraCiz() {
                '<span class="sira-ad">' + kacir(a) + "</span></li>";
       }).join("") +
     "</ol>";
+  siraKilitleriIsaretle(alan, s);   /* hangi adım açık, hangisi kod ister (62-ilk-deneyim) */
 }
 
 /* ==================== YAZI ÇÖZME OYUNU ==================== */
@@ -603,7 +604,6 @@ function ozelSonucSatiri() {
     .filter(function (x) { return x; });
   return liste.length ? '<p class="oyun-not">Senin öğelerin bu evrende: ' + liste.map(kacir).join(" · ") + "</p>" : "";
 }
-
 
 function baloncukBaslat() {
   E = { kurallar: [], yabancilar: [], sonuc: null, melez: false };

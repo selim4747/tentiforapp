@@ -15,7 +15,8 @@ function seviyeKoduSeviyesi() {
   if (typeof cuzdan === "undefined" || !Array.isArray(cuzdan.acilan)) { return 0; }
   let s = 0;
   cuzdan.acilan.forEach(function (x) { const m = /^svkod_(\d+)$/.exec(x); if (m) { s = Math.max(s, Number(m[1])); } });
-  return s;
+  /* tek kullanımlık kodlar: evren kodu 15, Evrengezer kodu 10 sayılır */
+  return Math.max(s, tekHakVar("evren") ? 15 : (tekHakVar("evrengezer") ? 10 : 0));
 }
 
 function seviyeKoduDene(kod, durum) {
@@ -40,16 +41,6 @@ function seviyeKoduDene(kod, durum) {
   return true;
 }
 
-if (typeof sonraSar === "function") {
-  sonraSar("kodDene", function (eski) {
-    return function (ham) {
-      const kod = String(ham || "").trim().toUpperCase();
-      if (kod && seviyeKoduDene(kod, document.querySelector("#kodDurum"))) { return; }
-      return eski.apply(this, arguments);
-    };
-  });
-}
-
 /* ==================== altın rozet katman açar ==================== */
 
 let rozetKatmanOnbellek = null;
@@ -66,21 +57,6 @@ function rozetAcikKatmanlar() {
   }
   rozetKatmanOnbellek = { zaman: Date.now(), m: m };
   return m;
-}
-
-if (typeof sonraSar === "function") {
-  sonraSar("buzul", function (eski) {
-    return function (g) {
-      if (!g || !g.dogrulama || cozulenler[g.dogrulama]) { return eski.apply(this, arguments); }
-      const ad = rozetAcikKatmanlar()[g.dogrulama];
-      if (!ad) { return eski.apply(this, arguments); }
-      cozulenler[g.dogrulama] = "rozet";
-      try {
-        return eski.apply(this, arguments).replace('<div class="buzul-etiket">çözüldü',
-          '<div class="buzul-etiket">altın rozetle açıldı · ' + kacir(ad));
-      } finally { delete cozulenler[g.dogrulama]; }
-    };
-  });
 }
 
 /* ==================== evrenler arası hızlı geçiş ==================== */
@@ -150,40 +126,6 @@ function evrenSeciciSuz(q) {
     const var_ = g.querySelector(".es-oge:not([hidden])");
     g.hidden = !!s && !var_;
   });
-}
-
-if (typeof evrenSeciciAc === "function") {
-  const eskiAc = evrenSeciciAc;
-  window.evrenSeciciAc = function () {
-    const r = eskiAc.apply(this, arguments);
-    evrenSeciciZenginlestir();
-    return r;
-  };
-}
-if (typeof evrenGit === "function") {
-  const eskiGit = evrenGit;
-  window.evrenGit = function (git) {
-    const b = document.querySelector('#evrenSecici [data-evren-git="' + (window.CSS && CSS.escape ? CSS.escape(git) : git) + '"] .es-ad, .evren-serit [data-evren-git="' + (window.CSS && CSS.escape ? CSS.escape(git) : git) + '"] .es-ad');
-    if (b && git.indexOf("harita:") !== 0) { sonEvrenEkle(b.textContent.trim(), git); }
-    return eskiGit.apply(this, arguments);
-  };
-}
-if (typeof evrenSayfaCiz === "function") {
-  const eskiCiz = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    const r = eskiCiz.apply(this, arguments);
-    const e = simdikiEvren();
-    if (e.git.indexOf("#/ev/") === 0 && !(typeof EVS !== "undefined" && EVS && EVS.kaynak === "acilan")) {
-      const l = sonEvrenler();
-      if (!l.length || l[0].git !== e.git) { sonEvrenEkle(e.ad, e.git); }
-    }
-    evrenDugmesiGuncelle();
-    return r;
-  };
-}
-if (typeof evrenSayfaKapat === "function") {
-  const eskiKapat = evrenSayfaKapat;
-  window.evrenSayfaKapat = function () { const r = eskiKapat.apply(this, arguments); evrenDugmesiGuncelle(); return r; };
 }
 
 /* ana sayfa: evren şeridi */

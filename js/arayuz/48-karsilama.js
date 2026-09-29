@@ -191,14 +191,3 @@ async function olaySayilariCiz() {
       "</tbody></table>" : '<p class="oyun-not">Henüz kayıt yok.</p>');
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  /* İstatistik sekmesi çizildikten sonra sayacı altına ekle */
-  if (typeof yoneticiIstatistikYukle === "function") {
-    const eski = yoneticiIstatistikYukle;
-    window.yoneticiIstatistikYukle = async function () {
-      const r = await eski.apply(this, arguments);
-      try { await olaySayilariCiz(); } catch (_) { /* sayaç panelin kalanını bozmasın */ }
-      return r;
-    };
-  }
-});

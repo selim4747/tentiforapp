@@ -16,10 +16,11 @@ const EVO_OYUNLAR = [
   { id: "sinav", ad: "Evren sınavı", ozet: "Kişiler, yerler, sözlük ve tarihten 10 soru." },
   { id: "harita", ad: "Harita bulmacası", ozet: "Adı verilen yeri etiketsiz haritada bul." },
   { id: "dogru", ad: "Doğru mu?", ozet: "8 iddia: evrenin kişileri, yerleri, sözlüğü. Doğru mu, yanlış mı?" },
-  { id: "zaman", ad: "Zaman sırası", ozet: "Tarihten 4 olayı sıraya koy; üç turun ikisini bil." }
+  { id: "zaman", ad: "Zaman sırası", ozet: "Tarihten 4 olayı sıraya koy; üç turun ikisini bil." },
+  { id: "yazicoz", ad: "Yazıyı çöz", ozet: "Evrenin kendi yazısıyla yazılmış adı bul. İşaretler Yazı sekmesinde." }
 ];
-const EVO_EN_AZ = { kelime: 5, sinav: 4, harita: 4, dogru: 4, zaman: 4 };
-const EVO_SORU_OYUNU = { sinav: true, dogru: true };
+const EVO_EN_AZ = { kelime: 5, sinav: 4, harita: 4, dogru: 4, zaman: 4, yazicoz: 4 };
+const EVO_SORU_OYUNU = { sinav: true, dogru: true, yazicoz: true };
 const EVO_ODUL_EG = 1;            /* varsayılan ödül: 1 EG değerinde evren parası */
 const EVO_ODUL_TAVAN_EG = 3;      /* kurucu en fazla 3 EG değerinde ödül koyabilir */
 const EVO_GUNLUK = 10;            /* günde en fazla bu kadar oyun ödülü (bütün evrenler) */
@@ -82,14 +83,6 @@ function evrenIcerikTemizle(ham, e) {
     }).filter(Boolean);
     if (c.length) { e.cizimler = c; }
   }
-}
-
-if (typeof evrenEkTemizle === "function") {
-  const eskiEkTemizle = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEkTemizle.apply(this, arguments);
-    evrenIcerikTemizle(ham, e);
-  };
 }
 
 /* ==================== çizim deposu (IndexedDB + bellek) ==================== */
@@ -199,54 +192,6 @@ function cizimleriAyir(l) {
       if (c && c.v) { cizimYaz(c.id, c.v); delete c.v; }
     });
   });
-}
-
-if (typeof fanEserlerimYaz === "function") {
-  const eskiEserlerimYaz = fanEserlerimYaz;
-  window.fanEserlerimYaz = function (l) { cizimleriAyir(l); return eskiEserlerimYaz.apply(this, arguments); };
-}
-if (typeof fanAcilanEkle === "function") {
-  const eskiAcilanEkle = fanAcilanEkle;
-  window.fanAcilanEkle = function (e) {
-    const k = JSON.parse(JSON.stringify(e));
-    cizimleriAyir(k);
-    return eskiAcilanEkle.call(this, k);
-  };
-}
-if (typeof fanDosyaHtml === "function") {
-  const eskiDosyaHtml = fanDosyaHtml;
-  window.fanDosyaHtml = function (e) {
-    /* adsız evrenin dosyası da yeniden açılabilsin (ad zorunlu alan) */
-    if (e && e.tur === "evren" && !String(e.ad || "").trim()) { e = Object.assign({}, e, { ad: "Adsız evren" }); }
-    return eskiDosyaHtml.call(this, cizimGomulu(e));
-  };
-}
-if (typeof fanIndir === "function") {
-  const eskiIndir = fanIndir;
-  window.fanIndir = async function (e) { await cizimleriIsit(e); return eskiIndir.apply(this, arguments); };
-}
-if (typeof fanPaylas === "function") {
-  const eskiPaylas = fanPaylas;
-  window.fanPaylas = async function (e) {
-    /* paylaşım menüsü dokunuşa yakın açılmalı: görseller zaten bellekteyse beklemeden */
-    if ((e.cizimler || []).some(function (c) { return !c.v && !CIZIM_BELLEK[c.id]; })) { await cizimleriIsit(e); }
-    return eskiPaylas.apply(this, arguments);
-  };
-}
-
-/* Yönetici siteye eklerken görseller GitHub'a ayrı dosya olarak gider; veri.json'da yalnızca yolu kalır. */
-if (typeof fanSiteyeEkle === "function") {
-  const eskiSiteyeEkle = fanSiteyeEkle;
-  window.fanSiteyeEkle = function (e) {
-    const ok = eskiSiteyeEkle.apply(this, arguments);
-    if (ok && e.tur === "evren") {
-      /* önce çizimler (yolları yazılsın), sonra evrenin tamamı ayrı dosya olarak (54-evren-dosyalari.js) */
-      Promise.resolve((e.cizimler || []).length ? cizimleriSiteyeYukle(e.id) : null).then(function () {
-        if (typeof evdSiteyeYukle === "function") { return evdSiteyeYukle(e.id); }
-      });
-    }
-    return ok;
-  };
 }
 
 async function cizimleriSiteyeYukle(eserId) {
@@ -369,7 +314,7 @@ function evoSoruHavuzu(e) {
 /** Hangi oyun oynanabilir: açık mı, yeterli içerik var mı? */
 function evoDurumlari(e) {
   return EVO_OYUNLAR.map(function (g) {
-    const sayi = g.id === "kelime" ? evoKelimeler(e).length : (EVO_SORU_OYUNU[g.id] ? evoSoruHavuzu(e).length
+    const sayi = g.id === "kelime" ? evoKelimeler(e).length : g.id === "yazicoz" ? yaziCozKelimeleri(e).length : (EVO_SORU_OYUNU[g.id] ? evoSoruHavuzu(e).length
       : (g.id === "zaman" ? evoZamanOlaylari(e).length : evoHaritaYerleri(e).length));
     return { id: g.id, ad: evoAd(e, g.id), ozet: g.ozet, acik: evoAyar(e, g.id).acik !== false, sayi: sayi, yeter: sayi >= EVO_EN_AZ[g.id] };
   });
@@ -388,6 +333,7 @@ function evoOdulMiktari(e, p) {
 /** Ödül verilmeyen durumun nedeni; verilebiliyorsa "". */
 function evoOdulEngeli() {
   if (!EVS) { return "Evren açık değil."; }
+  if (onizlemeMi()) { return "Önizlemede ödül yok; ziyaretçiler oynayınca kazanır."; }
   if (EVS.kaynak === "benim" || (EVS.kaynak === "fan" && evrenKendisininMi(EVS.id))) { return "Kendi evreninde oyunlar ödül vermez; deneme için oynayabilirsin."; }
   if (EVS.kaynak === "acilan") { return "Dosyadan açılan evrenlerde ödül yok; evren sitede yayımlanınca verir."; }
   return "";
@@ -674,7 +620,7 @@ function evrDurum() {
   return EVR;
 }
 
-function evrenRomanBolumu(v) {
+function evrenRomanGovde(v) {
   const e = v.eser;
   const r = e.roman || { baslik: "", ozet: "", bolumler: [] };
   const d = evrDurum();
@@ -833,54 +779,6 @@ function evcBuyut(id) {
   perde.hidden = false;
 }
 
-/* ==================== dosya görünümü: roman ve çizimler ==================== */
-
-if (typeof fanEserGovde === "function") {
-  const eskiGovde = fanEserGovde;
-  /* dosyada ve önizleme penceresinde (yönetici onaylamadan önce görsün) roman ve çizimler de; evren sayfasında kendi sekmelerinde */
-  window.fanEserGovde = function (e, dosya, secenek) {
-    const h = eskiGovde.apply(this, arguments);
-    if (!(dosya || (secenek && secenek.tam)) || !e || e.tur !== "evren") { return h; }
-    const r = e.roman;
-    const bolumler = (r && r.bolumler) || [];
-    const cizim = (e.cizimler || []).filter(function (c) { return cizimKaynak(c); });
-    return h +
-      (bolumler.length ? "<h2>Roman" + (r.baslik ? ": " + kacir(r.baslik) : "") + "</h2>" + (r.ozet ? "<p><i>" + kacir(r.ozet) + "</i></p>" : "") +
-        bolumler.map(function (b, i) { return "<h3>" + kacir(evrBolumAdi(b, i)) + "</h3>" + paragraf(b.metin); }).join("") : "") +
-      (cizim.length ? "<h2>Çizimler</h2>" + cizim.map(function (c) {
-        return '<figure style="margin:18px 0"><img src="' + kacir(cizimKaynak(c)) + '" alt="' + kacir(c.baslik || "Çizim") + '" style="max-width:100%;height:auto">' +
-          (c.baslik || c.aciklama ? "<figcaption>" + (c.baslik ? "<b>" + kacir(c.baslik) + "</b> " : "") + kacir(c.aciklama || "") + "</figcaption>" : "") + "</figure>";
-      }).join("") : "");
-  };
-}
-
-/* ==================== evren sayfası: sekmeler ==================== */
-
-if (typeof evrenEkSekmeler === "function") {
-  const eskiSekmeler = evrenEkSekmeler;
-  window.evrenEkSekmeler = function (v) {
-    const l = eskiSekmeler.apply(this, arguments);
-    if (!EVS || EVS.kaynak === "site") { return l; }
-    const e = v.eser;
-    const benim = EVS.kaynak === "benim";
-    const oyun = evoOynanabilir(e).length;
-    if (benim || oyun) { l.push(["oyunlar", "Oyunlar" + (oyun ? " (" + oyun + ")" : "")]); }
-    if (EVS.kaynak === "e99") { return l; }
-    const bolum = ((e.roman || {}).bolumler || []).length;
-    if (benim || bolum) { l.push(["roman", "Roman" + (bolum ? " (" + bolum + ")" : "")]); }
-    const cizim = (e.cizimler || []).length;
-    if (benim || cizim) { l.push(["cizim", "Çizimler" + (cizim ? " (" + cizim + ")" : "")]); }
-    return l;
-  };
-  const eskiBolum = evrenEkBolum;
-  window.evrenEkBolum = function (v) {
-    if (EVS && EVS.sekme === "oyunlar") { return evrenOyunlarBolumu(v); }
-    if (EVS && EVS.sekme === "roman" && EVS.kaynak !== "e99") { return evrenRomanBolumu(v); }
-    if (EVS && EVS.sekme === "cizim" && EVS.kaynak !== "e99") { return evrenCizimBolumu(v); }
-    return eskiBolum.apply(this, arguments);
-  };
-}
-
 /* ==================== olaylar ==================== */
 
 document.addEventListener("click", function (ev) {
@@ -1019,19 +917,3 @@ document.addEventListener("submit", function (ev) {
   if (o && (!o.alan || !o.alan.isConnected)) { o.alan = f.closest("[data-ko-kap]"); }
 }, true);
 
-/* Roman yazılırken sayfa yeniden çizilirse (sekme, ödül, başka evren) yazılan son harfler kaybolmasın */
-if (typeof evrenSayfaCiz === "function") {
-  const eskiSayfaCiz = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    if (evrBekleyen) { evrBekleyeniYaz(); }
-    return eskiSayfaCiz.apply(this, arguments);
-  };
-}
-if (typeof evrenSayfaKapat === "function") {
-  const eskiSayfaKapat = evrenSayfaKapat;
-  window.evrenSayfaKapat = function () {
-    if (evrBekleyen) { evrBekleyeniYaz(); }
-    EVO = null;
-    return eskiSayfaKapat.apply(this, arguments);
-  };
-}

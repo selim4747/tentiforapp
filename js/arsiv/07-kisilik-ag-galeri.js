@@ -31,6 +31,7 @@ function testSec(secenekIndeks) {
     });
 
     T.sonuc = enIyi;
+    if (!kartSahip(T.sonuc)) { kartKazan(T.sonuc, "test"); }   /* sonuç karakterinin kartı (39) */
 
     if (!kilitAcik(TEST_ODUL_ANAHTAR)) {
       cuzdan.acilan.push(TEST_ODUL_ANAHTAR);

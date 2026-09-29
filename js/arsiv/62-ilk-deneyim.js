@@ -13,12 +13,6 @@
   12. Kilit ilerlemesi: arşivin ne kadarı açık, sıradaki kilit.
   15. Geri bildirim: "Bir sorun mu var?" — panelde hata kayıtlarının arasında görünür. */
 
-/** 24-arsiv-mantigi.js en son yüklenir: onun fonksiyonları bütün betikler çalıştıktan sonra sarılır (veri ondan da sonra gelir). */
-function sonraSar(ad, kur) {
-  const yap = function () { if (typeof window[ad] === "function") { window[ad] = kur(window[ad]); } };
-  if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", yap); } else { yap(); }
-}
-
 /* ==================== 3. başlangıç kodu kendiliğinden ==================== */
 
 const BASLANGIC_OTO = "tentiforapp_baslangic_oto";
@@ -41,16 +35,6 @@ function baslangicKendiliginden() {
     kanonProfilEkle(p.id);
     if (typeof olaySay === "function") { olaySay("baslangic_oto"); }
   } catch (_) { /* kilit düzeni hazır değil */ }
-}
-
-/* veri yüklenir yüklenmez, ilk çizimden önce (cüzdan adımında) */
-if (typeof cuzdanYukle === "function") {
-  const eskiCuzdanYukle = cuzdanYukle;
-  window.cuzdanYukle = function () {
-    const r = eskiCuzdanYukle.apply(this, arguments);
-    baslangicKendiliginden();
-    return r;
-  };
 }
 
 /* ==================== 5. boş bölümler ==================== */
@@ -107,35 +91,6 @@ function kilitNasilAcilir(id) {
   return "Bu bölümün kodu yazardan gelir: QR kart, duyuru ya da etkinlik. Arşivde okudukça ve oynadıkça yeni yollar açılır.";
 }
 
-if (typeof kanonKartHtml === "function") {
-  const eskiKart = kanonKartHtml;
-  window.kanonKartHtml = function (baslik, bolumId) {
-    const h = eskiKart.apply(this, arguments);
-    const on = bolumId ? onizlemeMetni(bolumId) : "";
-    const ek = (on ? '<div class="kanon-onizleme" aria-hidden="true"><p>' + kacir(on) + "…</p></div>" : "") +
-      (bolumId ? '<p class="kanon-nasil">' + kacir(kilitNasilAcilir(bolumId)) + "</p>" : "");
-    return ek ? h.replace(/<div class="kanon-dugmeler">/, ek + '<div class="kanon-dugmeler">') : h;
-  };
-}
-
-if (typeof kanonKilitUygula === "function") {
-  const eskiKilit = kanonKilitUygula;
-  window.kanonKilitUygula = function () {
-    bosBolumleriUygula();
-    const r = eskiKilit.apply(this, arguments);
-    /* sayfada okunabilir bölüm varken kilit kartları tek satıra iner; dokununca önizleme açılır */
-    document.querySelectorAll(".kanon-yer").forEach(function (y) {
-      if (y.querySelector("details")) { return; }
-      const b = y.closest("section.bolum");
-      const ad = (y.querySelector(".kanon-baslik") || {}).textContent || "Kilitli";
-      y.innerHTML = '<details class="kanon-kompakt"><summary><span class="kanon-kompakt-ikon" aria-hidden="true">🔒</span>' + kacir(ad) +
-        '<span class="kanon-kompakt-ac">önizle</span></summary>' + y.innerHTML + "</details>";
-      if (b) { b.classList.add("kanon-kompakt-bolum"); }
-    });
-    return r;
-  };
-}
-
 /* ==================== 1. okuma yolu ==================== */
 
 function siraHedefi(ad) {
@@ -156,26 +111,19 @@ function siraAcikMi(h) {
   return typeof bolumErisimi !== "function" || bolumErisimi(h.bolum);
 }
 
-if (typeof siraCiz === "function") {
-  const eskiSira = siraCiz;
-  window.siraCiz = function () {
-    const r = eskiSira.apply(this, arguments);
-    const alan = document.querySelector("#siraAlan");
-    const s = veri.okumaSirasi && veri.okumaSirasi[siraSecim];
-    if (!alan || !s) { return r; }
-    alan.querySelectorAll(".sira-liste li").forEach(function (li, i) {
-      const h = siraHedefi(s.adimlar[i]);
-      if (!h) { return; }
-      const acik = siraAcikMi(h);
-      li.classList.add(acik ? "sira-acik" : "sira-kilitli");
-      li.insertAdjacentHTML("beforeend", acik
-        ? '<button type="button" class="ic-bag sira-git" data-sira-git="' + i + '">Oku →</button>'
-        : '<span class="sira-kilit" title="' + kacir(kilitNasilAcilir(h.bolum)) + '">🔒 ' +
-          (typeof baslangicKapsar === "function" && baslangicKapsar(h.bolum) ? "başlangıç kodu açar" : "kod ister") + "</span>");
-    });
-    alan.insertAdjacentHTML("afterbegin", kilitIlerlemesiHtml());
-    return r;
-  };
+/** Okuma sırasında her adımın kilit durumu ve "Oku →"; üstte kilit ilerlemesi. */
+function siraKilitleriIsaretle(alan, s) {
+  alan.querySelectorAll(".sira-liste li").forEach(function (li, i) {
+    const h = siraHedefi(s.adimlar[i]);
+    if (!h) { return; }
+    const acik = siraAcikMi(h);
+    li.classList.add(acik ? "sira-acik" : "sira-kilitli");
+    li.insertAdjacentHTML("beforeend", acik
+      ? '<button type="button" class="ic-bag sira-git" data-sira-git="' + i + '">Oku →</button>'
+      : '<span class="sira-kilit" title="' + kacir(kilitNasilAcilir(h.bolum)) + '">🔒 ' +
+        (typeof baslangicKapsar === "function" && baslangicKapsar(h.bolum) ? "başlangıç kodu açar" : "kod ister") + "</span>");
+  });
+  alan.insertAdjacentHTML("afterbegin", kilitIlerlemesiHtml());
 }
 
 function siraAdimaGit(i) {
@@ -272,51 +220,6 @@ document.addEventListener("click", function (ev) {
   if (d && typeof karakterAc === "function") { karakterAc(Number(d.dataset.devamKar)); }
 });
 
-sonraSar("arsiviTazele", function (eskiTazele) {
-  return function () {
-    const r = eskiTazele.apply(this, arguments);
-    try { bugunKartiCiz(); } catch (_) { /* yok */ }
-    return r;
-  };
-});
-if (typeof gunlukOzetCiz === "function") {
-  const eskiOzet = gunlukOzetCiz;
-  window.gunlukOzetCiz = function () {
-    const r = eskiOzet.apply(this, arguments);
-    try { bugunKartiCiz(); } catch (_) { /* yok */ }
-    return r;
-  };
-}
-
-/* ==================== 4. tanıtım turu: ekranı kapatmayan ipucu ==================== */
-
-if (typeof turCiz === "function") {
-  window.turCiz = function () {
-    const liste = veri.tur || [];
-    if (!liste.length || turAdim >= liste.length) { turBitir(); return; }
-    let k = document.querySelector("#turIpucu");
-    if (!k) {
-      k = document.createElement("div");
-      k.id = "turIpucu";
-      k.className = "tur-ipucu";
-      k.setAttribute("role", "status");
-      document.body.appendChild(k);
-    }
-    const a = liste[turAdim];
-    k.innerHTML = '<div class="tur-ipucu-ust"><span class="tur-sayac">' + (turAdim + 1) + " / " + liste.length + "</span>" +
-      '<button class="tur-kapat" data-tur="atla" aria-label="Turu kapat">✕</button></div>' +
-      "<b>" + kacir(a.baslik) + "</b><p>" + kacir(a.metin) + "</p>" +
-      '<button class="dugme" data-tur="ileri">' + (turAdim === liste.length - 1 ? "Başla" : "Sonraki") + "</button>";
-  };
-  const eskiBitir = turBitir;
-  window.turBitir = function () {
-    const r = eskiBitir.apply(this, arguments);
-    const k = document.querySelector("#turIpucu");
-    if (k) { k.remove(); }
-    return r;
-  };
-}
-
 /* ==================== 6. terimler ==================== */
 
 const TERIMLER = {
@@ -397,91 +300,56 @@ function eckaGostergesiAyarla() {
   document.documentElement.classList.toggle("ecka-yeni", eckaYeniMi());
 }
 
-if (typeof cuzdanGoster === "function") {
-  const eskiGoster = cuzdanGoster;
-  window.cuzdanGoster = function () {
-    const r = eskiGoster.apply(this, arguments);
-    eckaGostergesiAyarla();
-    return r;
-  };
-}
-if (typeof eckaKazan === "function") {
-  const eskiKazan = eckaKazan;
-  window.eckaKazan = function (miktar) {
-    const yeni = eckaYeniMi();
-    const r = eskiKazan.apply(this, arguments);
-    eckaGostergesiAyarla();
-    if (yeni && miktar > 0 && !eckaYeniMi()) {
-      setTimeout(function () {
-        const el = document.querySelector("#cuzdanTutar");
-        if (!el) { return; }
-        const b = document.createElement("div");
-        b.className = "terim-balon ecka-ilk";
-        b.setAttribute("role", "status");
-        b.innerHTML = "<b>İlk eçkan geldi!</b><p>" + kacir(TERIMLER["eçka"]) + " Buna dokununca neler alabileceğini görürsün.</p>" +
-          '<button type="button" class="ic-bag" data-terim-kapat>Tamam</button>';
-        document.body.appendChild(b);
-        const r2 = el.getBoundingClientRect();
-        const gen = Math.min(290, window.innerWidth - 24);
-        b.style.width = gen + "px";
-        b.style.left = Math.max(12, Math.min(window.innerWidth - gen - 12, r2.left + window.scrollX - 40)) + "px";
-        b.style.top = (r2.bottom + window.scrollY + 8) + "px";
-      }, 600);
-    }
-    return r;
-  };
+/** İlk eçkan kazanılınca cüzdanın altında açıklama balonu. */
+function eckaIlkBalon() {
+  const el = document.querySelector("#cuzdanTutar");
+  if (!el) { return; }
+  const b = document.createElement("div");
+  b.className = "terim-balon ecka-ilk";
+  b.setAttribute("role", "status");
+  b.innerHTML = "<b>İlk eçkan geldi!</b><p>" + kacir(TERIMLER["eçka"]) + " Buna dokununca neler alabileceğini görürsün.</p>" +
+    '<button type="button" class="ic-bag" data-terim-kapat>Tamam</button>';
+  document.body.appendChild(b);
+  const r2 = el.getBoundingClientRect();
+  const gen = Math.min(290, window.innerWidth - 24);
+  b.style.width = gen + "px";
+  b.style.left = Math.max(12, Math.min(window.innerWidth - gen - 12, r2.left + window.scrollX - 40)) + "px";
+  b.style.top = (r2.bottom + window.scrollY + 8) + "px";
 }
 
 /* ==================== 8. eçka penceresi ==================== */
 
-sonraSar("cuzdanPenceresi", function (eskiPencere) {
-  return function () {
-    const r = eskiPencere.apply(this, arguments);
-    const p = document.querySelector("#perde .pencere");
-    if (!p) { return r; }
-    const baslik = p.querySelector("h3");
-    const alt = p.querySelector(".pencere-alt");
-    const bilgi = '<div class="ecka-neler"><div class="oyun-etiket">eçka ile neler alabilirsin</div><ul>' +
-      '<li><a href="#galeri" data-kapat="1">Galeri</a> — kilitli görseller</li>' +
-      '<li><a href="#temalar" data-kapat="1">Temalar</a> — sitenin rengi, yazı tipleri</li>' +
-      '<li><a href="#oyunlar" data-kapat="1">Boyut Sürüklenmesi</a> — kilitli oyun</li>' +
-      "<li>Evrengezer bürosu — başka evrenlerin parası</li></ul>" +
-      '<p class="oyun-not">Kazanmak için: kutuları sonuna kadar oku, oyna, günün görevini yap.</p></div>';
-    (alt || baslik).insertAdjacentHTML("afterend", bilgi);
-    /* yedek kodu: düğmenin arkasında */
-    Array.prototype.forEach.call(p.querySelectorAll(".oyun-etiket"), function (e) {
-      if (!/^Yedekleme$/i.test(e.textContent.trim())) { return; }
-      const blok = e.closest(".arac-blok");
-      if (!blok || blok.closest("details")) { return; }
-      const d = document.createElement("details");
-      d.className = "ecka-yedek";
-      d.innerHTML = "<summary>Yedek kodu · ilerlemeni başka cihaza taşı</summary>";
-      blok.parentNode.insertBefore(d, blok);
-      d.appendChild(blok);
-      e.remove();
-    });
-    return r;
-  };
-});
+/** eçka penceresi: en üstte "neler alabilirsin"; yedek kodu bir düğmenin arkasında. */
+function eckaPencereDuzeni() {
+  const p = document.querySelector("#perde .pencere");
+  if (!p) { return; }
+  const baslik = p.querySelector("h3");
+  const alt = p.querySelector(".pencere-alt");
+  const bilgi = '<div class="ecka-neler"><div class="oyun-etiket">eçka ile neler alabilirsin</div><ul>' +
+    '<li><a href="#galeri" data-kapat="1">Galeri</a> — kilitli görseller</li>' +
+    '<li><a href="#temalar" data-kapat="1">Temalar</a> — sitenin rengi, yazı tipleri</li>' +
+    '<li><a href="#oyunlar" data-kapat="1">Boyut Sürüklenmesi</a> — kilitli oyun</li>' +
+    "<li>Evrengezer bürosu — başka evrenlerin parası</li></ul>" +
+    '<p class="oyun-not">Kazanmak için: kutuları sonuna kadar oku, oyna, günün görevini yap.</p></div>';
+  (alt || baslik).insertAdjacentHTML("afterend", bilgi);
+  /* yedek kodu: düğmenin arkasında */
+  Array.prototype.forEach.call(p.querySelectorAll(".oyun-etiket"), function (e) {
+    if (!/^Yedekleme$/i.test(e.textContent.trim())) { return; }
+    const blok = e.closest(".arac-blok");
+    if (!blok || blok.closest("details")) { return; }
+    const d = document.createElement("details");
+    d.className = "ecka-yedek";
+    d.innerHTML = "<summary>Yedek kodu · ilerlemeni başka cihaza taşı</summary>";
+    blok.parentNode.insertBefore(d, blok);
+    d.appendChild(blok);
+    e.remove();
+  });
+}
 
 /* ==================== 11. hesap: ne kazandırır, Google ile giriş ==================== */
 
 const HESAP_FAYDA = ["İlerlemen her cihazda seninle: okuduğun, eçka, rozetler, kendi evrenlerin",
   "XP sunucuda sayılır: seviye atlarsın, liderlikte yer alırsın", "Kulüplere katıl, teori yaz, evrenleri takip et"];
-
-if (typeof hesapPencere === "function") {
-  const eskiHesap = hesapPencere;
-  window.hesapPencere = function (tur) {
-    const r = eskiHesap.apply(this, arguments);
-    if (tur !== "giris" && tur !== "kayit") { return r; }
-    const form = document.querySelector('#perde [data-hesap-form="' + tur + '"]');
-    if (!form || form.parentNode.querySelector(".hesap-fayda")) { return r; }
-    form.insertAdjacentHTML("beforebegin", '<ul class="hesap-fayda">' + HESAP_FAYDA.map(function (x) { return "<li>" + kacir(x) + "</li>"; }).join("") + "</ul>" +
-      '<button type="button" class="dugme dugme-tam google-giris" data-google-giris><span class="google-g" aria-hidden="true">G</span> Google ile devam et</button>' +
-      '<p class="hesap-veya"><span>ya da e-postayla</span></p>');
-    return r;
-  };
-}
 
 document.addEventListener("click", async function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-google-giris]");

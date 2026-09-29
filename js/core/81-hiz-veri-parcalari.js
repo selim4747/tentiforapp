@@ -56,47 +56,6 @@ function veriParcalariUygula(o) {
   return o;
 }
 
-/* yönetici: GitHub'a kaydetmeden ve dışa aktarmadan önce parçalar yerinde olsun */
-if (typeof githubGonder === "function") {
-  const eskiGG30 = githubGonder;
-  window.githubGonder = function () {
-    const bu = this, arg = arguments;
-    if (veriParcalariHazir()) { return eskiGG30.apply(bu, arg); }
-    if (typeof yoneticiDurum === "function") { yoneticiDurum("Verinin tamamı hazırlanıyor…", true); }
-    return veriParcalariTam().then(function () { return eskiGG30.apply(bu, arg); }, function (e) {
-      if (typeof yoneticiDurum === "function") { yoneticiDurum("Kaydedilmedi: verinin bir kısmı indirilemedi (" + e.message + "). İnternetini kontrol edip tekrar dene.", false); }
-    });
-  };
-}
-if (typeof yoneticiDisaAktar === "function") {
-  const eskiDA30 = yoneticiDisaAktar;
-  window.yoneticiDisaAktar = function () {
-    const bu = this, arg = arguments;
-    return veriParcalariTam().then(function () { return eskiDA30.apply(bu, arg); }, function (e) {
-      if (typeof yoneticiDurum === "function") { yoneticiDurum("Dışa aktarılamadı: " + e.message, false); }
-    });
-  };
-}
-if (typeof yDegisiklikEkle === "function") {
-  const eskiDE30 = yDegisiklikEkle;
-  window.yDegisiklikEkle = function () {
-    const bu = this, arg = arguments;
-    if (veriParcalariHazir()) { return eskiDE30.apply(bu, arg); }
-    return veriParcalariTam().then(function () { return eskiDE30.apply(bu, arg); });
-  };
-}
-/* panel açılınca betiklerle birlikte parçalar da iner; hazır sayılması ikisini de bekler (65-yonetici-yukle.js) */
-if (typeof yoneticiBetikleriYukle === "function") {
-  const eskiBY30 = yoneticiBetikleriYukle;
-  window.yoneticiBetikleriYukle = function () {
-    return Promise.all([eskiBY30.apply(this, arguments), veriParcalariTam().catch(function () { /* internetsiz: kaydetmede yine denenir */ })]).then(function () { /* tamam */ });
-  };
-}
-if (typeof yoneticiBetikleriHazir === "function") {
-  const eskiBH30 = yoneticiBetikleriHazir;
-  window.yoneticiBetikleriHazir = function () { return eskiBH30.apply(this, arguments) && veriParcalariHazir(); };
-}
-
 /* ==================== 2. Değişiklikler sayfası ==================== */
 
 const DG_SON = "tf30_degisiklik_son";   /* bu cihazda en son görülen sürüm */
@@ -157,7 +116,8 @@ function dgListeHtml() {
     (eksik > 0 ? '<p class="oyun-not dg-yukleniyor">Daha eski ' + eksik + " sürüm yükleniyor…</p>" : "");
 }
 
-function degisiklikSayfaCiz() {
+/** Sürümler sayfası: değişiklik günlüğü (arama, seri süzgeci; eski sürümler ayrı parçadan iner). */
+function degisiklikCiz() {
   const alan = document.querySelector("#degisiklikAlan");
   if (!alan || typeof veri === "undefined" || !veri || !Array.isArray(veri.degisiklik)) { return; }
   if (DG.onceki === null) { try { DG.onceki = localStorage.getItem(DG_SON) || ""; } catch (_) { DG.onceki = ""; } }
@@ -188,14 +148,13 @@ function degisiklikSayfaCiz() {
   /* sayfa gerçekten açıksa: eski sürümleri indir, "yeni" işaretini bir sonraki ziyarete kadar sakla */
   const acik = typeof aktifSayfa === "undefined" || aktifSayfa === "surumler";
   if (acik && p && p.degisiklik && !VERI_PARCA.degisiklik) {
-    veriParcasi("degisiklik").then(degisiklikSayfaCiz, function () {
+    veriParcasi("degisiklik").then(degisiklikCiz, function () {
       const y = alan.querySelector(".dg-yukleniyor");
       if (y) { y.textContent = "Eski sürümler şu an indirilemedi (internet yok gibi). Bağlanınca bu sayfa tamamlanır."; }
     });
   }
   if (acik && son.surum) { try { localStorage.setItem(DG_SON, son.surum); } catch (_) { /* yok */ } }
 }
-window.degisiklikCiz = degisiklikSayfaCiz;
 
 document.addEventListener("input", function (e) {
   if (!e.target || e.target.id !== "dgAra") { return; }
@@ -207,5 +166,5 @@ document.addEventListener("click", function (e) {
   const b = e.target.closest && e.target.closest("[data-dg-seri]");
   if (!b) { return; }
   DG.seri = b.getAttribute("data-dg-seri");
-  degisiklikSayfaCiz();
+  degisiklikCiz();
 });

@@ -51,20 +51,6 @@ function heOlcekSvg(h, w, hh, k) {
     '<text x="0" y="-6" font-size="11" font-family="var(--mono,monospace)" fill="currentColor">' + kacir(yazi) + "</text></g>";
 }
 
-if (typeof haritaSahne === "function") {
-  const eskiSahne = haritaSahne;
-  window.haritaSahne = function (h, w, hh, cx, cy, k, sec) {
-    const s = eskiSahne.apply(this, arguments);
-    const c = heCizgilerSvg(h, w, hh, cx, cy, k);
-    const ol = sec && sec.kimlik === "tam" ? heOlcekSvg(h, w, hh, k) : "";
-    if (!c && !ol) { return s; }
-    /* çizgiler zeminin (kıtalar, gece) üstünde, işaretlerin ve adların altında */
-    const im = 'fill="url(#hmKa-' + sec.kimlik + ')"/></g>';
-    const i = s.indexOf(im);
-    return (i === -1 ? s + c : s.slice(0, i + im.length) + c + s.slice(i + im.length)) + ol;
-  };
-}
-
 /* ---------- düzenleme: "Çizgi" aracı ---------- */
 
 function heNokta(px, py) {
@@ -76,46 +62,22 @@ function heNokta(px, py) {
 
 function heKirli() { if (typeof haritaKirli === "function") { haritaKirli(); } }
 
-if (typeof haritaDuzenCubuguCiz === "function") {
-  const eskiCubuk = haritaDuzenCubuguCiz;
-  window.haritaDuzenCubuguCiz = function () {
-    eskiCubuk.apply(this, arguments);
-    const el = HT.kutu && HT.kutu.querySelector("#htDuzen");
-    if (!el) { return; }
-    el.classList.toggle("he-acik", !el.hidden && HT.arac === "cizgi");
-    if (el.hidden) { return; }
-    const kaydet = el.querySelector(".kaydet");
-    const dugme = '<button type="button" class="hl-oge' + (HT.arac === "cizgi" ? " secili" : "") + '" data-he="arac" aria-pressed="' + (HT.arac === "cizgi") + '">Çizgi</button>';
-    if (kaydet) { kaydet.insertAdjacentHTML("beforebegin", dugme); } else { el.insertAdjacentHTML("beforeend", dugme); }
-    if (HT.arac !== "cizgi") { return; }
-    const h = aktifHarita();
-    const l = h.cizgiler || [];
-    const sec = l.find(function (c) { return c.id === HE.secili; });
-    const ol = h.olcek || {};
-    el.insertAdjacentHTML("beforeend", '<div class="he-arac">' +
-      Object.keys(HE_CIZGI_AD).map(function (t) { return '<button type="button" class="hl-oge' + (HE.tur === t ? " secili" : "") + '" data-he-tur="' + t + '">' + HE_CIZGI_AD[t] + "</button>"; }).join("") +
-      '<button type="button" class="hl-oge kaydet" data-he="bitir"' + (HE.cizim.length < 2 ? " disabled" : "") + ">Bitir (" + HE.cizim.length + ")</button>" +
-      (HE.cizim.length ? '<button type="button" class="hl-oge" data-he="vazgec">Vazgeç</button>' : "") +
-      (l.length ? '<select class="he-sec" data-he-sec aria-label="Çizgiler"><option value="">Çizgiler (' + l.length + ")</option>" +
-        l.map(function (c) { return '<option value="' + kacir(c.id) + '"' + (c.id === HE.secili ? " selected" : "") + ">" + kacir((c.ad || "Adsız") + " · " + (HE_CIZGI_AD[c.tur] || "")) + "</option>"; }).join("") + "</select>" : "") +
-      (sec ? '<input class="he-giris" data-he-ad maxlength="80" value="' + kacir(sec.ad || "") + '" placeholder="Adı" aria-label="Çizginin adı"><button type="button" class="hl-oge" data-he="sil">Sil</button>' : "") +
-      '<label class="he-olcek">Ölçek: 10 birim = <input class="he-giris" type="number" min="0" step="any" data-he-olcek="deger" value="' + kacir(ol.deger || "") + '" placeholder="?">' +
-        '<input class="he-giris he-birim" maxlength="24" data-he-olcek="birim" value="' + kacir(ol.birim || "km") + '" aria-label="Birim"></label>' +
-      '<span class="he-not">Haritaya sırayla dokun, sonra Bitir.</span></div>');
-  };
-}
-
-if (typeof haritaDokun === "function") {
-  const eskiDokun = haritaDokun;
-  window.haritaDokun = function (px, py) {
-    if (HT.duzen && HT.arac === "cizgi" && haritaYonetici()) {
-      HE.cizim.push(heNokta(px, py));
-      haritaDuzenCubuguCiz();
-      haritaCizHemen();
-      return;
-    }
-    return eskiDokun.apply(this, arguments);
-  };
+/** Harita düzenleme çubuğunda çizgi aracının seçenekleri (tür, çizgiler, ölçek). */
+function heAracHtml() {
+  const h = aktifHarita();
+  const l = h.cizgiler || [];
+  const sec = l.find(function (c) { return c.id === HE.secili; });
+  const ol = h.olcek || {};
+  return '<div class="he-arac">' +
+    Object.keys(HE_CIZGI_AD).map(function (t) { return '<button type="button" class="hl-oge' + (HE.tur === t ? " secili" : "") + '" data-he-tur="' + t + '">' + HE_CIZGI_AD[t] + "</button>"; }).join("") +
+    '<button type="button" class="hl-oge kaydet" data-he="bitir"' + (HE.cizim.length < 2 ? " disabled" : "") + ">Bitir (" + HE.cizim.length + ")</button>" +
+    (HE.cizim.length ? '<button type="button" class="hl-oge" data-he="vazgec">Vazgeç</button>' : "") +
+    (l.length ? '<select class="he-sec" data-he-sec aria-label="Çizgiler"><option value="">Çizgiler (' + l.length + ")</option>" +
+      l.map(function (c) { return '<option value="' + kacir(c.id) + '"' + (c.id === HE.secili ? " selected" : "") + ">" + kacir((c.ad || "Adsız") + " · " + (HE_CIZGI_AD[c.tur] || "")) + "</option>"; }).join("") + "</select>" : "") +
+    (sec ? '<input class="he-giris" data-he-ad maxlength="80" value="' + kacir(sec.ad || "") + '" placeholder="Adı" aria-label="Çizginin adı"><button type="button" class="hl-oge" data-he="sil">Sil</button>' : "") +
+    '<label class="he-olcek">Ölçek: 10 birim = <input class="he-giris" type="number" min="0" step="any" data-he-olcek="deger" value="' + kacir(ol.deger || "") + '" placeholder="?">' +
+      '<input class="he-giris he-birim" maxlength="24" data-he-olcek="birim" value="' + kacir(ol.birim || "km") + '" aria-label="Birim"></label>' +
+    '<span class="he-not">Haritaya sırayla dokun, sonra Bitir.</span></div>';
 }
 
 document.addEventListener("click", function (ev) {

@@ -79,8 +79,10 @@ function buzulEtiket(g) {
 function buzul(g) {
   if (!g) { return ""; }
 
-  /* Metin düz durur; katman koduyla (ya da yönetici oturumuyla) açılana kadar çizilmez. */
-  const acik = !!cozulenler[g.dogrulama];
+  /* Metin düz durur; katman koduyla (ya da yönetici oturumuyla) açılana kadar çizilmez.
+     Altın rozetli karakterin kaydındaki katman kodsuz açılır (68-coklu-evren). */
+  const rozetAd = cozulenler[g.dogrulama] ? null : rozetAcikKatmanlar()[g.dogrulama];
+  const acik = !!cozulenler[g.dogrulama] || !!rozetAd;
   const yMetin = (typeof yoneticiCoz === "function") ? yoneticiCoz(g) : null;
   const metin = acik ? (g.metin !== undefined ? g.metin : null) : yMetin;
   const rozet = g.katmanAd
@@ -90,7 +92,7 @@ function buzul(g) {
   if (metin !== null && metin !== undefined) {
     return '<div class="buzul cozuldu"' + buzulEtiket(g) + ">" +
              '<div class="buzul-ic">' +
-               '<div class="buzul-etiket">çözüldü ' + rozet + "</div>" +
+               '<div class="buzul-etiket">' + (rozetAd ? "altın rozetle açıldı · " + kacir(rozetAd) : "çözüldü") + " " + rozet + "</div>" +
                '<div class="buzul-baslik">' + kacir(g.baslik) + "</div>" +
                '<div class="buzul-metin">' + paragraf(metin) + "</div>" +
              "</div>" +
@@ -387,6 +389,18 @@ function karakterAc(i) {
     "</div>";
 
   $("#perde").hidden = false;
+  kesifKaydet("karakter:" + k.id);   /* İlk Kâşif (30-yarislar) */
+  yilGuncelle(function (y) { y.okuma++; y.okunan[k.id] = (y.okunan[k.id] || 0) + 1; });   /* yılın özeti (39) */
+
+  /* kaydın okuma kutusu (sonuna kadar okununca kart ve rozet) ve rozet durumu (63) */
+  const p = document.querySelector("#perde .pencere");
+  const d = p.querySelector(".detay-metin");
+  const hedef = d || p;
+  hedef.setAttribute("data-oku", "kar:" + k.id);
+  hedef.setAttribute("data-oku-kelime", String(kelimeSay(k.ozet) + kelimeSay(k.detay)));
+  p.insertAdjacentHTML("beforeend", rozetKutusuHtml(k));
+  okuTara();
+  if (!p.querySelector(".karakter-zaman")) { p.insertAdjacentHTML("beforeend", karakterZamanHtml(k)); }   /* karakterin zamanı (80) */
 }
 
 function cuzdanPenceresi() {
@@ -430,6 +444,8 @@ function cuzdanPenceresi() {
     "</div>";
 
   $("#perde").hidden = false;
+  egCuzdanBlogu();   /* Evrengezer ve günlük tavan (45-evrengezer) */
+  eckaPencereDuzeni();   /* neler alınır; yedek kodu düğmenin arkasında (62) */
 }
 
 function kodPenceresi() {
@@ -453,8 +469,11 @@ function kodPenceresi() {
 }
 
 function perdeKapat() {
+  $("#perde").classList.remove("evr-perde-ust");
   $("#perde").hidden = true;
   $("#perde").innerHTML = "";
+  /* kod ya da seviye penceresi kapanınca ana sayfadaki kilit güncel olsun */
+  try { anaEvrenlerCiz(); } catch (_) { /* yok */ }
 }
 
 /** Kişiye özel kod: sarılmış katman kodlarını açar, her birini doğrular ve çözülenlere ekler. */
@@ -487,9 +506,14 @@ function profilUygula(profil, kod, durum) {
   }, 1400);
 }
 
+/** Kod penceresi. Sıra: ortak yazarlık daveti (ORT-, 75), sunucudaki tek kullanımlık kod (71), seviye kodu (68),
+    yönetici, profil ve katman kodları. */
 function kodDene(ham) {
   const kod = String(ham || "").trim().toUpperCase();
   const durum = $("#kodDurum");
+  if (/^ORT-[A-Z0-9]{8,}$/.test(kod)) { ortakKatil(kod, durum); return; }
+  if (kod && !tekYerelKodMu(kod)) { tekKodDene(kod, durum); return; }
+  if (kod && seviyeKoduDene(kod, durum)) { return; }
 
   if (!kod) {
     durum.textContent = "Kod gir";
@@ -607,7 +631,6 @@ document.addEventListener("keydown", function (e) {
   }
 });
 
-
 /* ---------- zaman çizelgesi ---------- */
 
 function katmanOzeti(katmanId) {
@@ -638,7 +661,6 @@ function cizZaman() {
 
   if (typeof zamanSvgCiz === "function") { zamanSvgCiz(); }
 }
-
 
 /* ---------- yapımlar ---------- */
 
@@ -679,6 +701,7 @@ function cizYapimlar() {
              }).join("") + "</div>" +
            "</div>";
   }).join("") + crossoverListesiCiz();
+  oylamaCiz();   /* içerik oylaması (31-topluluk) */
 }
 
 /** Yönetici panelindeki Crossover aracıyla eklenen, iki yapımı birbirine
@@ -731,8 +754,8 @@ function arsiviTazele() {
   if (typeof kanonSifirla === "function") { kanonSifirla(); }
   if (typeof kanonKilitUygula === "function") { kanonKilitUygula(); }
   if (typeof gezinmeCiz === "function") { try { gezinmeCiz(); } catch (hata) { console.error("[TentiforApp] menü tazelenemedi:", hata); } }
+  try { bugunKartiCiz(); } catch (_) { /* yok */ }   /* Keşif'te "bugün" kartı (62) */
 }
-
 
 /* ---------- başlat ---------- */
 acilanlariYukle();
@@ -840,7 +863,6 @@ veriKaynak
       '<div class="bos">veri.json yüklenemedi.<br>' +
       "Sayfayı bir sunucu üzerinden aç (GitHub Pages veya yerel sunucu).</div>";
   });
-
 
 /* çevrimdışı destek — yalnızca sunucudan açıldığında çalışır */
 if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {

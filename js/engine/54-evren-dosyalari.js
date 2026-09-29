@@ -52,78 +52,16 @@ function evdYukle(e) {
   return evdSuruyor[e.id];
 }
 
-/* sitedeki bir evren istendiğinde: indirildiyse tamamı, yoksa özeti */
-if (typeof fanBul === "function") {
-  const eskiBul = fanBul;
-  window.fanBul = function (kaynak, tur, id) {
-    if (kaynak === "site" && tur === "evren" && EVD_BELLEK[id]) { return EVD_BELLEK[id]; }
-    return eskiBul.apply(this, arguments);
-  };
-}
-
-/* okuma penceresi: önce evrenin tamamı insin */
-if (typeof fanPencere === "function") {
-  const eskiPencere = fanPencere;
-  window.fanPencere = function (e, kaynak) {
-    if (kaynak === "site" && evdDosyali(e) && !EVD_BELLEK[e.id]) {
-      const bu = this;
-      evdYukle(e).then(function (t) { eskiPencere.call(bu, t, kaynak); }, function (h) { if (typeof eckaBildir === "function") { eckaBildir(h.message); } });
-      return;
-    }
-    return eskiPencere.apply(this, arguments);
-  };
-}
-
-/* evren sayfası: dosyası inene kadar özet ve "indiriliyor" notu, inince tam hâli */
-if (typeof evrenSayfaAc === "function") {
-  const eskiAc = evrenSayfaAc;
-  window.evrenSayfaAc = function (kaynak, id) {
-    const r = eskiAc.apply(this, arguments);
-    if (kaynak === "fan") {
-      const e = fanBul("site", "evren", id);
-      if (evdDosyali(e) && !EVD_BELLEK[id]) {
-        evdYukle(e).then(function () {
-          if (EVS && EVS.kaynak === "fan" && EVS.id === id) { evrenSayfaCiz(); }
-        }, function (h) {
-          const g = document.querySelector("#evrenSayfa .evd-not");
-          if (g) { g.textContent = h.message + ". İnternet bağlantını kontrol et."; g.className = "evd-not kotu"; }
-        });
-      }
-    }
-    return r;
-  };
-}
-
-if (typeof evrenSayfaCiz === "function") {
-  const eskiCiz = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    const r = eskiCiz.apply(this, arguments);
-    if (!EVS || EVS.kaynak !== "fan") { return r; }
-    const govde = document.querySelector("#evrenSayfa .evs-govde");
-    const ozet = ((veri.fanEserleri || {}).evrenler || []).find(function (x) { return x.id === EVS.id; });
-    if (!govde || !ozet) { return r; }
-    if (evdDosyali(ozet) && !EVD_BELLEK[ozet.id]) {
-      govde.insertAdjacentHTML("afterbegin", '<p class="evd-not" role="status">Evren indiriliyor…</p>');
-    } else if (evdDosyali(ozet) && EVS.sekme === "bilgi") {
-      govde.insertAdjacentHTML("beforeend", evdIndirKutusu(ozet));
-    }
-    return r;
-  };
-}
-
 /* fan listesinde kart: özetteki sayılar */
-if (typeof fanKartHtml === "function") {
-  const eskiKart = fanKartHtml;
-  window.fanKartHtml = function (e, kaynak) {
-    if (!(e && e.sayilar && evdDosyali(e))) { return eskiKart.apply(this, arguments); }
-    const s = e.sayilar;
-    const alt = [e.yazar, s.kural + " kural", s.kisi + " kişi", s.bolum ? s.bolum + " bölüm" : "", s.gezegen ? (s.gezegen + 1) + " gezegen" : ""].filter(Boolean).join(" · ");
-    return '<button class="fan-kart" data-fan-ac="' + kaynak + ":" + kacir(e.tur) + ":" + kacir(e.id) + '">' +
-      (e.kapak && EVC_YOL.test(e.kapak) ? '<img class="fan-kart-kapak" src="' + kacir(e.kapak) + '" alt="" loading="lazy">' : "") +
-      '<span class="fan-kart-ad">' + kacir(fanAd(e)) + "</span>" +
-      '<span class="oyun-not">' + kacir(alt) + "</span>" +
-      (e.ozet ? '<span class="fan-kart-ozet">' + kacir(String(e.ozet).slice(0, 160)) + "</span>" : "") + "</button>";
-  };
+/** Dosyalı okur evreninin kartı: özet sayılarla (evrenin tamamı indirilmeden). */
+function evdKartHtml(e, kaynak) {
+  const s = e.sayilar;
+  const alt = [e.yazar, s.kural + " kural", s.kisi + " kişi", s.bolum ? s.bolum + " bölüm" : "", s.gezegen ? (s.gezegen + 1) + " gezegen" : ""].filter(Boolean).join(" · ");
+  return '<button class="fan-kart" data-fan-ac="' + kaynak + ":" + kacir(e.tur) + ":" + kacir(e.id) + '">' +
+    (e.kapak && EVC_YOL.test(e.kapak) ? '<img class="fan-kart-kapak" src="' + kacir(e.kapak) + '" alt="" loading="lazy">' : "") +
+    '<span class="fan-kart-ad">' + kacir(fanAd(e)) + "</span>" +
+    '<span class="oyun-not">' + kacir(alt) + "</span>" +
+    (e.ozet ? '<span class="fan-kart-ozet">' + kacir(String(e.ozet).slice(0, 160)) + "</span>" : "") + "</button>";
 }
 
 /* ==================== telefona indir (çevrimdışı) ==================== */
@@ -273,12 +211,3 @@ async function yayinIzle() {
   }, 20000) };
 }
 
-if (typeof siteyiYayinla === "function") {
-  const eskiYayinla = siteyiYayinla;
-  window.siteyiYayinla = async function () {
-    const r = await eskiYayinla.apply(this, arguments);
-    const d = document.querySelector("#yYayinDurum");
-    if (d && /başlatıldı/.test(d.textContent)) { yayinIzle(); }
-    return r;
-  };
-}

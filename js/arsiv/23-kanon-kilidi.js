@@ -45,7 +45,12 @@ function kanonProfilEkle(id) {
 }
 
 /** { hepsi, tumEvren, bolumler:Set, evrenler:Set } — bu cihazdaki erişim. */
+/** Okurun kanon erişimi: girilen kodların profilleri ve tek kullanımlık kişi kodları. */
 function kanonErisim() {
+  return tekKisiErisimiEkle(kanonKodErisimi());
+}
+
+function kanonKodErisimi() {
   /* sınırlı yönetici de bütün bölümleri ve evrenleri görür (düzenleyebilmek için); buz katmanları hariç */
   const yon = (typeof panelAcik === "function") ? panelAcik() : ((typeof yoneticiAcik === "function") && yoneticiAcik());
   if (kanonOnbellek && kanonOnbellekYonetici === yon) { return kanonOnbellek; }
@@ -107,7 +112,8 @@ function kanonBolumAdi(id) {
 
 /** Menülerde kilitli bölümün yanına küçük kilit koyar. */
 function kanonKilitIsareti(id) {
-  return bolumErisimi(id) ? "" : ' <span class="gez-kilit" title="Kilitli">' + KANON_KILIT_SVG + "</span>";
+  if (!bolumErisimi(id)) { return ' <span class="gez-kilit" title="Kilitli">' + KANON_KILIT_SVG + "</span>"; }
+  return seviyeBolumKilitli(id) ? ' <span class="gez-kilit svk-menu" title="Seviye ' + SEVIYE_BOLUMLER[id] + "'te açılır\">Sv " + SEVIYE_BOLUMLER[id] + "</span>" : "";
 }
 
 /** Herkese açık başlangıç profili (veri.baslangicKodu). */
@@ -140,6 +146,9 @@ function kanonKartHtml(baslik, bolumId) {
     '<h3 class="kanon-baslik">' + kacir(baslik) + "</h3>" +
     '<p class="kanon-metin">' + (uye ? "Bu bölüm senin kodunda yok." : "Bu bölüm kod ister. Sana bir kod verildiyse buradan gir.") + "</p>" +
     (basla ? '<p class="kanon-ipucu">Yeni misin? Başlangıç kodu: <b>' + kacir(veri.baslangicKodu) + "</b></p>" : "") +
+    /* bölümden kısa bir önizleme ve kilidin nasıl açıldığı */
+    (bolumId && onizlemeMetni(bolumId) ? '<div class="kanon-onizleme" aria-hidden="true"><p>' + kacir(onizlemeMetni(bolumId)) + "…</p></div>" : "") +
+    (bolumId ? '<p class="kanon-nasil">' + kacir(kilitNasilAcilir(bolumId)) + "</p>" : "") +
     '<div class="kanon-dugmeler">' +
       '<button type="button" class="dugme" data-kod-ac="1">Kod gir</button>' +
       (basla ? '<button type="button" class="dugme dugme-sade" data-baslangic-uygula="1">Başlangıç kodunu kullan</button>' : "") +
@@ -148,8 +157,24 @@ function kanonKartHtml(baslik, bolumId) {
 }
 
 /** Kilitli kanon bölümlerini gizler, yerine kod isteyen bir kart koyar. */
+/** Kilitli bölümler: boş bölümler gizlenir, kilitli bölümlere kilit kartı, seviye kapıları. */
 function kanonKilitUygula() {
   if (typeof veri === "undefined" || !veri) { return; }
+  bosBolumleriUygula();
+  kanonKilitKartlari();
+  /* sayfada okunabilir bölüm varken kilit kartları tek satıra iner; dokununca önizleme açılır */
+  document.querySelectorAll(".kanon-yer").forEach(function (y) {
+    if (y.querySelector("details")) { return; }
+    const b = y.closest("section.bolum");
+    const ad = (y.querySelector(".kanon-baslik") || {}).textContent || "Kilitli";
+    y.innerHTML = '<details class="kanon-kompakt"><summary><span class="kanon-kompakt-ikon" aria-hidden="true">🔒</span>' + kacir(ad) +
+      '<span class="kanon-kompakt-ac">önizle</span></summary>' + y.innerHTML + "</details>";
+    if (b) { b.classList.add("kanon-kompakt-bolum"); }
+  });
+  try { seviyeBolumleriUygula(); svkDugmeleriIsaretle(); } catch (_) { /* sayfa hazır değil */ }
+}
+
+function kanonKilitKartlari() {
 
   document.querySelectorAll(".kanon-yer, #kanonSayfaKilit").forEach(function (n) { n.remove(); });
 

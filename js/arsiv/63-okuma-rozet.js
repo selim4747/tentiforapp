@@ -68,6 +68,7 @@ function okuTara() {
     }
     if (gz) { gz.observe(el); }
   });
+  rbSeritleriZamanla();   /* bağlı kutu şeritleri (76) */
 }
 
 setInterval(function () {
@@ -109,6 +110,8 @@ function okuBugunEkle(anahtar) {
 let GUNUN_BEKLER = 0;
 
 function okumaBitti(anahtar, el) {
+  const yol = yolAktif();                              /* seçili okuma yolu */
+  const yolOnce = yol ? yolIlerleme(yol).okunan : 0;
   el.classList.add("oku-tamam");
   const ilk = okunduIsaretle(anahtar);
   const m = anahtar.match(/^kar:(.+)$/);
@@ -121,9 +124,9 @@ function okumaBitti(anahtar, el) {
     gunlukKazan("okuma", Math.max(1, Math.round(kelime / 40)), "Okuma");
   }
   /* bugünün kaydı: okununca ödül */
-  if (GUNUN_BEKLER && Date.now() - GUNUN_BEKLER < 30 * 60000 && typeof OKU.gununOrijinal === "function") {
+  if (GUNUN_BEKLER && Date.now() - GUNUN_BEKLER < 30 * 60000) {
     GUNUN_BEKLER = 0;
-    OKU.gununOrijinal();
+    gununOdulu();
   }
   rozetleriDenetle();
   /* açık karakter penceresindeki rozet durumu tazelensin */
@@ -133,23 +136,21 @@ function okumaBitti(anahtar, el) {
     const k = (veri.karakterler || []).find(function (x) { return "kar:" + x.id === km.getAttribute("data-oku"); });
     if (k) { rk.outerHTML = rozetKutusuHtml(k); }
   }
-}
-
-if (typeof gununOkundu === "function") {
-  OKU.gununOrijinal = gununOkundu;
-  window.gununOkundu = function () {
-    GUNUN_BEKLER = Date.now();
-    if (typeof eckaBildir === "function") { eckaBildir("Bugünün kaydı: sonuna kadar oku, ödülü okuyunca al"); }
-  };
-}
-
-/* dokununca kart vermesin: kart okumayla gelir (39-yil-koleksiyon.js karakterAc sarmalı) */
-if (typeof kartKazan === "function") {
-  const eskiKart = kartKazan;
-  window.kartKazan = function (id, kaynak) {
-    if (kaynak === "okuma" && !OKU.okumaIzni) { return; }
-    return eskiKart.apply(this, arguments);
-  };
+  try { rbSeritleriTazele(); } catch (_) { /* yok */ }  /* kutu rozeti şeritleri */
+  /* okuma yolu bittiyse */
+  if (yol) {
+    const o = yolIlerleme(yol);
+    if (o.okunan > yolOnce && !o.sonraki) {
+      jsonYaz(YOL_AKTIF, null);
+      eckaBildir("Yol bitti: " + yol.ad + " ✓");
+    }
+    yolCubuguCiz();
+  }
+  /* günlük okuma sayısı (okur istatistiği) */
+  const g = tf28Oku(TF28.kutu, {}) || {};
+  const bugun = yerelGun();
+  g[bugun] = (g[bugun] || 0) + 1;
+  tf28Yaz(TF28.kutu, gunleriBuda(g));
 }
 
 /* ---------- kutuları etiketlemek ---------- */
@@ -221,24 +222,6 @@ function okuAlintiGorunur() {
   return (veri.alintilar || []).map(function (a, i) { return { a: a, i: i }; }).filter(function (x) { return yon || (typeof katmanAcik === "function" && katmanAcik(x.a.gizli)); });
 }
 
-/* karakter penceresi: özet ve anlatım bir kutu; altında rozet durumu */
-sonraSar("karakterAc", function (eskiAc) {
-  return function (i) {
-    const r = eskiAc.apply(this, arguments);
-    const k = veri.karakterler[i];
-    const p = document.querySelector("#perde .pencere");
-    if (k && p && !document.querySelector("#perde").hidden) {
-      const d = p.querySelector(".detay-metin");
-      const hedef = d || p;
-      hedef.setAttribute("data-oku", "kar:" + k.id);
-      hedef.setAttribute("data-oku-kelime", String(kelimeSay(k.ozet) + kelimeSay(k.detay)));
-      p.insertAdjacentHTML("beforeend", rozetKutusuHtml(k));
-      okuTara();
-    }
-    return r;
-  };
-});
-
 /* ---------- karakter rozetleri ---------- */
 
 function okuAdVar(metin, ad) {
@@ -277,6 +260,12 @@ function karakterKutulari(k) {
   (veri.zamanCizelgesi || []).forEach(function (z, i) {
     if ((karakterAnilir(z.metin, k) || karakterAnilir(z.baslik, k)) && buzAcik(z.gizli)) { l.push({ anahtar: "zaman:" + (z.no || i), ad: "Zaman: " + z.baslik, git: "#zaman", kilitli: kodKilitli("zaman") }); }
   });
+  /* bağ ağında karaktere bağlı kutular (başka karakterin kaydı onun rozetidir) (76-rozet-baglari) */
+  const var_ = {};
+  l.forEach(function (x) { var_[x.anahtar] = true; });
+  rbBaglar("kar:" + k.id).forEach(function (b) {
+    if (!var_[b.anahtar] && !/^kar:/.test(b.anahtar)) { l.push({ anahtar: b.anahtar, ad: b.ad, git: b.git, kilitli: false }); }
+  });
   return l;
 }
 
@@ -302,6 +291,7 @@ function rozetDurumu(k) {
 /** Her okumadan ve her fan hikâyesi kaydından sonra: hak edilen rozetler verilir. */
 function rozetleriDenetle() {
   if (typeof cuzdan === "undefined" || typeof kilitAcik !== "function") { return; }
+  try { rbRozetleriDenetle(); } catch (_) { /* kutu rozetleri (76); rozet hesabı hiçbir şeyi bozmasın */ }
   const haber = [];
   let ecka = 0;
   (veri.karakterler || []).forEach(function (k) {
@@ -336,62 +326,17 @@ function rozetKutusuHtml(k) {
     '<p class="oyun-not">' + (r === "altin" ? "Hakkındaki her şeyi okudun ve ona bir hikâye yazdın."
       : (r === "gumus" ? (hikaye ? "" : "Altın rozet: " + kacir(k.ad) + " hakkında bir fan hikâyesi yaz (hikâyenin kişilerine adını ekle).")
         : (hikaye ? "Ona bir hikâye yazdın — altın rozet için hakkındaki her şeyi oku (" + kalan + " kutu kaldı)."
-          : "Hakkındaki her kutuyu okuyunca gümüş rozet; ona bir fan hikâyesi de yazınca altın."))) + "</p></div>";
+          : "Hakkındaki her kutuyu okuyunca gümüş rozet; ona bir fan hikâyesi de yazınca altın."))) + "</p>" +
+    rozetYoluHtml(k) + "</div>";
 }
 
-/* fan hikâyesi kaydedilince rozetler; düzenleyicide adı geçen karakterlerin durumu */
-if (typeof fanEserlerimYaz === "function") {
-  const eskiYaz = fanEserlerimYaz;
-  window.fanEserlerimYaz = function () {
-    const r = eskiYaz.apply(this, arguments);
-    setTimeout(rozetleriDenetle, 0);
-    return r;
-  };
-}
-
-if (typeof fanCiz === "function") {
-  const eskiFanCiz = fanCiz;
-  window.fanCiz = function (tur) {
-    const r = eskiFanCiz.apply(this, arguments);
-    if (tur === "hikaye" && typeof fanDuzenlenen === "function" && !(typeof fanSekme !== "undefined" && fanSekme.hikaye === "oku")) {
-      const e = fanDuzenlenen("hikaye");
-      const alan = document.querySelector("#fanHikayeAlan, [data-fan-alan='hikaye']");
-      if (e && alan) {
-        const adlar = String(e.karakterler || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
-        const kl = adlar.map(function (a) { return (veri.karakterler || []).find(function (k) { return String(k.ad).toLocaleLowerCase("tr") === a.toLocaleLowerCase("tr"); }); }).filter(Boolean);
-        if (kl.length) {
-          alan.insertAdjacentHTML("beforeend", '<div class="kutu-y rozet-kutu fan-rozet"><div class="oyun-etiket">Altın rozet</div>' + kl.map(function (k) {
-            const o = karakterOkunanlar(k), r = rozetDurumu(k);
-            const kalan = o.l.length - o.okunan.length;
-            return "<p>" + (r === "altin" ? "🥇 " : "") + "<b>" + kacir(k.ad) + "</b>: " +
-              (r === "altin" ? "altın rozetin var." : (kalan ? "altın rozet için hakkındaki her şeyi oku — " + kalan + " kutu kaldı." : "hikâyen en az 300 harf olunca altın rozet gelir.")) + "</p>";
-          }).join("") + "</div>");
-        }
-      }
-    }
-    return r;
-  };
-}
-
-/* koleksiyonda rozetler */
-if (typeof koleksiyonCiz === "function") {
-  const eskiKol = koleksiyonCiz;
-  window.koleksiyonCiz = function () {
-    const r = eskiKol.apply(this, arguments);
-    const alan = document.querySelector("#koleksiyonAlan");
-    if (alan) {
-      const l = (veri.karakterler || []).filter(function (k) { return k.id && k.kart !== false && okuErisim(null, k.gizli); });
-      const kazanilan = l.filter(function (k) { return rozetDurumu(k); });
-      alan.insertAdjacentHTML("afterbegin", '<div class="kutu-y rozet-ozet"><div class="oyun-etiket">Karakter rozetleri · ' + kazanilan.length + " / " + l.length + "</div>" +
-        '<div class="rozet-izgara">' + l.map(function (k) {
-          const r = rozetDurumu(k), o = karakterOkunanlar(k);
-          return '<button type="button" class="rozet-oge ' + (r || "yok") + '" data-rozet-kar="' + kacir(k.id) + '" title="' + kacir(k.ad + " · " + o.okunan.length + "/" + o.l.length) + '">' +
-            '<span class="rozet-simge" aria-hidden="true">' + (r ? ROZET_SIMGE[r] : "○") + "</span><span>" + kacir(k.ad) + "</span>" +
-            '<small>' + o.okunan.length + "/" + o.l.length + "</small></button>";
-        }).join("") + "</div></div>");
-    }
-    return r;
-  };
+/** Karakterin okuma yolu varsa: "Okuma yolu: 3/8 · ~20 dk". */
+function rozetYoluHtml(k) {
+  const y = okumaYolu("kar:" + k.id);
+  const o = y ? yolIlerleme(y) : null;
+  if (!o || !o.sonraki) { return ""; }
+  return '<div class="oyun-sira"><button class="dugme dugme-sade y-kucuk" data-yol-basla="' + kacir(y.id) + '">📖 Okuma yolu: ' +
+    o.okunan + "/" + o.toplam + " · ~" + y.dakika + " dk</button></div>";
 }
 
 document.addEventListener("click", function (ev) {

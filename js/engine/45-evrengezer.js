@@ -87,6 +87,85 @@ function evrenEkTemizle(ham, e) {
     if (l.length) { e.lorlar = l; }
   }
   if (/^[0-9a-f]{64}$/.test(ham.yoneticiOzet || "")) { e.yoneticiOzet = ham.yoneticiOzet; }
+
+  /* evren içerikleri: sorular, oyunlar (51-evren-oyunlari) */
+  evrenIcerikTemizle(ham, e);
+
+  /* gezegenler (53-evren-kurulum) */
+  const ana = fanMetin(ham.anaGezegen, 60).trim();
+  if (ana) { e.anaGezegen = ana; }
+  if (Array.isArray(ham.gezegenler)) {
+    const l = ham.gezegenler.slice(0, EVG_SINIR).map(function (g, i) {
+      if (!g || typeof g !== "object") { return null; }
+      return { id: fanMetin(g.id, 40).replace(/[^\w-]/g, "") || ("g" + i), ad: fanMetin(g.ad, 60).trim() || ("Gezegen " + (i + 2)),
+        harita: fanHaritaTemizle(g.harita) };
+    }).filter(Boolean);
+    if (l.length) { e.gezegenler = l; }
+  }
+
+  /* kişilerin yolları ve canlı konumları, evren saati (57-sehir-yol) */
+  (Array.isArray(ham.kisiler) ? ham.kisiler : []).slice(0, 120).forEach(function (k, i) {
+    const y = yolTemizle(k && k.yol);
+    if (y.length && e.kisiler && e.kisiler[i]) { e.kisiler[i].yol = y; }
+    const c = gzCanliTemizle(k && k.canli);
+    if (c && e.kisiler && e.kisiler[i]) { e.kisiler[i].canli = c; }
+  });
+  const st = ham.saat && typeof ham.saat === "object" ? ham.saat : null;
+  if (st && Number(st.gunSaat) > 0) {
+    e.saat = { gunSaat: Math.min(10000, Math.max(0.1, Math.round(Number(st.gunSaat) * 100) / 100)) };
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(st.baslangic || ""))) { e.saat.baslangic = st.baslangic; }
+  }
+
+  /* ilişki ağı (60-ag-zaman) */
+  const baglar = iaBaglarTemizle(ham.baglar);
+  if (baglar.length) { e.baglar = baglar; }
+
+  /* evren uygulamaları (69) ve evren yazısı (70) */
+  const u = evuTemizle(ham.uygulamalar);
+  if (u.length) { e.uygulamalar = u; } else { delete e.uygulamalar; }
+  const yazi = eyTemizle(ham.yazi);
+  if (yazi) { e.yazi = yazi; } else { delete e.yazi; }
+
+  /* sayfa düzeni: desen, boyut, hiza (72-sayfa-duzeni) */
+  if (ham.stil && typeof ham.stil === "object") {
+    const hs = ham.stil, ek = {};
+    if (EVG_DESENLER[hs.desen] && hs.desen) { ek.desen = hs.desen; }
+    if (EVG_BOYUT[hs.boyut] && hs.boyut) { ek.boyut = hs.boyut; }
+    if (EVG_HIZA[hs.hiza] && hs.hiza) { ek.hiza = hs.hiza; }
+    if (Object.keys(ek).length) { e.stil = Object.assign({}, e.stil || {}, ek); }
+  }
+
+  /* stil ve görünüm kodu (73-evren-kod-stil) */
+  if (typeof ham.stilKodu === "string" && ham.stilKodu.trim()) { e.stilKodu = ham.stilKodu.slice(0, EKS_STIL_SINIR); } else { delete e.stilKodu; }
+  if (typeof ham.gorunumKodu === "string" && ham.gorunumKodu.trim()) { e.gorunumKodu = ham.gorunumKodu.slice(0, EKS_GORUNUM_SINIR); } else { delete e.gorunumKodu; }
+
+  /* sekme düzeni (74-yonetim-kurulum) */
+  const sd = sekmeDuzenTemizle(ham.sekmeDuzen);
+  if (sd) { e.sekmeDuzen = sd; } else { delete e.sekmeDuzen; }
+
+  /* yönetici yetkileri, ortak evren (75-yonetim-yetkileri) */
+  const yy = ham.yoneticiYetki;
+  if (yy && typeof yy === "object") {
+    const t = { sekmeler: yy.sekmeler === true, ipucu: yy.ipucu === true };
+    if (Array.isArray(yy.lorlar)) { t.lorlar = yy.lorlar.map(String).filter(function (x) { return /^[\w-]{1,40}$/.test(x); }).slice(0, 200); }
+    e.yoneticiYetki = t;
+  }
+  if (ham.ortak === true) { e.ortak = true; }
+
+  /* ortak yazımda son iz (77-okuma-yollari) */
+  const z = ham.ortakIz;
+  if (z && typeof z === "object") {
+    e.ortakIz = { kim: String(z.kim || "").slice(0, 40), sekme: /^[a-z]{0,20}$/.test(z.sekme || "") ? z.sekme || "" : "", zaman: String(z.zaman || "").slice(0, 30) };
+  }
+
+  /* takvim (82-evren-kurucu), durum ve hikâye izni (83-evren-atolyesi), Evrengezer izinleri (84-evren-araclari) */
+  const tk = evrTakvimTemizle(ham.takvim);
+  if (tk) { e.takvim = tk; }
+  if (EVA_DURUMLAR.indexOf(ham.durum) !== -1) { e.durum = ham.durum; }
+  if (ham.izinler && typeof ham.izinler === "object" && ham.izinler.hikaye === "sahip") { e.izinler = { hikaye: "sahip" }; }
+  const egl = (Array.isArray(ham.egIzinleri) ? ham.egIzinleri : []).slice(0, 20).filter(function (x) { return x && /^[0-9a-f]{64}$/.test(x.oz || ""); })
+    .map(function (x) { return { oz: x.oz, not: fanMetin(x.not, 40), t: fanMetin(x.t, 30) }; });
+  if (egl.length) { e.egIzinleri = egl; }
 }
 
 /* ==================== alfabe ==================== */
@@ -244,6 +323,7 @@ function evrenZiyaretOdulu() {
   egKaydet();
   egBakiyeDegistir(anahtar, n, "Evren gezisi");
   if (typeof eckaBildir === "function") { eckaBildir("+" + n + " " + p.ad + " · " + (v.eser.ad || "evren") + " gezisi"); }
+  hesapHatirlat("evren");
   return n;
 }
 
@@ -317,6 +397,11 @@ function evrenSayfaStili(e) {
   if (evHex(s.ana)) { p.push("--deniz:" + s.ana, "--yarik:" + s.ana); }
   if (EV_FONTLAR[s.font]) { p.push("--govde:" + EV_FONTLAR[s.font], "--display:" + EV_FONTLAR[s.font], "font-family:" + EV_FONTLAR[s.font]); }
   if (typeof s.kose === "number") { p.push("--evs-kose:" + s.kose + "px"); }
+  /* desen, yazı boyu, hiza (72-sayfa-duzeni) */
+  const d = EVG_DESENLER[s.desen] && s.desen ? evgDesenArka(s.desen, s.ana) : "";
+  if (d) { p.push("background-image:" + d); }
+  if (s.boyut === "kucuk") { p.push("font-size:15px"); } else if (s.boyut === "buyuk") { p.push("font-size:19px"); }
+  if (s.hiza === "orta") { p.push("--evs-hiza:center"); }
   return p.join(";");
 }
 
@@ -447,6 +532,7 @@ async function evrenKodDene(e, kod) {
       const ck = lorAnahtarCoz(l.sy, "evyonk|" + e.id + "|" + k + "|" + l.tuz);
       if (ck && lorIcCoz(l, ck) !== null) { evlKaydet(e.id, l.id, ck); n++; }
     });
+    const d = jsonOku(EVY25, {}) || {}; d[e.id] = true; jsonYaz(EVY25, d);   /* bu cihazda evrenin yöneticisi */
     return { tur: "evren", n: n };
   }
   const ozet = lorKodOzet(e.id, k);
@@ -500,13 +586,16 @@ function evrenYoneticiKoduKur(e, kod) {
   const k = evKodTemiz(kod);
   if (k.replace(/[^A-Z0-9]/g, "").length < EV_KOD_EN_AZ) { return { hata: "Yönetici kodu en az " + EV_KOD_EN_AZ + " harf ve rakam olsun (Kod üret ile rastgele oluştur)." }; }
   const acik = evlAcilan(e.id);
+  const yetki = evy25SeciliYetki(e);   /* formda seçilen yetkiler (75) */
   let sarilan = 0, kalan = 0;
   evrenBenimDegistir(e.id, function (x) {
     x.yoneticiOzet = evYonOzet(x.id, k);
+    x.yoneticiYetki = yetki;
     (x.lorlar || []).forEach(function (l) {
       const ck = acik[l.id];
-      if (ck && lorIcCoz(l, ck) !== null) { l.sy = sifrele(ck, "evyonk|" + x.id + "|" + k + "|" + l.tuz); sarilan++; }
-      else { delete l.sy; kalan++; }
+      if (ck && lorIcCoz(l, ck) !== null) {
+        if (!yetki.lorlar || yetki.lorlar.indexOf(l.id) !== -1) { l.sy = sifrele(ck, "evyonk|" + x.id + "|" + k + "|" + l.tuz); sarilan++; } else { delete l.sy; }
+      } else { delete l.sy; kalan++; }
     });
   });
   evkYaz(e.id, function (d) { d.yon = k; });
@@ -525,32 +614,102 @@ async function evrenEgSarEksik(e) {
   return Object.keys(sarlar).length;
 }
 
+/** Kendi evrenini değiştirir. Ortak yazılan evrende: önce sürüm geçmişine kayıt, sonra öbür yazara gönderim. */
 function evrenBenimDegistir(id, fn) {
+  if (!ORTAK.uyguluyor) { gcmKaydet(id, "otomatik"); }
   const l = fanEserlerim();
   const e = l.find(function (x) { return x.id === id && x.tur === "evren"; });
   if (!e) { return; }
   fn(e);
   e.guncelleme = new Date().toISOString();
   fanEserlerimYaz(l);
+  if (!ORTAK.uyguluyor) { ortakYazZamanla(id); }
 }
 
 /* ==================== evren sayfası: ek sekmeler ==================== */
 
+/** Evren sayfasının harita ve bilgi dışındaki sekmeleri: [kimlik, ad]. */
 function evrenEkSekmeler(v) {
-  const l = [];
-  if (EVS.kaynak === "site") { return l; }
-  const lorlar = (v.eser.lorlar || []).length;
-  if (EVS.kaynak === "benim" || lorlar) { l.push(["lore", "Kilitli lore" + (lorlar ? " (" + lorlar + ")" : "")]); }
-  if (EVS.kaynak === "benim") { l.push(["stil", "Stil ve para"]); l.push(["kod", "Kod"]); }
-  if (v.eser.alfabe && v.eser.alfabe.harfler && EVS.kaynak !== "benim") { l.push(["alfabe", "Alfabe"]); }
+  const k = EVS.kaynak, e = v.eser;
+  let l = [];
+  if (k !== "site") {
+    const lorlar = (e.lorlar || []).length;
+    if (k === "benim" || lorlar) { l.push(["lore", "Kilitli lore" + (lorlar ? " (" + lorlar + ")" : "")]); }
+    if (k === "benim") { l.push(["stil", "Stil ve para"]); l.push(["kod", "Kod"]); }
+    if (e.alfabe && e.alfabe.harfler && k !== "benim") { l.push(["alfabe", "Alfabe"]); }
+  }
+  if (k !== "site") {
+    /* oyunlar, roman, çizimler (51-evren-oyunlari); E99'da yalnızca oyunlar */
+    const oyun = evoOynanabilir(e).length;
+    if (k === "benim" || oyun) { l.push(["oyunlar", "Oyunlar" + (oyun ? " (" + oyun + ")" : "")]); }
+    if (k !== "e99") {
+      const bolum = ((e.roman || {}).bolumler || []).length;
+      if (k === "benim" || bolum) { l.push(["roman", "Roman" + (bolum ? " (" + bolum + ")" : "")]); }
+      const cizim = (e.cizimler || []).length;
+      if (k === "benim" || cizim) { l.push(["cizim", "Çizimler" + (cizim ? " (" + cizim + ")" : "")]); }
+    }
+  }
+  if (evrenDefterAnahtari()) { l.push(["defter", "Ziyaretçi defteri"]); }
+  if (["benim", "fan", "acilan"].indexOf(k) !== -1 &&
+      (k === "benim" || iaBaglarTemizle(e.baglar).length || (e.tarih || []).some(function (t) { return t && (t.zaman || t.olay); }))) {
+    l.push(["ag", "Bağlar ve zaman"]);
+  }
+  if (k !== "site") {
+    const n = evuListe(e).length;
+    if (k === "benim" || n) { l.push(["uygulama", "Uygulamalar" + (n ? " (" + n + ")" : "")]); }
+    if (k === "benim" || eyDolu(e.yazi)) { l.push(["yazi", "Yazı"]); }
+  }
+  if (k === "benim") {
+    /* kendi evreninde görünüm ve yazı öne gelir */
+    const al = function (id) { const i = l.findIndex(function (x) { return x[0] === id; }); return i === -1 ? null : l.splice(i, 1)[0]; };
+    const stil = al("stil"), yazi = al("yazi");
+    const on = [];
+    if (stil) { on.push(["stil", "🎨 Görünüm"]); }
+    if (yazi) { on.push(["yazi", "✎ Yazı çiz"]); }
+    l = on.concat(l);
+  }
+  /* vitrin (kurucunun görünüm kodu) en önde; kendi evreninde "Kod ile stil" Görünüm'ün ardında (73-evren-kod-stil) */
+  if (k !== "site" && (k === "benim" || String(e.gorunumKodu || "").trim())) { l.unshift(["vitrin", "✦ Vitrin"]); }
+  if (k === "benim") {
+    const i = l.findIndex(function (x) { return x[0] === "stil"; });
+    l.splice(i === -1 ? 1 : i + 1, 0, ["kodstil", "{ } Kod ile stil"]);
+  } else {
+    /* kurucunun gizlediği sekmeler (sekme yetkisi verilen yönetici hepsini görür) */
+    const d = e.sekmeDuzen;
+    if (d && Array.isArray(d.gizli) && !evy25Var(e, "sekmeler")) { l = l.filter(function (x) { return d.gizli.indexOf(x[0]) === -1; }); }
+  }
+  if (k === "benim" && !v.onizle) { l.unshift(["kurucu", "🧭 Kurucu"]); }
   return l;
 }
 
+/** Seçili ek sekmenin içeriği (HTML); ek sekme değilse null. */
 function evrenEkBolum(v) {
-  if (EVS.sekme === "lore") { return evrenLoreBolumu(v); }
-  if (EVS.sekme === "stil" && EVS.kaynak === "benim") { return evrenStilBolumu(v); }
-  if (EVS.sekme === "kod" && EVS.kaynak === "benim") { return evrenKodBolumu(v); }
-  if (EVS.sekme === "alfabe") { return evrenAlfabeCevirici(v.eser); }
+  const s = EVS.sekme, k = EVS.kaynak;
+  if (s === "kurucu" && k === "benim") {
+    if ((EVR_ADIM[v.eser.id] || "temel") === "zaman") { evrTakvimHazirla(v.eser.id); }
+    return evrKurucuHtml(v);
+  }
+  if (s === "yazi") {
+    /* evrenin yazısı; yazı çizilmişse altında yazı klavyesi */
+    return eyBolum(v) + (v.eser && eyDolu(v.eser.yazi)
+      ? '<div class="kutu-y yk-kutu"><label for="ykMetin">Yazı klavyesi · kendi mesajını bu evrenin yazısıyla yaz</label>' +
+        '<textarea class="kod-giris arac-giris" id="ykMetin" rows="2" maxlength="160" placeholder="' + kacir(v.eser.ad || "Merhaba") + '"></textarea>' +
+        '<div class="yk-onizle" id="ykOnizle">' + eyYaziSvg(v.eser.ad || "", v.eser.yazi, 48) + "</div>" +
+        '<div class="oyun-sira"><button class="dugme" data-yk-png>PNG indir</button><button class="dugme dugme-sade" data-yk-paylas>Paylaş</button></div>' +
+        '<p class="oyun-not">Çizilmemiş harfler soluk görünür.</p></div>' : "");
+  }
+  if (s === "kodstil" && k === "benim") { return eksKodBolumu(v); }
+  if (s === "vitrin") { return eksVitrinBolumu(v); }
+  if (s === "oyunlar") { return evrenOyunlarBolumu(v); }
+  if (s === "roman" && k !== "e99") { return evrenRomanBolumu(v); }
+  if (s === "cizim" && k !== "e99") { return evrenCizimBolumu(v); }
+  if (s === "uygulama") { return evuBolum(v); }
+  if (s === "ag" && ["benim", "fan", "acilan"].indexOf(k) !== -1) { return iaEvrenBolumu(v); }
+  if (s === "defter") { return evrenDefterBolumu(); }
+  if (s === "lore") { return evrenLoreBolumu(v); }
+  if (s === "stil" && k === "benim") { return evrenStilBolumu(v); }
+  if (s === "kod" && k === "benim") { return evrenKodBolumu(v); }
+  if (s === "alfabe") { return evrenAlfabeCevirici(v.eser); }
   return null;
 }
 
@@ -615,6 +774,7 @@ function evrenYoneticiKoduHtml(e, kodlar) {
     (biliniyor ? '<p class="oyun-not">Şu anki kod: <code>' + kacir(kodlar.yon) + "</code></p>" : (kurulu ? '<p class="oyun-not">Bir yönetici kodu kurulu (bu cihazda kayıtlı değil).</p>' : "")) +
     '<div class="oyun-sira"><input class="kod-giris arac-giris" id="evyKod" maxlength="60" autocomplete="off" spellcheck="false" placeholder="Yeni yönetici kodu">' +
       '<button class="dugme dugme-sade" data-evy-uret>Kod üret</button><button class="dugme" data-evy-kur>' + (kurulu ? "Değiştir" : "Kur") + "</button></div>" +
+    evy25YetkiKutusu(e) +   /* bu kodun yetkileri (75) */
     '<p class="pencere-durum" id="evyDurum" role="status"></p></div>';
 }
 
@@ -627,7 +787,8 @@ function evrenStilBolumu(v) {
   const hs = (e.harita && e.harita.stil) || {};
   const al = (e.alfabe && e.alfabe.harfler) || {};
   const renk = function (yol, deger, yedek, etiket) {
-    return '<label class="evst-renk">' + etiket + ' <input type="color" data-evst="' + yol + '" value="' + kacir(deger || yedek) + '"></label>';
+    return evgGorunumKutusu(e) +   /* desen, yazı boyu, hiza */
+    '<label class="evst-renk">' + etiket + ' <input type="color" data-evst="' + yol + '" value="' + kacir(deger || yedek) + '"></label>';
   };
   const secim = function (yol, deger, secenekler) {
     return '<select class="kod-giris arac-giris" data-evst="' + yol + '">' + secenekler.map(function (s) {
@@ -937,22 +1098,17 @@ document.addEventListener("change", function (ev) {
   evrenStilOlay(ev, true);
 });
 
-/* cüzdan penceresi: eçka yanına Evrengezer ve toplam tavan */
-document.addEventListener("DOMContentLoaded", function () {
-  if (typeof cuzdanPenceresi !== "function") { return; }
-  const eski = cuzdanPenceresi;
-  window.cuzdanPenceresi = function () {
-    eski.apply(this, arguments);
-    const p = document.querySelector("#perde .pencere");
-    if (!p) { return; }
-    const genel = veri.cuzdan && veri.cuzdan.genelTavan;
-    const blok = document.createElement("div");
-    blok.className = "arac-blok";
-    blok.innerHTML = (genel ? '<p class="oyun-not">Oyunlardan bugün toplam: <b>' + gunlukToplamKazanc() + " / " + genel + " " + kacir(birim()) + "</b></p>" : "") +
-      '<div class="oyun-etiket">Evrengezer</div><p class="oyun-not"><b>' + egYukle().eg + " EG</b> · " + kacir(birim()) +
-      " Tömye'nin parası; başka evrenlerde o evrenin parası geçer.</p>" +
-      '<button class="dugme dugme-sade" data-eg-cuzdan-buro>Evrengezer bürosu</button>';
-    const ilk = p.querySelector(".oyun-etiket");
-    p.insertBefore(blok, ilk || null);
-  };
-});
+/** Cüzdan penceresinde eçkanın yanında Evrengezer ve oyunlardan günlük toplam. */
+function egCuzdanBlogu() {
+  const p = document.querySelector("#perde .pencere");
+  if (!p) { return; }
+  const genel = veri.cuzdan && veri.cuzdan.genelTavan;
+  const blok = document.createElement("div");
+  blok.className = "arac-blok";
+  blok.innerHTML = (genel ? '<p class="oyun-not">Oyunlardan bugün toplam: <b>' + gunlukToplamKazanc() + " / " + genel + " " + kacir(birim()) + "</b></p>" : "") +
+    '<div class="oyun-etiket">Evrengezer</div><p class="oyun-not"><b>' + egYukle().eg + " EG</b> · " + kacir(birim()) +
+    " Tömye'nin parası; başka evrenlerde o evrenin parası geçer.</p>" +
+    '<button class="dugme dugme-sade" data-eg-cuzdan-buro>Evrengezer bürosu</button>';
+  const ilk = p.querySelector(".oyun-etiket");
+  p.insertBefore(blok, ilk || null);
+}

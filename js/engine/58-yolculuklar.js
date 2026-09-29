@@ -311,108 +311,37 @@ function gzkOzet(h) {
 }
 
 /* harita sayfası: önizlemenin altında */
-if (typeof haritaCiz === "function") {
-  const eskiHaritaCiz = haritaCiz;
-  window.haritaCiz = function () {
-    const r = eskiHaritaCiz.apply(this, arguments);
-    const alan = document.querySelector("#haritaAlan");
-    const h = typeof aktifHarita === "function" ? aktifHarita() : null;
-    if (alan && h && gzkKisiListesi(h)) {
-      const oz = gzkOzet(h);
-      if (oz || gzkYonetici()) {
-        alan.insertAdjacentHTML("beforeend", '<div class="gzk-satir"><button type="button" class="dugme dugme-sade gzk-ac" data-gzk-ac="' + kacir(h.id) + '">🧭 ' +
-          (oz ? "Karakterlerin yolculukları: " + oz + " — gün gün izle" : "Karakterlere gün gün yolculuk çiz") + "</button></div>");
-      }
+/** Harita önizlemesinin altında "karakterlerin yolculukları" satırı. */
+function gzkHaritaSatiri(alan, h) {
+  if (gzkKisiListesi(h)) {
+    const oz = gzkOzet(h);
+    if (oz || gzkYonetici()) {
+      alan.insertAdjacentHTML("beforeend", '<div class="gzk-satir"><button type="button" class="dugme dugme-sade gzk-ac" data-gzk-ac="' + kacir(h.id) + '">🧭 ' +
+        (oz ? "Karakterlerin yolculukları: " + oz + " — gün gün izle" : "Karakterlere gün gün yolculuk çiz") + "</button></div>");
     }
-    return r;
-  };
+  }
 }
 
 /* tam ekran harita: katman panelinde "Yolculuklar" bölümü */
-if (typeof haritaPanelCiz === "function") {
-  const eskiPanel = haritaPanelCiz;
-  window.haritaPanelCiz = function () {
-    const r = eskiPanel.apply(this, arguments);
-    try {
-      const el = HT.kutu && HT.kutu.querySelector("#htPanel");
-      const h = aktifHarita();
-      if (el && !el.hidden && h && gzkKisiListesi(h)) {
-        const l = gzkKarakterler(h).filter(function (x) { return x.yol.length; });
-        if (l.length || gzkYonetici()) {
-          el.insertAdjacentHTML("beforeend", '<section class="hp-bolum gzk-panel"><b>Yolculuklar</b>' +
-            (l.length ? '<div class="hp-alt">' + l.map(function (x) {
-              const son = gzGunler(x.yol)[x.yol.length - 1];
-              return '<button type="button" class="hp-mini" data-gzk-ac="' + kacir(h.id) + '" data-gzk-kisi="' + x.i + '">' + kacir(x.ad) + " · " + son + " gün</button>";
-            }).join("") + "</div>" : "") +
-            '<p class="hp-not">' + (l.length ? "Birine dokun: gün gün nereye gittiğini izle." : "Henüz yolculuk yok.") + "</p>" +
-            (gzkYonetici() ? '<button type="button" class="hp-mini" data-gzk-ac="' + kacir(h.id) + '">Yolculukları düzenle</button>' : "") + "</section>");
-        }
+/** Harita katman panelinde "Yolculuklar" bölümü. */
+function gzkPanelBolumu(el, h) {
+  try {
+    if (el && !el.hidden && h && gzkKisiListesi(h)) {
+      const l = gzkKarakterler(h).filter(function (x) { return x.yol.length; });
+      if (l.length || gzkYonetici()) {
+        el.insertAdjacentHTML("beforeend", '<section class="hp-bolum gzk-panel"><b>Yolculuklar</b>' +
+          (l.length ? '<div class="hp-alt">' + l.map(function (x) {
+            const son = gzGunler(x.yol)[x.yol.length - 1];
+            return '<button type="button" class="hp-mini" data-gzk-ac="' + kacir(h.id) + '" data-gzk-kisi="' + x.i + '">' + kacir(x.ad) + " · " + son + " gün</button>";
+          }).join("") + "</div>" : "") +
+          '<p class="hp-not">' + (l.length ? "Birine dokun: gün gün nereye gittiğini izle." : "Henüz yolculuk yok.") + "</p>" +
+          (gzkYonetici() ? '<button type="button" class="hp-mini" data-gzk-ac="' + kacir(h.id) + '">Yolculukları düzenle</button>' : "") + "</section>");
       }
-    } catch (_) { /* harita kapalı */ }
-    return r;
-  };
-}
-
-/* yer kartı: buradan geçen karakterler, hangi günler */
-if (typeof haritaBilgiCiz === "function") {
-  const eskiBilgi = haritaBilgiCiz;
-  window.haritaBilgiCiz = function () {
-    const r = eskiBilgi.apply(this, arguments);
-    try {
-      const el = HT.kutu && HT.kutu.querySelector("#htBilgi");
-      const s = haritaSeciliYer();
-      const h = aktifHarita();
-      if (el && s && h && !el.hidden && !HT.duzen && gzkKisiListesi(h)) {
-        const gecenler = [];
-        gzkKarakterler(h).forEach(function (x) {
-          const gunler = gzGunler(x.yol);
-          const bu = [];
-          x.yol.forEach(function (a, j) { if (a.yer === s.id && a.g === h.id && bu.indexOf(gunler[j]) === -1) { bu.push(gunler[j]); } });
-          if (bu.length) { gecenler.push({ x: x, gunler: bu }); }
-        });
-        if (gecenler.length) {
-          el.insertAdjacentHTML("beforeend", '<div class="gzk-gecenler"><span class="oyun-etiket">buradan geçenler</span>' +
-            gecenler.map(function (g) {
-              const yazi = g.gunler.length > 4 ? g.gunler.slice(0, 4).join(", ") + "…" : g.gunler.join(", ");
-              return '<button type="button" class="hp-mini" data-gzk-ac="' + kacir(h.id) + '" data-gzk-kisi="' + g.x.i + '" data-gzk-gun="' + g.gunler[0] + '">' +
-                kacir(g.x.ad) + " · " + yazi + ". gün</button>";
-            }).join("") + "</div>");
-        }
-      }
-    } catch (_) { /* harita açık değil */ }
-    return r;
-  };
+    }
+  } catch (_) { /* harita kapalı */ }
 }
 
 /* ---------- Claude'un evreni: Yolculuklar sekmesi, kişilerde "yolculuğunu izle" ---------- */
-
-if (typeof CE_SEKMELER !== "undefined" && typeof claudeEvrenCiz === "function") {
-  const i = CE_SEKMELER.findIndex(function (x) { return x[0] === "hikayeler"; });
-  CE_SEKMELER.splice(i === -1 ? CE_SEKMELER.length : i + 1, 0, ["gezi", "Yolculuklar"]);
-  const eskiCe = claudeEvrenCiz;
-  window.claudeEvrenCiz = function () {
-    const r = eskiCe.apply(this, arguments);
-    const c = veri.claudeEvreni;
-    const g = document.querySelector("#claudeEvrenAlan .ce-govde");
-    const h = c && gzkHarita(c.harita);
-    if (!g || !h) { return r; }
-    if (ceSekme === "gezi") {
-      g.innerHTML = '<p class="oyun-giris">Karakterlerin Şomdo\'daki yolculukları, gün gün. Birini seç, “Gün gün izle”ye bas: haritada nerede olduğunu görürsün.</p>' +
-        '<div id="ceGezi" class="gzk-kok"></div>';
-      const onceki = GZK && GZK.harita === h.id ? GZK.secili : null;
-      gzkAc(h.id, onceki, null, "#ceGezi");
-    } else if (ceSekme === "kisiler") {
-      gzkKarakterler(h).forEach(function (x) {
-        const k = c.kisiler[x.i];
-        const d = k && k.id && g.querySelector("#ce-" + CSS.escape(k.id));
-        if (!d || !x.yol.length) { return; }
-        const son = gzGunler(x.yol)[x.yol.length - 1];
-        d.insertAdjacentHTML("beforeend", '<button type="button" class="dugme dugme-sade ce-gezi-dugme" data-ce-gezi="' + x.i + '">🧭 Yolculuğunu gün gün izle (' + son + " gün)</button>");
-      });
-    }
-    return r;
-  };
-}
 
 document.addEventListener("click", function (ev) {
   const b = ev.target.closest("[data-ce-gezi]");

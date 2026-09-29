@@ -224,7 +224,6 @@ function denetimCiz() {
     "</div>";
 }
 
-
 /* ==================== TEST ARAÇLARI ====================
    Yalnızca yönetici modunda. Oyunu denerken elle ilerlemek zorunda kalma. */
 
@@ -754,7 +753,6 @@ function yayilmaCiz() {
     iliskiOneriCiz();
 }
 
-
 /* Yönetici sekme grubu değiştirici. (Önce yanlış blokta duruyordu ve hiç
    tetiklenmiyordu; bağımsız yakalayıcıya taşındı.) */
 document.addEventListener("click", function (e) {
@@ -765,7 +763,6 @@ document.addEventListener("click", function (e) {
   yoneticiSekme = yoneticiSekmeleri()[0] || Y_GRUPLARI[yoneticiGrup].sekmeler[0];
   yoneticiCiz();
 });
-
 
 /* ==================== İLİŞKİ ÖNERİCİSİ ====================
    Bir karakterin metninde başka bir karakterin adı geçiyor ama ikisi
@@ -1507,7 +1504,6 @@ document.addEventListener("change", function (e) {
    kıta vb.) ve haklarında bilgi girilebilir. */
 
 let yoneticiHaritaId = null;      /* düzenlenen haritanın id'si, null = liste görünümü */
-let yoneticiHaritaYeniAd = "";    /* yeni harita oluşturma girişi */
 let yoneticiHaritaNoktaDuzenle = null; /* null: kapalı, sayı: nokta indeksi, "yeni": yeni nokta */
 
 function yoneticiHaritaDuzen() {

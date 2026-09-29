@@ -10,7 +10,11 @@ function slugYap(s) {
 
 function moderasyonYoneticiHtml() {
   if (typeof yoneticiAcik !== "function" || !yoneticiAcik()) { return ""; }
+  const hesap = typeof hesapKullanici !== "undefined" && hesapKullanici;
+  const kadi = hesap && typeof hesapProfil !== "undefined" && hesapProfil && hesapProfil.kullanici_adi;
   return '<details class="kutu-y mod-yonetici"><summary><b>Yönetici: moderatör kodları ve Pro</b></summary>' +
+    /* bu işlemler sitenin yönetici koduyla değil, yönetici hesabıyla yapılır: hangi hesapla gidildiği görünsün */
+    '<p class="oyun-not">' + (hesap ? "Hesap: " + kacir(kadi ? "@" + kadi : (hesap.email || "giriş açık")) : "Hesap girişi yok: önce Sen → Hesabın'dan yönetici hesabınla giriş yap.") + "</p>" +
     '<label for="modKodAd">Moderatörün adı</label><input class="arac-giris" id="modKodAd" maxlength="60" placeholder="Ayşe">' +
     '<label for="modKodDuzey">Yetkisi</label><select class="kod-giris arac-giris" id="modKodDuzey"><option value="fan">Fan moderatör: yalnızca fan-made onaylar</option><option value="kanon">Kanon moderatör: fan-made ve kanon onaylar</option></select>' +
     '<div class="oyun-sira"><button type="button" class="dugme" data-mod-kod-uret>Kod üret</button><button type="button" class="dugme dugme-sade" data-mod-kod-liste>Kodları göster</button><button type="button" class="dugme dugme-sade" data-mod-kod-kapat>Bütün kodları kapat</button></div>' +
@@ -65,8 +69,13 @@ document.addEventListener("click", async function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-mod-giris], [data-mod-cikis], [data-mod-onizle], [data-mod-indir], [data-mod-onay], [data-mod-red], [data-mod-kod-uret], [data-mod-kod-kapat], [data-pro-ver]");
   if (!b) { return; }
   const kart = b.closest("[data-mod-id]");
-  const durum = (kart && kart.querySelector(".pencere-durum")) || document.querySelector("#modDurum") || document.querySelector("#modKodDurum");
+  const yonetim = !!b.closest(".mod-yonetici");   /* moderatör kodları ve Pro: yönetici hesabıyla çalışır */
+  const durum = (kart && kart.querySelector(".pencere-durum")) || (yonetim ? document.querySelector("#modKodDurum") : document.querySelector("#modDurum")) || document.querySelector("#modKodDurum");
   const yaz = function (m, iyi) { if (durum) { durum.textContent = m; durum.className = "pencere-durum " + (iyi ? "iyi" : "kotu"); } };
+  if (yonetim && (typeof hesapKullanici === "undefined" || !hesapKullanici)) {
+    yaz("Bunun için yönetici hesabınla giriş yap (Sen → Hesabın), sonra bu sayfayı yenile.", false);
+    return;
+  }
   try {
     if (b.hasAttribute("data-mod-giris")) { await moderatorGiris((document.querySelector("#modKod") || {}).value); await moderatorDuzeyYukle(); return moderasyonCiz(); }
     if (b.hasAttribute("data-mod-cikis")) { moderatorCikis(); return moderasyonCiz(); }
@@ -122,23 +131,6 @@ document.addEventListener("click", async function (ev) {
 });
 document.addEventListener("keydown", function (ev) { if (ev.key === "Enter" && ev.target && ev.target.id === "modKod") { const b = document.querySelector("[data-mod-giris]"); if (b) { b.click(); } } });
 
-
-
-/* #/moderasyon ve #/yayin/<adres> sayfa değil: yönlendirici bunları "bulunamadı" saymasın; altta ana sayfa açılır */
-if (typeof hataSayfasiAc === "function") {
-  const eskiHSA40 = hataSayfasiAc;
-  window.hataSayfasiAc = function (istenen) {
-    const s = String(istenen || "");
-    if (/^(moderasyon|yayin\/)/.test(s)) {
-      if (typeof sayfaGoster === "function" && typeof aktifSayfa !== "undefined" && !aktifSayfa) { sayfaGoster("arsiv", false); }
-      setTimeout(/^moderasyon/.test(s) ? moderasyonCiz : yayinAdresiBak, 0);
-      return;
-    }
-    return eskiHSA40.apply(this, arguments);
-  };
-}
-
-
 /* 4.0.3: moderatörün düzeyi (fan / kanon) bu sekmede saklanır; asıl denetim sunucuda (moderasyon fonksiyonu) */
 function moderatorDuzey() { try { return sessionStorage.getItem("tf4_mod_duzey") || "fan"; } catch (_) { return "fan"; } }
 async function moderatorDuzeyYukle() {
@@ -180,6 +172,7 @@ async function moderatorKodListesiCiz() {
   const a = document.querySelector("#modKodListe");
   if (!a) { return; }
   const s = await tf4Istemci();
+  if (typeof hesapKullanici === "undefined" || !hesapKullanici) { a.innerHTML = '<p class="pencere-durum kotu">Kodları görmek için yönetici hesabınla giriş yap (Sen → Hesabın), sonra bu sayfayı yenile.</p>'; return; }
   const r = await s.rpc("moderator_kodlari_listesi");
   if (r.error) { a.innerHTML = '<p class="pencere-durum kotu">Okunamadı: ' + kacir(r.error.message) + "</p>"; return; }
   const l = r.data || [];

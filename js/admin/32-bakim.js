@@ -67,7 +67,8 @@ function hataAdresi() {
   return (location.origin + location.pathname + location.hash).slice(0, 300);
 }
 
-window.hataGonder = function (kayit) {
+/** Hata kaydını sunucuya gönderir (oturumda en çok 5, aynısı bir kez); 01-tanilama çağırır. */
+function hataGonder(kayit) {
   if (!kayit || hataGonderilen >= 5) { return; }
   /* aynı hata oturumda bir kez: döngüye giren bir hata yüzlerce satır üretmesin */
   const hataIz = String(kayit.baslik || "") + "|" + String(kayit.mesaj || "").slice(0, 200);
@@ -93,7 +94,7 @@ window.hataGonder = function (kayit) {
       body: JSON.stringify(govde)
     }).catch(function () {});
   } catch (e) { /* bildirim de patlarsa sessiz kal */ }
-};
+}
 
 (function () {
   const kuyruk = window.__hataKuyrugu || [];
@@ -104,7 +105,6 @@ window.hataGonder = function (kayit) {
 /* ==================== SESLİ OKUMA ==================== */
 
 const SESLI_SECICI = ".okuma-metin, .mektup-metin, .hikaye-metin, .detay-metin, .roman-metin";
-let sesliAktif = null;
 
 function sesliDestek() {
   return "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
@@ -130,33 +130,14 @@ function sesliDugmeEkle(kok) {
   });
 }
 
-function sesliDurdur() {
-  if (sesliDestek()) { window.speechSynthesis.cancel(); }
-  if (sesliAktif) { sesliAktif.textContent = "▶ Dinle"; sesliAktif.classList.remove("okuyor"); }
-  sesliAktif = null;
-}
+/* "▶ Dinle" düğmesi kesintisiz dinlemeyi başlatır (okur oyuncusu: 80-okur-oyuncu) */
+function sesliDurdur() { dinlemeDurdur(); }
 
 function sesliDugmeOku(dugme) {
-  if (sesliAktif === dugme) { sesliDurdur(); return; }
-  sesliDurdur();
-  const metinEl = dugme.nextElementSibling;
-  if (!metinEl) { return; }
-  const metin = (metinEl.innerText || metinEl.textContent || "").trim();
-  if (!metin) { return; }
-  const ses = sesliSes();
-  /* Tarayıcı sesleri uzun metni kesebiliyor; paragraf paragraf sıraya koy */
-  const parcalar = metin.split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
-  parcalar.forEach(function (p, i) {
-    const u = new SpeechSynthesisUtterance(p);
-    u.lang = "tr-TR";
-    if (ses) { u.voice = ses; }
-    u.rate = 0.95;
-    if (i === parcalar.length - 1) { u.onend = function () { if (sesliAktif === dugme) { sesliDurdur(); } }; }
-    window.speechSynthesis.speak(u);
-  });
-  sesliAktif = dugme;
-  dugme.textContent = "■ Durdur";
-  dugme.classList.add("okuyor");
+  if (SES.aktif && SES.dugme === dugme) { dinlemeDurdur(); return; }
+  const el = dugme.nextElementSibling;
+  if (!el) { return; }
+  sesBaslat(el, dugme);
 }
 
 function sesliBaslat() {
@@ -534,7 +515,8 @@ function yListeDegisiklik() {
       }).join("") + "</div>";
 }
 
-function yDegisiklikEkle() {
+async function yDegisiklikEkle() {
+  if (!veriParcalariHazir()) { await veriParcalariTam(); }   /* değişiklik günlüğü veri.json'un sonraki parçasında */
   const maddeler = ((document.querySelector("#yDegMaddeler") || {}).value || "").split("\n")
     .map(function (s) { return s.trim(); }).filter(Boolean);
   if (!maddeler.length) { yoneticiDurum("En az bir madde yaz", false); return; }
@@ -678,7 +660,14 @@ function istCubuk(baslik, satirlar, adAlan, degerAlan, adCevir) {
     }).join("") + "</div></figure>";
 }
 
+/** Panel istatistikleri; altında ziyaret sayacı (48) ve haftanın özeti (52). */
 async function yoneticiIstatistikYukle() {
+  await yoneticiIstatistikTemel();
+  try { await olaySayilariCiz(); } catch (_) { /* sayaç panelin kalanını bozmasın */ }
+  try { await haftaOzetiCiz(); } catch (_) { /* özet panelin kalanını bozmasın */ }
+}
+
+async function yoneticiIstatistikTemel() {
   const alan = document.querySelector("#yIstAlan");
   if (!alan) { return; }
   const ist = await bakimIstemci(alan);
