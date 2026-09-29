@@ -80,4 +80,9 @@ document.addEventListener("click", async function (ev) {
   try { await hesapIstemci.rpc("bildirimleri_okundu"); TF4_BILDIRIM.liste.forEach(function (x) { x.okundu = true; }); bildirimleriCiz(); } catch (_) { /* yok */ }
 });
 
-window.addEventListener("hashchange", function () { if (typeof aktifSayfa !== "undefined" && aktifSayfa === "sen") { bildirimleriYukle(); } });
+window.addEventListener("hashchange", function () {
+  if (typeof aktifSayfa === "undefined" || aktifSayfa !== "sen") { return; }
+  bildirimleriYukle();
+  /* ücretsiz görünen hesap Sen sayfasında durumunu yeniden sorar: hediye edilen Pro 6 saatlik önbelleği beklemeden görünür */
+  if (!tf4ProMu()) { tf4AbonelikYukle(true); }
+});
