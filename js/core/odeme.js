@@ -11,7 +11,8 @@ function proPencereHtml(neden) {
     '<div class="pro-katmanlar"><div class="pro-katman"><b>Ücretsiz</b><ul><li>1 evren taslağı</li><li>Bütün evrenleri gez, oku, oyna</li><li>Onaya 1 başvuru</li></ul></div>' +
       '<div class="pro-katman pro-one"><b>Yaratıcı Pro · ' + TF4_PRO_FIYAT + '</b><ul><li>Sınırsız evren</li><li>Onay kuyruğunda öncelik, aynı anda 5 başvuru</li><li>Reklamsız</li><li>Pro rozeti</li></ul></div></div>' +
     (pro ? '<p class="pencere-durum iyi">Pro üyesin' + (TF4.uyelik.bitis ? " · " + new Date(TF4.uyelik.bitis).toLocaleDateString("tr-TR") + " tarihine kadar" : "") + ".</p>"
-      : '<div class="oyun-sira"><button type="button" class="dugme" data-pro-ode>Pro’ya geç</button><button type="button" class="dugme dugme-sade" data-kod-ac>Kodum var</button></div>' +
+      : '<label class="pro-onay"><input type="checkbox" id="proOnay"> <span><a href="#/yasal/mesafeli">Mesafeli satış sözleşmesini</a>, <a href="#/yasal/iade">iade koşullarını</a> ve <a href="#/yasal/kvkk">KVKK aydınlatma metnini</a> okudum, kabul ediyorum.</span></label>' +
+        '<div class="oyun-sira"><button type="button" class="dugme" data-pro-ode>Pro’ya geç</button><button type="button" class="dugme dugme-sade" data-kod-ac>Kodum var</button></div>' +
         '<p class="oyun-not">Ödeme PayTR güvenli ödeme sayfasında yapılır; kart bilgin bu siteye gelmez. Üyelik 30 gün sürer, istersen yenilersin.</p>') +
     '<p class="pencere-durum" id="proDurum" role="status"></p></div>';
 }
@@ -45,8 +46,37 @@ document.addEventListener("click", function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-pro-ode], [data-pro-ac]");
   if (!b) { return; }
   if (b.hasAttribute("data-pro-ac")) { proPencereAc(b.getAttribute("data-pro-ac") || ""); return; }
+  const onay = document.querySelector("#proOnay");
+  if (onay && !onay.checked) { const d = document.querySelector("#proDurum"); if (d) { d.textContent = "Devam etmek için sözleşmeleri onayla."; d.className = "pencere-durum kotu"; } onay.focus(); return; }
   proyaGec();
 });
+
+/* 4.2: yasal sayfalar #/yasal/mesafeli | iade | kvkk — metinler veri.json "yasal" alanından (yönetici panelden ekler) */
+const TF4_YASAL = { mesafeli: "Mesafeli satış sözleşmesi", iade: "İptal ve iade koşulları", kvkk: "KVKK aydınlatma metni" };
+function yasalSayfaCiz(tur) {
+  const p = document.querySelector("#perde");
+  if (!p || !TF4_YASAL[tur]) { return; }
+  const metin = ((typeof veri !== "undefined" && veri && veri.yasal) || {})[tur];
+  p.innerHTML = '<div class="pencere yasal-pencere" role="dialog" aria-modal="true" aria-label="' + kacir(TF4_YASAL[tur]) + '"><button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button>' +
+    "<h3>" + kacir(TF4_YASAL[tur]) + "</h3>" +
+    (metin ? '<div class="yasal-metin">' + String(metin).split(/\n{2,}/).map(function (x) { return "<p>" + kacir(x).replace(/\n/g, "<br>") + "</p>"; }).join("") + "</div>"
+      : '<p class="oyun-not">Bu metin henüz eklenmedi.</p>') +
+    '<p class="oyun-not">' + Object.keys(TF4_YASAL).map(function (k) { return '<a href="#/yasal/' + k + '">' + kacir(TF4_YASAL[k]) + "</a>"; }).join(" · ") + "</p></div>";
+  p.hidden = false;
+}
+if (typeof hataSayfasiAc === "function") {
+  const eskiHSA42 = hataSayfasiAc;
+  window.hataSayfasiAc = function (istenen) {
+    /* yönlendirici yalnızca ilk parçayı ("yasal") verir; türü adresten oku */
+    const m = /^yasal/.test(String(istenen || "")) ? /^#\/yasal\/([a-z]+)/.exec(typeof rota === "function" ? rota() : location.hash) : null;
+    if (m && TF4_YASAL[m[1]]) {
+      if (typeof sayfaGoster === "function" && typeof aktifSayfa !== "undefined" && !aktifSayfa) { sayfaGoster("arsiv", false); }
+      setTimeout(function () { yasalSayfaCiz(m[1]); }, 0);
+      return;
+    }
+    return eskiHSA42.apply(this, arguments);
+  };
+}
 
 /* ödemeden dönüş: #/sen?odeme=tamam */
 function odemeDonusBak() {

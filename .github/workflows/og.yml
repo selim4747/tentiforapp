@@ -1,0 +1,37 @@
+# Paylaşım görselleri (4.2): onaylanıp veri.json'a giren okur evrenleri ve fan hikâyeleri için ikon/og/*.png üretir.
+# Günde bir kez (ve elle: Actions → "Paylaşım görselleri" → Run workflow) çalışır; değişiklik varsa "[skip ci]" ile
+# işler — site kendiliğinden yeniden yayınlanmaz, görseller bir sonraki Yayınla ile sitede görünür.
+name: Paylaşım görselleri
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: og-gorselleri
+  cancel-in-progress: false
+
+jobs:
+  uret:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/og-gorselleri.mjs
+      - name: Değişiklik varsa işle
+        run: |
+          git add ikon/og
+          if git diff --cached --quiet; then echo "Yeni görsel yok."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Paylaşım görselleri güncellendi [skip ci]"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push

@@ -189,6 +189,13 @@ async function toplulukProfilEk(p) {
       (Number(tr.data.kanon) ? '<span class="birinci">★ ' + Number(tr.data.kanon) + " kanon teori</span>" : "") +
       (Number(tr.data.yakin) ? "<span>◐ " + Number(tr.data.yakin) + " yakın teori</span>" : "") + "</div>";
   }
+  /* 4.2: yaratıcı profili — sitede yayındaki evrenleri ve hikâyeleri (veri.json'dan; sunucuya ek okuma yok) */
+  const eserler = ["evren", "hikaye"].map(function (t) { return (typeof fanSiteListesi === "function" ? fanSiteListesi(t) : []).filter(function (x) { return x.yazar_kadi === ad; }); });
+  if (eserler[0].length || eserler[1].length) {
+    html += '<div class="profil-eserler"><span class="oyun-etiket">Evrenleri ve hikâyeleri</span><ul class="mod-yayin">' +
+      eserler[0].map(function (x) { return '<li><a href="#/ev/fan/' + encodeURIComponent(x.id) + '"><b>' + kacir(x.ad) + "</b></a> · " + (x.kanon === true ? "kanon evren" : "evren") + "</li>"; }).join("") +
+      eserler[1].map(function (x) { return '<li><a href="#/fan/hikaye/' + encodeURIComponent(x.id) + '"><b>' + kacir(x.baslik || x.id) + "</b></a> · hikâye" + (x.evren ? " · " + kacir(x.evren) : "") + "</li>"; }).join("") + "</ul></div>";
+  }
   el.innerHTML = html + "</div>";
 }
 

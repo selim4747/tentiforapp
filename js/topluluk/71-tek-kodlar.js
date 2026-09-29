@@ -10,7 +10,7 @@
    - Haklar yalnızca bellekte tutulur: hesapla gelir, hesaptan çıkınca gider; cihaza kalıcı yazılmaz. */
 
 const TEK = { haklar: [], surum: 0, yoneticiVerdi: false };
-const TEK_TURLER = { evren: "Evren kurma", evren1: "Bir evren kurma (tek seferlik)", evrengezer: "Evrengezer kurma", yonetici: "Sınırlı yönetici", kisi: "Kişi (bölüm ve evren erişimi)" };
+const TEK_TURLER = { evren: "Evren kurma", evren1: "Bir evren kurma (tek seferlik)", evrengezer: "Evrengezer kurma", yonetici: "Sınırlı yönetici", kisi: "Kişi (bölüm ve evren erişimi)", pro30: "Yaratıcı Pro (hediye / deneme; varsayılan 30 gün)" };
 
 function tekOzet(kod) {
   return onaltilik(sha256Bayt(metniBayta(String(kod || "").trim().toUpperCase() + "#tek")));
@@ -126,7 +126,9 @@ async function tekKodDene(kod, durum) {
     evren1: "Bir evren kurma hakkın açıldı: seviyeyi beklemeden bir evren kurabilirsin (Ana sayfa ya da Evren Atölyesi → Yeni evren kur).",
     evrengezer: "Evrengezer kurma açıldı: seviyeyi beklemeden kurabilirsin.",
     yonetici: "Sınırlı yönetici paneli açıldı (Sen → Yönetici).",
-    kisi: "Sana ayrılan bölümler açıldı." + (katman ? " · " + katman + " buz katmanı" : "") })[d.tur] + " Kod hesabına bağlandı.", true);
+    kisi: "Sana ayrılan bölümler açıldı." + (katman ? " · " + katman + " buz katmanı" : ""),
+    pro30: "Yaratıcı Pro açıldı: sınırsız evren, kuyrukta öncelik, reklamsız." })[d.tur] + " Kod hesabına bağlandı.", true);
+  if (d.tur === "pro30" && typeof tf4AbonelikYukle === "function") { tf4AbonelikYukle(true); }
   if (typeof olaySay === "function") { olaySay("tek_kod:" + d.tur); }
   setTimeout(function () { if (typeof perdeKapat === "function") { perdeKapat(); } tekHaklariUygula(); }, 1300);
 }

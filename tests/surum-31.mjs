@@ -234,6 +234,40 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
         /data-tf4-gonder/.test(teslimHtml()) && /önceliklisin/.test(teslimHtml()) && !/data-pro-ode/.test(proPencereHtml("")) &&
         /Yaratıcı Pro üyesisin/.test(document.querySelector("#proAlan").textContent);
     }));
+
+    /* ---------- 4.2: bildirimler, kurucu onayı, hikâye moderasyonu, yasal sayfalar, Pro kodu ---------- */
+    console.log("4.2");
+    await sahte.kokSorgu("select public.kullaniciya_bildir(id, 'Başvurun onaylandı: Deneme', '#/sen') from public.profiller where kullanici_adi = 'tekevren31'");
+    await sahte.kokSorgu("insert into public.evren_sahipleri (slug, kullanici) select 'kurucu-evreni', id from public.profiller where kullanici_adi = 'tekevren31' on conflict do nothing");
+    ok("4.2: bildirim merkezi okunmamış bildirimi gösterir, okundu sayılınca nokta söner", await U.evaluate(async function () {
+      location.hash = "#/sen"; await new Promise(function (r) { setTimeout(r, 400); });
+      await bildirimleriYukle();
+      const var_ = /Başvurun onaylandı: Deneme/.test(document.querySelector("#tf4BildirimAlan").textContent) && document.documentElement.hasAttribute("data-bildirim-var");
+      document.querySelector("[data-bildirim-okundu]").click(); await new Promise(function (r) { setTimeout(r, 900); });
+      return var_ && !document.documentElement.hasAttribute("data-bildirim-var");
+    }));
+    ok("4.2: kurucu paneli: evren için hikâye onayı ayarı açılıp kapanır (sunucuda da)", await U.evaluate(async function () {
+      await kurucuPaneliCiz();
+      const k = document.querySelector('#kurucuAlan [data-kurucu-onay="kurucu-evreni"]');
+      if (!k || k.checked) { return false; }
+      k.click(); await new Promise(function (r) { setTimeout(r, 900); });
+      const s = await tf4Istemci(); const { data } = await s.from("evren_sahipleri").select("hikaye_onayi").eq("slug", "kurucu-evreni").maybeSingle();
+      return !!data && data.hikaye_onayi === true;
+    }));
+    await sahte.kokSorgu("insert into public.basvurular (baslik, ozet, dosya_yolu, gonderen, tur, evren_slug) select 'Kuyruktaki Hikaye', 'Kısa', id::text || '/2-h.json.gz', id, 'hikaye', 'kurucu-evreni' from public.profiller where kullanici_adi = 'tekevren31'");
+    await M.evaluate(function () { moderasyonCiz(); }); await bekle(M, 1500);
+    ok("4.2: moderatör kuyruğunda hikâye başvurusu türüyle görünür", await M.evaluate(function () {
+      const k = Array.from(document.querySelectorAll(".mod-basvuru")).find(function (x) { return /Kuyruktaki Hikaye/.test(x.textContent); });
+      return !!k && k.getAttribute("data-mod-tur") === "hikaye" && /hik/i.test(k.querySelector(".mod-tur").textContent) && !!document.querySelector("#modSikayetler");
+    }));
+    await M.evaluate(function () { location.hash = "#/yasal/kvkk"; }); await bekle(M, 700);
+    ok("4.2: #/yasal/kvkk açılır (404 değil), altlıkta yasal bağlantılar var", await M.evaluate(function () {
+      return !document.querySelector("#yokSayfa") && !!document.querySelector("#perde .yasal-pencere") && document.querySelectorAll('footer a[href^="#/yasal/"]').length === 3;
+    }), await M.evaluate(function () { return { yok: !!document.querySelector("#yokSayfa"), p: (document.querySelector("#perde") || {}).className + " " + ((document.querySelector("#perde") || {}).innerHTML || "").slice(0, 120), f: document.querySelectorAll('footer a[href^="#/yasal/"]').length, r: rota(), h: typeof TF4_YASAL }; }));
+    ok("4.2: Pro ödemesi sözleşme onayı olmadan başlamaz; Pro hediye kodu türü var", await M.evaluate(function () {
+      proPencereAc(""); document.querySelector("[data-pro-ode]").click();
+      return /sözleşmeleri onayla/.test(document.querySelector("#proDurum").textContent) && !!TEK_TURLER.pro30;
+    }));
     await M.close(); await U.evaluate(function () { if (typeof perdeKapat === "function") { perdeKapat(); } });
 
     /* ---------- 3. E25 ---------- */

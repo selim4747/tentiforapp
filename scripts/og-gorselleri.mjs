@@ -1,6 +1,7 @@
 /* Paylaşım görselleri (1200×630): her sayfa, kanon evren, E99 ve karşılama için ikon/og/<ad>.png.
    Yayın paketi (scripts/paketle.mjs) bu dosyaları sayfaların og:image etiketine yazar.
-   Yeniden üretmek için (Chromium gerekir): node scripts/og-gorselleri.mjs */
+   Yeniden üretmek için (Chromium gerekir): node scripts/og-gorselleri.mjs
+   4.2: okur evrenleri (ikon/og/<adres>.png) ve fan hikâyeleri (ikon/og/hikaye-<adres>.png) de üretilir. */
 
 import { createRequire } from "node:module";
 import { readFileSync, mkdirSync } from "node:fs";
@@ -23,6 +24,19 @@ const kartlar = sayfalar.map(function (s) { return { ad: s.id, ust: "Tentiforver
 for (const [id, k] of Object.entries(veri.kanonEvrenleri || {})) {
   kartlar.push({ ad: id, ust: "Kanon evren", baslik: k.ad || id.toUpperCase(),
     alt: id === "e25" ? "Evrengezerlerin evreni · kendi Evrengezerini ekle" : "İçeriği kodla açılır", koyu: true });
+}
+/* 4.2: onaylanıp yayına giren okur evrenleri ve hikâyeleri (moderasyon veri.json'a yazar; iş akışı og.yml günde bir üretir) */
+const guvenli = function (x) { return String(x || "").replace(/[^A-Za-z0-9_-]/g, ""); };
+const kisalt = function (x, n) { x = String(x || ""); return x.length > n ? x.slice(0, n - 1) + "…" : x; };
+for (const e of ((veri.fanEserleri || {}).evrenler || [])) {
+  const id = guvenli(e.id);
+  if (!id || /^e\d+$/.test(id)) { continue; }
+  kartlar.push({ ad: id, ust: e.kanon === true ? "Kanon evren" : "Okur evreni", baslik: kisalt(e.ad || id, 40), alt: kisalt(e.ozet || (e.yazar ? "Kuran: " + e.yazar : "Tentiforverse okurlarının kurduğu bir evren."), 140), koyu: true });
+}
+for (const e of ((veri.fanEserleri || {}).hikayeler || [])) {
+  const id = guvenli(e.id);
+  if (!id) { continue; }
+  kartlar.push({ ad: "hikaye-" + id, ust: "Fan hikâyesi" + (e.evren ? " · " + e.evren : ""), baslik: kisalt(e.baslik || id, 40), alt: kisalt(e.ozet || (e.yazar ? "Yazan: " + e.yazar : ""), 140), koyu: false });
 }
 if (veri.e99) { kartlar.push({ ad: "e99", ust: "Herkesin evreni", baslik: "E99", alt: "Bomboş bir evren: kuralını, kişisini, haritasını sen yaz", koyu: false }); }
 kartlar.push({ ad: "basla", ust: "Tentiforverse", baslik: "Hoş geldin, gezgin.", alt: "Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker.", koyu: true });

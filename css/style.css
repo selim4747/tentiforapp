@@ -5138,3 +5138,20 @@ html.tf-pro .reklam-yuva{display:none}
 .mod-basvuru{display:grid;gap:4px}
 .mod-basvuru label{margin-top:6px}
 html[data-onizleme] #evrenSayfa::before{content:"Güvenli önizleme · cihazına kaydedilmez";display:block;position:sticky;top:0;z-index:5;background:#0D3560;color:#fff;font:600 13px/1 var(--govde);padding:10px 14px;text-align:center}
+
+/* ==================== 4.2 ==================== */
+html[data-bildirim-var] .hesap-btn{position:relative}
+html[data-bildirim-var] .hesap-btn::before{content:"";position:absolute;top:-3px;left:-3px;width:10px;height:10px;border-radius:50%;background:#d1453b;border:2px solid var(--kar)}
+.bildirim-liste{list-style:none;margin:8px 0;padding:0;display:grid;gap:6px}
+.bildirim-liste li{padding:8px 10px;border-radius:var(--r-kucuk);background:var(--kar)}
+.bildirim-liste li.yeni{border-left:3px solid var(--deniz);font-weight:600}
+.kurucu-ayar{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:4px}
+.kurucu-okuma .fan-oku{max-height:50vh;overflow:auto;margin-top:8px;padding:10px;border:1px solid var(--buz);border-radius:var(--r-kucuk)}
+.tf4-basvurular{margin:8px 0 0 18px}
+.mod-tur{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--buz);color:var(--deniz);margin-right:6px}
+.mod-fark{margin:6px 0 0 18px;font-size:13.5px}
+.yasal-metin{white-space:pre-wrap;max-height:60vh;overflow:auto;font-size:14.5px;line-height:1.6}
+.pro-onay{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin:8px 0}
+.alt-yasal a { color: inherit; opacity: .8; }
+.yasal-pencere { max-width: 720px; }
+.profil-eserler { margin-top: .8rem; }
