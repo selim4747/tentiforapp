@@ -972,19 +972,6 @@ function karakterZamanHtml(k) {
     '<p class="oyun-not">Soluk olanları henüz okumadın; dokununca açılır.</p></div>';
 }
 
-/* karakter penceresi açılınca bir kez (rozet kutusu kendini yenilese de çizgi çoğalmaz) */
-if (typeof sonraSar === "function") {
-  sonraSar("karakterAc", function (eskiAc) {
-    return function (i) {
-      const r = eskiAc.apply(this, arguments);
-      const k = (veri.karakterler || [])[i];
-      const p = document.querySelector("#perde:not([hidden]) .pencere");
-      if (k && p && !p.querySelector(".karakter-zaman")) { p.insertAdjacentHTML("beforeend", karakterZamanHtml(k)); }
-      return r;
-    };
-  });
-}
-
 /* ==================== olaylar ==================== */
 
 document.addEventListener("click", function (e) {

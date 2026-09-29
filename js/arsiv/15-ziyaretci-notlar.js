@@ -162,6 +162,7 @@ function madalyaVar(id) {
 function madalyaVer(id) {
   if (madalyaVar(id)) { return; }
   hesapHatirlat("madalya");
+  yilGuncelle(function (y) { if (y.madalya.indexOf(id) === -1) { y.madalya.push(id); } });   /* yılın özeti (39) */
   const m = jsonOku(MADALYA_ANAHTAR, []) || [];
   m.push(id);
   jsonYaz(MADALYA_ANAHTAR, m);
@@ -256,6 +257,7 @@ function meydanTohumla(oyun) {
 }
 
 function meydanBitir(oyun, skor) {
+  ilkHaftaIsaretle("yaris");   /* ilk hafta (39) */
   if (!meydan || meydan.oyun !== oyun) { return; }
 
   /* Nöbet haftalık meydanı (30-yarislar.js): skor sunucuya gider */

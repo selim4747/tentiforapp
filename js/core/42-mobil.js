@@ -180,17 +180,6 @@ if ("launchQueue" in window && window.launchQueue && window.launchQueue.setConsu
 
 /* ==================== bağlama ==================== */
 
-/* gezinme her çizildiğinde alt menü de güncellensin */
-(function () {
-  const eski = window.gezinmeCiz;
-  if (typeof eski !== "function") { return; }
-  window.gezinmeCiz = function () {
-    const r = eski.apply(this, arguments);
-    try { altMenuCiz(); } catch (e) { /* alt menü asıl gezinmeyi bozmasın */ }
-    return r;
-  };
-})();
-
 window.addEventListener("hashchange", function () {
   if (rota().indexOf("#/fan/paylasim") === 0) { paylasilanDosyaAc(); }
   if (document.querySelector("#mobilMenu")) { mobilMenuKapat(); }

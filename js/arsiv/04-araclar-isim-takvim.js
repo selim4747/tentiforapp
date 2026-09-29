@@ -203,6 +203,8 @@ function isimCiz() {
 }
 
 function isimCalistir() {
+  const giris = document.querySelector("#isimGiris");
+  if (giris && giris.value.trim()) { ilkHaftaIsaretle("isim"); }   /* ilk hafta (39) */
   const g = document.querySelector("#isimGiris");
   const kutu = document.querySelector("#isimSonuc");
   if (!g || !kutu) { return; }

@@ -99,16 +99,6 @@ function evaStatuNotu(ad) {
 
 /* ==================== Evrengezer götürme ==================== */
 
-/* hikâye dosyası indirilirken, paylaşılırken, gönderilirken kurallar */
-["fanIndir", "fanPaylas"].forEach(function (ad) {
-  const eski = window[ad];
-  if (typeof eski !== "function") { return; }
-  window[ad] = function (e) {
-    const n = evaHikayeDenetle(e);
-    if (n) { if (typeof eckaBildir === "function") { eckaBildir(n); } return ad === "fanPaylas" ? Promise.resolve(n) : undefined; }
-    return eski.apply(this, arguments);
-  };
-});
 /* hikâye düzenleyicisinde: seçilen evrenin kuralı evren alanının hemen altında */
 function evaHikayeNotuYaz() {
   const g = document.querySelector('[data-fan-form="hikaye"] [data-fan-alan="evren"]');

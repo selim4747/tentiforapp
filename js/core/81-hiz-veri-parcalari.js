@@ -116,7 +116,8 @@ function dgListeHtml() {
     (eksik > 0 ? '<p class="oyun-not dg-yukleniyor">Daha eski ' + eksik + " sürüm yükleniyor…</p>" : "");
 }
 
-function degisiklikSayfaCiz() {
+/** Sürümler sayfası: değişiklik günlüğü (arama, seri süzgeci; eski sürümler ayrı parçadan iner). */
+function degisiklikCiz() {
   const alan = document.querySelector("#degisiklikAlan");
   if (!alan || typeof veri === "undefined" || !veri || !Array.isArray(veri.degisiklik)) { return; }
   if (DG.onceki === null) { try { DG.onceki = localStorage.getItem(DG_SON) || ""; } catch (_) { DG.onceki = ""; } }
@@ -147,14 +148,13 @@ function degisiklikSayfaCiz() {
   /* sayfa gerçekten açıksa: eski sürümleri indir, "yeni" işaretini bir sonraki ziyarete kadar sakla */
   const acik = typeof aktifSayfa === "undefined" || aktifSayfa === "surumler";
   if (acik && p && p.degisiklik && !VERI_PARCA.degisiklik) {
-    veriParcasi("degisiklik").then(degisiklikSayfaCiz, function () {
+    veriParcasi("degisiklik").then(degisiklikCiz, function () {
       const y = alan.querySelector(".dg-yukleniyor");
       if (y) { y.textContent = "Eski sürümler şu an indirilemedi (internet yok gibi). Bağlanınca bu sayfa tamamlanır."; }
     });
   }
   if (acik && son.surum) { try { localStorage.setItem(DG_SON, son.surum); } catch (_) { /* yok */ } }
 }
-window.degisiklikCiz = degisiklikSayfaCiz;
 
 document.addEventListener("input", function (e) {
   if (!e.target || e.target.id !== "dgAra") { return; }
@@ -166,5 +166,5 @@ document.addEventListener("click", function (e) {
   const b = e.target.closest && e.target.closest("[data-dg-seri]");
   if (!b) { return; }
   DG.seri = b.getAttribute("data-dg-seri");
-  degisiklikSayfaCiz();
+  degisiklikCiz();
 });

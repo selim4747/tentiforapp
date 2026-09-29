@@ -534,16 +534,6 @@ async function ortakKatil(kod, durum) {
   } catch (_) { yaz("Sunucuya ulaşılamadı.", false); }
 }
 
-if (typeof sonraSar === "function") {
-  sonraSar("kodDene", function (eski) {
-    return function (ham) {
-      const kod = String(ham || "").trim().toUpperCase();
-      if (/^ORT-[A-Z0-9]{8,}$/.test(kod)) { ortakKatil(kod, document.querySelector("#kodDurum")); return; }
-      return eski.apply(this, arguments);
-    };
-  });
-}
-
 async function ortakEvrenlerimiCek() {
   if (!y25Hesap()) { return; }
   try {

@@ -236,17 +236,6 @@ function defterEvrenAdi(a) {
   return k && k.ad ? k.ad : a.toUpperCase();
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  if (typeof yoneticiIstatistikYukle === "function") {
-    const eski = yoneticiIstatistikYukle;
-    window.yoneticiIstatistikYukle = async function () {
-      const r = await eski.apply(this, arguments);
-      try { await haftaOzetiCiz(); } catch (_) { /* özet panelin kalanını bozmasın */ }
-      return r;
-    };
-  }
-});
-
 /* ==================== olaylar ==================== */
 
 document.addEventListener("click", async function (ev) {

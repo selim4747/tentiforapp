@@ -2199,26 +2199,6 @@ function basinCiz() {
       : "");
 }
 
-/* ==================== DEĞİŞİKLİK GÜNLÜĞÜ ==================== */
-
-function degisiklikCiz() {
-  const alan = document.querySelector("#degisiklikAlan");
-  if (!alan || !veri.degisiklik) { return; }
-
-  alan.innerHTML = '<div class="madde-liste">' + veri.degisiklik.map(function (d, i) {
-    return '<div class="madde' + (i === 0 ? " acik" : "") + '">' +
-             '<button class="madde-bas">' +
-               '<span class="madde-bolum">' + kacir(d.surum) + "</span>" +
-               '<span class="madde-baslik">' + kacir(d.tarih) + "</span>" +
-               '<span class="madde-ok">›</span>' +
-             "</button>" +
-             '<div class="madde-govde"><ul class="y-bosluk">' +
-               d.maddeler.map(function (m) { return "<li>" + kacir(m) + "</li>"; }).join("") +
-             "</ul></div>" +
-           "</div>";
-  }).join("") + "</div>";
-}
-
 /* ==================== olaylar ==================== */
 
 document.addEventListener("click", function (e) {

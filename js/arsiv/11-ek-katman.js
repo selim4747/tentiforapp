@@ -206,6 +206,7 @@ function bilinmeyenCiz() {
                "</div>";
       }).join("") +
     "</div>";
+  teoriCiz();   /* okur teorileri (31-topluluk) */
 }
 
 /* ==================== RASTGELE KEŞİF ==================== */

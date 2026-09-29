@@ -1098,22 +1098,17 @@ document.addEventListener("change", function (ev) {
   evrenStilOlay(ev, true);
 });
 
-/* cüzdan penceresi: eçka yanına Evrengezer ve toplam tavan */
-document.addEventListener("DOMContentLoaded", function () {
-  if (typeof cuzdanPenceresi !== "function") { return; }
-  const eski = cuzdanPenceresi;
-  window.cuzdanPenceresi = function () {
-    eski.apply(this, arguments);
-    const p = document.querySelector("#perde .pencere");
-    if (!p) { return; }
-    const genel = veri.cuzdan && veri.cuzdan.genelTavan;
-    const blok = document.createElement("div");
-    blok.className = "arac-blok";
-    blok.innerHTML = (genel ? '<p class="oyun-not">Oyunlardan bugün toplam: <b>' + gunlukToplamKazanc() + " / " + genel + " " + kacir(birim()) + "</b></p>" : "") +
-      '<div class="oyun-etiket">Evrengezer</div><p class="oyun-not"><b>' + egYukle().eg + " EG</b> · " + kacir(birim()) +
-      " Tömye'nin parası; başka evrenlerde o evrenin parası geçer.</p>" +
-      '<button class="dugme dugme-sade" data-eg-cuzdan-buro>Evrengezer bürosu</button>';
-    const ilk = p.querySelector(".oyun-etiket");
-    p.insertBefore(blok, ilk || null);
-  };
-});
+/** Cüzdan penceresinde eçkanın yanında Evrengezer ve oyunlardan günlük toplam. */
+function egCuzdanBlogu() {
+  const p = document.querySelector("#perde .pencere");
+  if (!p) { return; }
+  const genel = veri.cuzdan && veri.cuzdan.genelTavan;
+  const blok = document.createElement("div");
+  blok.className = "arac-blok";
+  blok.innerHTML = (genel ? '<p class="oyun-not">Oyunlardan bugün toplam: <b>' + gunlukToplamKazanc() + " / " + genel + " " + kacir(birim()) + "</b></p>" : "") +
+    '<div class="oyun-etiket">Evrengezer</div><p class="oyun-not"><b>' + egYukle().eg + " EG</b> · " + kacir(birim()) +
+    " Tömye'nin parası; başka evrenlerde o evrenin parası geçer.</p>" +
+    '<button class="dugme dugme-sade" data-eg-cuzdan-buro>Evrengezer bürosu</button>';
+  const ilk = p.querySelector(".oyun-etiket");
+  p.insertBefore(blok, ilk || null);
+}

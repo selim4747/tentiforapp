@@ -661,7 +661,14 @@ function istCubuk(baslik, satirlar, adAlan, degerAlan, adCevir) {
     }).join("") + "</div></figure>";
 }
 
+/** Panel istatistikleri; altında ziyaret sayacı (48) ve haftanın özeti (52). */
 async function yoneticiIstatistikYukle() {
+  await yoneticiIstatistikTemel();
+  try { await olaySayilariCiz(); } catch (_) { /* sayaç panelin kalanını bozmasın */ }
+  try { await haftaOzetiCiz(); } catch (_) { /* özet panelin kalanını bozmasın */ }
+}
+
+async function yoneticiIstatistikTemel() {
   const alan = document.querySelector("#yIstAlan");
   if (!alan) { return; }
   const ist = await bakimIstemci(alan);

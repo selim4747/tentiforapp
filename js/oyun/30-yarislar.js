@@ -388,6 +388,13 @@ async function yarisBitir() {
 
 /** Günde bir kez, yarışı bitirene küçük bir eçka ödülü (bu ayın yarışında iki katı). */
 function yarisOdul(id, puan) {
+  if (puan) {   /* yılın özeti, ilk hafta (39) */
+    yilGuncelle(function (y) {
+      y.yaris++;
+      if (!y.enIyi || puan > y.enIyi.puan) { y.enIyi = { ad: YARIS_AD[id] || id, puan: puan }; }
+    });
+    ilkHaftaIsaretle("yaris");
+  }
   if (!puan || typeof kilitAcik !== "function") { return; }
   const anahtar = "yaris_" + id + "_" + bugununAdi();
   if (kilitAcik(anahtar)) { return; }
@@ -698,32 +705,6 @@ function kesifKaydet(anahtar) {
   if (!yarisHazirMi() || !hesapKullanici) { return; }
   hesapIstemci.rpc("kesif_kaydet", { p: anahtar }).then(function () {}, function () {});
 }
-
-/* karakterAc 24-arsiv-mantigi.js'te, bu dosyadan sonra yüklenir: sarmalamayı sayfa hazır olunca yap */
-function kesifBagla() {
-  /* karakter kartı açılınca */
-  if (typeof karakterAc === "function") {
-    const eski = karakterAc;
-    window.karakterAc = function (i) {
-      const r = eski.apply(this, arguments);
-      const k = (veri.karakterler || [])[i];
-      if (k) { kesifKaydet("karakter:" + k.id); }
-      return r;
-    };
-  }
-  /* buz katmanı çözülünce */
-  if (typeof katmanAc === "function") {
-    const eskiK = katmanAc;
-    window.katmanAc = function () {
-      const once = {};
-      (veri.katmanlar || []).forEach(function (k) { once[k.id] = !!cozulenler[k.dogrulama]; });
-      const r = eskiK.apply(this, arguments);
-      (veri.katmanlar || []).forEach(function (k) { if (!once[k.id] && cozulenler[k.dogrulama]) { kesifKaydet("katman:" + k.id); } });
-      return r;
-    };
-  }
-}
-if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", kesifBagla); } else { kesifBagla(); }
 
 /* evren maddesi açılınca */
 document.addEventListener("click", function (e) {

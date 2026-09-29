@@ -628,68 +628,6 @@ function ilkHaftaCiz() {
     }).join("") + "</ol></div>";
 }
 
-/* ==================== KANCALAR ==================== */
-
-/* Tanımları 24-arsiv-mantigi.js'ten sonra da geçerli kalsın diye sarmalama sayfa yüklenince yapılır. */
-function yilKancalariKur() {
-  const sar = function (ad, sonra) {
-    const eski = window[ad];
-    if (typeof eski !== "function") { return; }
-    window[ad] = function () {
-      const r = eski.apply(this, arguments);
-      try { sonra.apply(this, [r].concat(Array.prototype.slice.call(arguments))); } catch (e) { /* kanca asıl işi bozmasın */ }
-      return r;
-    };
-  };
-
-  sar("eckaKazan", function (r, miktar) {
-    if (miktar > 0) { yilGuncelle(function (y) { y.ecka += miktar; }); }
-  });
-  sar("madalyaVer", function (r, id) {
-    yilGuncelle(function (y) { if (y.madalya.indexOf(id) === -1) { y.madalya.push(id); } });
-  });
-  sar("karakterAc", function (r, i) {
-    const k = veri.karakterler[i];
-    if (!k || !bolumErisimi("arsiv")) { return; }
-    yilGuncelle(function (y) { y.okuma++; y.okunan[k.id] = (y.okunan[k.id] || 0) + 1; });
-    kartKazan(k.id, "okuma");
-  });
-  sar("oyunBitti", function (r, oyun) {
-    yilGuncelle(function (y) { y.oyun[oyun] = (y.oyun[oyun] || 0) + 1; });
-    ilkHaftaIsaretle("oyun");
-    if (oyun === "nobet" && typeof O !== "undefined" && O && O.gorevli) { kartKazan(O.gorevli, "nobet"); }
-  });
-  sar("testSec", function () {
-    if (typeof T !== "undefined" && T && T.sonuc && !kartSahip(T.sonuc)) { kartKazan(T.sonuc, "test"); }
-  });
-  sar("yarisOdul", function (r, id, puan) {
-    if (!puan) { return; }
-    yilGuncelle(function (y) {
-      y.yaris++;
-      if (!y.enIyi || puan > y.enIyi.puan) { y.enIyi = { ad: YARIS_AD[id] || id, puan: puan }; }
-    });
-    ilkHaftaIsaretle("yaris");
-  });
-  sar("gorevIlerle", function (r, id) {
-    if (id === "yazi4") { ilkHaftaIsaretle("yazi"); }
-    etkinlikGorevKontrol();
-  });
-  sar("isimCalistir", function () {
-    const g = document.querySelector("#isimGiris");
-    if (g && g.value.trim()) { ilkHaftaIsaretle("isim"); }
-  });
-  sar("meydanBitir", function () { ilkHaftaIsaretle("yaris"); });
-  sar("fanYeni", function (r, tur) { if (tur === "hikaye") { ilkHaftaIsaretle("defter"); } });
-  sar("kartpostalOlustur", function () {
-    if (document.querySelector("#kpAdres")) { ilkHaftaIsaretle("kartpostal"); }
-  });
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  if (typeof veri === "undefined") { return; }
-  yilKancalariKur();
-});
-
 /** Veri yüklenince (24-arsiv-mantigi.js hepsiniCiz'den sonra çağırır). */
 function yilKoleksiyonBasla() {
   if (!veri || !veri.takvim) { return; }

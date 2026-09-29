@@ -261,6 +261,7 @@ function fanDuzenlenen(tur) {
 }
 
 function fanYeni(tur) {
+  if (tur === "hikaye") { ilkHaftaIsaretle("defter"); }   /* ilk hafta (39) */
   /* üretim hakkı: seviye / ücretsiz taslak / Pro; yoksa uyarı */
   if (SEVIYE_URETIM[tur] && !uretimAcik(tur)) { seviyeUyari(tur); return null; }
   const taban = tur !== "evren" || evrenTabanAcik();   /* taban hak yoksa tek seferlik evren hakkı harcanır */
@@ -682,10 +683,17 @@ async function fanKapakUret(e) {
 
 function fanBlob(e) { return new Blob([fanDosyaHtml(e)], { type: "text/html" }); }
 
-async function fanIndir(e) { await cizimleriIsit(e); kartIndir(fanBlob(e), fanDosyaAdi(e)); }
+async function fanIndir(e) {
+  const n = evaHikayeDenetle(e);   /* hikâyenin evreni buna izin vermiyorsa (83) */
+  if (n) { eckaBildir(n); return; }
+  await cizimleriIsit(e);
+  kartIndir(fanBlob(e), fanDosyaAdi(e));
+}
 
 /** Telefonda paylaşım menüsü (WhatsApp, e-posta…); yoksa indirir. */
 async function fanPaylas(e, metin) {
+  const n = evaHikayeDenetle(e);   /* hikâyenin evreni buna izin vermiyorsa (83) */
+  if (n) { eckaBildir(n); return n; }
   /* paylaşım menüsü dokunuşa yakın açılmalı: görseller zaten bellekteyse beklemeden */
   if ((e.cizimler || []).some(function (c) { return !c.v && !CIZIM_BELLEK[c.id]; })) { await cizimleriIsit(e); }
   try {

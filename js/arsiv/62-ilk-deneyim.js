@@ -13,12 +13,6 @@
   12. Kilit ilerlemesi: arşivin ne kadarı açık, sıradaki kilit.
   15. Geri bildirim: "Bir sorun mu var?" — panelde hata kayıtlarının arasında görünür. */
 
-/** 24-arsiv-mantigi.js en son yüklenir: onun fonksiyonları bütün betikler çalıştıktan sonra sarılır (veri ondan da sonra gelir). */
-function sonraSar(ad, kur) {
-  const yap = function () { if (typeof window[ad] === "function") { window[ad] = kur(window[ad]); } };
-  if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", yap); } else { yap(); }
-}
-
 /* ==================== 3. başlangıç kodu kendiliğinden ==================== */
 
 const BASLANGIC_OTO = "tentiforapp_baslangic_oto";
@@ -226,14 +220,6 @@ document.addEventListener("click", function (ev) {
   if (d && typeof karakterAc === "function") { karakterAc(Number(d.dataset.devamKar)); }
 });
 
-sonraSar("arsiviTazele", function (eskiTazele) {
-  return function () {
-    const r = eskiTazele.apply(this, arguments);
-    try { bugunKartiCiz(); } catch (_) { /* yok */ }
-    return r;
-  };
-});
-
 /* ==================== 4. tanıtım turu: ekranı kapatmayan ipucu ==================== */
 
 /* ==================== 6. terimler ==================== */
@@ -335,35 +321,32 @@ function eckaIlkBalon() {
 
 /* ==================== 8. eçka penceresi ==================== */
 
-sonraSar("cuzdanPenceresi", function (eskiPencere) {
-  return function () {
-    const r = eskiPencere.apply(this, arguments);
-    const p = document.querySelector("#perde .pencere");
-    if (!p) { return r; }
-    const baslik = p.querySelector("h3");
-    const alt = p.querySelector(".pencere-alt");
-    const bilgi = '<div class="ecka-neler"><div class="oyun-etiket">eçka ile neler alabilirsin</div><ul>' +
-      '<li><a href="#galeri" data-kapat="1">Galeri</a> — kilitli görseller</li>' +
-      '<li><a href="#temalar" data-kapat="1">Temalar</a> — sitenin rengi, yazı tipleri</li>' +
-      '<li><a href="#oyunlar" data-kapat="1">Boyut Sürüklenmesi</a> — kilitli oyun</li>' +
-      "<li>Evrengezer bürosu — başka evrenlerin parası</li></ul>" +
-      '<p class="oyun-not">Kazanmak için: kutuları sonuna kadar oku, oyna, günün görevini yap.</p></div>';
-    (alt || baslik).insertAdjacentHTML("afterend", bilgi);
-    /* yedek kodu: düğmenin arkasında */
-    Array.prototype.forEach.call(p.querySelectorAll(".oyun-etiket"), function (e) {
-      if (!/^Yedekleme$/i.test(e.textContent.trim())) { return; }
-      const blok = e.closest(".arac-blok");
-      if (!blok || blok.closest("details")) { return; }
-      const d = document.createElement("details");
-      d.className = "ecka-yedek";
-      d.innerHTML = "<summary>Yedek kodu · ilerlemeni başka cihaza taşı</summary>";
-      blok.parentNode.insertBefore(d, blok);
-      d.appendChild(blok);
-      e.remove();
-    });
-    return r;
-  };
-});
+/** eçka penceresi: en üstte "neler alabilirsin"; yedek kodu bir düğmenin arkasında. */
+function eckaPencereDuzeni() {
+  const p = document.querySelector("#perde .pencere");
+  if (!p) { return; }
+  const baslik = p.querySelector("h3");
+  const alt = p.querySelector(".pencere-alt");
+  const bilgi = '<div class="ecka-neler"><div class="oyun-etiket">eçka ile neler alabilirsin</div><ul>' +
+    '<li><a href="#galeri" data-kapat="1">Galeri</a> — kilitli görseller</li>' +
+    '<li><a href="#temalar" data-kapat="1">Temalar</a> — sitenin rengi, yazı tipleri</li>' +
+    '<li><a href="#oyunlar" data-kapat="1">Boyut Sürüklenmesi</a> — kilitli oyun</li>' +
+    "<li>Evrengezer bürosu — başka evrenlerin parası</li></ul>" +
+    '<p class="oyun-not">Kazanmak için: kutuları sonuna kadar oku, oyna, günün görevini yap.</p></div>';
+  (alt || baslik).insertAdjacentHTML("afterend", bilgi);
+  /* yedek kodu: düğmenin arkasında */
+  Array.prototype.forEach.call(p.querySelectorAll(".oyun-etiket"), function (e) {
+    if (!/^Yedekleme$/i.test(e.textContent.trim())) { return; }
+    const blok = e.closest(".arac-blok");
+    if (!blok || blok.closest("details")) { return; }
+    const d = document.createElement("details");
+    d.className = "ecka-yedek";
+    d.innerHTML = "<summary>Yedek kodu · ilerlemeni başka cihaza taşı</summary>";
+    blok.parentNode.insertBefore(d, blok);
+    d.appendChild(blok);
+    e.remove();
+  });
+}
 
 /* ==================== 11. hesap: ne kazandırır, Google ile giriş ==================== */
 

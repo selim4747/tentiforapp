@@ -68,7 +68,13 @@ const GEZINME_ANA = ["arsiv", "tomye", "okuma", "atolye", "fan", "oyunlar", "sen
 let gezinmeSonHtml = "";
 let gezinmeKaydirSira = 0;
 
+/** Üst gezinme; telefonda alt menü de (42-mobil). */
 function gezinmeCiz() {
+  gezinmeTemelCiz();
+  try { altMenuCiz(); } catch (e) { /* alt menü asıl gezinmeyi bozmasın */ }
+}
+
+function gezinmeTemelCiz() {
   const alan = document.querySelector("#gezinme");
   if (!alan) { return; }
 

@@ -222,24 +222,6 @@ function okuAlintiGorunur() {
   return (veri.alintilar || []).map(function (a, i) { return { a: a, i: i }; }).filter(function (x) { return yon || (typeof katmanAcik === "function" && katmanAcik(x.a.gizli)); });
 }
 
-/* karakter penceresi: özet ve anlatım bir kutu; altında rozet durumu */
-sonraSar("karakterAc", function (eskiAc) {
-  return function (i) {
-    const r = eskiAc.apply(this, arguments);
-    const k = veri.karakterler[i];
-    const p = document.querySelector("#perde .pencere");
-    if (k && p && !document.querySelector("#perde").hidden) {
-      const d = p.querySelector(".detay-metin");
-      const hedef = d || p;
-      hedef.setAttribute("data-oku", "kar:" + k.id);
-      hedef.setAttribute("data-oku-kelime", String(kelimeSay(k.ozet) + kelimeSay(k.detay)));
-      p.insertAdjacentHTML("beforeend", rozetKutusuHtml(k));
-      okuTara();
-    }
-    return r;
-  };
-});
-
 /* ---------- karakter rozetleri ---------- */
 
 function okuAdVar(metin, ad) {

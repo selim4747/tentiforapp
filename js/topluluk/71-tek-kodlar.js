@@ -133,16 +133,6 @@ async function tekKodDene(kod, durum) {
   setTimeout(function () { if (typeof perdeKapat === "function") { perdeKapat(); } tekHaklariUygula(); }, 1300);
 }
 
-if (typeof sonraSar === "function") {
-  sonraSar("kodDene", function (eski) {
-    return function (ham) {
-      const kod = String(ham || "").trim().toUpperCase();
-      if (!kod || tekYerelKodMu(kod)) { return eski.apply(this, arguments); }
-      tekKodDene(kod, document.querySelector("#kodDurum"));
-    };
-  });
-}
-
 /* ==================== panel: Tek kodlar (tam yönetici) ==================== */
 
 const TEK_PANEL = { tur: "kisi", ad: "", adet: 1, sure: "", bolumler: {}, evrenler: {}, katman: false, yeni: null, liste: null, durum: "" };
