@@ -87,6 +87,85 @@ function evrenEkTemizle(ham, e) {
     if (l.length) { e.lorlar = l; }
   }
   if (/^[0-9a-f]{64}$/.test(ham.yoneticiOzet || "")) { e.yoneticiOzet = ham.yoneticiOzet; }
+
+  /* evren içerikleri: sorular, oyunlar (51-evren-oyunlari) */
+  evrenIcerikTemizle(ham, e);
+
+  /* gezegenler (53-evren-kurulum) */
+  const ana = fanMetin(ham.anaGezegen, 60).trim();
+  if (ana) { e.anaGezegen = ana; }
+  if (Array.isArray(ham.gezegenler)) {
+    const l = ham.gezegenler.slice(0, EVG_SINIR).map(function (g, i) {
+      if (!g || typeof g !== "object") { return null; }
+      return { id: fanMetin(g.id, 40).replace(/[^\w-]/g, "") || ("g" + i), ad: fanMetin(g.ad, 60).trim() || ("Gezegen " + (i + 2)),
+        harita: fanHaritaTemizle(g.harita) };
+    }).filter(Boolean);
+    if (l.length) { e.gezegenler = l; }
+  }
+
+  /* kişilerin yolları ve canlı konumları, evren saati (57-sehir-yol) */
+  (Array.isArray(ham.kisiler) ? ham.kisiler : []).slice(0, 120).forEach(function (k, i) {
+    const y = yolTemizle(k && k.yol);
+    if (y.length && e.kisiler && e.kisiler[i]) { e.kisiler[i].yol = y; }
+    const c = gzCanliTemizle(k && k.canli);
+    if (c && e.kisiler && e.kisiler[i]) { e.kisiler[i].canli = c; }
+  });
+  const st = ham.saat && typeof ham.saat === "object" ? ham.saat : null;
+  if (st && Number(st.gunSaat) > 0) {
+    e.saat = { gunSaat: Math.min(10000, Math.max(0.1, Math.round(Number(st.gunSaat) * 100) / 100)) };
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(st.baslangic || ""))) { e.saat.baslangic = st.baslangic; }
+  }
+
+  /* ilişki ağı (60-ag-zaman) */
+  const baglar = iaBaglarTemizle(ham.baglar);
+  if (baglar.length) { e.baglar = baglar; }
+
+  /* evren uygulamaları (69) ve evren yazısı (70) */
+  const u = evuTemizle(ham.uygulamalar);
+  if (u.length) { e.uygulamalar = u; } else { delete e.uygulamalar; }
+  const yazi = eyTemizle(ham.yazi);
+  if (yazi) { e.yazi = yazi; } else { delete e.yazi; }
+
+  /* sayfa düzeni: desen, boyut, hiza (72-sayfa-duzeni) */
+  if (ham.stil && typeof ham.stil === "object") {
+    const hs = ham.stil, ek = {};
+    if (EVG_DESENLER[hs.desen] && hs.desen) { ek.desen = hs.desen; }
+    if (EVG_BOYUT[hs.boyut] && hs.boyut) { ek.boyut = hs.boyut; }
+    if (EVG_HIZA[hs.hiza] && hs.hiza) { ek.hiza = hs.hiza; }
+    if (Object.keys(ek).length) { e.stil = Object.assign({}, e.stil || {}, ek); }
+  }
+
+  /* stil ve görünüm kodu (73-evren-kod-stil) */
+  if (typeof ham.stilKodu === "string" && ham.stilKodu.trim()) { e.stilKodu = ham.stilKodu.slice(0, EKS_STIL_SINIR); } else { delete e.stilKodu; }
+  if (typeof ham.gorunumKodu === "string" && ham.gorunumKodu.trim()) { e.gorunumKodu = ham.gorunumKodu.slice(0, EKS_GORUNUM_SINIR); } else { delete e.gorunumKodu; }
+
+  /* sekme düzeni (74-yonetim-kurulum) */
+  const sd = sekmeDuzenTemizle(ham.sekmeDuzen);
+  if (sd) { e.sekmeDuzen = sd; } else { delete e.sekmeDuzen; }
+
+  /* yönetici yetkileri, ortak evren (75-yonetim-yetkileri) */
+  const yy = ham.yoneticiYetki;
+  if (yy && typeof yy === "object") {
+    const t = { sekmeler: yy.sekmeler === true, ipucu: yy.ipucu === true };
+    if (Array.isArray(yy.lorlar)) { t.lorlar = yy.lorlar.map(String).filter(function (x) { return /^[\w-]{1,40}$/.test(x); }).slice(0, 200); }
+    e.yoneticiYetki = t;
+  }
+  if (ham.ortak === true) { e.ortak = true; }
+
+  /* ortak yazımda son iz (77-okuma-yollari) */
+  const z = ham.ortakIz;
+  if (z && typeof z === "object") {
+    e.ortakIz = { kim: String(z.kim || "").slice(0, 40), sekme: /^[a-z]{0,20}$/.test(z.sekme || "") ? z.sekme || "" : "", zaman: String(z.zaman || "").slice(0, 30) };
+  }
+
+  /* takvim (82-evren-kurucu), durum ve hikâye izni (83-evren-atolyesi), Evrengezer izinleri (84-evren-araclari) */
+  const tk = evrTakvimTemizle(ham.takvim);
+  if (tk) { e.takvim = tk; }
+  if (EVA_DURUMLAR.indexOf(ham.durum) !== -1) { e.durum = ham.durum; }
+  if (ham.izinler && typeof ham.izinler === "object" && ham.izinler.hikaye === "sahip") { e.izinler = { hikaye: "sahip" }; }
+  const egl = (Array.isArray(ham.egIzinleri) ? ham.egIzinleri : []).slice(0, 20).filter(function (x) { return x && /^[0-9a-f]{64}$/.test(x.oz || ""); })
+    .map(function (x) { return { oz: x.oz, not: fanMetin(x.not, 40), t: fanMetin(x.t, 30) }; });
+  if (egl.length) { e.egIzinleri = egl; }
 }
 
 /* ==================== alfabe ==================== */
@@ -536,21 +615,66 @@ function evrenBenimDegistir(id, fn) {
 
 /* ==================== evren sayfası: ek sekmeler ==================== */
 
+/** Evren sayfasının harita ve bilgi dışındaki sekmeleri: [kimlik, ad]. */
 function evrenEkSekmeler(v) {
-  const l = [];
-  if (EVS.kaynak === "site") { return l; }
-  const lorlar = (v.eser.lorlar || []).length;
-  if (EVS.kaynak === "benim" || lorlar) { l.push(["lore", "Kilitli lore" + (lorlar ? " (" + lorlar + ")" : "")]); }
-  if (EVS.kaynak === "benim") { l.push(["stil", "Stil ve para"]); l.push(["kod", "Kod"]); }
-  if (v.eser.alfabe && v.eser.alfabe.harfler && EVS.kaynak !== "benim") { l.push(["alfabe", "Alfabe"]); }
+  const k = EVS.kaynak, e = v.eser;
+  let l = [];
+  if (k !== "site") {
+    const lorlar = (e.lorlar || []).length;
+    if (k === "benim" || lorlar) { l.push(["lore", "Kilitli lore" + (lorlar ? " (" + lorlar + ")" : "")]); }
+    if (k === "benim") { l.push(["stil", "Stil ve para"]); l.push(["kod", "Kod"]); }
+    if (e.alfabe && e.alfabe.harfler && k !== "benim") { l.push(["alfabe", "Alfabe"]); }
+  }
+  if (evrenDefterAnahtari()) { l.push(["defter", "Ziyaretçi defteri"]); }
+  if (["benim", "fan", "acilan"].indexOf(k) !== -1 &&
+      (k === "benim" || iaBaglarTemizle(e.baglar).length || (e.tarih || []).some(function (t) { return t && (t.zaman || t.olay); }))) {
+    l.push(["ag", "Bağlar ve zaman"]);
+  }
+  if (k !== "site") {
+    const n = evuListe(e).length;
+    if (k === "benim" || n) { l.push(["uygulama", "Uygulamalar" + (n ? " (" + n + ")" : "")]); }
+    if (k === "benim" || eyDolu(e.yazi)) { l.push(["yazi", "Yazı"]); }
+  }
+  if (k === "benim") {
+    /* kendi evreninde görünüm ve yazı öne gelir */
+    const al = function (id) { const i = l.findIndex(function (x) { return x[0] === id; }); return i === -1 ? null : l.splice(i, 1)[0]; };
+    const stil = al("stil"), yazi = al("yazi");
+    const on = [];
+    if (stil) { on.push(["stil", "🎨 Görünüm"]); }
+    if (yazi) { on.push(["yazi", "✎ Yazı çiz"]); }
+    l = on.concat(l);
+  } else {
+    /* kurucunun gizlediği sekmeler (sekme yetkisi verilen yönetici hepsini görür) */
+    const d = e.sekmeDuzen;
+    if (d && Array.isArray(d.gizli) && !evy25Var(e, "sekmeler")) { l = l.filter(function (x) { return d.gizli.indexOf(x[0]) === -1; }); }
+  }
+  if (k === "benim" && !v.onizle) { l.unshift(["kurucu", "🧭 Kurucu"]); }
   return l;
 }
 
+/** Seçili ek sekmenin içeriği (HTML); ek sekme değilse null. */
 function evrenEkBolum(v) {
-  if (EVS.sekme === "lore") { return evrenLoreBolumu(v); }
-  if (EVS.sekme === "stil" && EVS.kaynak === "benim") { return evrenStilBolumu(v); }
-  if (EVS.sekme === "kod" && EVS.kaynak === "benim") { return evrenKodBolumu(v); }
-  if (EVS.sekme === "alfabe") { return evrenAlfabeCevirici(v.eser); }
+  const s = EVS.sekme, k = EVS.kaynak;
+  if (s === "kurucu" && k === "benim") {
+    if ((EVR_ADIM[v.eser.id] || "temel") === "zaman") { evrTakvimHazirla(v.eser.id); }
+    return evrKurucuHtml(v);
+  }
+  if (s === "yazi") {
+    /* evrenin yazısı; yazı çizilmişse altında yazı klavyesi */
+    return eyBolum(v) + (v.eser && eyDolu(v.eser.yazi)
+      ? '<div class="kutu-y yk-kutu"><label for="ykMetin">Yazı klavyesi · kendi mesajını bu evrenin yazısıyla yaz</label>' +
+        '<textarea class="kod-giris arac-giris" id="ykMetin" rows="2" maxlength="160" placeholder="' + kacir(v.eser.ad || "Merhaba") + '"></textarea>' +
+        '<div class="yk-onizle" id="ykOnizle">' + eyYaziSvg(v.eser.ad || "", v.eser.yazi, 48) + "</div>" +
+        '<div class="oyun-sira"><button class="dugme" data-yk-png>PNG indir</button><button class="dugme dugme-sade" data-yk-paylas>Paylaş</button></div>' +
+        '<p class="oyun-not">Çizilmemiş harfler soluk görünür.</p></div>' : "");
+  }
+  if (s === "uygulama") { return evuBolum(v); }
+  if (s === "ag" && ["benim", "fan", "acilan"].indexOf(k) !== -1) { return iaEvrenBolumu(v); }
+  if (s === "defter") { return evrenDefterBolumu(); }
+  if (s === "lore") { return evrenLoreBolumu(v); }
+  if (s === "stil" && k === "benim") { return evrenStilBolumu(v); }
+  if (s === "kod" && k === "benim") { return evrenKodBolumu(v); }
+  if (s === "alfabe") { return evrenAlfabeCevirici(v.eser); }
   return null;
 }
 

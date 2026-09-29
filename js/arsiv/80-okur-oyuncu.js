@@ -583,16 +583,6 @@ document.addEventListener("focusin", function (e) {
   if (yatayVar && !dikeyVar) { BUL.yon = true; } else if (dikeyVar && !yatayVar) { BUL.yon = false; }
 });
 
-/* Günlük oyunlar alanı çizilince atlas ve bulmaca da gelsin (Harita Avı'nın altında) */
-if (typeof gunlukOyunlarCiz === "function") {
-  const eskiGOC28 = gunlukOyunlarCiz;
-  window.gunlukOyunlarCiz = function () {
-    const r = eskiGOC28.apply(this, arguments);
-    try { haftaBulmacaCiz(); } catch (e) { console.error("[TentiforApp] bulmaca:", e); }
-    return r;
-  };
-}
-
 /* Bugün kartında haftanın bulmacası ve okuma hedefi */
 if (typeof bugunOyunlari === "function") {
   const eskiBO28 = bugunOyunlari;
@@ -656,18 +646,6 @@ setInterval(function () {
     hatirlatmalariKur();
   }
 }, 1000);
-
-if (typeof okumaBitti === "function") {
-  const eskiOB28 = okumaBitti;
-  window.okumaBitti = function () {
-    const r = eskiOB28.apply(this, arguments);
-    const g = tf28Oku(TF28.kutu, {}) || {};
-    const bugun = yerelGun();
-    g[bugun] = (g[bugun] || 0) + 1;
-    tf28Yaz(TF28.kutu, gunleriBuda(g));
-    return r;
-  };
-}
 
 function okumaDakika(gun) { return Math.floor(((tf28Oku(TF28.okuma, {}) || {})[gun || yerelGun()] || 0) / 60); }
 
@@ -841,19 +819,6 @@ async function hatirlatmaAyarla(ac) {
   }
   tf28Yaz(TF28.hatirlat, true);
   return hatirlatmalariKur();
-}
-
-/* Sen → Bildirimler: yeni satır */
-if (typeof ayar25Html === "function") {
-  const eskiA25 = ayar25Html;
-  window.ayar25Html = function () {
-    const h = eskiA25.apply(this, arguments);
-    const acik = hatirlatmaAcik();
-    const satir = '<div class="ayar25-satir"><span>Seri, okuma hedefi ve okuma yolu hatırlatmaları' +
-        '<span class="oyun-not"> · ' + (typeof kabukMu === "function" && kabukMu() ? "telefon bildirimiyle" : "tarayıcıda site açıkken şerit olarak; telefon bildirimi uygulamada") + "</span></span>" +
-      (acik ? '<button class="dugme dugme-sade y-kucuk" data-hatirlat28="kapat">Kapat</button>' : '<button class="dugme y-kucuk" data-hatirlat28="ac">Aç</button>') + "</div>";
-    return h.replace('<div class="ayar25-satir"><span>Takip ettiğin evrenler</span>', satir + '<div class="ayar25-satir"><span>Takip ettiğin evrenler</span>');
-  };
 }
 
 /** Tarayıcıda: akşam, seri tehlikedeyse günde bir kez küçük şerit. */
@@ -1238,10 +1203,6 @@ document.addEventListener("visibilitychange", function () { if (document.visibil
 })(60);
 
 window.addEventListener("hashchange", function () { setTimeout(haftaKartiCiz, 300); });
-if (typeof oyunXpVer === "function") {
-  const eskiOXV28 = oyunXpVer;
-  window.oyunXpVer = function () { const r = eskiOXV28.apply(this, arguments); setTimeout(hatirlatmalariKur, 0); return r; };
-}
 
 /* erişilebilirlik: soluk "pasif" düğmeler ekran okuyucuya da kullanılamaz olarak söylensin (sınıf birçok dosyada) */
 function pasifIsaretle() {

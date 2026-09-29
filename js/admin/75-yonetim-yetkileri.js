@@ -107,20 +107,6 @@ function evy25Yetki(e) { return (e && e.yoneticiYetki) || { sekmeler: false, ipu
 /** Bu cihazda bu evrenin yönetici kodu girildi ve kod bu yetkiyi veriyor mu? */
 function evy25Var(e, yetki) { return !!(e && e.yoneticiOzet && evy25Acik(e.id) && evy25Yetki(e)[yetki]); }
 
-if (typeof evrenEkTemizle === "function") {
-  const eskiEk25 = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEk25.apply(this, arguments);
-    const y = ham.yoneticiYetki;
-    if (y && typeof y === "object") {
-      const t = { sekmeler: y.sekmeler === true, ipucu: y.ipucu === true };
-      if (Array.isArray(y.lorlar)) { t.lorlar = y.lorlar.map(String).filter(function (x) { return /^[\w-]{1,40}$/.test(x); }).slice(0, 200); }
-      e.yoneticiYetki = t;
-    }
-    if (ham.ortak === true) { e.ortak = true; }
-  };
-}
-
 if (typeof evrenYoneticiKoduHtml === "function") {
   const eskiEYH = evrenYoneticiKoduHtml;
   window.evrenYoneticiKoduHtml = function (e, kodlar) {
@@ -167,17 +153,6 @@ if (typeof evrenKodDene === "function") {
   };
 }
 
-/* gizli sekmeler: yetkili evren yöneticisine görünür */
-if (typeof evrenEkSekmeler === "function") {
-  const eskiSek25 = evrenEkSekmeler;
-  window.evrenEkSekmeler = function (v) {
-    if (v && v.eser && v.eser.sekmeDuzen && evy25Var(v.eser, "sekmeler")) {
-      const e2 = Object.assign({}, v.eser); delete e2.sekmeDuzen;
-      return eskiSek25.call(this, Object.assign({}, v, { eser: e2 }));
-    }
-    return eskiSek25.apply(this, arguments);
-  };
-}
 if (typeof evrenDuzeni === "function") {
   const eskiDuz25 = evrenDuzeni;
   window.evrenDuzeni = function () {
@@ -330,26 +305,6 @@ document.addEventListener("click", function (ev) {
 const YEDEK25 = "tentiforapp_son_yedek";   /* bu cihazda son yedek (hesapla eşitlenmez) */
 document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("[data-y-yedek-al]")) { try { localStorage.setItem(YEDEK25, String(Date.now())); } catch (_) { /* yok */ } } }, true);
 
-if (typeof yon24Serit === "function") {
-  const eskiSerit = yon24Serit;
-  window.yon24Serit = function () {
-    let h = eskiSerit.apply(this, arguments);
-    if (typeof yoneticiAcik === "function" && yoneticiAcik()) {
-      let son = 0;
-      try { son = Number(localStorage.getItem(YEDEK25)) || 0; } catch (_) { son = 0; }
-      const gun = son ? Math.floor((Date.now() - son) / 86400000) : null;
-      if (gun === null || gun >= 7) {
-        h += '<div class="y-uyari"><b>' + (gun === null ? "Bu cihazdan hiç yedek alınmadı." : gun + " gündür yedek alınmadı.") + "</b> Haftada bir yedek al: " +
-          '<button class="dugme dugme-sade y-kucuk" data-y25-yedek>Yedeğe git</button></div>';
-      }
-    }
-    if (IB_SAYI.yeni > 0 && typeof yoneticiSekmeleri === "function" && yoneticiSekmeleri("bakim").indexOf("icbildirim") !== -1) {
-      h += '<div class="y-uyari"><b>' + IB_SAYI.yeni + " yeni içerik bildirimi</b> " +
-        '<button class="dugme dugme-sade y-kucuk" data-y25-ib>Bak</button></div>';
-    }
-    return h;
-  };
-}
 const IB_SAYI = { yeni: 0, soruldu: false };
 function ibSayiSor() {
   if (IB_SAYI.soruldu || !y25Hesap()) { return; }
@@ -382,19 +337,6 @@ if (typeof yoneticiForm === "function") {
     if (yoneticiSekme === "icbildirim") { return yoneticiIcerikBildirimleri(); }
     if (yoneticiSekme === "vitrin") { return yoneticiVitrin(); }
     return eskiForm.apply(this, arguments);
-  };
-}
-if (typeof yoneticiCiz === "function") {
-  const eskiYC25 = yoneticiCiz;
-  window.yoneticiCiz = function () {
-    if (yoneticiSekme === "icbildirim" || yoneticiSekme === "vitrin") { yoneticiSecili = null; }
-    const r = eskiYC25.apply(this, arguments);
-    Object.keys(Y25_YENI_SEKMELER).forEach(function (s) {
-      const b = document.querySelector('#yoneticiAlan [data-y-sekme="' + s + '"]');
-      if (b) { b.textContent = Y25_YENI_SEKMELER[s]; }
-    });
-    if (typeof panelAcik === "function" && panelAcik()) { ibSayiSor(); }
-    return r;
   };
 }
 
@@ -656,15 +598,6 @@ if (typeof sonraSar === "function") {
   });
 }
 
-/* girişte: başka cihazda katıldığın ortak evrenler bu cihaza da gelsin */
-if (typeof hesapProfilYukle === "function") {
-  const eskiPY25 = hesapProfilYukle;
-  window.hesapProfilYukle = async function () {
-    const r = await eskiPY25.apply(this, arguments);
-    setTimeout(ortakEvrenlerimiCek, 1500);
-    return r;
-  };
-}
 async function ortakEvrenlerimiCek() {
   if (!y25Hesap()) { return; }
   try {
@@ -779,18 +712,7 @@ function evrenSay(ad) {
 }
 
 let eviSonSekme = "";
-if (typeof evrenSayfaCiz === "function") {
-  const eskiCiz25 = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    const r = eskiCiz25.apply(this, arguments);
-    if (typeof EVS !== "undefined" && EVS) {
-      const k = EVS.kaynak + ":" + EVS.id + ":" + EVS.sekme;
-      if (k !== eviSonSekme) { eviSonSekme = k; evrenSay("ziyaret"); evrenSay("sekme:" + String(EVS.sekme).replace(/[^a-z0-9]/g, "").slice(0, 30)); }
-      y25EvrenEkleri();
-    } else { eviSonSekme = ""; }
-    return r;
-  };
-}
+
 document.addEventListener("click", function (ev) {
   const o = ev.target.closest && ev.target.closest("[data-evo-basla], [data-evu-ac]");
   if (!o) { return; }
@@ -850,26 +772,6 @@ function eviKutusu(e) {
 const ONZ = { bekleyen: null };
 function onizlemeMi() { return typeof EVS !== "undefined" && !!EVS && EVS.kaynak === "fan" && (EVS.onizle === true || ONZ.bekleyen === EVS.id); }
 
-if (typeof evrenSayfaVerisi === "function") {
-  const eskiSV = evrenSayfaVerisi;
-  window.evrenSayfaVerisi = function () {
-    if (onizlemeMi()) {
-      const e = evrenBenimBul(EVS.id);
-      return e ? { eser: e, duzenle: false, rozet: "Önizleme · ziyaretçiler böyle görür", onizle: true } : null;
-    }
-    return eskiSV.apply(this, arguments);
-  };
-}
-if (typeof evrenSayfaAc === "function") {
-  const eskiAcOnz = evrenSayfaAc;
-  window.evrenSayfaAc = function (kaynak, id) {
-    if (kaynak !== "onizle") { return eskiAcOnz.apply(this, arguments); }
-    if (!evrenBenimBul(id)) { return eskiAcOnz.call(this, "benim", id); }
-    ONZ.bekleyen = id;
-    try { eskiAcOnz.call(this, "fan", id); } finally { ONZ.bekleyen = null; }
-    if (EVS && EVS.id === id) { EVS.onizle = true; evrenSayfaCiz(); }
-  };
-}
 if (typeof evoOdulEngeli === "function") {
   const eskiOE = evoOdulEngeli;
   window.evoOdulEngeli = function () {
@@ -910,16 +812,6 @@ document.addEventListener("click", function (ev) {
   evrenSayfaAc(b.hasAttribute("data-ev-onizle") ? "onizle" : "benim", id);
   const s = document.querySelector("#evrenSayfa"); if (s) { s.scrollTop = 0; }
 });
-
-/* kişiselleştir kutusuna önizleme düğmesi */
-if (typeof evrenBilgiBolumu === "function") {
-  const eskiBilgi25 = evrenBilgiBolumu;
-  window.evrenBilgiBolumu = function () {
-    const h = eskiBilgi25.apply(this, arguments);
-    return h.replace('<button class="dugme dugme-sade" data-evs-sekme="uygulama">⌨ Uygulama ekle</button>',
-      '<button class="dugme dugme-sade" data-evs-sekme="uygulama">⌨ Uygulama ekle</button><button class="dugme dugme-sade" data-ev-onizle>👁 Ziyaretçi gibi gör</button>');
-  };
-}
 
 /* uygulama çerçevesinin altında bildir */
 if (typeof evuCalistir === "function") {
@@ -1005,10 +897,6 @@ const OKL = "tentiforapp_okuma_listem";   /* { anahtar: { ad, git, bolum, sira, 
 if (typeof ESIT_BIRLESIM !== "undefined" && ESIT_BIRLESIM.indexOf(OKL) === -1) { ESIT_BIRLESIM.push(OKL); }
 
 let oklAcilis = null, oklDevamBolum = null;
-if (typeof evrenSayfaKapat === "function") {
-  const eskiKapatOkl = evrenSayfaKapat;
-  window.evrenSayfaKapat = function () { oklAcilis = null; return eskiKapatOkl.apply(this, arguments); };
-}
 
 function oklOku() { const d = jsonOku(OKL, {}); return d && typeof d === "object" && !Array.isArray(d) ? d : {}; }
 function oklAnahtar() { return EVS.kaynak + ":" + EVS.id; }
@@ -1092,11 +980,16 @@ function ayar25Html() {
   const takip = typeof tkpListe === "function" ? tkpListe() : {};
   const indirilen = typeof evdIndirilenler === "function" ? evdIndirilenler() : {};
   const evAd = function (id) { const e = ((veri.fanEserleri || {}).evrenler || []).find(function (x) { return x.id === id; }); return e ? e.ad : id; };
-  return '<details class="kutu-y ayar25" open><summary><b>Okuma listem</b></summary>' + oklHtml() + "</details>" +
+  const hatirlat = hatirlatmaAcik();
+  return '<details class="kutu-y ayar25"><summary><b>Okuma yolları</b></summary>' + yollarHtml() + "</details>" +
+    '<details class="kutu-y ayar25" open><summary><b>Okuma listem</b></summary>' + oklHtml() + "</details>" +
     '<details class="kutu-y ayar25"><summary><b>Bildirimler</b></summary>' +
       '<div class="ayar25-satir"><span>Yeni roman bölümü</span>' + (!push ? '<span class="oyun-not">site henüz kurmadı</span>' :
         (aboneMi ? '<button class="dugme dugme-sade y-kucuk" data-bildirim="kapat">Kapat</button>' : '<button class="dugme y-kucuk" data-bildirim="ac">Aç</button>')) + "</div>" +
       '<div class="ayar25-satir"><span>Günün kelimesi hatırlatması</span>' + (htr ? '<button class="dugme dugme-sade y-kucuk" data-htr="kapat">Kapat</button>' : '<button class="dugme y-kucuk" data-htr="ac">Aç</button>') + "</div>" +
+      '<div class="ayar25-satir"><span>Seri, okuma hedefi ve okuma yolu hatırlatmaları' +
+        '<span class="oyun-not"> · ' + (kabukMu() ? "telefon bildirimiyle" : "tarayıcıda site açıkken şerit olarak; telefon bildirimi uygulamada") + "</span></span>" +
+        (hatirlat ? '<button class="dugme dugme-sade y-kucuk" data-hatirlat28="kapat">Kapat</button>' : '<button class="dugme y-kucuk" data-hatirlat28="ac">Aç</button>') + "</div>" +
       '<div class="ayar25-satir"><span>Takip ettiğin evrenler</span><span class="oyun-not">' + (Object.keys(takip).length || "yok") + "</span></div>" +
       (Object.keys(takip).length ? '<ul class="ayar25-liste">' + Object.keys(takip).map(function (id) {
         return "<li>" + kacir(evAd(id)) + ' <button class="ic-bag" data-tkp="' + kacir(id) + '">takibi bırak</button></li>';
@@ -1104,7 +997,7 @@ function ayar25Html() {
       '<div class="ayar25-satir"><span>Sessiz saatler</span><span class="ayar25-saat">' + saat("sessizBas", sessiz.bas) + " – " + saat("sessizBit", sessiz.bit) + "</span></div>" +
       '<p class="oyun-not">Sessiz saatlerde günlük hatırlatma gelmez; yeni bölüm bildirimi sessiz (titreşimsiz) gelir.</p>' +
       "</details>" +
-    '<details class="kutu-y ayar25"><summary><b>Cihazdaki evrenler</b> · ' + Object.keys(indirilen).length + "</summary>" +
+    '<details class="kutu-y ayar25"><summary><b>Çevrimdışı okuma</b> · ' + Object.keys(indirilen).length + "</summary>" + paketKutusuHtml() +
       (Object.keys(indirilen).length ? '<ul class="ayar25-liste">' + Object.keys(indirilen).map(function (id) {
         return "<li>" + kacir(evAd(id)) + ' <span class="oyun-not">· ' + kacir(new Date(indirilen[id]).toLocaleDateString("tr-TR")) + '</span> <button class="ic-bag" data-ayar25-evd-sil="' + kacir(id) + '">kaldır</button></li>';
       }).join("") + "</ul>" : '<p class="oyun-not">Fan evrenleri keşfinde “Önizle → Cihaza indir” ile bir evreni internetsiz okumak için indirebilirsin.</p>') +
@@ -1147,26 +1040,7 @@ if (typeof sayfaGoster === "function") {
   window.sayfaGoster = function () { const r = eskiSG25.apply(this, arguments); if (aktifSayfa === "sen") { ayar25Ciz(); } return r; };
 }
 
-if (typeof hesapCiz === "function") {
-  const eskiHC25 = hesapCiz;
-  /* 3.0: Sen sayfası kapalıyken çizilmez (açılışta okuma yolları hesabı boşa gidiyordu); sayfaya gelince çizilir */
-  window.hesapCiz = function () { const r = eskiHC25.apply(this, arguments); if (ayar25Gorunur()) { ayar25Ciz(); } return r; };
-}
-
 /* ==================== 11. evren yazısı klavyesi ==================== */
-
-if (typeof evrenEkBolum === "function") {
-  const eskiEB25 = evrenEkBolum;
-  window.evrenEkBolum = function (v) {
-    const h = eskiEB25.apply(this, arguments);
-    if (!EVS || EVS.sekme !== "yazi" || !v || !v.eser || typeof eyDolu !== "function" || !eyDolu(v.eser.yazi)) { return h; }
-    return (h || "") + '<div class="kutu-y yk-kutu"><label for="ykMetin">Yazı klavyesi · kendi mesajını bu evrenin yazısıyla yaz</label>' +
-      '<textarea class="kod-giris arac-giris" id="ykMetin" rows="2" maxlength="160" placeholder="' + kacir(v.eser.ad || "Merhaba") + '"></textarea>' +
-      '<div class="yk-onizle" id="ykOnizle">' + eyYaziSvg(v.eser.ad || "", v.eser.yazi, 48) + "</div>" +
-      '<div class="oyun-sira"><button class="dugme" data-yk-png>PNG indir</button><button class="dugme dugme-sade" data-yk-paylas>Paylaş</button></div>' +
-      '<p class="oyun-not">Çizilmemiş harfler soluk görünür.</p></div>';
-  };
-}
 
 document.addEventListener("input", function (e) {
   if (!e.target || e.target.id !== "ykMetin") { return; }
@@ -1229,14 +1103,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const bekle = typeof veriHazirOlunca === "function" ? veriHazirOlunca : function (f) { setTimeout(f, 1500); };
   bekle(function () { haftaninEvreniCiz(); if (ayar25Gorunur()) { ayar25Ciz(); } });
 });
-/* açık bir ortak evrene girince güncel hâli çek */
-if (typeof evrenSayfaAc === "function") {
-  const eskiAc25 = evrenSayfaAc;
-  window.evrenSayfaAc = function (kaynak, id) {
-    const r = eskiAc25.apply(this, arguments);
-    if (kaynak === "benim") { const e = evrenBenimBul(id); if (e && e.ortak) { ortakCek(id); } }
-    return r;
-  };
-}
+
 /* bağlantı gelince bekleyen ortak kayıtlar */
 window.addEventListener("online", function () { Object.keys(ORTAK.bekleyen).forEach(function (id) { if (ORTAK.bekleyen[id]) { ortakYaz(id); } }); });

@@ -332,26 +332,4 @@ if (typeof okuTara === "function") {
     return r;
   };
 }
-if (typeof okumaBitti === "function") {
-  const eskiOB = okumaBitti;
-  window.okumaBitti = function () { const r = eskiOB.apply(this, arguments); try { rbSeritleriTazele(); } catch (_) { /* yok */ } return r; };
-}
 
-/* koleksiyonda: kutu rozetlerinin sayısı */
-if (typeof koleksiyonCiz === "function") {
-  const eskiKol = koleksiyonCiz;
-  window.koleksiyonCiz = function () {
-    const r = eskiKol.apply(this, arguments);
-    const alan = document.querySelector("#koleksiyonAlan");
-    if (!alan || alan.querySelector(".rb-ozet") || typeof cuzdan === "undefined") { return r; }
-    const g = cuzdan.acilan.filter(function (x) { return /^rozetk:/.test(x); }).length;
-    const a = cuzdan.acilan.filter(function (x) { return /^rozetk_altin:/.test(x); }).length;
-    let toplam = 0;
-    try { rbAg().forEach(function (d, k) { if (!/^kar:/.test(k) && rbErisir(d.kutu) && rbBaglar(k).length) { toplam++; } }); } catch (_) { toplam = 0; }
-    const oz = alan.querySelector(".rozet-ozet");
-    const html = '<div class="kutu-y rb-ozet"><div class="oyun-etiket">Kutu rozetleri · 🥈 ' + g + " · 🥇 " + a + " / " + toplam + "</div>" +
-      '<p class="oyun-not">Bir kutuyu ve bağlı olduğu her kutuyu okuyunca gümüş; konusuna fan hikâyesi yazınca altın. Bağlı kutular her kutunun altında.</p></div>';
-    if (oz) { oz.insertAdjacentHTML("afterend", html); } else { alan.insertAdjacentHTML("afterbegin", html); }
-    return r;
-  };
-}

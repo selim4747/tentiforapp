@@ -168,23 +168,6 @@ if (typeof evrenGit === "function") {
     return eskiGit.apply(this, arguments);
   };
 }
-if (typeof evrenSayfaCiz === "function") {
-  const eskiCiz = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    const r = eskiCiz.apply(this, arguments);
-    const e = simdikiEvren();
-    if (e.git.indexOf("#/ev/") === 0 && !(typeof EVS !== "undefined" && EVS && EVS.kaynak === "acilan")) {
-      const l = sonEvrenler();
-      if (!l.length || l[0].git !== e.git) { sonEvrenEkle(e.ad, e.git); }
-    }
-    evrenDugmesiGuncelle();
-    return r;
-  };
-}
-if (typeof evrenSayfaKapat === "function") {
-  const eskiKapat = evrenSayfaKapat;
-  window.evrenSayfaKapat = function () { const r = eskiKapat.apply(this, arguments); evrenDugmesiGuncelle(); return r; };
-}
 
 /* ana sayfa: evren şeridi */
 function evrenSeritHtml() {

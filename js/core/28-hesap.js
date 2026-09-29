@@ -302,6 +302,12 @@ async function hesapProfilYukle() {
   if (!hesapKullanici) { return; }
   const { data } = await hesapIstemci.from("profiller").select("*").eq("id", hesapKullanici.id).maybeSingle();
   hesapProfil = data || { id: hesapKullanici.id };
+  /* profile bağlı işler: kullanıcı adı uyarısı, tek kodlar ve bildirimler, yönetici davet kodu, ortak evrenler */
+  kadiUyarisiCiz();
+  tekHaklariYukle();
+  YON24.soruldu = false;
+  setTimeout(davetKoduDene, 600);
+  setTimeout(ortakEvrenlerimiCek, 1500);
 }
 
 /* ==================== yardımcılar ==================== */
@@ -403,6 +409,17 @@ let hesapKayitAdKontrol = 0;
 function hesapPencere(tur) {
   const perde = document.querySelector("#perde");
   if (!perde) { return; }
+  /* çevrimdışı ve Supabase kütüphanesi yüklenmemiş: giriş yapılamaz */
+  if (navigator.onLine === false && !(window.supabase && window.supabase.createClient)) {
+    perde.innerHTML = '<div class="pencere" role="dialog" aria-modal="true" aria-labelledby="cdHesapBaslik">' +
+      '<button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button>' +
+      '<h3 id="cdHesapBaslik">Çevrimdışısın</h3>' +
+      '<p class="pencere-alt">Giriş yapmak ya da hesap açmak için internet gerekir.</p>' +
+      '<p class="oyun-not">Okuduğun, oynadığın ve kazandığın her şey bu cihazda duruyor. Bağlantı gelince giriş yaparsan hesabınla birleşir.</p>' +
+      '<button class="dugme" data-kapat="1">Tamam</button></div>';
+    perde.hidden = false;
+    return;
+  }
   if (!hesapIstemci) { hesapGerekli().then(function () { if (hesapIstemci) { hesapPencere(tur); } }); return; }
 
   const alan = function (id, etiket, tip, oz) {
@@ -462,6 +479,14 @@ function hesapPencere(tur) {
       '<p class="pencere-durum" id="hesapDurum" role="status"></p>' +
     "</div>";
   perde.hidden = false;
+
+  /* giriş ve kayıtta: hesabın faydaları, Google ile giriş */
+  const form = (tur === "giris" || tur === "kayit") && perde.querySelector('[data-hesap-form="' + tur + '"]');
+  if (form && !form.parentNode.querySelector(".hesap-fayda")) {
+    form.insertAdjacentHTML("beforebegin", '<ul class="hesap-fayda">' + HESAP_FAYDA.map(function (x) { return "<li>" + kacir(x) + "</li>"; }).join("") + "</ul>" +
+      '<button type="button" class="dugme dugme-tam google-giris" data-google-giris><span class="google-g" aria-hidden="true">G</span> Google ile devam et</button>' +
+      '<p class="hesap-veya"><span>ya da e-postayla</span></p>');
+  }
 
   const ilk = perde.querySelector("input");
   if (ilk) { ilk.focus(); }
@@ -1019,6 +1044,11 @@ document.addEventListener("visibilitychange", function () {
 let hesapDuzenle = false;
 
 function hesapCiz() {
+  hesapTemelCiz();
+  if (ayar25Gorunur()) { ayar25Ciz(); }   /* okur ayarları; Sen sayfası kapalıyken çizilmez */
+}
+
+function hesapTemelCiz() {
   const alan = document.querySelector("#hesapAlan");
   if (!alan) { return; }
 
@@ -1088,7 +1118,7 @@ function hesapCiz() {
         '<span id="hesapEsitDurum"></span>' +
         '<button class="dugme dugme-sade" data-hesap-esitle="1">Şimdi eşitle</button>' +
         '<button class="dugme dugme-sade" data-gez-git="liderlik">Liderlik tabloları</button>' +
-      "</div>" +
+      "</div>" + cihazlarimHtml() +
       '<div class="oyun-sira">' +
         '<button class="dugme dugme-sade" data-hesap-pencere="yenisifre">Şifreyi değiştir</button>' +
         '<button class="dugme dugme-sade" data-hesap-cikis="1">Çıkış yap</button>' +

@@ -344,24 +344,6 @@ function gkKelimeBilgi(k) {
   return "";
 }
 
-/* Günün Kelimesi bölümü: üstte mod seçimi, altında seçilen mod */
-if (typeof gunKelimesiYukle === "function") {
-  const eskiGkYukle = gunKelimesiYukle;
-  window.gunKelimesiYukle = function () {
-    const dis = document.querySelector("#gkAlan");
-    if (!dis) { return; }
-    const mod = gkModu();
-    const dugme = function (m, ad) {
-      return '<button class="dugme' + (mod === m ? "" : " dugme-sade") + '" role="tab" aria-selected="' + (mod === m) + '" data-gk-mod="' + m + '">' + ad + "</button>";
-    };
-    dis.innerHTML = '<div class="gk-modlar" role="tablist" aria-label="Günün kelimesi modu">' +
-      dugme("kolay", "Kolay · hesapsız") + dugme("zor", "Zor · herkesle yarış") + "</div>" +
-      '<div id="gkIc"><div class="gk"><span class="oyun-etiket">Günün kelimesi</span><p class="oyun-not">Yükleniyor…</p></div></div>';
-    if (mod === "kolay") { koCiz(document.querySelector("#gkIc"), gkKolayOyunu()); return; }
-    return eskiGkYukle.apply(this, arguments);
-  };
-}
-
 /* Zor mod bitince: kelimenin kartı, sunucudaki istatistik ve hikâye kartı */
 if (typeof gunKelimesiCiz === "function") {
   const eskiGkCiz = gunKelimesiCiz;
@@ -443,26 +425,6 @@ async function arsivKartHikayeUret(id) {
   c.textAlign = "left";
   kartEtiket(c, "TentiforApp · " + KART_ADRES + "/koleksiyon/", sol - 40, BOY - 130, KART_RENK.yarik, 24);
   return t;
-}
-
-if (typeof koleksiyonCiz === "function") {
-  const eskiKolCiz = koleksiyonCiz;
-  window.koleksiyonCiz = function () {
-    const r = eskiKolCiz.apply(this, arguments);
-    const alan = document.querySelector("#koleksiyonAlan");
-    const t = koleksiyonOku();
-    const sahip = (veri.karakterler || []).filter(function (k) { return t[k.id] && k.kart !== false; });
-    if (alan && sahip.length) {
-      const d = document.createElement("div");
-      d.className = "kutu-y kol-hikaye";
-      d.innerHTML = '<label for="kolHikayeSec">Bir kartını hikâyende paylaş</label>' +
-        '<div class="oyun-sira"><select id="kolHikayeSec" class="kod-giris">' + sahip.map(function (k) {
-          return '<option value="' + kacir(k.id) + '">' + kacir(k.ad) + (kartParlak(t[k.id]) ? " ✦" : "") + "</option>";
-        }).join("") + '</select><button class="dugme" data-kol-hikaye>Hikâye kartı</button></div>';
-      alan.insertBefore(d, alan.children[1] || null);
-    }
-    return r;
-  };
 }
 
 /* ==================== hesapsız ilerleme hatırlatması ==================== */

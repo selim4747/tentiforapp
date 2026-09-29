@@ -44,14 +44,23 @@ function tekHaklariUygula() {
   } catch (_) { /* sayfa henüz hazır değil */ }
 }
 
+/** Girişten sonra hesaba bağlı haklar: tek kullanımlık kodlar, Pro üyeliği, bildirimler, kurucu paneli. */
 async function tekHaklariYukle() {
-  if (!tekHesapVar()) { if (TEK.haklar.length) { TEK.haklar = []; tekHaklariUygula(); } return; }
-  try {
-    const r = await hesapIstemci.rpc("tek_kodlarim");
-    if (r.error) { return; }
-    TEK.haklar = Array.isArray(r.data) ? r.data : [];
-    tekHaklariUygula();
-  } catch (_) { /* çevrimdışı: sonra */ }
+  /* girişten önce girilen tek seferlik evren kodu bekliyorsa şimdi harcanır */
+  let bekliyor = false;
+  try { bekliyor = localStorage.getItem(EVR1_BEKLEYEN) === "1"; } catch (_) { /* yok */ }
+  if (bekliyor && tekHesapVar()) { await evren1Harca(); }
+  if (!tekHesapVar()) {
+    if (TEK.haklar.length) { TEK.haklar = []; tekHaklariUygula(); }
+  } else {
+    try {
+      const r = await hesapIstemci.rpc("tek_kodlarim");
+      if (!r.error) { TEK.haklar = Array.isArray(r.data) ? r.data : []; tekHaklariUygula(); }
+    } catch (_) { /* çevrimdışı: sonra */ }
+  }
+  try { await tf4AbonelikYukle(false); } catch (_) { /* yok */ }
+  bildirimleriYukle();
+  kurucuPaneliCiz();
 }
 
 /* ---------- haklar siteye ---------- */
@@ -141,16 +150,6 @@ if (typeof sonraSar === "function") {
       tekKodDene(kod, document.querySelector("#kodDurum"));
     };
   });
-}
-
-/* hesaba girince / açılışta haklar sunucudan */
-if (typeof hesapProfilYukle === "function") {
-  const eskiPY = hesapProfilYukle;
-  window.hesapProfilYukle = async function () {
-    const r = await eskiPY.apply(this, arguments);
-    tekHaklariYukle();
-    return r;
-  };
 }
 
 /* ==================== panel: Tek kodlar (tam yönetici) ==================== */

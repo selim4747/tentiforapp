@@ -337,6 +337,7 @@ window.addEventListener("resize", function () {
    duruyordu. Bu widget üçünü tek bakışta gösteren bir "Bugün" kartı. */
 
 function gunlukOzetCiz() {
+  try { bugunKartiCiz(); } catch (_) { /* yok */ }   /* Keşif'te "bugün" kartı (62-ilk-deneyim) */
   const alan = document.querySelector("#gunlukOzetAlan");
   if (!alan) { return; }
 

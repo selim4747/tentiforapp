@@ -249,6 +249,7 @@ function siraCiz() {
                '<span class="sira-ad">' + kacir(a) + "</span></li>";
       }).join("") +
     "</ol>";
+  siraKilitleriIsaretle(alan, s);   /* hangi adım açık, hangisi kod ister (62-ilk-deneyim) */
 }
 
 /* ==================== YAZI ÇÖZME OYUNU ==================== */

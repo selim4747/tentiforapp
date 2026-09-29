@@ -56,18 +56,6 @@ function veriParcalariUygula(o) {
   return o;
 }
 
-/* yönetici: GitHub'a kaydetmeden ve dışa aktarmadan önce parçalar yerinde olsun */
-if (typeof githubGonder === "function") {
-  const eskiGG30 = githubGonder;
-  window.githubGonder = function () {
-    const bu = this, arg = arguments;
-    if (veriParcalariHazir()) { return eskiGG30.apply(bu, arg); }
-    if (typeof yoneticiDurum === "function") { yoneticiDurum("Verinin tamamı hazırlanıyor…", true); }
-    return veriParcalariTam().then(function () { return eskiGG30.apply(bu, arg); }, function (e) {
-      if (typeof yoneticiDurum === "function") { yoneticiDurum("Kaydedilmedi: verinin bir kısmı indirilemedi (" + e.message + "). İnternetini kontrol edip tekrar dene.", false); }
-    });
-  };
-}
 if (typeof yoneticiDisaAktar === "function") {
   const eskiDA30 = yoneticiDisaAktar;
   window.yoneticiDisaAktar = function () {
@@ -84,17 +72,6 @@ if (typeof yDegisiklikEkle === "function") {
     if (veriParcalariHazir()) { return eskiDE30.apply(bu, arg); }
     return veriParcalariTam().then(function () { return eskiDE30.apply(bu, arg); });
   };
-}
-/* panel açılınca betiklerle birlikte parçalar da iner; hazır sayılması ikisini de bekler (65-yonetici-yukle.js) */
-if (typeof yoneticiBetikleriYukle === "function") {
-  const eskiBY30 = yoneticiBetikleriYukle;
-  window.yoneticiBetikleriYukle = function () {
-    return Promise.all([eskiBY30.apply(this, arguments), veriParcalariTam().catch(function () { /* internetsiz: kaydetmede yine denenir */ })]).then(function () { /* tamam */ });
-  };
-}
-if (typeof yoneticiBetikleriHazir === "function") {
-  const eskiBH30 = yoneticiBetikleriHazir;
-  window.yoneticiBetikleriHazir = function () { return eskiBH30.apply(this, arguments) && veriParcalariHazir(); };
 }
 
 /* ==================== 2. Değişiklikler sayfası ==================== */

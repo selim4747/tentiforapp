@@ -99,10 +99,3 @@ function veriDenetimOnayi() {
   return true;
 }
 
-if (typeof githubGonder === "function") {
-  const eskiGonder = githubGonder;
-  window.githubGonder = function () {
-    if (!veriDenetimOnayi()) { return Promise.resolve(); }
-    return eskiGonder.apply(this, arguments);
-  };
-}

@@ -89,15 +89,6 @@ function htrSatirCiz(mesaj) {
   if (modlar) { modlar.insertAdjacentHTML("afterend", yeni); }
 }
 
-if (typeof gunKelimesiYukle === "function") {
-  const eskiGk = gunKelimesiYukle;
-  window.gunKelimesiYukle = function () {
-    const r = eskiGk.apply(this, arguments);
-    htrSatirCiz();
-    return r;
-  };
-}
-
 /* kelime bitince servis çalışanına "bugün oynandı" (hatırlatma gelmesin) */
 document.addEventListener("submit", function (ev) {
   if (!ev.target.closest || !ev.target.closest("#gkAlan")) { return; }
@@ -117,24 +108,6 @@ function tkpKutusu(id) {
       : "Takip et: bu evrene yeni roman bölümü eklenince haberin olsun.") + "</p>" +
     '<div class="oyun-sira"><button class="dugme' + (takipte ? " dugme-sade" : "") + '" data-tkp="' + kacir(id) + '">' + (takipte ? "Takibi bırak" : "☆ Takip et") + "</button></div>" +
     '<p class="pencere-durum" id="tkpDurum" role="status"></p></div>';
-}
-
-if (typeof evrenSayfaCiz === "function") {
-  const eskiCiz = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    const r = eskiCiz.apply(this, arguments);
-    if (!EVS || EVS.kaynak !== "fan") { return r; }
-    const e = tkpFanEvren(EVS.id);
-    if (!e) { return r; }
-    /* açılan takipli evren: yeni bölümler görüldü */
-    const l = tkpListe();
-    if (EVS.id in l && tkpBolumSayisi(e) > l[EVS.id]) { l[EVS.id] = tkpBolumSayisi(e); jsonYaz(TKP_ANAHTAR, l); swAyarEsitle(); }
-    if (EVS.sekme === "bilgi") {
-      const g = document.querySelector("#evrenSayfa .evs-govde");
-      if (g) { g.insertAdjacentHTML("beforeend", tkpKutusu(EVS.id)); }
-    }
-    return r;
-  };
 }
 
 /** Ana sayfa: takip edilen evrenlerde yeni bölüm. */

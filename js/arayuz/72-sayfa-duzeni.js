@@ -14,14 +14,7 @@ if (typeof sayfalamaCiz === "function") {
     if (c) { c.hidden = true; c.innerHTML = ""; }
   };
 }
-if (typeof sayfaBasiCiz === "function") {
-  const eskiBas = sayfaBasiCiz;
-  window.sayfaBasiCiz = function () {
-    const r = eskiBas.apply(this, arguments);
-    document.querySelectorAll("#sayfaBasi .sayfa-no").forEach(function (p) { p.remove(); });
-    return r;
-  };
-}
+
 /* 1–9 tuşlarıyla sayfa atlama: sayfalar birbirinin devamı değil (18-gezinme.js'teki dinleyiciden önce) */
 document.addEventListener("keydown", function (e) {
   const a = document.activeElement;
@@ -62,20 +55,6 @@ function evgDesenArka(desen, ana) {
   return svg ? "url(\"data:image/svg+xml," + encodeURIComponent(svg) + "\")" : "";
 }
 
-if (typeof evrenEkTemizle === "function") {
-  const eskiEkG = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEkG.apply(this, arguments);
-    const s = ham.stil;
-    if (!s || typeof s !== "object") { return; }
-    const ek = {};
-    if (EVG_DESENLER[s.desen] && s.desen) { ek.desen = s.desen; }
-    if (EVG_BOYUT[s.boyut] && s.boyut) { ek.boyut = s.boyut; }
-    if (EVG_HIZA[s.hiza] && s.hiza) { ek.hiza = s.hiza; }
-    if (Object.keys(ek).length) { e.stil = Object.assign({}, e.stil || {}, ek); }
-  };
-}
-
 if (typeof evrenSayfaStili === "function") {
   const eskiStil = evrenSayfaStili;
   window.evrenSayfaStili = function (e) {
@@ -114,36 +93,6 @@ if (typeof evrenStilBolumu === "function") {
   const eskiStilBol = evrenStilBolumu;
   window.evrenStilBolumu = function (v) {
     return evgGorunumKutusu(v.eser) + eskiStilBol.apply(this, arguments);
-  };
-}
-
-/* sekmeler: kendi evreninde Görünüm ve Yazı öne; adlar açık */
-if (typeof evrenEkSekmeler === "function") {
-  const eskiSek22 = evrenEkSekmeler;
-  window.evrenEkSekmeler = function (v) {
-    const l = eskiSek22.apply(this, arguments);
-    if (!EVS || EVS.kaynak !== "benim") { return l; }
-    const al = function (id) { const i = l.findIndex(function (x) { return x[0] === id; }); return i === -1 ? null : l.splice(i, 1)[0]; };
-    const stil = al("stil"), yazi = al("yazi");
-    const on = [];
-    if (stil) { on.push(["stil", "🎨 Görünüm"]); }
-    if (yazi) { on.push(["yazi", "✎ Yazı çiz"]); }
-    return on.concat(l);
-  };
-}
-
-/* bilgi sayfasında: kişiselleştirme kısayolları */
-if (typeof evrenBilgiBolumu === "function") {
-  const eskiBilgi = evrenBilgiBolumu;
-  window.evrenBilgiBolumu = function (v) {
-    const h = eskiBilgi.apply(this, arguments);
-    if (!EVS || EVS.kaynak !== "benim") { return h; }
-    return '<div class="kutu-y evg-kisisel"><span class="oyun-etiket">Evrenini kişiselleştir</span>' +
-      '<p class="oyun-not">Evreninin sayfası senin: rengini, desenini ve yazı tipini değiştir, kendi yazını harf harf çiz, kodla oyun ekle.</p>' +
-      '<div class="oyun-sira"><button class="dugme" data-evs-sekme="stil">🎨 Görünümü değiştir</button>' +
-      '<button class="dugme dugme-sade" data-evs-sekme="kodstil">{ } Stil ve görünüm kodu</button>' +
-      '<button class="dugme dugme-sade" data-evs-sekme="yazi">✎ Yazını çiz</button>' +
-      '<button class="dugme dugme-sade" data-evs-sekme="uygulama">⌨ Uygulama ekle</button></div></div>' + h;
   };
 }
 

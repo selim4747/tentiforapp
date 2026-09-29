@@ -24,6 +24,7 @@ function cuzdanYukle() {
   if (!cuzdan.gunluk) { cuzdan.gunluk = {}; }
   gunuTazele();
   istatistikHazirla();
+  baslangicKendiliginden();   /* yeni gelen: başlangıç kodu kendiliğinden açılır (62-ilk-deneyim) */
 }
 
 function cuzdanKaydet() {
@@ -43,12 +44,16 @@ function gecmiseYaz(miktar, kaynak) {
 }
 
 function eckaKazan(miktar, kaynak) {
-  if (miktar <= 0) { return; }
-  cuzdan.ecka += miktar;
-  cuzdan.kazanilan += miktar;
-  gecmiseYaz(miktar, kaynak);
-  cuzdanKaydet();
-  eckaBildir("+" + miktar + " " + birim() + (kaynak ? " · " + kaynak : ""));
+  const ilk = eckaYeniMi();
+  if (miktar > 0) {
+    cuzdan.ecka += miktar;
+    cuzdan.kazanilan += miktar;
+    gecmiseYaz(miktar, kaynak);
+    cuzdanKaydet();
+    eckaBildir("+" + miktar + " " + birim() + (kaynak ? " · " + kaynak : ""));
+  }
+  eckaGostergesiAyarla();
+  if (ilk && miktar > 0 && !eckaYeniMi()) { setTimeout(eckaIlkBalon, 600); }   /* ilk eçkan: ne işe yaradığını anlatan balon */
 }
 
 /** Harcama dener. Yetmezse false döner ve hiçbir şey değişmez. */
@@ -173,6 +178,7 @@ function kilitAc(anahtar, fiyat) {
 function cuzdanGoster() {
   const el = document.querySelector("#cuzdanTutar");
   if (el) { el.textContent = cuzdan.ecka + " " + birim(); }
+  eckaGostergesiAyarla();
 }
 
 let bildirimZaman = null;

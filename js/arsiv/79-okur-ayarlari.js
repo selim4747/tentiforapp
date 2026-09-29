@@ -829,25 +829,6 @@ function haviTahminNokta(hx, hy) {
   oyunBugunCiz();
 }
 
-/* Günlük oyunlar alanı yeniden çizilince Harita Avı da altına gelsin */
-if (typeof gunlukOyunlarCiz === "function") {
-  const eskiGOC27 = gunlukOyunlarCiz;
-  window.gunlukOyunlarCiz = function () {
-    const r = eskiGOC27.apply(this, arguments);
-    try { haviCiz(); } catch (e) { console.error("[TentiforApp] Harita Avı:", e); }
-    return r;
-  };
-}
-/* bir oyun kazanılınca Bugün kartı tazelensin */
-if (typeof oyunXpVer === "function") {
-  const eskiOXV27 = oyunXpVer;
-  window.oyunXpVer = function () {
-    const r = eskiOXV27.apply(this, arguments);
-    setTimeout(oyunBugunCiz, 0);
-    return r;
-  };
-}
-
 /* ==================== olaylar ==================== */
 
 document.addEventListener("click", function (e) {

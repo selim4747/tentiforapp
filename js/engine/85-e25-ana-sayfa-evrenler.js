@@ -13,14 +13,6 @@ const EVR1_BEKLEYEN = "tf31_evren1_harca";   /* çevrimdışı kurulduysa: bağl
 
 function evren1Var() { return typeof tekHakVar === "function" && tekHakVar("evren1"); }
 
-if (typeof uretimAcik === "function") {
-  const eskiUA31 = uretimAcik;
-  window.uretimAcik = function (tur) {
-    const r = eskiUA31.apply(this, arguments);
-    return r || (tur === "evren" && evren1Var());
-  };
-}
-
 async function evren1Harca() {
   if (typeof tekHesapVar !== "function" || !tekHesapVar()) { try { localStorage.setItem(EVR1_BEKLEYEN, "1"); } catch (_) { /* yok */ } return false; }
   try {
@@ -46,19 +38,6 @@ function evren1Kullan() {
 
 function evrenSayisi() { return fanEserlerim().filter(function (x) { return x.tur === "evren" && !x.e99; }).length; }
 
-/* 3.1.1: hak, yeni evren hangi yoldan açılırsa açılsın harcanır (Kurucu, Fan sayfası "+ Yeni evren");
-   yarım kalmış boş taslağı yeniden açmak (evrenYeniKur) fanYeni'ye gitmez, hak harcamaz. */
-if (typeof fanYeni === "function") {
-  const eskiFY311 = fanYeni;
-  window.fanYeni = function (tur) {
-    if (tur !== "evren") { return eskiFY311.apply(this, arguments); }
-    const taban = evrenTabanAcik();
-    const e = eskiFY311.apply(this, arguments);
-    if (e && !taban && evren1Var()) { evren1Kullan(); }
-    return e;
-  };
-}
-
 /* evren kopyalamak da yeni evren kurmaktır: kapıdan geçer, gerekirse tek seferlik hakkı harcar */
 document.addEventListener("click", function (ev) {
   const b = ev.target.closest && ev.target.closest('[data-evs-kopyala], [data-fan-p="kopyala"]');
@@ -73,16 +52,6 @@ document.addEventListener("click", function (ev) {
   const once = evrenSayisi();
   setTimeout(function () { if (evrenSayisi() > once && evren1Var()) { evren1Kullan(); } }, 0);
 }, true);
-/* bekleyen harcama: hesap hazır olunca */
-if (typeof tekHaklariYukle === "function") {
-  const eskiTHY31 = tekHaklariYukle;
-  window.tekHaklariYukle = async function () {
-    let bekliyor = false;
-    try { bekliyor = localStorage.getItem(EVR1_BEKLEYEN) === "1"; } catch (_) { /* yok */ }
-    if (bekliyor && typeof tekHesapVar === "function" && tekHesapVar()) { await evren1Harca(); }
-    return eskiTHY31.apply(this, arguments);
-  };
-}
 
 /* ==================== 2. ana sayfa: evrenler ==================== */
 
@@ -100,23 +69,40 @@ function anaEvrenlerCiz() {
   /* test evrenleri: Claude'un Evreni ve sitenin örnek fan evrenleri (kanon değil) */
   const test = l.site.filter(function (x) { return x.git === "#/claude"; }).concat(l.fan.filter(function (x) { return /^test/.test(x.not || ""); }));
   const fan = l.fan.filter(function (x) { return !/^test/.test(x.not || ""); });
-  const acik = typeof uretimAcik === "function" ? uretimAcik("evren") : true;
-  const gereken = (typeof SEVIYE_URETIM !== "undefined" && SEVIYE_URETIM.evren) ? SEVIYE_URETIM.evren.seviye : 15;
+  const acik = uretimAcik("evren"), pro = tf4ProMu();
   alan.innerHTML =
     (site.length ? '<div class="ana-evren-grup"><span class="ana-etiket">Kanon evrenler</span><div class="ana-evren-liste">' + site.map(function (x) { return kart(x, "kanon"); }).join("") + "</div></div>" : "") +
     (fan.length ? '<div class="ana-evren-grup"><span class="ana-etiket">Okurların evrenleri</span><div class="ana-evren-liste">' + fan.map(function (x) { return kart(x, "fan"); }).join("") + "</div></div>" : "") +
     (test.length ? '<div class="ana-evren-grup"><span class="ana-etiket">Test evrenleri · özellikleri gör ve dene</span><div class="ana-evren-liste">' + test.map(function (x) { return kart(x, "test"); }).join("") + "</div></div>" : "") +
     (l.benim.length ? '<div class="ana-evren-grup"><span class="ana-etiket">Senin evrenlerin</span><div class="ana-evren-liste">' + l.benim.map(function (x) { return kart(x, "benim"); }).join("") + "</div></div>" : "") +
-    '<div class="ana-kur' + (acik ? "" : " kilitli") + '">' +
-      (acik
-        ? '<b>Evrenini kur</b><span class="ana-evren-not">Tömye kadar derin bir evren: adım adım Kurucu.' + (evren1Var() && !(typeof seviyeYeter === "function" && seviyeYeter(gereken)) ? " Tek seferlik hakkınla bir evren." : "") + '</span>' +
-          '<button type="button" class="dugme" data-es-yeni>+ Yeni evren kur</button>'
-        : '<b><span aria-hidden="true">🔒 </span>Evrenini kur</b>' +
-          '<span class="ana-evren-not">' + kacir(typeof seviyeKapiMetni === "function" ? seviyeKapiMetni(gereken) : "Seviye " + gereken + "'te açılır") + "</span>" +
-          (typeof seviyeCubukHtml === "function" ? seviyeCubukHtml(gereken) : "") +
-          '<span class="ana-evren-not">Sana verilen tek seferlik bir evren kodu varsa girişten sonra gir: seviyeyi beklemeden bir evren kurarsın.</span>' +
-          '<button type="button" class="dugme dugme-sade" data-kod-ac="1">Kodum var</button>') +
+    /* bütün evrenler: ara, süz, sırala (açılınca çizilir) */
+    '<details class="kesif-daha tev-kutu" id="tumEvrenlerKutu"><summary><span class="kesif-daha-ad">Tüm evrenler</span><span class="kesif-daha-not">ara · süz · sırala · yıldızla</span></summary><div class="kesif-daha-ic" id="tumEvrenler"></div></details>' +
+    /* evren kurma: ücretsiz 1 taslak, Pro sınırsız, tek seferlik kod */
+    '<div class="ana-kur' + (acik ? "" : " kilitli") + '">' + (acik
+      ? '<b>Evrenini kur</b><span class="ana-evren-not">' + (pro ? "Yaratıcı Pro: sınırsız evren." : (tf4EvrenSayisi() < 1 ? "Ücretsiz: ilk evren taslağın hazır seni bekliyor." : "Tek seferlik hakkınla bir evren daha.")) +
+          ' Tömye kadar derin bir evren: adım adım Kurucu.</span><button type="button" class="dugme" data-es-yeni>+ Yeni evren kur</button>'
+      : '<b><span aria-hidden="true">🔒 </span>Evrenini kur</b><span class="ana-evren-not">Ücretsiz plandaki 1 evren taslağını kullandın. Yaratıcı Pro ile sınırsız evren kurarsın; tek seferlik bir evren kodun varsa girişten sonra gir.</span>' +
+        '<div class="oyun-sira"><button type="button" class="dugme" data-pro-ac>Pro’ya geç · ' + TF4_PRO_FIYAT + '</button><button type="button" class="dugme dugme-sade" data-kod-ac="1">Kodum var</button></div>') +
     "</div>";
+  const d = alan.querySelector("#tumEvrenlerKutu");
+  d.addEventListener("toggle", function () { if (d.open) { tumEvrenlerCiz(); } });
+
+  /* her kartın yanında yıldız; yıldızlananlar en üstte */
+  alan.querySelectorAll(".ana-evren[data-evren-git]").forEach(function (k) {
+    const git = k.getAttribute("data-evren-git");
+    const sar = document.createElement("div"); sar.className = "ana-evren-sar";
+    k.parentNode.insertBefore(sar, k); sar.appendChild(k);
+    const y = yildizliMi(git);
+    sar.insertAdjacentHTML("beforeend", '<button type="button" class="ana-yildiz' + (y ? " acik" : "") + '" data-yildiz="' + kacir(git) + '" aria-pressed="' + y + '" aria-label="' +
+      kacir((y ? "Yıldızı kaldır: " : "Yıldızla: ") + (k.querySelector(".ana-evren-ad") || k).textContent.replace(/^🔒\s*/, "")) + '">' + (y ? "★" : "☆") + "</button>");
+  });
+  const yk = yildizlilar().map(function (git) {
+    const k = alan.querySelector('.ana-evren-sar > .ana-evren[data-evren-git="' + CSS.escape(git) + '"]');
+    return k ? k.parentNode.outerHTML : "";
+  }).filter(Boolean);
+  if (yk.length) {
+    alan.insertAdjacentHTML("afterbegin", '<div class="ana-evren-grup ana-yildizli"><span class="ana-etiket">★ Yıldızladıkların</span><div class="ana-evren-liste">' + yk.join("") + "</div></div>");
+  }
 }
 
 document.addEventListener("tf-veri-hazir", function () { setTimeout(anaEvrenlerCiz, 0); });
@@ -152,10 +138,6 @@ if (typeof evrKonukHavuzu === "function") {
     if (!evrHavuzBellek) { evrHavuzBellek = eskiEKH311.apply(this, arguments); setTimeout(function () { evrHavuzBellek = null; }, 0); }
     return evrHavuzBellek;
   };
-}
-if (typeof fanEserlerimYaz === "function") {
-  const eskiFEY311 = fanEserlerimYaz;
-  window.fanEserlerimYaz = function () { evrHavuzBellek = null; return eskiFEY311.apply(this, arguments); };
 }
 
 /** E25'in kapıları: bütün evrenler (kanon, okurların, senin). Yeni kurulan her evren bir kapı. */
@@ -251,14 +233,6 @@ function e25DogumSahnesiHtml() {
     '<button type="button" class="pencere-kapat" data-e25-dogum-kapat aria-label="Kapat">✕</button></div></section>';
 }
 
-if (typeof e25KisilerHtml === "function") {
-  const eskiE25H31 = e25KisilerHtml;
-  window.e25KisilerHtml = function () {
-    const h = eskiE25H31.apply(this, arguments);
-    return e25DogumSahnesiHtml() + e25SalonHtml() + h;
-  };
-}
-
 /* yeni Evrengezer formunda: doğum (kapı ve ilk söz) */
 if (typeof kisiFormHtml === "function") {
   const eskiKF31 = kisiFormHtml;
@@ -271,41 +245,6 @@ if (typeof kisiFormHtml === "function") {
         kapilar.map(function (k) { return '<option value="' + kacir(k.ad) + '">' + kacir(k.ad) + "</option>"; }).join("") + "</select>" +
       '<label for="kisiIlkSoz">İlk sözü</label><input class="kod-giris arac-giris" id="kisiIlkSoz" maxlength="200" placeholder="Burası neresi? Taşım neden sıcak?"></div>' +
       '<label for="kisiAd">Adı</label>');
-  };
-}
-
-if (typeof kisiKaydet === "function") {
-  const eskiKK31 = kisiKaydet;
-  window.kisiKaydet = async function (id) {
-    if (id) { return eskiKK31.apply(this, arguments); }
-    const kapi = (document.querySelector("#kisiKapi") || {}).value || "", soz = ((document.querySelector("#kisiIlkSoz") || {}).value || "").trim();
-    const once = fanEserlerim().filter(function (x) { return x.tur === "kisi"; }).map(function (x) { return x.id; });
-    const hata = await eskiKK31.apply(this, arguments);
-    if (hata) { return hata; }
-    const l = fanEserlerim();
-    const yeni = l.find(function (x) { return x.tur === "kisi" && once.indexOf(x.id) === -1; });
-    if (yeni) {
-      yeni.dogum = { kapi: kapi.slice(0, 80), soz: soz.slice(0, 200), t: new Date().toISOString() };
-      fanEserlerimYaz(l);
-      evrDogumSon = yeni.id;
-    }
-    return "";
-  };
-}
-
-/* kartta: pasaport damgaları ve doğum */
-if (typeof kisiKartHtml === "function") {
-  const eskiKKH31 = kisiKartHtml;
-  window.kisiKartHtml = function (x) {
-    let h = eskiKKH31.apply(this, arguments);
-    const d = e25Damgalar(x.e.id);
-    const dg = x.e.dogum;
-    if (dg && (dg.kapi || dg.soz)) {
-      h = h.replace('<p class="oyun-not evr-dogdu">E25’te doğdu', '<p class="oyun-not evr-dogdu">E25’te doğdu' + (dg.kapi ? " · " + kacir(dg.kapi) + " kapısından" : "") + (dg.soz ? " · ilk sözü: “" + kacir(dg.soz) + "”" : ""));
-    }
-    const pas = '<div class="e25-pasaport"><span class="oyun-etiket">Pasaport · ' + d.length + " damga</span>" +
-      (d.length ? '<div class="e25-damgalar">' + d.map(e25DamgaHtml).join("") + "</div>" : '<span class="oyun-not"> henüz boş: başka bir evrende hikâyeye konuk olunca damga gelir</span>') + "</div>";
-    return h.replace(/<\/div>$/, pas + "</div>");
   };
 }
 
@@ -499,16 +438,6 @@ function evrZamanUygula(i) {
   if (o) { o.innerHTML = "<b>" + kacir(x.t.zaman || "—") + "</b>" + (x.t.cag ? ' <span class="oyun-not">' + kacir(x.t.cag) + "</span>" : "") + " · " + kacir(x.yer.ad) + " — " + kacir(evrKisa(x.t.olay, 200)); }
 }
 
-if (typeof evrenHaritaBolumu === "function") {
-  const eskiEHB31 = evrenHaritaBolumu;
-  window.evrenHaritaBolumu = function (v) {
-    const h = eskiEHB31.apply(this, arguments);
-    const z = v && v.eser ? evrZamanHtml(v.eser) : "";
-    if (!z) { return h; }
-    setTimeout(function () { evrZamanUygula(0); }, 0);
-    return h.replace('<div class="evh-kutu" data-evh-kutu>', z + '<div class="evh-kutu" data-evh-kutu>');
-  };
-}
 document.addEventListener("input", function (ev) { if (ev.target && ev.target.id === "evrZamanAralik") { evrZamanUygula(ev.target.value); } });
 
 /* ==================== 7. panel: kanona aday evrenler ==================== */

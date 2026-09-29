@@ -53,6 +53,10 @@ function evkKartHtml(e, kisa) {
         '<span class="evk-yazi"><b>' + kacir(a.ad) + "</b><small>" + kacir(a.ipucu) + "</small></span>" +
         '<span class="evk-ok" aria-hidden="true">→</span></button></li>';
     }).join("") + "</ol>" +
+    /* hiç kural yoksa: bir türle başla (şablon) */
+    (!(e.kurallar || []).some(function (x) { return x && (String(x.ad || "").trim() || String(x.aciklama || "").trim()); })
+      ? '<div class="evt-turler"><span class="oyun-not">Bir türle başla (yalnızca boş alanları doldurur, sonra hepsini değiştirebilirsin):</span>' +
+        EVT_TURLER.map(function (t) { return '<button class="evt-tur" data-evt-tur="' + t.id + '"><b>' + kacir(t.ad) + "</b><small>" + kacir(t.ozet) + "</small></button>"; }).join("") + "</div>" : "") +
     "</section>";
 }
 
@@ -145,28 +149,6 @@ function evkGit(adim) {
 
 /* ---------- evren sayfasına bağlama ---------- */
 
-if (typeof evrenSayfaCiz === "function") {
-  const eskiCiz = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    const r = eskiCiz.apply(this, arguments);
-    const s = document.querySelector("#evrenSayfa");
-    if (!s || !EVS) { return r; }
-    /* seçili sekme şeritte görünsün */
-    const serit = s.querySelector(".evs-sekmeler");
-    const secili = serit && serit.querySelector(".evs-sekme.secili");
-    if (secili && serit.scrollWidth > serit.clientWidth) {
-      serit.scrollLeft = Math.max(0, secili.offsetLeft - (serit.clientWidth - secili.offsetWidth) / 2);
-    }
-    if (EVS.kaynak === "benim" && (EVS.sekme === "bilgi" || EVS.sekme === "harita")) {
-      const e = evrenBenimBul(EVS.id);
-      const govde = s.querySelector(".evs-govde");
-      const kart = e ? evkKartHtml(e, EVS.sekme === "harita") : "";
-      if (govde && kart) { govde.insertAdjacentHTML("afterbegin", kart); }
-    }
-    return r;
-  };
-}
-
 /* İlk adımlar kartı ad ve anlatım yazılırken güncellensin (sayfa yeniden çizilmeden) */
 let evkTazeleZaman = null;
 document.addEventListener("input", function (ev) {
@@ -222,23 +204,6 @@ document.addEventListener("DOMContentLoaded", function () {
    Harita sekmesinde üstte gezegen şeridi: seç, ekle, adını değiştir, sil. */
 
 const EVG_SINIR = 12;
-
-if (typeof evrenEkTemizle === "function") {
-  const eskiEk = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEk.apply(this, arguments);
-    const ana = fanMetin(ham.anaGezegen, 60).trim();
-    if (ana) { e.anaGezegen = ana; }
-    if (Array.isArray(ham.gezegenler)) {
-      const l = ham.gezegenler.slice(0, EVG_SINIR).map(function (g, i) {
-        if (!g || typeof g !== "object") { return null; }
-        return { id: fanMetin(g.id, 40).replace(/[^\w-]/g, "") || ("g" + i), ad: fanMetin(g.ad, 60).trim() || ("Gezegen " + (i + 2)),
-          harita: fanHaritaTemizle(g.harita) };
-      }).filter(Boolean);
-      if (l.length) { e.gezegenler = l; }
-    }
-  };
-}
 
 function evgAnaAd(e) { return e.anaGezegen || ((e.gezegenler || []).length ? "Ana gezegen" : (e.ad || "Ana gezegen")); }
 
@@ -311,15 +276,3 @@ document.addEventListener("change", function (ev) {
   evrenSayfaCiz();
 });
 
-/* okuma görünümü ve dosya: öbür gezegenlerin haritaları da */
-if (typeof fanEserGovde === "function") {
-  const eskiGovde = fanEserGovde;
-  window.fanEserGovde = function (e) {
-    const h = eskiGovde.apply(this, arguments);
-    if (!e || e.tur !== "evren" || !(e.gezegenler || []).length || typeof evrenHaritaSvg !== "function") { return h; }
-    return h + "<h2>Öbür gezegenler</h2>" + e.gezegenler.map(function (g) {
-      const y = ((g.harita || {}).yerler) || [];
-      return "<h3>" + kacir(g.ad) + "</h3>" + (y.length ? evrenHaritaSvg(g.harita, { alfabe: e.alfabe }) : '<p class="bilgi">Haritası henüz boş.</p>');
-    }).join("");
-  };
-}

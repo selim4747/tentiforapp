@@ -11,15 +11,6 @@
 
 const EVA_DURUMLAR = ["fan", "kanonAday"];
 
-if (typeof evrenEkTemizle === "function") {
-  const eskiEk30b = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEk30b.apply(this, arguments);
-    if (EVA_DURUMLAR.indexOf(ham.durum) !== -1) { e.durum = ham.durum; }
-    if (ham.izinler && typeof ham.izinler === "object" && ham.izinler.hikaye === "sahip") { e.izinler = { hikaye: "sahip" }; }
-  };
-}
-
 /* ==================== statü ==================== */
 
 function evaAd(s) { return String(s || "").trim().toLocaleLowerCase("tr"); }
@@ -123,26 +114,6 @@ if (typeof kisiGoturHtml === "function") {
   };
 }
 
-if (typeof kisiGotur === "function") {
-  const eskiGotur30 = kisiGotur;
-  window.kisiGotur = function (kisi, hedef) {
-    let evrenAdi = null;
-    if (/^yeni-hikaye@/.test(hedef || "")) { evrenAdi = hedef.slice("yeni-hikaye@".length); hedef = "yeni-hikaye"; }
-    if (/^hikaye:/.test(hedef || "")) {
-      const h = fanEserlerim().find(function (x) { return x.tur === "hikaye" && x.id === hedef.slice(7); });
-      const g = h ? evaEvrengezerIzni(h.evren) : { izin: true };
-      if (!g.izin) { if (typeof eckaBildir === "function") { eckaBildir(g.neden); } return null; }
-    }
-    const r = eskiGotur30.call(this, kisi, hedef);
-    if (r && evrenAdi && r.tur === "hikaye") {
-      const l = fanEserlerim();
-      const h = l.find(function (x) { return x.id === r.id; });
-      if (h) { h.evren = evrenAdi; fanEserlerimYaz(l); }
-    }
-    return r;
-  };
-}
-
 /* hikâye dosyası indirilirken, paylaşılırken, gönderilirken kurallar */
 ["fanIndir", "fanPaylas"].forEach(function (ad) {
   const eski = window[ad];
@@ -172,14 +143,7 @@ function evaHikayeNotuYaz() {
   const sorun = evaHikayeDenetle(h);
   n.innerHTML = evaStatuNotu(g.value) + (sorun ? ' <b class="eva-uyari">' + kacir(sorun) + "</b>" : "");
 }
-if (typeof fanCiz === "function") {
-  const eskiFC30b = fanCiz;
-  window.fanCiz = function (tur) {
-    const r = eskiFC30b.apply(this, arguments);
-    if (tur === "hikaye") { try { evaHikayeNotuYaz(); } catch (_) { /* yok */ } }
-    return r;
-  };
-}
+
 document.addEventListener("input", function (ev) {
   if (ev.target && ev.target.matches && ev.target.matches('[data-fan-form="hikaye"] [data-fan-alan="evren"]')) { evaHikayeNotuYaz(); }
 });
@@ -223,27 +187,17 @@ function evaEylemHtml(v) {
       (hk.izin ? '<button class="dugme" data-eva-hikaye="' + kacir(ad) + '">✎ Bu evrende hikâye yaz</button>' : '<span class="oyun-not">' + kacir(hk.neden) + "</span>") +
       (s.tur === "kanon" ? '<button class="dugme dugme-sade" data-eva-evrengezer>Evrengezer getir</button>' : "") +
       (yon ? '<button class="dugme dugme-sade" data-eva-kanon="' + kacir(EVS.id) + '">' + (s.tur === "kanon" ? "Kanondan çıkar" : "Kanona al") + "</button>" : "") +
-    "</div></div>";
-}
-
-if (typeof evrenBilgiBolumu === "function") {
-  const eskiBB30 = evrenBilgiBolumu;
-  window.evrenBilgiBolumu = function (v) { return evaEylemHtml(v) + eskiBB30.apply(this, arguments); };
-}
-
-/* rozet: fan evrenlerinde statü, kendi evreninde seçtiği yol */
-if (typeof evrenSayfaVerisi === "function") {
-  const eskiSV30 = evrenSayfaVerisi;
-  window.evrenSayfaVerisi = function () {
-    const v = eskiSV30.apply(this, arguments);
-    if (!v || !EVS) { return v; }
-    if (EVS.kaynak === "fan" && !v.onizle) {
-      const oz = fanSiteListesi("evren").find(function (x) { return x.id === EVS.id; }) || v.eser || {};
-      v.rozet = oz.kanon === true ? "Kanon evren · herkes hikâye yazabilir" : (oz.test === true ? "Test · fan-made evren (örnek)" : "Fan-made evren");
-    }
-    if (EVS.kaynak === "benim" && v.eser && v.eser.durum === "kanonAday") { v.rozet += " · kanona aday"; }
-    return v;
-  };
+    "</div>" +
+    /* fan-made evrende Evrengezer izni kodu */
+    (s.tur === "fan" && !evaYetkili(s) && (s.eser && (s.eser.egIzinleri || []).length)
+      ? '<details class="evr-izin-gir"><summary>Evrengezer izni kodun var mı?</summary><div class="oyun-sira"><input class="kod-giris" id="evrIzinKod" placeholder="EG-…" aria-label="Evrengezer izni kodu">' +
+        '<button type="button" class="dugme dugme-sade" data-evr-izin-gir>Gir</button></div><p class="pencere-durum" id="evrIzinGirDurum" role="status"></p></details>'
+      : (s.tur === "fan" && evaYetkili(s) ? '<p class="oyun-not">✓ Bu evrene Evrengezer getirme iznin var.</p>' : "")) +
+    evrRafHtml(ad) +
+    '<div class="oyun-sira">' + (EVS.kaynak === "fan" ? '<button type="button" class="dugme dugme-sade" data-evr-tur-ac>🧭 Evren turu</button>' : "") +
+      '<button type="button" class="dugme dugme-sade" data-evr-kart="' + kacir(EVS.kaynak + ":" + EVS.id) + '">🖼 Evren kartı</button>' +
+      /* okur evrenini şikâyet et (moderatörlere gider) */
+      (EVS.kaynak === "fan" ? '<button class="dugme dugme-sade" data-evren-bildir="' + kacir(EVS.id) + '">Bildir</button>' : "") + "</div></div>";
 }
 
 document.addEventListener("click", function (ev) {
@@ -295,15 +249,6 @@ function evaYolHtml(e) {
       secim("sahip", "Hikâyeleri yalnızca ben yazarım", "Başkaları bu evrende hikâye yazamaz.", !!kapali, "data-eva-izin") + "</div>"
       : '<p class="oyun-not">Aşağıdaki “Yazara gönder” ile gönder; yazar onaylayıp yayınlarsa evrenin kanona girer.</p>') +
     "</div>";
-}
-if (typeof evrKurucuHtml === "function") {
-  const eskiKH30 = evrKurucuHtml;
-  window.evrKurucuHtml = function (v) {
-    const h = eskiKH30.apply(this, arguments);
-    if ((EVR_ADIM[v.eser.id] || "temel") !== "paylas") { return h; }
-    const i = h.indexOf('<div class="oyun-sira">');
-    return i === -1 ? h : h.slice(0, i) + evaYolHtml(v.eser) + h.slice(i);
-  };
 }
 
 /* evren seçicide: fan evrenlerinin statüsü */
@@ -397,11 +342,3 @@ document.addEventListener("click", function (ev) {
 /* sayfaya her gelişte güncel (kendi evrenlerin başka sayfada değişir) */
 window.addEventListener("hashchange", function () { if (typeof rota === "function" && rota().indexOf("#/atolye") === 0) { setTimeout(evrenAtolyeCiz, 30); } });
 
-/* kanona alınmış fan evreninin okur sayfasında etiket */
-if (typeof fanEserGovde === "function") {
-  const eskiGovde30b = fanEserGovde;
-  window.fanEserGovde = function (e) {
-    const h = eskiGovde30b.apply(this, arguments);
-    return e && e.tur === "evren" && e.kanon === true && !e.etiket ? h.replace("Fan evreni · kanon dışı", "Kanon evren · okurların kurduğu") : h;
-  };
-}

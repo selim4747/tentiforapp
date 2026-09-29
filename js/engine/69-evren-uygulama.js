@@ -28,15 +28,6 @@ function evuTemizle(l) {
   }).filter(Boolean);
 }
 
-if (typeof evrenEkTemizle === "function") {
-  const eskiEk = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEk.apply(this, arguments);
-    const u = evuTemizle(ham.uygulamalar);
-    if (u.length) { e.uygulamalar = u; } else { delete e.uygulamalar; }
-  };
-}
-
 function evuListe(e) { return (e && e.uygulamalar) || []; }
 
 /** Çerçeveye giden evren verisi (salt okunur kopya) */
@@ -214,31 +205,6 @@ function evuSahneKur() {
   const v = typeof evrenSayfaVerisi === "function" ? evrenSayfaVerisi() : null;
   const u = v && evuListe(v.eser).find(function (x) { return x.id === s.getAttribute("data-evu"); });
   if (u) { evuCalistir(s, v.eser, u); }
-}
-
-if (typeof evrenEkSekmeler === "function") {
-  const eskiSek = evrenEkSekmeler;
-  window.evrenEkSekmeler = function (v) {
-    const l = eskiSek.apply(this, arguments);
-    if (!EVS || EVS.kaynak === "site") { return l; }
-    const n = evuListe(v.eser).length;
-    if (EVS.kaynak === "benim" || n) { l.push(["uygulama", "Uygulamalar" + (n ? " (" + n + ")" : "")]); }
-    return l;
-  };
-  const eskiBol = evrenEkBolum;
-  window.evrenEkBolum = function (v) {
-    if (EVS && EVS.sekme === "uygulama") { return evuBolum(v); }
-    return eskiBol.apply(this, arguments);
-  };
-}
-if (typeof evrenSayfaCiz === "function") {
-  const eskiCizU = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    const r = eskiCizU.apply(this, arguments);
-    if (!EVS || EVS.sekme !== "uygulama") { evuCerceve = null; }
-    evuSahneKur();
-    return r;
-  };
 }
 
 function evuDegistir(fn) {

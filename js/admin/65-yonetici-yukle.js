@@ -4,12 +4,18 @@
 const YONETICI_BETIKLERI = ["js/admin/22b-yonetici-araclari.js", "js/admin/25-panel-roman-ses-basin.js", "js/admin/43-kurulum.js"];
 let yoneticiBetikSozu = null;
 
+/** Panel betikleri ve veri.json'un bütün parçaları hazır mı (panel tam veriyle kaydeder). */
 function yoneticiBetikleriHazir() {
-  return typeof yoneticiGithub === "function" && typeof yoneticiRoman === "function" && typeof yoneticiKurulum === "function";
+  return typeof yoneticiGithub === "function" && typeof yoneticiRoman === "function" && typeof yoneticiKurulum === "function" && veriParcalariHazir();
 }
 
 function yoneticiBetikleriYukle() {
-  if (yoneticiBetikleriHazir()) { return Promise.resolve(); }
+  const parcalar = veriParcalariTam().catch(function () { /* internetsiz: kaydetmede yine denenir */ });
+  return Promise.all([yoneticiBetikDosyalari(), parcalar]).then(function () { /* tamam */ });
+}
+
+function yoneticiBetikDosyalari() {
+  if (typeof yoneticiGithub === "function" && typeof yoneticiRoman === "function" && typeof yoneticiKurulum === "function") { return Promise.resolve(); }
   if (yoneticiBetikSozu) { return yoneticiBetikSozu; }
   yoneticiBetikSozu = YONETICI_BETIKLERI.reduce(function (onceki, yol) {
     return onceki.then(function () {
@@ -25,16 +31,3 @@ function yoneticiBetikleriYukle() {
   return yoneticiBetikSozu;
 }
 
-if (typeof yoneticiCiz === "function") {
-  const eskiYoneticiCiz = yoneticiCiz;
-  window.yoneticiCiz = function () {
-    const acik = (typeof panelAcik === "function" && panelAcik()) || (typeof yoneticiAcik === "function" && yoneticiAcik());
-    if (acik && !yoneticiBetikleriHazir()) {
-      const bu = this, arg = arguments;
-      yoneticiBetikleriYukle().then(function () { eskiYoneticiCiz.apply(bu, arg); });
-      /* yüklenene kadar panel, eksik sekmeler olmadan çizilir (sekme gövdeleri yüklenince yeniden) */
-      try { return eskiYoneticiCiz.apply(this, arguments); } catch (_) { return undefined; }
-    }
-    return eskiYoneticiCiz.apply(this, arguments);
-  };
-}

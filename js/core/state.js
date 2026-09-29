@@ -27,15 +27,6 @@ async function tf4AbonelikYukle(zorla) {
   return TF4.uyelik;
 }
 
-/* giriş yapınca (tek kod hakları yüklenirken) üyelik de yüklenir */
-if (typeof tekHaklariYukle === "function") {
-  const eskiTHY40 = tekHaklariYukle;
-  window.tekHaklariYukle = async function () {
-    const r = await eskiTHY40.apply(this, arguments);
-    try { await tf4AbonelikYukle(false); } catch (_) { /* yok */ }
-    return r;
-  };
-}
 try { const o = JSON.parse(localStorage.getItem(TF4_UYELIK_ANAHTAR) || "null"); if (o && o.v) { TF4.uyelik = o.v; } } catch (_) { /* yok */ }
 tf4UyelikUygula();
 
@@ -89,14 +80,4 @@ document.addEventListener("click", async function (ev) {
   try { await hesapIstemci.rpc("bildirimleri_okundu"); TF4_BILDIRIM.liste.forEach(function (x) { x.okundu = true; }); bildirimleriCiz(); } catch (_) { /* yok */ }
 });
 
-/* girişte bir kez; Sen sayfası açılınca tazele */
-if (typeof tekHaklariYukle === "function") {
-  const eskiTHY42 = tekHaklariYukle;
-  window.tekHaklariYukle = async function () {
-    const r = await eskiTHY42.apply(this, arguments);
-    bildirimleriYukle();
-    if (typeof kurucuPaneliCiz === "function") { kurucuPaneliCiz(); }
-    return r;
-  };
-}
 window.addEventListener("hashchange", function () { if (typeof aktifSayfa !== "undefined" && aktifSayfa === "sen") { bildirimleriYukle(); } });

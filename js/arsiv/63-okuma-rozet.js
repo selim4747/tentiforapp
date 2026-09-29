@@ -109,6 +109,8 @@ function okuBugunEkle(anahtar) {
 let GUNUN_BEKLER = 0;
 
 function okumaBitti(anahtar, el) {
+  const yol = yolAktif();                              /* seçili okuma yolu */
+  const yolOnce = yol ? yolIlerleme(yol).okunan : 0;
   el.classList.add("oku-tamam");
   const ilk = okunduIsaretle(anahtar);
   const m = anahtar.match(/^kar:(.+)$/);
@@ -133,6 +135,21 @@ function okumaBitti(anahtar, el) {
     const k = (veri.karakterler || []).find(function (x) { return "kar:" + x.id === km.getAttribute("data-oku"); });
     if (k) { rk.outerHTML = rozetKutusuHtml(k); }
   }
+  try { rbSeritleriTazele(); } catch (_) { /* yok */ }  /* kutu rozeti şeritleri */
+  /* okuma yolu bittiyse */
+  if (yol) {
+    const o = yolIlerleme(yol);
+    if (o.okunan > yolOnce && !o.sonraki) {
+      jsonYaz(YOL_AKTIF, null);
+      eckaBildir("Yol bitti: " + yol.ad + " ✓");
+    }
+    yolCubuguCiz();
+  }
+  /* günlük okuma sayısı (okur istatistiği) */
+  const g = tf28Oku(TF28.kutu, {}) || {};
+  const bugun = yerelGun();
+  g[bugun] = (g[bugun] || 0) + 1;
+  tf28Yaz(TF28.kutu, gunleriBuda(g));
 }
 
 if (typeof gununOkundu === "function") {
@@ -337,61 +354,6 @@ function rozetKutusuHtml(k) {
       : (r === "gumus" ? (hikaye ? "" : "Altın rozet: " + kacir(k.ad) + " hakkında bir fan hikâyesi yaz (hikâyenin kişilerine adını ekle).")
         : (hikaye ? "Ona bir hikâye yazdın — altın rozet için hakkındaki her şeyi oku (" + kalan + " kutu kaldı)."
           : "Hakkındaki her kutuyu okuyunca gümüş rozet; ona bir fan hikâyesi de yazınca altın."))) + "</p></div>";
-}
-
-/* fan hikâyesi kaydedilince rozetler; düzenleyicide adı geçen karakterlerin durumu */
-if (typeof fanEserlerimYaz === "function") {
-  const eskiYaz = fanEserlerimYaz;
-  window.fanEserlerimYaz = function () {
-    const r = eskiYaz.apply(this, arguments);
-    setTimeout(rozetleriDenetle, 0);
-    return r;
-  };
-}
-
-if (typeof fanCiz === "function") {
-  const eskiFanCiz = fanCiz;
-  window.fanCiz = function (tur) {
-    const r = eskiFanCiz.apply(this, arguments);
-    if (tur === "hikaye" && typeof fanDuzenlenen === "function" && !(typeof fanSekme !== "undefined" && fanSekme.hikaye === "oku")) {
-      const e = fanDuzenlenen("hikaye");
-      const alan = document.querySelector("#fanHikayeAlan, [data-fan-alan='hikaye']");
-      if (e && alan) {
-        const adlar = String(e.karakterler || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
-        const kl = adlar.map(function (a) { return (veri.karakterler || []).find(function (k) { return String(k.ad).toLocaleLowerCase("tr") === a.toLocaleLowerCase("tr"); }); }).filter(Boolean);
-        if (kl.length) {
-          alan.insertAdjacentHTML("beforeend", '<div class="kutu-y rozet-kutu fan-rozet"><div class="oyun-etiket">Altın rozet</div>' + kl.map(function (k) {
-            const o = karakterOkunanlar(k), r = rozetDurumu(k);
-            const kalan = o.l.length - o.okunan.length;
-            return "<p>" + (r === "altin" ? "🥇 " : "") + "<b>" + kacir(k.ad) + "</b>: " +
-              (r === "altin" ? "altın rozetin var." : (kalan ? "altın rozet için hakkındaki her şeyi oku — " + kalan + " kutu kaldı." : "hikâyen en az 300 harf olunca altın rozet gelir.")) + "</p>";
-          }).join("") + "</div>");
-        }
-      }
-    }
-    return r;
-  };
-}
-
-/* koleksiyonda rozetler */
-if (typeof koleksiyonCiz === "function") {
-  const eskiKol = koleksiyonCiz;
-  window.koleksiyonCiz = function () {
-    const r = eskiKol.apply(this, arguments);
-    const alan = document.querySelector("#koleksiyonAlan");
-    if (alan) {
-      const l = (veri.karakterler || []).filter(function (k) { return k.id && k.kart !== false && okuErisim(null, k.gizli); });
-      const kazanilan = l.filter(function (k) { return rozetDurumu(k); });
-      alan.insertAdjacentHTML("afterbegin", '<div class="kutu-y rozet-ozet"><div class="oyun-etiket">Karakter rozetleri · ' + kazanilan.length + " / " + l.length + "</div>" +
-        '<div class="rozet-izgara">' + l.map(function (k) {
-          const r = rozetDurumu(k), o = karakterOkunanlar(k);
-          return '<button type="button" class="rozet-oge ' + (r || "yok") + '" data-rozet-kar="' + kacir(k.id) + '" title="' + kacir(k.ad + " · " + o.okunan.length + "/" + o.l.length) + '">' +
-            '<span class="rozet-simge" aria-hidden="true">' + (r ? ROZET_SIMGE[r] : "○") + "</span><span>" + kacir(k.ad) + "</span>" +
-            '<small>' + o.okunan.length + "/" + o.l.length + "</small></button>";
-        }).join("") + "</div></div>");
-    }
-    return r;
-  };
 }
 
 document.addEventListener("click", function (ev) {

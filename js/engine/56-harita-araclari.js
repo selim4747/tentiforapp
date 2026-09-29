@@ -25,28 +25,6 @@ function gecitAdi(git) {
   return s ? s[1].replace(/ \((kanon|fanmade|senin)\)$/, "") : "başka bir evren";
 }
 
-if (typeof evrenSeciliFormu === "function") {
-  const eskiForm = evrenSeciliFormu;
-  window.evrenSeciliFormu = function (v, hv) {
-    const h = eskiForm.apply(this, arguments);
-    if (!EVS.secili || !h) { return h; }
-    const b = evrenYerBul(hv, EVS.secili);
-    if (!b) { return h; }
-    const y = b.yer;
-    let ek = "";
-    if (b.duzenlenir) {
-      ek = '<label for="evhGecit">Geçit: bu yer başka bir evrene kapı olsun</label>' +
-        '<select class="kod-giris arac-giris" id="evhGecit" data-evh-gecit><option value="">— geçit yok —</option>' +
-          gecitSecenekleri(EVS.id).map(function (s) { return '<option value="' + kacir(s[0]) + '"' + (y.gecit === s[0] ? " selected" : "") + ">" + kacir(s[1]) + "</option>"; }).join("") +
-        "</select>";
-    }
-    if (y.gecit && FAN_GECIT.test(y.gecit)) {
-      ek += '<button class="dugme evh-gecit-git" data-evren-git="' + kacir(y.gecit) + '">Geçitten geç → ' + kacir(gecitAdi(y.gecit)) + "</button>";
-    }
-    return ek ? h.replace(/<\/div>$/, ek + "</div>") : h;
-  };
-}
-
 /* okur: haritada bir yere dokununca anlatımı (ve varsa geçidi) */
 document.addEventListener("click", function (ev) {
   const g = ev.target.closest && ev.target.closest("#evrenSayfa .evh-kutu .evh-svg:not(.duzenle) [data-evh-yer]");
@@ -215,20 +193,6 @@ function evtUygula(id, turId) {
       }
     }
   });
-}
-
-/* ilk adımlar kartında (Bilgiler): kural yazılmadıysa türle başla */
-if (typeof evkKartHtml === "function") {
-  const eskiKart = evkKartHtml;
-  window.evkKartHtml = function (e, kisa) {
-    const h = eskiKart.apply(this, arguments);
-    if (!h || kisa) { return h; }
-    const kuralYok = !(e.kurallar || []).some(function (x) { return x && (String(x.ad || "").trim() || String(x.aciklama || "").trim()); });
-    if (!kuralYok) { return h; }
-    const tur = '<div class="evt-turler"><span class="oyun-not">Bir türle başla (yalnızca boş alanları doldurur, sonra hepsini değiştirebilirsin):</span>' +
-      EVT_TURLER.map(function (t) { return '<button class="evt-tur" data-evt-tur="' + t.id + '"><b>' + kacir(t.ad) + "</b><small>" + kacir(t.ozet) + "</small></button>"; }).join("") + "</div>";
-    return h.replace(/<\/section>$/, tur + "</section>");
-  };
 }
 
 document.addEventListener("click", function (ev) {

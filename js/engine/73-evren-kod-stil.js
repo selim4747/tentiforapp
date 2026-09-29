@@ -14,15 +14,6 @@ const EKS_ETIKETLER = ["div", "span", "p", "h1", "h2", "h3", "h4", "h5", "ul", "
   "table", "thead", "tbody", "tr", "th", "td", "details", "summary", "dl", "dt", "dd", "code", "pre", "sup", "sub"];
 const EKS_OZNITELIK = ["class", "title", "alt", "href", "src", "style", "colspan", "rowspan", "open", "width", "height", "role", "aria-label", "lang", "dir"];
 
-if (typeof evrenEkTemizle === "function") {
-  const eskiEkK = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEkK.apply(this, arguments);
-    if (typeof ham.stilKodu === "string" && ham.stilKodu.trim()) { e.stilKodu = ham.stilKodu.slice(0, EKS_STIL_SINIR); } else { delete e.stilKodu; }
-    if (typeof ham.gorunumKodu === "string" && ham.gorunumKodu.trim()) { e.gorunumKodu = ham.gorunumKodu.slice(0, EKS_GORUNUM_SINIR); } else { delete e.gorunumKodu; }
-  };
-}
-
 /* ==================== stil kodu ==================== */
 
 function eksCssTemizle(css) {
@@ -181,46 +172,6 @@ const EKS_ORNEK = {
     "</section>"
   ].join("\n")
 };
-
-if (typeof evrenEkSekmeler === "function") {
-  const eskiSekK = evrenEkSekmeler;
-  window.evrenEkSekmeler = function (v) {
-    const l = eskiSekK.apply(this, arguments);
-    if (!EVS || EVS.kaynak === "site") { return l; }
-    const vitrin = String(v.eser.gorunumKodu || "").trim();
-    if (vitrin || EVS.kaynak === "benim") { l.unshift(["vitrin", "✦ Vitrin"]); }
-    if (EVS.kaynak === "benim") {
-      const i = l.findIndex(function (x) { return x[0] === "stil"; });
-      l.splice(i === -1 ? 1 : i + 1, 0, ["kodstil", "{ } Kod ile stil"]);
-    }
-    return l;
-  };
-  const eskiBolK = evrenEkBolum;
-  window.evrenEkBolum = function (v) {
-    if (EVS && EVS.sekme === "kodstil" && EVS.kaynak === "benim") { return eksKodBolumu(v); }
-    if (EVS && EVS.sekme === "vitrin") { return eksVitrinBolumu(v); }
-    return eskiBolK.apply(this, arguments);
-  };
-}
-
-/* stil kodunu sayfaya uygula (evren sayfası kapanınca kendiliğinden gider) */
-if (typeof evrenSayfaCiz === "function") {
-  const eskiCizK = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    const r = eskiCizK.apply(this, arguments);
-    const s = document.querySelector("#evrenSayfa");
-    const v = typeof evrenSayfaVerisi === "function" ? evrenSayfaVerisi() : null;
-    if (s && v && v.eser && !v.kilitli) {
-      const css = eksStilCss(v.eser);
-      let st = s.querySelector("#evsKodStil");
-      if (css) {
-        if (!st) { st = document.createElement("style"); st.id = "evsKodStil"; s.appendChild(st); }
-        if (st.textContent !== css) { st.textContent = css; }
-      } else if (st) { st.remove(); }
-    }
-    return r;
-  };
-}
 
 document.addEventListener("click", function (ev) {
   const h = ev.target.closest && ev.target.closest("[data-eks-kaydet], [data-eks-ornek], [data-eks-sil]");

@@ -745,11 +745,12 @@ function sayfaBasiCiz(sayfa) {
   const i = SAYFA_SIRASI.indexOf(sayfa);
   const g = GEZINME[i];
   c.hidden = !g || sayfa === "arsiv";
+  /* bölümlerin gizlenip açılması aynı karede biter: başlık tekrarı ölçümü bir sonraki karede */
+  requestAnimationFrame(function () { try { sadeBaslikTekrari(sayfa); } catch (_) { /* yok */ } });
   if (c.hidden) { return; }
 
   c.innerHTML =
     '<div class="sayfa-bas-ust"><div class="sayfa-bas-yazi">' +
-      '<p class="sayfa-no">Sayfa ' + (i + 1) + " / " + SAYFA_SIRASI.length + "</p>" +
       "<h1>" + kacir(g.ad) + "</h1></div>" +
       '<button class="dugme dugme-sade sayfa-paylas" data-sayfa-paylas="' + sayfa + '"><span aria-hidden="true">↗</span> Paylaş</button></div>' +
     '<div class="sayfa-icerik" role="navigation" aria-label="Bu sayfada">' +

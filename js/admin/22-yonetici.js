@@ -270,7 +270,25 @@ function yoneticiSekmeleri(grup) {
   return yoneticiAcik() ? l : l.filter(function (s) { return SINIRLI_SEKMELER.indexOf(s) !== -1; });
 }
 
+/** Yönetici paneli. Yayında panel betikleri (22b, 25, 43) ayrı yüklenir: yüklenene kadar panel eksik sekmelerle
+    çizilir, yüklenince yeniden. */
 function yoneticiCiz() {
+  if (yoneticiSekme === "icbildirim" || yoneticiSekme === "vitrin") { yoneticiSecili = null; }
+  if ((panelAcik() || yoneticiAcik()) && !yoneticiBetikleriHazir()) {
+    yoneticiBetikleriYukle().then(yoneticiTemelCiz);
+    try { yoneticiTemelCiz(); } catch (_) { /* eksik betik */ }
+  } else {
+    yoneticiTemelCiz();
+  }
+  if (document.querySelector("#yoneticiAlan") && panelAcik()) { yon24Sor(); yon24SeritKoy(); }   /* kurulum şeridi */
+  Object.keys(Y25_YENI_SEKMELER).forEach(function (s) {
+    const b = document.querySelector('#yoneticiAlan [data-y-sekme="' + s + '"]');
+    if (b) { b.textContent = Y25_YENI_SEKMELER[s]; }
+  });
+  if (panelAcik()) { ibSayiSor(); }   /* içerik bildirimi sayısı */
+}
+
+function yoneticiTemelCiz() {
   const alan = document.querySelector("#yoneticiAlan");
   if (!alan) { return; }
 
@@ -948,6 +966,15 @@ async function githubShaOku() {
 
 /** veri.json'u doğrudan depoya yazar. Çakışma (409) olursa dosyayı yeniden okuyup bir kez daha dener. */
 async function githubGonder() {
+  /* veri.json'un bütün parçaları gelmeden kaydedilmez (yoksa eksik veri yazılır) */
+  if (!veriParcalariHazir()) {
+    yoneticiDurum("Verinin tamamı hazırlanıyor…", true);
+    try { await veriParcalariTam(); } catch (e) {
+      yoneticiDurum("Kaydedilmedi: verinin bir kısmı indirilemedi (" + e.message + "). İnternetini kontrol edip tekrar dene.", false);
+      return;
+    }
+  }
+  if (!veriDenetimOnayi()) { return; }   /* veri denetimi uyarı verdiyse yöneticiye sorulur */
   if (!githubHazir()) {
     yoneticiDurum("Önce kullanıcı adı, depo ve anahtar gir", false);
     return;

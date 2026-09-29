@@ -350,7 +350,7 @@ function evrenHaritaSvg(h, o) {
     ekli.filter(function (y) { return !y.sekil; }).map(function (y) { return isaret(y, true); }).join("") +
     yerler.filter(function (y) { return y.sekil; }).map(function (y) { return isaret(y, false); }).join("") +
     ekli.filter(function (y) { return y.sekil; }).map(function (y) { return isaret(y, true); }).join("") +
-    taslak + olcek + "</svg>";
+    taslak + olcek + gzYolSvg() + "</svg>";
 }
 
 /* ==================== evren sayfası ==================== */
@@ -358,7 +358,21 @@ function evrenHaritaSvg(h, o) {
 let EVS = null;
 let evrenSonrakiSekme = null;   /* yeni evren kurulunca bilgi sekmesiyle açılsın */   /* { kaynak: benim|fan|acilan|e99, id, sekme: harita|bilgi, secili, mod: sec|yer|cizim, cizim: [] } */
 
+/** Evren sayfasını açar. kaynak: site | fan | benim | acilan | e99 | onizle (kendi evrenine ziyaretçi gözüyle). */
 function evrenSayfaAc(kaynak, id) {
+  if (kaynak === "onizle") {
+    if (!evrenBenimBul(id)) { evrenSayfaKur("benim", id); return; }
+    ONZ.bekleyen = id;
+    try { evrenSayfaKur("fan", id); } finally { ONZ.bekleyen = null; }
+    if (EVS && EVS.id === id) { EVS.onizle = true; evrenSayfaCiz(); }
+    return;
+  }
+  evrenSayfaKur(kaynak, id);
+  /* ortak yazılan kendi evreni: öbür yazarın son hâli */
+  if (kaynak === "benim") { const e = evrenBenimBul(id); if (e && e.ortak) { ortakCek(id); } }
+}
+
+function evrenSayfaKur(kaynak, id) {
   if (kaynak === "e99") { e99Katki(); id = "e99"; }
   /* haritası olmayan kanon evren bilgi sekmesiyle açılır */
   const haritasiz = (kaynak === "site" && !(veri.haritalar || []).some(function (h) { return h.id === id && (h.yerler || []).length; })) ||
@@ -370,9 +384,25 @@ function evrenSayfaAc(kaynak, id) {
   if (EVS && typeof evrenZiyaretOdulu === "function") {
     if (evrenZiyaretOdulu() && document.querySelector("#evrenSayfa [data-evs-cuzdan]")) { evrenSayfaCiz(); }
   }
+  /* dosyalı okur evreni: dosyası indirilince yeniden çizilir */
+  if (kaynak === "fan") {
+    const e = fanBul("site", "evren", id);
+    if (evdDosyali(e) && !EVD_BELLEK[id]) {
+      evdYukle(e).then(function () {
+        if (EVS && EVS.kaynak === "fan" && EVS.id === id) { evrenSayfaCiz(); }
+      }, function (h) {
+        const g = document.querySelector("#evrenSayfa .evd-not");
+        if (g) { g.textContent = h.message + ". İnternet bağlantını kontrol et."; g.className = "evd-not kotu"; }
+      });
+    }
+  }
 }
 
 function evrenSayfaKapat() {
+  oklAcilis = null; sekmeDuzenSon = null;          /* okuma listesi açılışı, sekme düzeni */
+  gzOynatDurdur(); GZ.gun = null;                  /* haritadaki zaman oynatıcısı */
+  if (evrBekleyen) { evrBekleyeniYaz(); }          /* Kurucu'da yazılmayı bekleyen değişiklik */
+  EVO = null;                                      /* açık evren oyunu */
   const s = document.querySelector("#evrenSayfa");
   if (s) { s.remove(); }
   document.documentElement.classList.remove("evren-acik");
@@ -381,18 +411,27 @@ function evrenSayfaKapat() {
     history.replaceState(null, "", rotadanYol("#/fan") + location.search);
     if (typeof sayfaYonlendir === "function") { sayfaYonlendir(); }
   }
+  evrenDugmesiGuncelle();
 }
 
 /** Gösterilecek evren ve düzenleme hakkı. */
 function evrenSayfaVerisi() {
   if (!EVS) { return null; }
+  if (onizlemeMi()) {
+    /* kendi evrenine ziyaretçi gözüyle */
+    const e = evrenBenimBul(EVS.id);
+    return e ? { eser: e, duzenle: false, rozet: "Önizleme · ziyaretçiler böyle görür", onizle: true } : null;
+  }
   if (EVS.kaynak === "benim") {
     const e = evrenBenimBul(EVS.id);
-    return e ? { eser: e, duzenle: true, hedef: e.id, rozet: "Senin evrenin · tam yöneticisi sensin" } : null;
+    return e ? { eser: e, duzenle: true, hedef: e.id, rozet: "Senin evrenin · tam yöneticisi sensin" + (e.durum === "kanonAday" ? " · kanona aday" : "") } : null;
   }
   if (EVS.kaynak === "fan" || EVS.kaynak === "acilan") {
     const e = fanBul(EVS.kaynak === "fan" ? "site" : "acilan", "evren", EVS.id);
-    return e ? { eser: e, duzenle: false, rozet: EVS.kaynak === "fan" ? "Fanmade evren" : "Açtığın dosya" } : null;
+    if (!e) { return null; }
+    if (EVS.kaynak === "acilan") { return { eser: e, duzenle: false, rozet: "Açtığın dosya" }; }
+    const oz = fanSiteListesi("evren").find(function (x) { return x.id === EVS.id; }) || e;
+    return { eser: e, duzenle: false, rozet: oz.kanon === true ? "Kanon evren · herkes hikâye yazabilir" : (oz.test === true ? "Test · fan-made evren (örnek)" : "Fan-made evren") };
   }
   if (EVS.kaynak === "e99") {
     return { eser: veri.e99 || {}, duzenle: true, hedef: E99_KATKI_ID, katki: e99Katki(), rozet: "Herkesin evreni · yazdıkların önce yalnızca sende durur" };
@@ -417,7 +456,140 @@ function evrenSayfaBasligi() {
   return v && v.eser ? (v.eser.ad || "Evren") + " — TentiforApp" : "";
 }
 
+/** Evren sayfasını çizer. Sıra: sekme düzeni (evrenin ilk sekmesi, gizli harita) → iskelet ve sekme içerikleri
+    (evrenSayfaIskeletCiz) → sayfa ekleri (sayaç, okuma yolu, tur, onaya gönderme). */
 function evrenSayfaCiz() {
+  /* sekme düzeni: evren ilk açıldığında kurucunun seçtiği ilk sekme; harita gizliyse bilgi */
+  const d = EVS ? evrenDuzeni() : null;
+  if (!EVS) { sekmeDuzenSon = null; } else {
+    const anahtar = EVS.kaynak + ":" + EVS.id;
+    if (sekmeDuzenSon !== anahtar) {
+      sekmeDuzenSon = anahtar;
+      const gizli = EVS.kaynak !== "benim" ? ((d && d.gizli) || []) : [];
+      if (d && d.ilk && (EVS.sekme === "harita" || EVS.sekme === "bilgi") && gizli.indexOf(d.ilk) === -1) { EVS.sekme = d.ilk; }
+    }
+    if (haritaGizliMi(d) && EVS.sekme === "harita") { EVS.sekme = "bilgi"; }
+  }
+  evrenSayfaIskeletCiz();
+  if (d && haritaGizliMi(d)) {
+    /* seçilen sekme bu evrende yoksa çizim haritaya düşer; harita gizliyse bilgiye */
+    if (EVS && EVS.sekme === "harita") { EVS.sekme = "bilgi"; evrenSayfaIskeletCiz(); }
+    const hb = document.querySelector('#evrenSayfa [data-evs-sekme="harita"]'); if (hb) { hb.remove(); }
+  }
+
+  /* ziyaret ve sekme sayacı, yönetici ekleri */
+  if (EVS) {
+    const k = EVS.kaynak + ":" + EVS.id + ":" + EVS.sekme;
+    if (k !== eviSonSekme) { eviSonSekme = k; evrenSay("ziyaret"); evrenSay("sekme:" + String(EVS.sekme).replace(/[^a-z0-9]/g, "").slice(0, 30)); }
+    y25EvrenEkleri();
+  } else { eviSonSekme = ""; }
+
+  /* ortak yazım şeridi, okuma yolu çubuğu */
+  if (EVS && EVS.kaynak === "benim") {
+    const e = evrenBenimBul(EVS.id);
+    const g = document.querySelector("#evrenSayfa .evs-govde");
+    if (e && e.ortak && g && !g.querySelector(".oi-serit")) { const h = oiSeritHtml(e); if (h) { g.insertAdjacentHTML("afterbegin", h); } }
+  }
+  yolCubuguCiz();
+
+  /* okur evreninde ilk açılış turu */
+  try {
+    if (EVS && ["fan", "acilan"].indexOf(EVS.kaynak) !== -1 && !(EVS.turAcik !== true && evrTurGoruldu())) {
+      const v = evrenSayfaVerisi();
+      const g = document.querySelector("#evrenSayfa .evs-govde");
+      if (v && !v.kilitli && g && !g.querySelector(".evr-tur")) { const h = evrTurHtml(v); if (h) { g.insertAdjacentHTML("afterbegin", h); } }
+    }
+  } catch (_) { /* tur olmadan devam */ }
+
+  /* kendi evreni sitede yayındaysa: "Güncellemeyi onaya gönder" */
+  if (EVS && EVS.kaynak === "benim" && document.querySelector("[data-tf4-gonder]") && typeof hesapKullanici !== "undefined" && hesapKullanici) {
+    const id = EVS.id;
+    tf4GuncellemeAdresi(id).then(function (slug) {
+      const b = document.querySelector("[data-tf4-gonder]");
+      if (!slug || !b || !EVS || EVS.id !== id) { return; }
+      b.setAttribute("data-tf4-guncelle", slug); b.textContent = "Güncellemeyi onaya gönder";
+      const n = document.querySelector("#tf4TeslimNot");
+      if (n) { n.textContent = "Bu evren sitede (" + slug + "). Yaptığın değişiklikler moderatör onayından sonra sitedekinin yerine geçer."; }
+    });
+  }
+}
+
+/** Evren sayfasının iskeleti ve seçili sekmenin içeriği, ardından sekmeye bağlı ekler. */
+function evrenSayfaIskeletCiz() {
+  if (evrBekleyen) { evrBekleyeniYaz(); }   /* Kurucu'da yazılmayı bekleyen değişiklik */
+  evrenSayfaTemelCiz();
+  const s = document.querySelector("#evrenSayfa");
+
+  /* seçili sekme şeritte görünsün; kendi evreninde üstte kurulum kartı */
+  if (s && EVS) {
+    const serit = s.querySelector(".evs-sekmeler");
+    const secili = serit && serit.querySelector(".evs-sekme.secili");
+    if (secili && serit.scrollWidth > serit.clientWidth) {
+      serit.scrollLeft = Math.max(0, secili.offsetLeft - (serit.clientWidth - secili.offsetWidth) / 2);
+    }
+    if (EVS.kaynak === "benim" && (EVS.sekme === "bilgi" || EVS.sekme === "harita")) {
+      const e = evrenBenimBul(EVS.id);
+      const govde = s.querySelector(".evs-govde");
+      const kart = e ? evkKartHtml(e, EVS.sekme === "harita") : "";
+      if (govde && kart) { govde.insertAdjacentHTML("afterbegin", kart); }
+    }
+  }
+
+  if (EVS && EVS.kaynak === "fan") {
+    /* dosyalı okur evreni: indiriliyor notu ya da indirme kutusu */
+    const govde = document.querySelector("#evrenSayfa .evs-govde");
+    const ozet = ((veri.fanEserleri || {}).evrenler || []).find(function (x) { return x.id === EVS.id; });
+    if (govde && ozet) {
+      if (evdDosyali(ozet) && !EVD_BELLEK[ozet.id]) {
+        govde.insertAdjacentHTML("afterbegin", '<p class="evd-not" role="status">Evren indiriliyor…</p>');
+      } else if (evdDosyali(ozet) && EVS.sekme === "bilgi") {
+        govde.insertAdjacentHTML("beforeend", evdIndirKutusu(ozet));
+      }
+    }
+    /* takip: açılan evrenin yeni bölümleri görüldü; bilgi sekmesinde takip kutusu */
+    const te = tkpFanEvren(EVS.id);
+    if (te) {
+      const l = tkpListe();
+      if (EVS.id in l && tkpBolumSayisi(te) > l[EVS.id]) { l[EVS.id] = tkpBolumSayisi(te); jsonYaz(TKP_ANAHTAR, l); swAyarEsitle(); }
+      if (EVS.sekme === "bilgi") {
+        const g = document.querySelector("#evrenSayfa .evs-govde");
+        if (g) { g.insertAdjacentHTML("beforeend", tkpKutusu(EVS.id)); }
+      }
+    }
+  }
+
+  /* son gezilen evrenler, üstteki evren düğmesi */
+  const se = simdikiEvren();
+  if (se.git.indexOf("#/ev/") === 0 && !(EVS && EVS.kaynak === "acilan")) {
+    const l = sonEvrenler();
+    if (!l.length || l[0].git !== se.git) { sonEvrenEkle(se.ad, se.git); }
+  }
+  evrenDugmesiGuncelle();
+
+  /* evren uygulaması sahnesi */
+  if (!EVS || EVS.sekme !== "uygulama") { evuCerceve = null; }
+  evuSahneKur();
+
+  /* evren yazısıyla başlık */
+  const ye = eyVeri();
+  const bas = document.querySelector("#evrenSayfa .evs-baslik");
+  if (ye && bas && ye.yazi && ye.yazi.baslik && eyDolu(ye.yazi) && !bas.querySelector(".evs-yazi-ad")) {
+    bas.insertAdjacentHTML("beforeend", '<div class="evs-yazi-ad" aria-hidden="true">' + eyYaziSvg(ye.ad || "", ye.yazi, 26) + "</div>");
+  }
+
+  /* kurucunun stil kodu */
+  const sv = evrenSayfaVerisi();
+  if (s && sv && sv.eser && !sv.kilitli && s.isConnected) {
+    const css = eksStilCss(sv.eser);
+    let st = s.querySelector("#evsKodStil");
+    if (css) {
+      if (!st) { st = document.createElement("style"); st.id = "evsKodStil"; s.appendChild(st); }
+      if (st.textContent !== css) { st.textContent = css; }
+    } else if (st) { st.remove(); }
+  }
+}
+
+function evrenSayfaTemelCiz() {
   const v = evrenSayfaVerisi();
   let s = document.querySelector("#evrenSayfa");
   if (!v) { if (s) { s.remove(); } EVS = null; return; }
@@ -479,7 +651,29 @@ function evrenHaritaVerisi(v) {
   return { yayin: v.duzenle ? { yerler: [] } : h, duzen: v.duzenle ? h : null };
 }
 
+/** Evrenin harita sekmesi: haritanın zaman kaydırıcısı, harita (kişilerin yolları çizilerek), araçlar, seçili yer,
+    altında zaman oynatıcısı. */
 function evrenHaritaBolumu(v) {
+  /* kişilerin yolları: harita çizilirken evrenHaritaSvg bu noktaları okur */
+  let yolNok = null;
+  if (EVS && ["benim", "fan", "acilan"].indexOf(EVS.kaynak) !== -1) {
+    const b = gzEvrenBaglami(v);
+    gzKimlik("evren:" + EVS.kaynak + ":" + EVS.id + ":" + b.secili);
+    GZ.bagla = function () { const vv = evrenSayfaVerisi(); return vv ? gzEvrenBaglami(vv) : null; };
+    yolNok = gzNoktalar(b, EVS.gezegen || "");
+  }
+  window.__gzYol = yolNok;
+  let h;
+  try { h = evrenHaritaGovde(v); } finally { window.__gzYol = null; }
+  h += gziBolumu(v);
+  /* haritada zaman: kaydırınca olayın yeri yanar */
+  const z = v && v.eser ? evrZamanHtml(v.eser) : "";
+  if (!z) { return h; }
+  setTimeout(function () { evrZamanUygula(0); }, 0);
+  return h.replace('<div class="evh-kutu" data-evh-kutu>', z + '<div class="evh-kutu" data-evh-kutu>');
+}
+
+function evrenHaritaGovde(v) {
   const hv = evrenHaritaVerisi(v);
   const e99 = EVS.kaynak === "e99";
   const gorunen = e99 ? hv.yayin : (hv.duzen || hv.yayin);
@@ -543,15 +737,24 @@ function evrenSeciliFormu(v, hv) {
   const b = evrenYerBul(hv, EVS.secili);
   if (!b) { return ""; }
   const y = b.yer;
+  /* geçit: yer başka bir evrene kapı; şehir haritası */
+  const gecitGit = y.gecit && FAN_GECIT.test(y.gecit)
+    ? '<button class="dugme evh-gecit-git" data-evren-git="' + kacir(y.gecit) + '">Geçitten geç → ' + kacir(gecitAdi(y.gecit)) + "</button>" : "";
   if (!b.duzenlenir) {
-    return '<div class="kutu-y evh-bilgi"><b>' + kacir(y.ad || "—") + "</b>" + (y.tur ? ' <span class="oyun-not">' + kacir(y.tur) + "</span>" : "") + paragraf(y.not) + "</div>";
+    return '<div class="kutu-y evh-bilgi"><b>' + kacir(y.ad || "—") + "</b>" + (y.tur ? ' <span class="oyun-not">' + kacir(y.tur) + "</span>" : "") + paragraf(y.not) +
+      gecitGit + (y.sehir ? '<button class="dugme sh-ac" data-sh-evren="' + kacir(y.id) + '">🏙 Şehir haritasını aç</button>' : "") + "</div>";
   }
   return '<div class="kutu-y evh-bilgi" data-evh-form="' + kacir(y.id) + '">' +
     '<label for="evhAd">Adı</label><input class="kod-giris arac-giris" id="evhAd" data-evh-alan="ad" value="' + kacir(y.ad) + '" maxlength="80">' +
     '<label for="evhTur">Türü (listede yoksa kendin yaz)</label><input class="kod-giris arac-giris" id="evhTur" data-evh-alan="tur" list="evhTurler" value="' + kacir(y.tur) + '" maxlength="40">' +
     '<datalist id="evhTurler">' + EVH_TURLER.map(function (t) { return '<option value="' + t + '">'; }).join("") + "</datalist>" +
     '<label for="evhNot">Anlatım</label><textarea class="kod-giris arac-giris fan-uzun" id="evhNot" data-evh-alan="not" rows="3" maxlength="2000">' + kacir(y.not) + "</textarea>" +
-    '<button class="dugme dugme-sade y-sil" data-evh-sil>Bu yeri sil</button></div>';
+    '<button class="dugme dugme-sade y-sil" data-evh-sil>Bu yeri sil</button>' +
+    '<label for="evhGecit">Geçit: bu yer başka bir evrene kapı olsun</label>' +
+    '<select class="kod-giris arac-giris" id="evhGecit" data-evh-gecit><option value="">— geçit yok —</option>' +
+      gecitSecenekleri(EVS.id).map(function (s) { return '<option value="' + kacir(s[0]) + '"' + (y.gecit === s[0] ? " selected" : "") + ">" + kacir(s[1]) + "</option>"; }).join("") +
+    "</select>" + gecitGit +
+    '<button class="dugme dugme-sade sh-ac" data-sh-evren="' + kacir(y.id) + '">🏙 ' + (y.sehir ? "Şehir haritasını düzenle" : "Şehir haritası çiz") + "</button></div>";
 }
 
 /** Düzenlenen haritayı kaydeder (kendi evreni ya da E99 katkısı). */
@@ -679,7 +882,21 @@ document.addEventListener("input", function (ev) {
 
 /* ---------- bilgi sekmesi ---------- */
 
+/** Evrenin "bilgi" sekmesi: üstte evrenin durumu ve eylemleri (evaEylemHtml), kendi evreninde onaya gönderme ve
+    kişiselleştirme kısayolları, altında türüne göre içerik. */
 function evrenBilgiBolumu(v) {
+  if (EVS.kaynak !== "benim") { return evaEylemHtml(v) + evrenBilgiIcerik(v); }
+  return teslimHtml() + evaEylemHtml(v) +
+    '<div class="kutu-y evg-kisisel"><span class="oyun-etiket">Evrenini kişiselleştir</span>' +
+    '<p class="oyun-not">Evreninin sayfası senin: rengini, desenini ve yazı tipini değiştir, kendi yazını harf harf çiz, kodla oyun ekle.</p>' +
+    '<div class="oyun-sira"><button class="dugme" data-evs-sekme="stil">🎨 Görünümü değiştir</button>' +
+    '<button class="dugme dugme-sade" data-evs-sekme="kodstil">{ } Stil ve görünüm kodu</button>' +
+    '<button class="dugme dugme-sade" data-evs-sekme="yazi">✎ Yazını çiz</button>' +
+    '<button class="dugme dugme-sade" data-evs-sekme="uygulama">⌨ Uygulama ekle</button>' +
+    '<button class="dugme dugme-sade" data-ev-onizle>👁 Ziyaretçi gibi gör</button></div></div>' + evrenBilgiIcerik(v);
+}
+
+function evrenBilgiIcerik(v) {
   const e = v.eser;
   if (EVS.kaynak === "benim") {
     fanSecili.evren = e.id;
@@ -880,7 +1097,7 @@ async function siteyiYayinla() {
   try {
     /* Cloudflare bu uca tarayıcıdan gelen isteğe CORS izni vermiyor; istek gider ama yanıt okunamaz */
     await fetch(kanca, { method: "POST", mode: "no-cors" });
-    if (d) { d.textContent = "Yayın başlatıldı. 1–2 dakika içinde site güncellenir (Cloudflare → Deployments'ta görünür)."; d.className = "pencere-durum iyi"; }
+    if (d) { d.textContent = "Yayın başlatıldı. 1–2 dakika içinde site güncellenir (Cloudflare → Deployments'ta görünür)."; d.className = "pencere-durum iyi"; yayinIzle(); }
   } catch (e) {
     if (d) { d.textContent = "Gönderilemedi: " + ((e && e.message) || e); d.className = "pencere-durum kotu"; }
   }
@@ -998,17 +1215,6 @@ document.addEventListener("keydown", function (e) {
   if (EVS && EVS.mod === "cizim") { EVS.mod = "sec"; EVS.cizim = []; evrenSayfaCiz(); return; }
   if (document.querySelector("#evrenSayfa") && !document.querySelector("#perde:not([hidden])")) { evrenSayfaKapat(); }
 });
-
-/* Fan editöründe grup ekleme/çıkarma fanCiz("evren") çağırır: açık evren sayfası da tazelensin */
-(function () {
-  const eski = window.fanCiz;
-  if (typeof eski !== "function") { return; }
-  window.fanCiz = function (tur) {
-    const r = eski.apply(this, arguments);
-    if (tur === "evren" && EVS && EVS.sekme === "bilgi") { try { evrenSayfaCiz(); } catch (e) { /* sayfa kapanmış */ } }
-    return r;
-  };
-})();
 
 document.addEventListener("DOMContentLoaded", function () {
   evrenDugmesiKur();

@@ -62,25 +62,6 @@ function yolTemizle(l) {
   }).filter(Boolean);
 }
 
-/* kişilerin yolu: fanTemizle kişileri alan alan kurar; yolu buradan eklenir (aynı sıra) */
-if (typeof evrenEkTemizle === "function") {
-  const eskiEk = evrenEkTemizle;
-  window.evrenEkTemizle = function (ham, e) {
-    eskiEk.apply(this, arguments);
-    (Array.isArray(ham.kisiler) ? ham.kisiler : []).slice(0, 120).forEach(function (k, i) {
-      const y = yolTemizle(k && k.yol);
-      if (y.length && e.kisiler && e.kisiler[i]) { e.kisiler[i].yol = y; }
-      const c = gzCanliTemizle(k && k.canli);
-      if (c && e.kisiler && e.kisiler[i]) { e.kisiler[i].canli = c; }
-    });
-    const st = ham.saat && typeof ham.saat === "object" ? ham.saat : null;
-    if (st && Number(st.gunSaat) > 0) {
-      e.saat = { gunSaat: Math.min(10000, Math.max(0.1, Math.round(Number(st.gunSaat) * 100) / 100)) };
-      if (/^\d{4}-\d{2}-\d{2}$/.test(String(st.baslangic || ""))) { e.saat.baslangic = st.baslangic; }
-    }
-  };
-}
-
 /* ==================== şehir haritası: çizim ==================== */
 
 function sehirSvg(s, o) {
@@ -360,41 +341,6 @@ window.addEventListener("keydown", function (e) {
 }, true);
 
 /* ==================== bağlantılar: evren sayfası, Tömye haritası ==================== */
-
-/* evren sayfasında seçili yer: şehir haritasını aç / düzenle */
-if (typeof evrenSeciliFormu === "function") {
-  const eskiForm = evrenSeciliFormu;
-  window.evrenSeciliFormu = function (v, hv) {
-    const h = eskiForm.apply(this, arguments);
-    if (!EVS.secili || !h) { return h; }
-    const b = evrenYerBul(hv, EVS.secili);
-    if (!b) { return h; }
-    const dugme = b.duzenlenir
-      ? '<button class="dugme dugme-sade sh-ac" data-sh-evren="' + kacir(b.yer.id) + '">🏙 ' + (b.yer.sehir ? "Şehir haritasını düzenle" : "Şehir haritası çiz") + "</button>"
-      : (b.yer.sehir ? '<button class="dugme sh-ac" data-sh-evren="' + kacir(b.yer.id) + '">🏙 Şehir haritasını aç</button>' : "");
-    return dugme ? h.replace(/<\/div>$/, dugme + "</div>") : h;
-  };
-}
-
-/* Tömye (ve kanon) haritası: yer kartında şehir haritası; yönetici düzenlerken oluşturur */
-if (typeof haritaBilgiCiz === "function") {
-  const eskiBilgi = haritaBilgiCiz;
-  window.haritaBilgiCiz = function () {
-    const r = eskiBilgi.apply(this, arguments);
-    try {
-      const el = HT.kutu && HT.kutu.querySelector("#htBilgi");
-      const s = haritaSeciliYer();
-      if (el && s && !el.hidden && (s.sehir || HT.duzen)) {
-        const d = '<button type="button" class="dugme ' + (HT.duzen ? "dugme-sade " : "") + 'sh-ac" data-sh-kanon="1">🏙 ' +
-          (HT.duzen ? (s.sehir ? "Şehir haritasını düzenle" : "Şehir haritası çiz") : "Şehir haritasını aç") + "</button>";
-        /* düzenleme kartı uzun: düğme en üstte (kapat düğmesinin ardından) */
-        const kapat = HT.duzen && el.querySelector(".ht-bilgi-kapat");
-        if (kapat) { kapat.insertAdjacentHTML("afterend", d); } else { el.insertAdjacentHTML("beforeend", d); }
-      }
-    } catch (_) { /* harita açık değil */ }
-    return r;
-  };
-}
 
 document.addEventListener("click", function (ev) {
   const h = ev.target.closest("[data-sh-evren], [data-sh-kanon]");
@@ -704,37 +650,34 @@ document.addEventListener("input", function (ev) {
 });
 
 /* haritaya seçili kişinin yolu: geçilen adımlar koyu, sıradakiler soluk, bugünkü yer halkalı */
-if (typeof evrenHaritaSvg === "function") {
-  const eskiSvg = evrenHaritaSvg;
-  window.evrenHaritaSvg = function () {
-    const s = eskiSvg.apply(this, arguments);
-    const l = window.__gzYol;
-    if (!l || !l.length) { return s; }
-    const k = 0.7;
-    const nok = function (p) { return p.x + "," + (p.y * k).toFixed(2); };
-    const gecen = l.filter(function (p) { return p.durum !== "gelecek"; });
-    const simdiIdx = l.findIndex(function (p) { return p.durum === "simdi"; });
-    const gelen = simdiIdx === -1 ? l.filter(function (p) { return p.durum === "gelecek"; }) : l.slice(simdiIdx);
-    const cizgi = (gecen.length > 1 ? '<polyline points="' + gecen.map(nok).join(" ") + '" fill="none" stroke="#C0392B" stroke-width="0.45" stroke-dasharray="1.2 0.7" stroke-linecap="round"></polyline>' : "") +
-      (gelen.length > 1 ? '<polyline points="' + gelen.map(nok).join(" ") + '" fill="none" stroke="#C0392B" stroke-opacity="0.3" stroke-width="0.35" stroke-dasharray="0.6 0.8" stroke-linecap="round"></polyline>' : "");
-    /* aynı yere birden çok uğrama tek işarette: "1,4" */
-    const gruplar = [];
-    l.forEach(function (p) {
-      let g = gruplar.find(function (x) { return x.yer === p.yer; });
-      if (!g) { g = { yer: p.yer, x: p.x, y: p.y, n: [], durum: "gelecek" }; gruplar.push(g); }
-      g.n.push(p.n);
-      if (p.durum === "simdi" || (p.durum === "gecti" && g.durum === "gelecek")) { g.durum = p.durum; }
-    });
-    const noktalar = gruplar.map(function (g) {
-      const yazi = g.n.length > 3 ? g.n[0] + "…" + g.n[g.n.length - 1] : g.n.join(",");
-      const r = Math.max(1.5, 0.55 + yazi.length * 0.45);
-      return '<g class="gz-nokta' + (g.durum === "simdi" ? " simdi" : "") + '" transform="translate(' + g.x + "," + (g.y * k).toFixed(2) + ')"' + (g.durum === "gelecek" ? ' opacity="0.4"' : "") + ">" +
-        (g.durum === "simdi" ? '<circle class="gz-halka" r="3.2" fill="none" stroke="#C0392B" stroke-width="0.35"></circle>' : "") +
-        '<rect x="' + (-r) + '" y="-1.5" width="' + (2 * r) + '" height="3" rx="1.5" fill="#C0392B" stroke="#fff" stroke-width="0.3"></rect>' +
-        '<text y="0.55" text-anchor="middle" font-size="1.5" font-family="ui-monospace,monospace" fill="#fff">' + yazi + "</text></g>";
-    }).join("");
-    return s.replace(/<\/svg>$/, '<g class="gz-yol" pointer-events="none">' + cizgi + noktalar + "</g></svg>");
-  };
+/** Evren haritasında seçili kişinin yolu (evrenHaritaBolumu window.__gzYol'a noktaları koyar; harita çizilirken okunur). */
+function gzYolSvg() {
+  const l = window.__gzYol;
+  if (!l || !l.length) { return ""; }
+  const k = 0.7;
+  const nok = function (p) { return p.x + "," + (p.y * k).toFixed(2); };
+  const gecen = l.filter(function (p) { return p.durum !== "gelecek"; });
+  const simdiIdx = l.findIndex(function (p) { return p.durum === "simdi"; });
+  const gelen = simdiIdx === -1 ? l.filter(function (p) { return p.durum === "gelecek"; }) : l.slice(simdiIdx);
+  const cizgi = (gecen.length > 1 ? '<polyline points="' + gecen.map(nok).join(" ") + '" fill="none" stroke="#C0392B" stroke-width="0.45" stroke-dasharray="1.2 0.7" stroke-linecap="round"></polyline>' : "") +
+    (gelen.length > 1 ? '<polyline points="' + gelen.map(nok).join(" ") + '" fill="none" stroke="#C0392B" stroke-opacity="0.3" stroke-width="0.35" stroke-dasharray="0.6 0.8" stroke-linecap="round"></polyline>' : "");
+  /* aynı yere birden çok uğrama tek işarette: "1,4" */
+  const gruplar = [];
+  l.forEach(function (p) {
+    let g = gruplar.find(function (x) { return x.yer === p.yer; });
+    if (!g) { g = { yer: p.yer, x: p.x, y: p.y, n: [], durum: "gelecek" }; gruplar.push(g); }
+    g.n.push(p.n);
+    if (p.durum === "simdi" || (p.durum === "gecti" && g.durum === "gelecek")) { g.durum = p.durum; }
+  });
+  const noktalar = gruplar.map(function (g) {
+    const yazi = g.n.length > 3 ? g.n[0] + "…" + g.n[g.n.length - 1] : g.n.join(",");
+    const r = Math.max(1.5, 0.55 + yazi.length * 0.45);
+    return '<g class="gz-nokta' + (g.durum === "simdi" ? " simdi" : "") + '" transform="translate(' + g.x + "," + (g.y * k).toFixed(2) + ')"' + (g.durum === "gelecek" ? ' opacity="0.4"' : "") + ">" +
+      (g.durum === "simdi" ? '<circle class="gz-halka" r="3.2" fill="none" stroke="#C0392B" stroke-width="0.35"></circle>' : "") +
+      '<rect x="' + (-r) + '" y="-1.5" width="' + (2 * r) + '" height="3" rx="1.5" fill="#C0392B" stroke="#fff" stroke-width="0.3"></rect>' +
+      '<text y="0.55" text-anchor="middle" font-size="1.5" font-family="ui-monospace,monospace" fill="#fff">' + yazi + "</text></g>";
+  }).join("");
+  return '<g class="gz-yol" pointer-events="none">' + cizgi + noktalar + "</g>";
 }
 
 /* ==================== gezi çizelgesi: evren sayfası ==================== */
@@ -825,23 +768,6 @@ function gziBolumu(v) {
   return '<section class="gz-kutu" aria-label="Gezi çizelgesi">' + gzGovde(b) + "</section>";
 }
 
-if (typeof evrenHaritaBolumu === "function") {
-  const eskiBolum = evrenHaritaBolumu;
-  window.evrenHaritaBolumu = function (v) {
-    let yolNok = null;
-    if (EVS && ["benim", "fan", "acilan"].indexOf(EVS.kaynak) !== -1) {
-      const b = gzEvrenBaglami(v);
-      gzKimlik("evren:" + EVS.kaynak + ":" + EVS.id + ":" + b.secili);
-      GZ.bagla = function () { const vv = evrenSayfaVerisi(); return vv ? gzEvrenBaglami(vv) : null; };
-      yolNok = gzNoktalar(b, EVS.gezegen || "");
-    }
-    window.__gzYol = yolNok;
-    let h;
-    try { h = eskiBolum.apply(this, arguments); } finally { window.__gzYol = null; }
-    return h + gziBolumu(v);
-  };
-}
-
 /* "Haritada dokunarak ekle": yere dokunmak adım ekler (sürükleme ve seçim yerine) */
 document.addEventListener("pointerdown", function (ev) {
   if (!EVS || EVS.mod !== "yol" || EVS.kaynak !== "benim") { return; }
@@ -861,12 +787,6 @@ document.addEventListener("click", function (ev) {
   EVS.mod = EVS.mod === "yol" ? "sec" : "yol"; EVS.secili = null; EVS.cizim = [];
   evrenSayfaCiz();
 });
-
-/* evren sayfası kapanınca oynatıcı durur */
-if (typeof evrenSayfaKapat === "function") {
-  const eskiKapat = evrenSayfaKapat;
-  window.evrenSayfaKapat = function () { gzOynatDurdur(); GZ.gun = null; return eskiKapat.apply(this, arguments); };
-}
 
 /* ==================== yolculuk kartı (1080×1920, Instagram hikâyesi) ==================== */
 

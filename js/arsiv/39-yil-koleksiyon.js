@@ -274,9 +274,31 @@ function koleksiyonCiz() {
   const sahip = Object.keys(t).length;
   const tamam = tamamlananSetler();
 
-  alan.innerHTML =
+  /* karakter rozetleri: her karakterin kutularını okuyunca */
+  const rl = (veri.karakterler || []).filter(function (k) { return k.id && k.kart !== false && okuErisim(null, k.gizli); });
+  const rozetOzet = '<div class="kutu-y rozet-ozet"><div class="oyun-etiket">Karakter rozetleri · ' + rl.filter(function (k) { return rozetDurumu(k); }).length + " / " + rl.length + "</div>" +
+    '<div class="rozet-izgara">' + rl.map(function (k) {
+      const r = rozetDurumu(k), o = karakterOkunanlar(k);
+      return '<button type="button" class="rozet-oge ' + (r || "yok") + '" data-rozet-kar="' + kacir(k.id) + '" title="' + kacir(k.ad + " · " + o.okunan.length + "/" + o.l.length) + '">' +
+        '<span class="rozet-simge" aria-hidden="true">' + (r ? ROZET_SIMGE[r] : "○") + "</span><span>" + kacir(k.ad) + "</span>" +
+        '<small>' + o.okunan.length + "/" + o.l.length + "</small></button>";
+    }).join("") + "</div></div>";
+  /* kutu rozetleri: bir kutuyu ve bağlı kutularını okuyunca gümüş, konusuna hikâye yazınca altın */
+  let rbToplam = 0;
+  try { rbAg().forEach(function (d, k) { if (!/^kar:/.test(k) && rbErisir(d.kutu) && rbBaglar(k).length) { rbToplam++; } }); } catch (_) { rbToplam = 0; }
+  const rbOzet = '<div class="kutu-y rb-ozet"><div class="oyun-etiket">Kutu rozetleri · 🥈 ' + cuzdan.acilan.filter(function (x) { return /^rozetk:/.test(x); }).length +
+    " · 🥇 " + cuzdan.acilan.filter(function (x) { return /^rozetk_altin:/.test(x); }).length + " / " + rbToplam + "</div>" +
+    '<p class="oyun-not">Bir kutuyu ve bağlı olduğu her kutuyu okuyunca gümüş; konusuna fan hikâyesi yazınca altın. Bağlı kutular her kutunun altında.</p></div>';
+  /* sahip olunan bir kartı hikâyede paylaş */
+  const sahipK = (veri.karakterler || []).filter(function (k) { return t[k.id] && k.kart !== false; });
+  const kolHikaye = sahipK.length ? '<div class="kutu-y kol-hikaye"><label for="kolHikayeSec">Bir kartını hikâyende paylaş</label>' +
+    '<div class="oyun-sira"><select id="kolHikayeSec" class="kod-giris">' + sahipK.map(function (k) {
+      return '<option value="' + kacir(k.id) + '">' + kacir(k.ad) + (kartParlak(t[k.id]) ? " ✦" : "") + "</option>";
+    }).join("") + '</select><button class="dugme" data-kol-hikaye>Hikâye kartı</button></div></div>' : "";
+
+  alan.innerHTML = rozetOzet + rbOzet +
     '<p class="oyun-giris">Bir karakterin kaydını açtığında kartı senin olur; üç farklı günde açarsan kart parlar. ' +
-      "“Hangi karaktersin?” testinin sonucu ve Nöbet'i bitirdiğin görevli de kart verir. Bir seti tamamlayınca o setin unvanını alırsın.</p>" +
+      "“Hangi karaktersin?” testinin sonucu ve Nöbet'i bitirdiğin görevli de kart verir. Bir seti tamamlayınca o setin unvanını alırsın.</p>" + kolHikaye +
     '<p class="oyun-not">' + sahip + " / " + toplam + " kart · " + tamam.length + " / " + Object.keys(setler).length + " set</p>" +
     (tamam.length ? '<div class="kol-unvanlar">' + tamam.map(function (g) {
       return '<span class="kol-unvan">' + kacir(setUnvani(g)) + "</span>";

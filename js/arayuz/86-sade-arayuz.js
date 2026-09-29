@@ -15,16 +15,6 @@ function sadeBaslikTekrari(sayfa) {
   if (cipler) { cipler.classList.toggle("tek-cip", cipler.children.length < 2); }
 }
 
-if (typeof sayfaBasiCiz === "function") {
-  const eskiSBC32 = sayfaBasiCiz;
-  window.sayfaBasiCiz = function (sayfa) {
-    const r = eskiSBC32.apply(this, arguments);
-    /* bölümlerin gizlenip açılması aynı karede biter: ölçüm bir sonraki karede */
-    requestAnimationFrame(function () { try { sadeBaslikTekrari(sayfa); } catch (_) { /* yok */ } });
-    return r;
-  };
-}
-
 /* 3.2.2: Tentiforverse kartları ("#/arsiv": evren seçici, E25 kapısı, atölye) Tömye sayfasını açar.
    Değer korunur (karşılaştırmalar ona bakıyor); ana sayfadaki Tömye kartı kendi düğmeleriyle kalır. */
 document.addEventListener("click", function (ev) {

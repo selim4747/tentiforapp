@@ -29,6 +29,8 @@ function oyunXpAlindi(oyun) { return oyunXpKayitlari().indexOf(oyunXpAnahtari(oy
 
 /** Günde bir kez: kazanılan XP (0 = bugün alındı ya da günlük tavan doldu). */
 function oyunXpVer(oyun) {
+  setTimeout(oyunBugunCiz, 0);          /* "bugün" kutusu */
+  setTimeout(hatirlatmalariKur, 0);     /* hatırlatmalar yeniden kurulur */
   if (typeof cuzdan === "undefined" || !oyun) { return 0; }
   const k = oyunXpAnahtari(oyun);
   if (cuzdan.acilan.indexOf(k) !== -1 || oyunXpBugun() >= OYUN_XP_GUNLUK) { return 0; }
@@ -166,8 +168,13 @@ function goEvrenCiz(evren) {
 function gunlukOyunlarCiz() {
   const alan = document.querySelector("#gunlukOyunAlan");
   if (!alan) { return; }
-  if (GO && GO.evren === "tomye") { alan.innerHTML = goOyunHtml(); return; }
-  alan.innerHTML = '<p class="oyun-giris">Her gün yeni sorular. Kazandığın her oyun günde bir kez ' + OYUN_XP + " XP verir; " +
+  if (GO && GO.evren === "tomye") { alan.innerHTML = goOyunHtml(); } else { alan.innerHTML = gunlukOyunKartlari(); }
+  try { haviCiz(); } catch (e) { console.error("[TentiforApp] Harita Avı:", e); }
+  try { haftaBulmacaCiz(); } catch (e) { console.error("[TentiforApp] bulmaca:", e); }
+}
+
+function gunlukOyunKartlari() {
+  return '<p class="oyun-giris">Her gün yeni sorular. Kazandığın her oyun günde bir kez ' + OYUN_XP + " XP verir; " +
       "başka evrenlerin oyunları da aynı havuzdan sayılır.</p>" +
     '<p class="oyun-not go-durum">' + kacir(oyunXpDurumMetni()) + "</p>" +
     GO_OYUNLAR.filter(function (o) { return o.evren === "tomye"; }).map(function (o) {
@@ -252,14 +259,6 @@ function kadiUyarisiCiz() {
   document.body.appendChild(el);
 }
 
-if (typeof hesapProfilYukle === "function") {
-  const eskiProfilYukle = hesapProfilYukle;
-  window.hesapProfilYukle = async function () {
-    const r = await eskiProfilYukle.apply(this, arguments);
-    kadiUyarisiCiz();
-    return r;
-  };
-}
 if (typeof hesapProfilKaydet === "function") {
   const eskiProfilKaydet = hesapProfilKaydet;
   window.hesapProfilKaydet = async function () {

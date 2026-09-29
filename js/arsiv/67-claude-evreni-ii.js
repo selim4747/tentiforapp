@@ -211,34 +211,6 @@ function ceKronolojiOlaylari() {
 
 /* ==================== çizim: claudeEvrenCiz sarmalayıcı ==================== */
 
-if (typeof CE_SEKMELER !== "undefined" && typeof claudeEvrenCiz === "function") {
-  if (!CE_SEKMELER.some(function (x) { return x[0] === "roman"; })) {
-    const i = CE_SEKMELER.findIndex(function (x) { return x[0] === "hikayeler"; });
-    CE_SEKMELER.splice(i === -1 ? CE_SEKMELER.length : i + 1, 0, ["roman", "Roman"]);
-  }
-  const eskiCe2 = claudeEvrenCiz;
-  window.claudeEvrenCiz = function () {
-    const r = eskiCe2.apply(this, arguments);
-    const alan = document.querySelector("#claudeEvrenAlan");
-    const govde = alan && alan.querySelector(".ce-govde");
-    if (!govde || !ceVeri()) { return r; }
-    /* arama: sekmelerin üstünde */
-    const sek = alan.querySelector(".ce-sekmeler");
-    if (sek && !alan.querySelector("#ceAra")) {
-      sek.insertAdjacentHTML("beforebegin", '<div class="ce-ara"><input class="kod-giris arac-giris" id="ceAra" type="search" placeholder="Bu evrende ara: kişi, yer, terim, olay…" aria-label="Claude\'un Evreni\'nde ara" autocomplete="off">' +
-        '<div id="ceAraSonuc" role="status"></div></div>');
-    }
-    if (ceSekme === "roman") { govde.innerHTML = ceRomanHtml(); }
-    else if (ceSekme === "genel") { govde.insertAdjacentHTML("afterbegin", ceIlerlemeHtml()); }
-    else if (ceSekme === "kisiler") { ceKisileriZenginlestir(); }
-    else if (ceSekme === "oyunlar" && typeof goEvrenCiz === "function") {
-      govde.insertAdjacentHTML("afterbegin", '<div class="kutu-y ce-gunluk"><span class="oyun-etiket">Günlük oyunlar · XP</span><div id="ceGunlukAlan"></div></div>');
-      goEvrenCiz("claude");
-    }
-    return r;
-  };
-}
-
 document.addEventListener("input", function (e) {
   if (e.target && e.target.id === "ceAra") { ceAraSonucCiz(e.target.value); }
 });

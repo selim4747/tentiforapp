@@ -569,7 +569,25 @@ function yarisMeydanBitti(skor) {
 
 let gkDurum = null;
 
-async function gunKelimesiYukle() {
+/** Günün kelimesi: kolay (hesapsız, cihazda) ve zor (herkesle yarış, sunucuda) modları. */
+function gunKelimesiYukle() {
+  const dis = document.querySelector("#gkAlan");
+  let r;
+  if (dis) {
+    const mod = gkModu();
+    const dugme = function (m, ad) {
+      return '<button class="dugme' + (mod === m ? "" : " dugme-sade") + '" role="tab" aria-selected="' + (mod === m) + '" data-gk-mod="' + m + '">' + ad + "</button>";
+    };
+    dis.innerHTML = '<div class="gk-modlar" role="tablist" aria-label="Günün kelimesi modu">' +
+      dugme("kolay", "Kolay · hesapsız") + dugme("zor", "Zor · herkesle yarış") + "</div>" +
+      '<div id="gkIc"><div class="gk"><span class="oyun-etiket">Günün kelimesi</span><p class="oyun-not">Yükleniyor…</p></div></div>';
+    if (mod === "kolay") { koCiz(document.querySelector("#gkIc"), gkKolayOyunu()); } else { r = gunKelimesiZorYukle(); }
+  }
+  htrSatirCiz();   /* hatırlatma satırı */
+  return r;
+}
+
+async function gunKelimesiZorYukle() {
   const alan = document.querySelector("#gkIc") || document.querySelector("#gkAlan");
   if (!alan || !yarisHazirMi()) { return; }
   if (!hesapKullanici) {

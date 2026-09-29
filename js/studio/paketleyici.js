@@ -79,43 +79,6 @@ async function tf4GuncellemeAdresi(id) {
   catch (_) { return null; }
 }
 
-if (typeof evrKurucuHtml === "function") {
-  const eskiEKH40 = evrKurucuHtml;
-  window.evrKurucuHtml = function (v) {
-    const h = eskiEKH40.apply(this, arguments);
-    const e = v && v.eser;
-    if (!e || typeof EVR_ADIM === "undefined" || (EVR_ADIM[e.id] || "temel") !== "paylas") { return h; }
-    return h + teslimHtml();
-  };
-}
-/* kendi evreninin Bilgiler sekmesinde de, en üstte */
-if (typeof evrenBilgiBolumu === "function") {
-  const eskiEBB40 = evrenBilgiBolumu;
-  window.evrenBilgiBolumu = function (v) {
-    const h = eskiEBB40.apply(this, arguments);
-    return (typeof EVS !== "undefined" && EVS && EVS.kaynak === "benim" ? teslimHtml() : "") + h;
-  };
-}
-
-/* evren sayfası çizildikten sonra: onaylı evrense düğme "Güncellemeyi gönder" olur */
-if (typeof evrenSayfaCiz === "function") {
-  const eskiESC42 = evrenSayfaCiz;
-  window.evrenSayfaCiz = function () {
-    const r = eskiESC42.apply(this, arguments);
-    if (typeof EVS !== "undefined" && EVS && EVS.kaynak === "benim" && document.querySelector("[data-tf4-gonder]") && typeof hesapKullanici !== "undefined" && hesapKullanici) {
-      const id = EVS.id;
-      tf4GuncellemeAdresi(id).then(function (slug) {
-        const b = document.querySelector("[data-tf4-gonder]");
-        if (!slug || !b || !EVS || EVS.id !== id) { return; }
-        b.setAttribute("data-tf4-guncelle", slug); b.textContent = "Güncellemeyi onaya gönder";
-        const n = document.querySelector("#tf4TeslimNot");
-        if (n) { n.textContent = "Bu evren sitede (" + slug + "). Yaptığın değişiklikler moderatör onayından sonra sitedekinin yerine geçer."; }
-      });
-    }
-    return r;
-  };
-}
-
 document.addEventListener("click", async function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-tf4-gonder], [data-tf4-basvurularim]");
   if (!b || typeof EVS === "undefined" || !EVS) { return; }
