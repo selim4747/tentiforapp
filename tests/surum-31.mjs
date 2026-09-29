@@ -231,7 +231,8 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
     ok("4.0: Pro üye: rozet, sınırsız evren, Kurucu'nun son adımında onaya gönder", await U.evaluate(async function () {
       await tf4AbonelikYukle(true);
       return tf4ProMu() && document.documentElement.classList.contains("tf-pro") && uretimAcik("evren") && !!fanYeni("evren") &&
-        /data-tf4-gonder/.test(teslimHtml()) && /önceliklisin/.test(teslimHtml()) && !/data-pro-ode/.test(proPencereHtml(""));
+        /data-tf4-gonder/.test(teslimHtml()) && /önceliklisin/.test(teslimHtml()) && !/data-pro-ode/.test(proPencereHtml("")) &&
+        /Yaratıcı Pro üyesisin/.test(document.querySelector("#proAlan").textContent);
     }));
     await M.close(); await U.evaluate(function () { if (typeof perdeKapat === "function") { perdeKapat(); } });
 

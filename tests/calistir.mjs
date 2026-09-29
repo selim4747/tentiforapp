@@ -59,6 +59,20 @@ adim("üst düzey ad çakışması", function () {
   console.log("  " + Object.keys(ad).length + " üst düzey ad, çakışma yok");
 });
 
+/* 4.1: index.html'deki her betik dosyası var ve bağımlılık sırası doğru: çekirdek (core) önce, 4.0 modülleri
+   (supabase → state → auth → odeme) motor, stüdyo ve yönetim modüllerinden önce; hepsi eski dosyalardan sonra */
+adim("betik bloğu: dosyalar ve sıra", function () {
+  const l = [...readFileSync(join(KOK, "index.html"), "utf8").matchAll(/<script src="(js\/[^"?]+)"/g)].map(function (m) { return m[1]; });
+  const eksik = l.filter(function (f) { try { statSync(join(KOK, f)); return false; } catch (_) { return true; } });
+  if (eksik.length) { throw new Error("index.html'de olmayan dosya: " + eksik.join(", ")); }
+  const sira = ["js/core/00-rota.js", "js/core/supabase.js", "js/core/state.js", "js/core/auth.js", "js/core/odeme.js", "js/engine/evren-motoru.js", "js/studio/editor.js", "js/studio/paketleyici.js", "js/admin/moderasyon.js"];
+  const yer = sira.map(function (f) { return l.indexOf(f); });
+  if (yer.some(function (i) { return i === -1; }) || yer.some(function (i, k) { return k && i < yer[k - 1]; })) { throw new Error("betik sırası bozuk: " + sira.join(" → ")); }
+  const sonEski = Math.max.apply(null, l.map(function (f, i) { return /\/\d/.test(f) && !/24-arsiv-mantigi/.test(f) ? i : -1; }));
+  if (sonEski > l.indexOf("js/core/supabase.js")) { throw new Error("4.0 modülleri eski dosyalardan sonra yüklenmeli"); }
+  console.log("  " + l.length + " betik, hepsi var, sıra doğru");
+});
+
 adim("veritabanı sıfırlanıyor", function () {
   psql("postgres", ["-c", "drop database if exists " + DB, "-c", "create database " + DB]);
   psql(DB, ["-c", "create extension if not exists pgcrypto"]);

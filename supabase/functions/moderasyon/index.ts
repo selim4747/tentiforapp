@@ -89,6 +89,16 @@ Deno.serve(async (istek) => {
   let g;
   try { g = await istek.json(); } catch (_) { return yanit({ hata: "geçersiz istek" }, 400); }
   const db = createClient(Deno.env.get("SUPABASE_URL"), Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
+  /* 4.1: giriş — kod yalnızca burada (sunucuda) karşılaştırılır: veritabanında kodun kendisi değil özeti durur,
+     başarılı girişte 12 saatlik oturum anahtarı (token) döner; istemci kodu saklamaz, yalnızca token'ı tutar */
+  if (g.islem === "giris") {
+    const kod = String(g.kod || "").trim();
+    if (kod.length < 8 || kod.length > 80) { return yanit({ hata: "Kod geçersiz." }, 400); }
+    const { data: token, error } = await db.rpc("moderator_giris", { p_kod: kod });
+    if (error || !token) { return yanit({ hata: /deneme/.test((error && error.message) || "") ? "Çok deneme yapıldı; biraz bekle." : "Kod geçersiz." }, 401); }
+    const { data: bilgi } = await db.rpc("moderator_bilgi", { p_token: token });
+    return yanit({ token, duzey: (bilgi && bilgi.duzey) || "fan", ad: (bilgi && bilgi.ad) || "" });
+  }
   const { data: mod } = await db.rpc("moderator_bilgi", { p_token: String(g.token || "") });
   if (!mod) { return yanit({ hata: "moderatör oturumu yok ya da süresi doldu" }, 401); }
   const kanonYetki = mod.duzey === "kanon";

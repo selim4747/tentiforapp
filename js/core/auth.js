@@ -5,14 +5,26 @@ const TF4_MOD_ANAHTAR = "tf4_mod";
 
 function moderatorToken() { try { return sessionStorage.getItem(TF4_MOD_ANAHTAR) || ""; } catch (_) { return ""; } }
 
+/* 4.1: kod doğrudan "moderasyon" Edge Function'ına gider ve orada doğrulanır; bu dosyada hiçbir kod yazılı değildir.
+   Dönen oturum anahtarı (token) yalnızca bu sekmede, oturum süresince tutulur. Fonksiyon henüz kurulmadıysa
+   aynı doğrulamayı yapan veritabanı fonksiyonuna (moderator_giris) düşer. */
 async function moderatorGiris(kod) {
   const k = String(kod || "").trim();
   if (k.length < 8) { throw new Error("Kod en az 8 karakter."); }
-  const s = await tf4Istemci();
-  const { data, error } = await s.rpc("moderator_giris", { p_kod: k });
-  if (error || !data) { throw new Error(/deneme/.test((error && error.message) || "") ? "Çok deneme yapıldı; biraz bekle." : "Kod geçersiz."); }
-  try { sessionStorage.setItem(TF4_MOD_ANAHTAR, data); } catch (_) { /* yok */ }
-  TF4.moderator = data;
+  let token = "", duzey = "";
+  try {
+    const r = await tf4Fonksiyon("moderasyon", { islem: "giris", kod: k });
+    if (!r || typeof r.token !== "string" || r.token.length < 20) { throw new Error("fonksiyon yanıtı yok"); }
+    token = r.token; duzey = r.duzey;
+  } catch (e) {
+    if (/geçersiz|deneme/.test(e.message || "")) { throw e; }
+    const s = await tf4Istemci();
+    const { data, error } = await s.rpc("moderator_giris", { p_kod: k });
+    if (error || !data) { throw new Error(/deneme/.test((error && error.message) || "") ? "Çok deneme yapıldı; biraz bekle." : "Kod geçersiz."); }
+    token = data;
+  }
+  try { sessionStorage.setItem(TF4_MOD_ANAHTAR, token); if (duzey) { sessionStorage.setItem("tf4_mod_duzey", duzey === "kanon" ? "kanon" : "fan"); } } catch (_) { /* yok */ }
+  TF4.moderator = token;
   return true;
 }
 
