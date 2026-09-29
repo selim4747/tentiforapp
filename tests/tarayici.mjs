@@ -1039,7 +1039,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       const kayit = cuzdan.acilan.slice();
       cuzdan.acilan = cuzdan.acilan.filter(function (x) { return !/^(svkod_|oku_|oxp_)/.test(x); }); SVK.onbellek = null;
       veri.seviyeKodlari = (veri.seviyeKodlari || []).concat([{ ozet: dogrulamaOzeti("TESTSVK015"), ad: "Evren kurma", seviye: 15 }]);
-      const once = !uretimAcik("evren") && !uretimAcik("kisi");
+      const once = !uretimAcik("kisi");
       kodPenceresi(); kodDene("testsvk015");
       const sonra = uretimAcik("evren") && uretimAcik("kisi") && uretimAcik("hikaye") && /açıldı/.test(document.querySelector("#kodDurum").textContent);
       veri.seviyeKodlari.pop(); cuzdan.acilan = kayit; perdeKapat();
@@ -1728,8 +1728,8 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
 
     /* seviye kapıları */
     await YZ.evaluate(function () { location.hash = "#/fan"; }); await bekle(YZ, 700);
-    ok("seviye 1: fan hikâyesi, Evrengezer ve fan evreni kilitli", await YZ.evaluate(function () {
-      return seviyeDurumu().seviye < 5 && fanYeni("hikaye") === null && evrenYeniKur() === null && /svk-kapi/.test(e25KisilerHtml());
+    ok("seviye 1: fan hikâyesi ve Evrengezer kilitli", await YZ.evaluate(function () {
+      return seviyeDurumu().seviye < 5 && fanYeni("hikaye") === null && /svk-kapi/.test(e25KisilerHtml());   /* 4.0: ilk evren taslağı seviyesiz */
     }));
     await YZ.evaluate(function () { perdeKapat(); fanSekme.hikaye = "yaz"; fanCiz("hikaye"); }); await bekle(YZ, 300);
     await YZ.click('[data-fan-yeni="hikaye"]'); await bekle(YZ, 200);

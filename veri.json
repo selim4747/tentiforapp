@@ -1,5 +1,5 @@
 {
-  "surum": "3.3.0",
+  "surum": "4.0.0",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7183,6 +7183,18 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "4.0.0",
+      "tarih": "2026-09-29",
+      "maddeler": [
+        "Evrenini onaya gönder: Kurucu'nun son adımında evren tek bir sıkıştırılmış pakete çevrilip kilitli onay kuyruğuna gider; moderatörler onaylayınca ana sayfadaki “Onaylanan evrenler”de herkese açılır",
+        "Moderasyon (#/moderasyon): moderatörler hesap açmadan kendilerine verilen erişim koduyla girer; kuyruğu görür, paketi indirir ya da Güvenli Önizleme'de (cihaza kaydetmeden) açar, onaylar ya da reddeder",
+        "Evren kurmakta seviye kilidi kalktı: herkes 1 evren taslağını ücretsiz kurar",
+        "Yaratıcı Pro (aylık): sınırsız evren, onay kuyruğunda öncelik ve aynı anda 5 başvuru, reklamsız, Pro rozeti; ödeme PayTR güvenli ödeme sayfasında",
+        "Yeni yapı: core (istemci, üyelik, moderatör girişi, ödeme, reklam), engine (evren motoru), studio (kurallar, paketleyici), admin (moderasyon) modülleri; eski dosyalar sonraki sürümlerde bu klasörlere taşınacak",
+        "Supabase: evrenin kendisi veritabanında değil, Storage'da tek dosya; veritabanında yalnızca küçük başvuru, vitrin ve üyelik satırları (kurulum.sql bir kez yeniden çalıştırılmalı)"
+      ]
+    },
     {
       "surum": "3.3.0",
       "tarih": "2026-09-29",

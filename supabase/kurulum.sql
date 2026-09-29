@@ -2422,7 +2422,7 @@ grant execute on function public.tek_kod_kullan(text), public.tek_kodlarim(), pu
 -- ---------- 2.4: kurulum sürümü ve evren uygulamalarının puan tabloları ----------
 -- Site, bu dosyanın Supabase'de çalıştırılmış sürümünü sorar; eskiyse panelde "kurulum.sql'i çalıştır" uyarısı çıkar.
 create or replace function public.kurulum_surumu() returns text
-language sql immutable set search_path = '' as $$ select '3.1'::text $$;
+language sql immutable set search_path = '' as $$ select '4.0'::text $$;
 grant execute on function public.kurulum_surumu() to anon, authenticated;
 
 -- Evren uygulamalarının (kurucunun kodla yazdığı oyunlar) en iyi puanları: her kişinin her oyundaki en iyisi.
@@ -2745,3 +2745,256 @@ grant execute on function public.sayac_toplu(jsonb) to anon, authenticated;
 
 -- Supabase'in API'si yeni tablo ve sütunları hemen görsün
 notify pgrst, 'reload schema';
+
+-- ==================== 4.0: hafif evren teslimi, moderatör onayı, üyelik ====================
+-- Evrenin kendisi veritabanında tutulmaz: sıkıştırılmış tek bir .json.gz olarak Storage'dadır.
+-- Veritabanında yalnızca küçük birer satır: başvuru (kuyruk), yayındaki evren (vitrin), üyelik.
+
+-- ---------- üyelik ----------
+create table if not exists public.kullanici_abonelik (
+  kullanici uuid primary key references auth.users(id) on delete cascade,
+  uyelik_tipi text not null default 'ucretsiz' check (uyelik_tipi in ('ucretsiz', 'pro')),
+  abonelik_bitis timestamptz,
+  odeme_id text,
+  guncelleme timestamptz not null default now()
+);
+alter table public.kullanici_abonelik enable row level security;
+drop policy if exists "abonelik_kendi" on public.kullanici_abonelik;
+create policy "abonelik_kendi" on public.kullanici_abonelik for select to authenticated using (kullanici = auth.uid());
+-- yazma yalnızca ödeme webhook'u (service role) ve yönetici fonksiyonuyla
+
+-- ödeme kayıtları: yalnızca Edge Function'lar (service role) okur/yazar
+create table if not exists public.odemeler (
+  merchant_oid text primary key,
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  tutar int not null,
+  durum text not null default 'bekliyor' check (durum in ('bekliyor', 'basarili', 'basarisiz')),
+  olusturma timestamptz not null default now(),
+  sonuc timestamptz
+);
+alter table public.odemeler enable row level security;
+
+create or replace function public.pro_mu(p_kullanici uuid default auth.uid()) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.kullanici_abonelik a
+    where a.kullanici = p_kullanici and a.uyelik_tipi = 'pro' and a.abonelik_bitis > now());
+$$;
+revoke execute on function public.pro_mu(uuid) from public, anon;
+grant execute on function public.pro_mu(uuid) to authenticated;
+
+create or replace function public.abonelik_durumum() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('pro', public.pro_mu(auth.uid()),
+    'tip', coalesce((select uyelik_tipi from public.kullanici_abonelik where kullanici = auth.uid()), 'ucretsiz'),
+    'bitis', (select abonelik_bitis from public.kullanici_abonelik where kullanici = auth.uid()));
+$$;
+revoke execute on function public.abonelik_durumum() from public, anon;
+grant execute on function public.abonelik_durumum() to authenticated;
+
+-- yönetici: elle Pro ver (deneme, hediye, ödeme dışı)
+create or replace function public.pro_ver(p_kullanici_adi text, p_gun int) returns timestamptz
+language plpgsql security definer set search_path = '' as $$
+declare u uuid; b timestamptz;
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  if p_gun is null or p_gun < 1 or p_gun > 3660 then raise exception 'gün 1–3660'; end if;
+  select id into u from public.profiller where kullanici_adi = lower(btrim(p_kullanici_adi));
+  if u is null then raise exception 'kullanıcı yok'; end if;
+  insert into public.kullanici_abonelik (kullanici, uyelik_tipi, abonelik_bitis, odeme_id)
+    values (u, 'pro', now() + make_interval(days => p_gun), 'elle')
+  on conflict (kullanici) do update set uyelik_tipi = 'pro',
+    abonelik_bitis = greatest(coalesce(public.kullanici_abonelik.abonelik_bitis, now()), now()) + make_interval(days => p_gun),
+    odeme_id = 'elle', guncelleme = now()
+  returning abonelik_bitis into b;
+  return b;
+end;
+$$;
+revoke execute on function public.pro_ver(text, int) from public, anon;
+grant execute on function public.pro_ver(text, int) to authenticated;
+
+-- ---------- başvurular (onay kuyruğu) ----------
+create table if not exists public.basvurular (
+  id uuid primary key default gen_random_uuid(),
+  baslik text not null check (char_length(baslik) between 1 and 120),
+  ozet text not null default '' check (char_length(ozet) <= 600),
+  dosya_yolu text not null,
+  boyut int not null default 0 check (boyut between 0 and 3145728),
+  gonderen uuid not null references auth.users(id) on delete cascade,
+  gonderen_eposta text,
+  oncelik boolean not null default false,
+  durum text not null default 'bekliyor' check (durum in ('bekliyor', 'onaylandi', 'reddedildi')),
+  karar_notu text,
+  tarih timestamptz not null default now(),
+  karar_tarihi timestamptz
+);
+create index if not exists basvurular_kuyruk on public.basvurular (durum, oncelik desc, tarih);
+alter table public.basvurular enable row level security;
+drop policy if exists "basvuru_kendi" on public.basvurular;
+create policy "basvuru_kendi" on public.basvurular for select to authenticated using (gonderen = auth.uid());
+-- ekleme yalnızca basvuru_gonder ile; genel kullanıcı başkasının başvurusunu göremez
+
+create or replace function public.basvuru_gonder(p_baslik text, p_ozet text, p_dosya_yolu text, p_boyut int) returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare u uuid := auth.uid(); pro boolean; n int; yeni uuid;
+begin
+  if u is null then raise exception 'giriş gerekli'; end if;
+  if p_dosya_yolu is null or p_dosya_yolu !~ ('^' || u::text || '/[A-Za-z0-9._-]{1,120}\.json\.gz$') then raise exception 'dosya yolu geçersiz'; end if;
+  pro := public.pro_mu(u);
+  select count(*) into n from public.basvurular where gonderen = u and durum = 'bekliyor';
+  if n >= (case when pro then 5 else 1 end) then
+    raise exception 'bekleyen başvurun var (ücretsiz 1, Pro 5)';
+  end if;
+  insert into public.basvurular (baslik, ozet, dosya_yolu, boyut, gonderen, gonderen_eposta, oncelik)
+    values (left(btrim(p_baslik), 120), left(coalesce(p_ozet, ''), 600), p_dosya_yolu, greatest(0, coalesce(p_boyut, 0)), u,
+      (select email from auth.users where id = u), pro)
+  returning id into yeni;
+  return yeni;
+end;
+$$;
+revoke execute on function public.basvuru_gonder(text, text, text, int) from public, anon;
+grant execute on function public.basvuru_gonder(text, text, text, int) to authenticated;
+
+-- ---------- yayındaki evrenler (vitrin; herkes okur) ----------
+create table if not exists public.yayindaki_evrenler (
+  slug text primary key check (slug ~ '^[a-z0-9][a-z0-9-]{2,59}$'),
+  baslik text not null,
+  ozet text not null default '',
+  dosya_yolu text not null,
+  yazar text,
+  basvuru uuid references public.basvurular(id) on delete set null,
+  yayin_tarihi timestamptz not null default now()
+);
+alter table public.yayindaki_evrenler enable row level security;
+drop policy if exists "yayin_herkes" on public.yayindaki_evrenler;
+create policy "yayin_herkes" on public.yayindaki_evrenler for select to anon, authenticated using (true);
+
+-- ---------- moderatör erişim kodları ----------
+-- Kodun kendisi sitede (yönetici panelinde) üretilir; buraya yalnızca özeti gelir. Moderatör hesap açmaz:
+-- kodla giriş yapar, 12 saatlik bir oturum anahtarı (token) alır; token da yalnızca özetiyle saklanır.
+create table if not exists public.moderator_kodlari (
+  ozet text primary key,
+  ad text not null default '',
+  aktif boolean not null default true,
+  olusturma timestamptz not null default now()
+);
+alter table public.moderator_kodlari enable row level security;
+create table if not exists public.moderator_oturumlari (
+  token_ozet text primary key,
+  kod_ozet text not null references public.moderator_kodlari(ozet) on delete cascade,
+  bitis timestamptz not null
+);
+alter table public.moderator_oturumlari enable row level security;
+create table if not exists public.moderator_denemeler (
+  zaman timestamptz not null default now()
+);
+alter table public.moderator_denemeler enable row level security;
+
+create or replace function public.mod_ozet(p_metin text, p_tuz text) returns text
+language sql immutable set search_path = '' as $$
+  select encode(sha256(convert_to(btrim(coalesce(p_metin, '')) || p_tuz, 'UTF8')), 'hex');
+$$;
+
+create or replace function public.moderator_giris(p_kod text) returns text
+language plpgsql security definer set search_path = '' as $$
+declare oz text := public.mod_ozet(upper(p_kod), '#mod'); t text;
+begin
+  -- kaba kuvvete karşı: son 10 dakikada 30'dan çok hatalı deneme varsa bekle
+  if (select count(*) from public.moderator_denemeler where zaman > now() - interval '10 minutes') >= 30 then
+    raise exception 'çok deneme; biraz bekle';
+  end if;
+  if not exists (select 1 from public.moderator_kodlari where ozet = oz and aktif) then
+    insert into public.moderator_denemeler default values;
+    delete from public.moderator_denemeler where zaman < now() - interval '1 day';
+    raise exception 'kod geçersiz';
+  end if;
+  delete from public.moderator_oturumlari where bitis < now();
+  t := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+  insert into public.moderator_oturumlari (token_ozet, kod_ozet, bitis) values (public.mod_ozet(t, '#tok'), oz, now() + interval '12 hours');
+  return t;
+end;
+$$;
+revoke execute on function public.moderator_giris(text) from public;
+grant execute on function public.moderator_giris(text) to anon, authenticated;
+
+create or replace function public.moderator_dogrula(p_token text) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.moderator_oturumlari o join public.moderator_kodlari k on k.ozet = o.kod_ozet
+    where o.token_ozet = public.mod_ozet(p_token, '#tok') and o.bitis > now() and k.aktif);
+$$;
+revoke execute on function public.moderator_dogrula(text) from public;
+grant execute on function public.moderator_dogrula(text) to anon, authenticated;
+
+create or replace function public.mod_kuyruk(p_token text) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.moderator_dogrula(p_token) then raise exception 'moderatör oturumu yok'; end if;
+  return coalesce((select jsonb_agg(to_jsonb(b) - 'gonderen' order by b.oncelik desc, b.tarih)
+    from public.basvurular b where b.durum = 'bekliyor'), '[]'::jsonb);
+end;
+$$;
+revoke execute on function public.mod_kuyruk(text) from public;
+grant execute on function public.mod_kuyruk(text) to anon, authenticated;
+
+-- karar: dosya taşıma/silme Edge Function'da (service role); bu yalnızca satırları işler
+create or replace function public.mod_karar(p_token text, p_id uuid, p_onay boolean, p_slug text, p_not text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare b public.basvurular;
+begin
+  if not public.moderator_dogrula(p_token) then raise exception 'moderatör oturumu yok'; end if;
+  select * into b from public.basvurular where id = p_id and durum = 'bekliyor' for update;
+  if b.id is null then raise exception 'başvuru yok ya da karar verilmiş'; end if;
+  update public.basvurular set durum = case when p_onay then 'onaylandi' else 'reddedildi' end,
+    karar_notu = left(coalesce(p_not, ''), 400), karar_tarihi = now() where id = p_id;
+  if p_onay then
+    insert into public.yayindaki_evrenler (slug, baslik, ozet, dosya_yolu, yazar, basvuru)
+      values (p_slug, b.baslik, b.ozet, p_slug || '.json.gz',
+        (select coalesce(nullif(gorunen_ad, ''), kullanici_adi) from public.profiller where id = b.gonderen), b.id)
+    on conflict (slug) do update set baslik = excluded.baslik, ozet = excluded.ozet, basvuru = excluded.basvuru, yayin_tarihi = now();
+  end if;
+  return jsonb_build_object('id', p_id, 'onay', p_onay);
+end;
+$$;
+revoke execute on function public.mod_karar(text, uuid, boolean, text, text) from public;
+grant execute on function public.mod_karar(text, uuid, boolean, text, text) to anon, authenticated;
+
+-- yönetici: moderatör kodu ekle / kapat (kodun özeti gelir: mod_ozet(upper(kod), '#mod'))
+create or replace function public.moderator_kod_ekle(p_ozet text, p_ad text) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  if p_ozet !~ '^[0-9a-f]{64}$' then raise exception 'özet geçersiz'; end if;
+  insert into public.moderator_kodlari (ozet, ad) values (p_ozet, left(coalesce(p_ad, ''), 60))
+  on conflict (ozet) do update set aktif = true, ad = excluded.ad;
+end;
+$$;
+revoke execute on function public.moderator_kod_ekle(text, text) from public, anon;
+grant execute on function public.moderator_kod_ekle(text, text) to authenticated;
+
+create or replace function public.moderator_kodlari_kapat() returns int
+language plpgsql security definer set search_path = '' as $$
+declare n int;
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  update public.moderator_kodlari set aktif = false where aktif;
+  get diagnostics n = row_count;
+  delete from public.moderator_oturumlari;
+  return n;
+end;
+$$;
+revoke execute on function public.moderator_kodlari_kapat() from public, anon;
+grant execute on function public.moderator_kodlari_kapat() to authenticated;
+
+-- ---------- Storage: kuyruk (kilitli) ve yayın (herkese açık) ----------
+-- Test veritabanında storage şeması yok: yalnızca Supabase'de kurulur.
+do $$
+begin
+  if exists (select 1 from pg_namespace where nspname = 'storage') then
+    insert into storage.buckets (id, name, public, file_size_limit)
+      values ('onay-kuyrugu', 'onay-kuyrugu', false, 3145728), ('yayindaki-evrenler', 'yayindaki-evrenler', true, 3145728)
+    on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit;
+    execute 'drop policy if exists "kuyruga_birak" on storage.objects';
+    -- kişi yalnızca kendi klasörüne dosya bırakabilir; kimse (service role dışında) listeleyemez, okuyamaz, silemez
+    execute $p$create policy "kuyruga_birak" on storage.objects for insert to authenticated
+      with check (bucket_id = 'onay-kuyrugu' and (storage.foldername(name))[1] = auth.uid()::text)$p$;
+  end if;
+end $$;

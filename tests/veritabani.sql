@@ -392,7 +392,7 @@ update public.tek_kodlar set kullanici = null where ozet = public.tek_kod_ozet('
 select test.ok('elle NULL yapılınca yöneticilik gider', (select count(*) = 0 from public.yoneticiler where id = '44444444-4444-4444-4444-444444444444'));
 
 -- ---------- 2.4: kurulum sürümü, süreli kodlar, uygulama puanları ----------
-select test.ok('kurulum sürümü sorulabilir', public.kurulum_surumu() = '3.1');
+select test.ok('kurulum sürümü sorulabilir', public.kurulum_surumu() = '4.0');
 set role authenticated;
 set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
 select public.tek_kod_olustur(jsonb_build_array(jsonb_build_object('ozet', public.tek_kod_ozet('SURELI1234'), 'tur', 'evrengezer', 'sure_gun', 7)));
@@ -492,3 +492,37 @@ select public.sayac_toplu('[{"tur":"olay","ad":"toplu_test"},{"tur":"olay","ad":
 reset role;
 select test.ok('toplu sayaç olayları sayar', (select sayi from public.olay_sayaclari where ad = 'toplu_test' and gun = current_date) = 2);
 select test.ok('toplu sayaç evren sayacını sayar', (select sum(sayi) from public.evren_sayaclari where evren = 'ev:toplu') = 1);
+
+-- ---------- 4.0: evren teslimi, moderatör kodu, üyelik ----------
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select test.ok('üyelik varsayılan ücretsiz', (public.abonelik_durumum() ->> 'pro')::boolean = false);
+select test.ok('başkasının klasörüne dosya yolu verilemez', test.patlar($q$select public.basvuru_gonder('X', '', '33333333-3333-3333-3333-333333333333/a.json.gz', 10)$q$));
+select test.ok('başvuru gönderilir', public.basvuru_gonder('Deneme Evreni', 'Özet', '44444444-4444-4444-4444-444444444444/1-ev.json.gz', 1200) is not null);
+select test.ok('ücretsizde bekleyen tek başvuru', test.patlar($q$select public.basvuru_gonder('İkinci', '', '44444444-4444-4444-4444-444444444444/2-ev.json.gz', 10)$q$));
+select test.ok('kişi kendi başvurusunu görür', (select count(*) from public.basvurular) = 1);
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('başkasının başvurusu görünmez', (select count(*) from public.basvurular) = 0);
+select test.ok('yönetici olmayan moderatör kodu ekleyemez', test.patlar($q$select public.moderator_kod_ekle(public.mod_ozet('MODKOD123456', '#mod'), 'x')$q$));
+select test.ok('yönetici olmayan Pro veremez', test.patlar($q$select public.pro_ver('x', 30)$q$));
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select public.moderator_kod_ekle(public.mod_ozet('MODKOD123456', '#mod'), 'Deneme moderatör');
+select test.ok('yönetici elle Pro verir', public.pro_ver((select kullanici_adi from public.profiller where id = '44444444-4444-4444-4444-444444444444'), 30) > now());
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select test.ok('Pro üye durumu görür', (public.abonelik_durumum() ->> 'pro')::boolean);
+select set_config('test.b2', public.basvuru_gonder('İkinci', '', '44444444-4444-4444-4444-444444444444/2-ev.json.gz', 10)::text, false);
+select test.ok('Pro birden çok başvuru bekletebilir, öncelikli girer', (select oncelik from public.basvurular where id = current_setting('test.b2')::uuid));
+set role anon;
+select test.ok('yanlış moderatör kodu reddedilir', test.patlar($q$select public.moderator_giris('YANLIS')$q$));
+select test.ok('oturumsuz kuyruk okunamaz', test.patlar($q$select public.mod_kuyruk('uydurma')$q$));
+select set_config('test.mod', public.moderator_giris('modkod123456'), false);
+select test.ok('moderatör kodla girer, kuyruğu görür (öncelikli önde)', jsonb_array_length(public.mod_kuyruk(current_setting('test.mod'))) = 2
+  and (public.mod_kuyruk(current_setting('test.mod')) -> 0 ->> 'oncelik')::boolean);
+select test.ok('kuyrukta gönderen kimliği yok', not (public.mod_kuyruk(current_setting('test.mod')) -> 0 ? 'gonderen'));
+select test.ok('onay vitrine işler', public.mod_karar(current_setting('test.mod'), (select (public.mod_kuyruk(current_setting('test.mod')) -> 0 ->> 'id')::uuid), true, 'ikinci-evren', 'güzel') ->> 'onay' = 'true');
+select test.ok('vitrin herkese açık', (select count(*) from public.yayindaki_evrenler where slug = 'ikinci-evren') = 1);
+select test.ok('red kaydedilir', public.mod_karar(current_setting('test.mod'), (select (public.mod_kuyruk(current_setting('test.mod')) -> 0 ->> 'id')::uuid), false, null, 'eksik') ->> 'onay' = 'false');
+select test.ok('karar verilen başvuru kuyruktan düşer', jsonb_array_length(public.mod_kuyruk(current_setting('test.mod'))) = 0);
+select test.ok('ödeme ve kod tabloları okunamaz', test.patlar($q$select * from public.odemeler$q$) or (select count(*) from public.moderator_kodlari) = 0);
+reset role;
+select test.ok('kod kapatılınca oturum düşer', public.moderator_dogrula(current_setting('test.mod')) and (select count(*) from public.moderator_kodlari where aktif) = 1);
