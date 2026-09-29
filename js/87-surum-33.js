@@ -1,17 +1,7 @@
 /* Sürüm 3.3 — Tömye bağlantıları, yıldızlı evrenler, okuma ayarları, evren doluluğu, şablonla başla,
    tüm evrenler süzgeci, Evrengezer yolculuk şablonu. Hepsi cihazda: sunucuya yük yok. */
 
-/* ==================== 1. Tömye bağlantıları ====================
-   Tentiforverse (24. Evren) kartları "#/arsiv" taşır (seçici, E25 kapısı, atölye): 3.2'den beri
-   arşiv Tömye sayfasında; tıklanınca oraya gidilir. Değer korunur (karşılaştırmalar ona bakıyor). */
-document.addEventListener("click", function (ev) {
-  const b = ev.target.closest && ev.target.closest('[data-evren-git="#/arsiv"]');
-  if (!b || b.closest("#anaEvrenler")) { return; }
-  ev.preventDefault(); ev.stopImmediatePropagation();
-  if (typeof evrenSeciciKapat === "function" && document.querySelector("#evrenSecici")) { evrenSeciciKapat(); }
-  if (typeof evrenSayfaKapat === "function" && document.querySelector("#evrenSayfa")) { evrenSayfaKapat(); }
-  location.hash = "#/tomye";
-}, true);
+/* 1. Tömye bağlantıları 3.2.2'de (js/86-surum-32.js) */
 
 /* ==================== 8. yıldızlı evrenler ==================== */
 const YILDIZ_ANAHTAR = "tf33_yildizli";

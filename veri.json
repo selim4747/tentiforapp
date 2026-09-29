@@ -1,5 +1,5 @@
 {
-  "surum": "3.2.2",
+  "surum": "3.3.0",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7183,6 +7183,19 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "3.3.0",
+      "tarih": "2026-09-29",
+      "maddeler": [
+        "Evrenleri yıldızla: ana sayfada her evrenin yanında ☆; yıldızladıkların en üstte (yalnızca cihazında)",
+        "Tüm evrenler: ana sayfada ara, süz (kanon, fan-made, test, senin, yıldızlı) ve sırala (A–Z, en çok gezdiğin)",
+        "Evren doluluğu: Kurucu'da “Evrenin %40’ı dolu · Sıradaki: tarih →” göstergesi, dokununca o adıma gider",
+        "Şablonla başla: yeni evrende Kurucu'nun ilk adımında yedi tür (iki yeni: kıyamet sonrası, mitoloji); kurallar, sözlük ve haritanın yanında kişiler, tarih ve bir belge de geliyor",
+        "Evrengezer yolculuğu: bir Evrengezeri yeni hikâyeyle başka evrene götürünce taslak altı adımlı yolculuk iskeletiyle açılıyor",
+        "Okuma ayarları: Okuma sayfasında yazı boyutu, satır aralığı ve sepya kâğıt rengi (cihazda hatırlanır)",
+        "Yönetici paneli yeni kart diliyle; odak halkaları her yerde net; gece modunda soluk oklar düzeldi; Tömye sayfasında ekran dışı kartlar görününce çiziliyor"
+      ]
+    },
     {
       "surum": "3.2.2",
       "tarih": "2026-09-28",
