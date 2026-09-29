@@ -5046,8 +5046,7 @@ html.ecka-yeni .cuzdan-rozet{display:none}
 a.ic-grup-ad{display:block;text-decoration:none}
 a.ic-grup-ad:hover,a.ic-grup-ad:focus-visible{color:var(--deniz);text-decoration:underline}
 
-/* ==================== 3.2.2 — evren sayfaları 3.2 düzeninde ====================
-   Evrenin kendi yazı tipi (--govde/--display evren sayfasında değişir) yalnızca metinde kalır;
+/* ==================== 3.2.2 — evren sayfaları 3.2 düzeninde =============   Evrenin kendi yazı tipi (--govde/--display evren sayfasında değişir) yalnızca metinde kalır;
    düğme, sekme, etiket, giriş gibi denetimler sitenin arayüz yazısıyla ve aynı biçimde. */
 :root{--arayuz:"Karla",system-ui,sans-serif}
 #evrenSayfa .dugme,#evrenSayfa .evs-sekme,#evrenSayfa .evg-cip,#evrenSayfa .evs-cuzdan,#evrenSayfa .evs-cuzdan .evs-eg,
@@ -5067,3 +5066,56 @@ a.ic-grup-ad:hover,a.ic-grup-ad:focus-visible{color:var(--deniz);text-decoration
 /* kartlar sitenin kart diliyle */
 #evrenSayfa .kutu-y,#evrenSayfa .fan-grup,#evrenSayfa .evr-tur,#evrenSayfa .evh-kutu,#evrenSayfa .gz-kutu{border-radius:var(--r-kart)}
 #evrenSayfa .evg-cip{border-radius:999px}
+=======
+/* ==================== 3.3 ==================== */
+/* yıldızlı evrenler */
+.ana-evren-sar{position:relative;display:grid}
+.ana-evren-sar > .ana-evren{padding-right:44px}
+.ana-yildiz{position:absolute;top:6px;right:6px;width:36px;height:36px;border:none;border-radius:50%;background:transparent;color:var(--murekkep-2);font-size:19px;line-height:1;cursor:pointer}
+.ana-yildiz:hover,.ana-yildiz:focus-visible{background:var(--buz);color:var(--deniz)}
+.ana-yildiz.acik{color:#c98a0b}
+/* tüm evrenler */
+.tev-kutu{margin:14px 0}
+.tev-ust{display:flex;gap:8px;flex-wrap:wrap}
+.tev-ara{flex:1 1 180px;min-width:0;margin:0}
+.tev-sira{flex:0 0 auto;min-height:44px}
+.tev-secimler{display:flex;flex-wrap:wrap;gap:6px}
+.tev-sec{font:inherit;font-size:13.5px;padding:6px 12px;min-height:36px;border:1px solid var(--sig);border-radius:999px;background:var(--beyaz);color:var(--murekkep-2);cursor:pointer}
+.tev-sec.secili{background:var(--deniz);border-color:var(--deniz);color:var(--beyaz)}
+.tev-liste{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+/* okuma ayarları */
+.okuma-ayar{margin:0 0 18px;background:var(--beyaz);border:1px solid var(--buz);border-radius:var(--r-kart);padding:10px 14px}
+.okuma-ayar summary{cursor:pointer;font-weight:600;min-height:32px;display:flex;align-items:center}
+.okuma-ayar-ic{display:grid;gap:6px;padding-top:8px;max-width:420px}
+.okuma-ayar-ic input[type=range]{width:100%;accent-color:var(--deniz)}
+.okuma-sepya{display:flex;gap:8px;align-items:center;margin:6px 0}
+html[data-okuma-ozel] .okuma-metin p,html[data-okuma-ozel] .uzun-metin p,html[data-okuma-ozel] .evs-roman p,html[data-okuma-ozel] .fan-metin p{
+  font-size:calc(17px * var(--okuma-boyut,1)) !important;line-height:var(--okuma-aralik,1.65) !important}
+html[data-okuma-sepya] .okuma-metin,html[data-okuma-sepya] .uzun-metin,html[data-okuma-sepya] .evs-roman,html[data-okuma-sepya] .fan-metin,html[data-okuma-sepya] .detay-metin{
+  background:#f6eedc;color:#3b2f1e;border-radius:var(--r-kucuk);padding:12px 14px}
+/* evren doluluğu */
+.ev-doluluk{display:grid;gap:6px;margin:0 0 14px;padding:12px 14px;background:var(--beyaz);border:1px solid var(--buz);border-radius:var(--r-kart)}
+.ev-doluluk-ust{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px}
+.ev-doluluk .svk-cubuk{display:block}
+/* şablon seçimi Kurucu'da */
+.evr-kurucu + .evt-turler,.evt-turler{margin-top:12px}
+/* 3. evren sayfası: eylem kartı sıkı, düğmeler yan yana */
+.eva-eylem{padding:12px 14px}
+.eva-eylem .oyun-not{margin-top:4px;font-size:13px}
+.eva-eylem .oyun-sira{gap:6px;margin-top:8px}
+.eva-eylem .dugme{min-height:40px;padding:8px 14px;font-size:14px}
+.evs-cuzdan{gap:6px}
+/* 4. yönetici paneli: aynı kart dili, okunaklı satırlar */
+.y-satir{border-radius:var(--r-kucuk)}
+.y-kucuk{font-family:var(--govde);font-size:13px;letter-spacing:0;border-radius:var(--r-kucuk)}
+.y-satir-alt{font-size:13px}
+.y-rozet{border-radius:999px}
+/* 13. klavye: odak halkası her yerde net */
+:focus-visible{outline:2px solid var(--deniz);outline-offset:2px}
+.ana-evren:focus-visible,.kart:focus-visible,.dugme:focus-visible,.gez-btn:focus-visible,.tev-sec:focus-visible,.ana-yildiz:focus-visible{outline:3px solid var(--deniz);outline-offset:3px}
+html[data-ayar-tema="gece"] :focus-visible{outline-color:#A8CDEB}
+/* 12. uzun sayfalar: ekran dışındaki kartlar çizimi ertelesin */
+#karakterIzgara > .kart,#evrenListe > .madde{content-visibility:auto;contain-intrinsic-size:auto 220px}
+/* gece modunda soluk kalan oklar */
+html[data-ayar-tema="gece"] .go-isaret,html[data-ayar-tema="gece"] .madde-ok{color:var(--murekkep-2)}
+.go-isaret,.madde-ok{color:var(--murekkep-2)}
