@@ -392,7 +392,7 @@ update public.tek_kodlar set kullanici = null where ozet = public.tek_kod_ozet('
 select test.ok('elle NULL yapılınca yöneticilik gider', (select count(*) = 0 from public.yoneticiler where id = '44444444-4444-4444-4444-444444444444'));
 
 -- ---------- 2.4: kurulum sürümü, süreli kodlar, uygulama puanları ----------
-select test.ok('kurulum sürümü sorulabilir', public.kurulum_surumu() = '4.0');
+select test.ok('kurulum sürümü sorulabilir', public.kurulum_surumu() = '4.2');
 set role authenticated;
 set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
 select public.tek_kod_olustur(jsonb_build_array(jsonb_build_object('ozet', public.tek_kod_ozet('SURELI1234'), 'tur', 'evrengezer', 'sure_gun', 7)));
@@ -543,3 +543,55 @@ select test.ok('yönetici kodları görür (kodun kendisi değil, özetin başı
 select test.ok('yönetici bir kodu siler', public.moderator_kod_sil(public.mod_ozet('FANKOD123456', '#mod')));
 reset role;
 select test.ok('silinen kodun oturumu düşer', not public.moderator_dogrula(current_setting('test.fanmod')));
+
+-- ---------- 4.2: hikâye başvurusu, kurucu onayı, bildirimler, şikâyet, güncelleme, Pro kodu ----------
+-- 444 bir evreni onaylatmış olsun (kurucu), 333 o evrene hikâye yazsın
+insert into public.evren_sahipleri (slug, kullanici) values ('kurucu-evreni', '44444444-4444-4444-4444-444444444444') on conflict do nothing;
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('kurucu olmayan hikâye onayı ayarını değiştiremez', test.patlar($q$select public.evren_hikaye_onayi('kurucu-evreni', true)$q$));
+select test.ok('kurucu onayı kapalıyken hikâye doğrudan moderatöre gider',
+  public.basvuru_teslim('hikaye', 'İlk Hikâye', 'özet', '33333333-3333-3333-3333-333333333333/h1.json.gz', 100, 'kurucu-evreni', null, 'h1') ->> 'durum' = 'bekliyor');
+select test.ok('başkasının evrenine güncelleme gönderilemez', test.patlar($q$select public.basvuru_teslim('evren', 'X', '', '33333333-3333-3333-3333-333333333333/x.json.gz', 1, null, 'kurucu-evreni', 'x')$q$));
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select test.ok('kurucu hikâye onayını açar', public.evren_hikaye_onayi('kurucu-evreni', true));
+reset role;
+update public.basvurular set durum = 'reddedildi', karar_tarihi = now() where gonderen = '33333333-3333-3333-3333-333333333333';
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select set_config('test.h2', public.basvuru_teslim('hikaye', 'İkinci Hikâye', 'özet', '33333333-3333-3333-3333-333333333333/h2.json.gz', 100, 'kurucu-evreni', null, 'h2') ->> 'id', false);
+select test.ok('kurucu onayı açıkken hikâye önce kurucuya gider', (select durum from public.basvurular where id = current_setting('test.h2')::uuid) = 'kurucu_bekliyor');
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select test.ok('kurucuya bildirim düşer', public.bildirimlerim() -> 0 ->> 'metin' ~ 'İkinci Hikâye' and not (public.bildirimlerim() -> 0 ->> 'okundu')::boolean);
+select test.ok('kurucu bekleyen hikâyeyi görür', jsonb_array_length(public.kurucu_bekleyenler()) = 1);
+select test.ok('kurucu onaylar: hikâye moderatöre geçer', (public.kurucu_karar(current_setting('test.h2')::uuid, true, null) ->> 'onay')::boolean);
+select public.bildirimleri_okundu();
+select test.ok('bildirimler okundu işaretlenir', not (public.bildirimlerim() -> 0 ->> 'okundu')::boolean is false);
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('yazara kurucu onayı bildirilir', public.bildirimlerim() -> 0 ->> 'metin' ~ 'kurucusu');
+select test.ok('başkasının bekleyen hikâyesine kurucu kararı verilemez', test.patlar($q$select public.kurucu_karar(gen_random_uuid(), true, null)$q$));
+select test.ok('başvurularım kaynak kimliğini döner', public.basvurularim() @> '[{"kaynak_id":"h2"}]'::jsonb);
+set role anon;
+select test.ok('moderatör kuyruğunda hikâye türü ve hedef evren', public.mod_kuyruk(current_setting('test.mod')) @> '[{"tur":"hikaye","evren_slug":"kurucu-evreni"}]'::jsonb);
+select test.ok('moderatör reddeder ve not gönderene bildirilir', (public.mod_karar(current_setting('test.mod'), current_setting('test.h2')::uuid, false, null, 'dil düzeltilmeli') ->> 'onay')::boolean = false);
+reset role;
+select test.ok('red notu yazarın bildirimlerinde', (select metin from public.kullanici_bildirimleri where kullanici = '33333333-3333-3333-3333-333333333333' order by zaman desc limit 1) ~ 'dil düzeltilmeli');
+-- şikâyet
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('okur şikâyet eder', public.sikayet_et('evren', 'kurucu-evreni', 'uygunsuz içerik'));
+set role anon;
+select test.ok('şikâyetsiz giriş yapılamaz', test.patlar($q$select public.sikayet_et('evren', 'x', 'neden yok')$q$));
+select test.ok('moderatör şikâyetleri görür', public.mod_sikayetler(current_setting('test.mod')) @> '[{"slug":"kurucu-evreni","sayi":1}]'::jsonb);
+select test.ok('moderatör şikâyeti kapatır', public.mod_sikayet_kapat(current_setting('test.mod'), 'evren', 'kurucu-evreni') = 1);
+select test.ok('kapatılan şikâyet listeden düşer', jsonb_array_length(public.mod_sikayetler(current_setting('test.mod'))) = 0);
+reset role;
+-- Pro hediye kodu
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select test.ok('yönetici Pro kodu üretir', public.tek_kod_olustur(jsonb_build_array(jsonb_build_object('ozet', public.tek_kod_ozet('PROHEDIYE1'), 'tur', 'pro30', 'ad', 'Hediye'))) = 1);
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select test.ok('Pro kodu girilmeden Pro değil', not (public.abonelik_durumum() ->> 'pro')::boolean);
+select test.ok('Pro kodu hesaba bağlanır', public.tek_kod_kullan('PROHEDIYE1') ->> 'tur' = 'pro30');
+select test.ok('kodla 30 gün Pro', (public.abonelik_durumum() ->> 'pro')::boolean and (public.abonelik_durumum() ->> 'bitis')::timestamptz > now() + interval '29 days');
+reset role;

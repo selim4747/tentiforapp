@@ -3082,3 +3082,268 @@ end;
 $$;
 revoke execute on function public.moderator_kod_sil(text) from public, anon;
 grant execute on function public.moderator_kod_sil(text) to authenticated;
+
+-- ==================== 4.2: fan hikâyesi onayı, kurucu onayı, bildirimler, şikâyet, güncelleme, Pro kodu ====================
+
+-- ---------- Pro hediye/deneme kodu: tek kullanımlık kod türü "pro30" (sure_gun verilmezse 30 gün) ----------
+alter table public.tek_kodlar drop constraint if exists tek_kodlar_tur_check;
+alter table public.tek_kodlar add constraint tek_kodlar_tur_check check (tur in ('evren', 'evren1', 'evrengezer', 'yonetici', 'kisi', 'pro30'));
+
+create or replace function public.pro_kod_bitis(p_kullanici uuid) returns timestamptz
+language sql stable security definer set search_path = '' as $$
+  select max(baglanma + make_interval(days => coalesce(sure_gun, 30))) from public.tek_kodlar
+    where kullanici = p_kullanici and tur = 'pro30' and not iptal and baglanma is not null;
+$$;
+revoke execute on function public.pro_kod_bitis(uuid) from public, anon, authenticated;
+
+create or replace function public.pro_mu(p_kullanici uuid default auth.uid()) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.kullanici_abonelik a where a.kullanici = p_kullanici and a.uyelik_tipi = 'pro' and a.abonelik_bitis > now())
+    or coalesce(public.pro_kod_bitis(p_kullanici) > now(), false);
+$$;
+
+create or replace function public.abonelik_durumum() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('pro', public.pro_mu(auth.uid()),
+    'tip', case when public.pro_mu(auth.uid()) then 'pro' else 'ucretsiz' end,
+    'bitis', nullif(greatest(coalesce((select abonelik_bitis from public.kullanici_abonelik where kullanici = auth.uid() and uyelik_tipi = 'pro'), '-infinity'::timestamptz),
+                             coalesce(public.pro_kod_bitis(auth.uid()), '-infinity'::timestamptz)), '-infinity'::timestamptz));
+$$;
+
+-- ---------- kullanıcı bildirimleri (site ve uygulama içi; itme bildirimi Edge Function'dan) ----------
+create table if not exists public.kullanici_bildirimleri (
+  no bigserial primary key,
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  metin text not null check (char_length(metin) <= 400),
+  baglanti text check (baglanti is null or baglanti ~ '^#/'),
+  okundu boolean not null default false,
+  zaman timestamptz not null default now()
+);
+create index if not exists kullanici_bildirimleri_kisi on public.kullanici_bildirimleri (kullanici, zaman desc);
+alter table public.kullanici_bildirimleri enable row level security;
+drop policy if exists "bildirim_kendi" on public.kullanici_bildirimleri;
+create policy "bildirim_kendi" on public.kullanici_bildirimleri for select to authenticated using (kullanici = auth.uid());
+
+create or replace function public.kullaniciya_bildir(p_kullanici uuid, p_metin text, p_baglanti text) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if p_kullanici is null then return; end if;
+  insert into public.kullanici_bildirimleri (kullanici, metin, baglanti) values (p_kullanici, left(p_metin, 400), p_baglanti);
+  -- kişi başına en çok 50 bildirim tutulur
+  delete from public.kullanici_bildirimleri where kullanici = p_kullanici and no not in
+    (select no from public.kullanici_bildirimleri where kullanici = p_kullanici order by zaman desc limit 50);
+end;
+$$;
+revoke execute on function public.kullaniciya_bildir(uuid, text, text) from public, anon, authenticated;
+
+create or replace function public.bildirimlerim() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('no', no, 'metin', metin, 'baglanti', baglanti, 'okundu', okundu, 'zaman', zaman) order by zaman desc), '[]'::jsonb)
+    from (select * from public.kullanici_bildirimleri where kullanici = auth.uid() order by zaman desc limit 30) b;
+$$;
+revoke execute on function public.bildirimlerim() from public, anon;
+grant execute on function public.bildirimlerim() to authenticated;
+
+create or replace function public.bildirimleri_okundu() returns void
+language sql security definer set search_path = '' as $$
+  update public.kullanici_bildirimleri set okundu = true where kullanici = auth.uid() and not okundu;
+$$;
+revoke execute on function public.bildirimleri_okundu() from public, anon;
+grant execute on function public.bildirimleri_okundu() to authenticated;
+
+-- ---------- evren sahipliği ve kurucu onayı ayarı ----------
+create table if not exists public.evren_sahipleri (
+  slug text primary key,
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  hikaye_onayi boolean not null default false,
+  olusturma timestamptz not null default now()
+);
+alter table public.evren_sahipleri enable row level security;
+drop policy if exists "sahip_kendi" on public.evren_sahipleri;
+create policy "sahip_kendi" on public.evren_sahipleri for select to authenticated using (kullanici = auth.uid());
+
+create or replace function public.evren_hikaye_onayi(p_slug text, p_acik boolean) returns boolean
+language plpgsql security definer set search_path = '' as $$
+begin
+  update public.evren_sahipleri set hikaye_onayi = coalesce(p_acik, false) where slug = p_slug and kullanici = auth.uid();
+  if not found then raise exception 'bu evrenin kurucusu değilsin'; end if;
+  return coalesce(p_acik, false);
+end;
+$$;
+revoke execute on function public.evren_hikaye_onayi(text, boolean) from public, anon;
+grant execute on function public.evren_hikaye_onayi(text, boolean) to authenticated;
+
+-- ---------- başvurular: tür (evren/hikâye), hedef evren, güncelleme, kurucu onayı ----------
+alter table public.basvurular add column if not exists tur text not null default 'evren';
+alter table public.basvurular add column if not exists evren_slug text;
+alter table public.basvurular add column if not exists guncelle_slug text;
+alter table public.basvurular add column if not exists kaynak_id text;
+alter table public.basvurular add column if not exists yayin_slug text;
+alter table public.basvurular drop constraint if exists basvurular_durum_check;
+alter table public.basvurular add constraint basvurular_durum_check check (durum in ('kurucu_bekliyor', 'bekliyor', 'onaylandi', 'reddedildi'));
+alter table public.basvurular drop constraint if exists basvurular_tur_check;
+alter table public.basvurular add constraint basvurular_tur_check check (tur in ('evren', 'hikaye'));
+
+create or replace function public.basvuru_teslim(p_tur text, p_baslik text, p_ozet text, p_dosya_yolu text, p_boyut int,
+  p_evren text, p_guncelle text, p_kaynak text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare u uuid := auth.uid(); pro boolean; n int; yeni uuid; s public.evren_sahipleri; v_durum text := 'bekliyor';
+begin
+  if u is null then raise exception 'giriş gerekli'; end if;
+  if p_tur not in ('evren', 'hikaye') then raise exception 'tür evren ya da hikaye'; end if;
+  if p_dosya_yolu is null or p_dosya_yolu !~ ('^' || u::text || '/[A-Za-z0-9._-]{1,120}\.json\.gz$') then raise exception 'dosya yolu geçersiz'; end if;
+  pro := public.pro_mu(u);
+  select count(*) into n from public.basvurular where gonderen = u and durum in ('bekliyor', 'kurucu_bekliyor');
+  if n >= (case when pro then 5 else 1 end) then raise exception 'bekleyen başvurun var (ücretsiz 1, Pro 5)'; end if;
+  -- güncelleme: yalnızca evrenin kurucusu gönderebilir
+  if p_guncelle is not null then
+    if p_tur <> 'evren' or not exists (select 1 from public.evren_sahipleri where slug = p_guncelle and kullanici = u) then
+      raise exception 'yalnızca evrenin kurucusu güncelleme gönderebilir';
+    end if;
+  end if;
+  -- hikâye: evrenin kurucusu "hikâyeleri ben onaylayayım" dediyse önce ona gider
+  if p_tur = 'hikaye' and p_evren is not null then
+    select * into s from public.evren_sahipleri where slug = p_evren;
+    if s.slug is not null and s.hikaye_onayi and s.kullanici <> u then v_durum := 'kurucu_bekliyor'; end if;
+  end if;
+  insert into public.basvurular (tur, baslik, ozet, dosya_yolu, boyut, gonderen, gonderen_eposta, oncelik, durum, evren_slug, guncelle_slug, kaynak_id)
+    values (p_tur, left(btrim(p_baslik), 120), left(coalesce(p_ozet, ''), 600), p_dosya_yolu, greatest(0, coalesce(p_boyut, 0)), u,
+      (select email from auth.users where id = u), pro, v_durum, p_evren, p_guncelle, left(coalesce(p_kaynak, ''), 60))
+  returning id into yeni;
+  if v_durum = 'kurucu_bekliyor' then
+    perform public.kullaniciya_bildir(s.kullanici, 'Evrenine yeni bir hikâye yazıldı: “' || left(btrim(p_baslik), 80) || '”. Onayını bekliyor.', '#/sen');
+  end if;
+  return jsonb_build_object('id', yeni, 'durum', v_durum, 'kurucu', case when v_durum = 'kurucu_bekliyor' then s.kullanici end);
+end;
+$$;
+revoke execute on function public.basvuru_teslim(text, text, text, text, int, text, text, text) from public, anon;
+grant execute on function public.basvuru_teslim(text, text, text, text, int, text, text, text) to authenticated;
+
+-- kurucu: onayını bekleyen hikâyeler ve karar
+create or replace function public.kurucu_bekleyenler() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id', b.id, 'baslik', b.baslik, 'ozet', b.ozet, 'evren', b.evren_slug, 'tarih', b.tarih) order by b.tarih), '[]'::jsonb)
+    from public.basvurular b join public.evren_sahipleri s on s.slug = b.evren_slug
+    where b.durum = 'kurucu_bekliyor' and s.kullanici = auth.uid();
+$$;
+revoke execute on function public.kurucu_bekleyenler() from public, anon;
+grant execute on function public.kurucu_bekleyenler() to authenticated;
+
+create or replace function public.kurucu_karar(p_id uuid, p_onay boolean, p_not text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare b public.basvurular;
+begin
+  select bb.* into b from public.basvurular bb join public.evren_sahipleri s on s.slug = bb.evren_slug
+    where bb.id = p_id and bb.durum = 'kurucu_bekliyor' and s.kullanici = auth.uid() for update of bb;
+  if b.id is null then raise exception 'başvuru yok ya da senin evrenin değil'; end if;
+  if p_onay then
+    update public.basvurular set durum = 'bekliyor' where id = p_id;
+    perform public.kullaniciya_bildir(b.gonderen, 'Evrenin kurucusu “' || b.baslik || '” hikâyeni onayladı; şimdi moderatörlerde.', '#/sen');
+  else
+    update public.basvurular set durum = 'reddedildi', karar_notu = left('Kurucu: ' || coalesce(p_not, ''), 400), karar_tarihi = now() where id = p_id;
+    perform public.kullaniciya_bildir(b.gonderen, 'Evrenin kurucusu “' || b.baslik || '” hikâyeni reddetti' || coalesce(': ' || nullif(btrim(p_not), ''), '.'), '#/sen');
+  end if;
+  return jsonb_build_object('id', p_id, 'onay', p_onay, 'dosya', case when p_onay then null else b.dosya_yolu end);
+end;
+$$;
+revoke execute on function public.kurucu_karar(uuid, boolean, text) from public, anon;
+grant execute on function public.kurucu_karar(uuid, boolean, text) to authenticated;
+
+-- başvurularım (kaynak ve yayın adresiyle: "güncelleme gönder" ve "düzelt, yeniden gönder" için)
+create or replace function public.basvurularim() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id', id, 'tur', tur, 'baslik', baslik, 'durum', durum, 'karar_notu', karar_notu,
+    'tarih', tarih, 'kaynak_id', kaynak_id, 'yayin_slug', yayin_slug, 'guncelle_slug', guncelle_slug) order by tarih desc), '[]'::jsonb)
+    from (select * from public.basvurular where gonderen = auth.uid() order by tarih desc limit 20) b;
+$$;
+revoke execute on function public.basvurularim() from public, anon;
+grant execute on function public.basvurularim() to authenticated;
+
+-- moderatör kararı: gönderene bildirim; evren onayında kurucu kaydı
+create or replace function public.mod_karar(p_token text, p_id uuid, p_onay boolean, p_slug text, p_not text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare b public.basvurular; ad text;
+begin
+  if not public.moderator_dogrula(p_token) then raise exception 'moderatör oturumu yok'; end if;
+  select * into b from public.basvurular where id = p_id and durum = 'bekliyor' for update;
+  if b.id is null then raise exception 'başvuru yok ya da karar verilmiş'; end if;
+  update public.basvurular set durum = case when p_onay then 'onaylandi' else 'reddedildi' end,
+    karar_notu = left(coalesce(p_not, ''), 400), karar_tarihi = now(), yayin_slug = case when p_onay then p_slug end where id = p_id;
+  ad := case when b.tur = 'hikaye' then 'hikâyen' else 'evrenin' end;
+  if p_onay then
+    if b.tur = 'evren' then
+      insert into public.evren_sahipleri (slug, kullanici) values (p_slug, b.gonderen) on conflict (slug) do nothing;
+    end if;
+    perform public.kullaniciya_bildir(b.gonderen, '“' || b.baslik || '” ' || ad || ' onaylandı' || coalesce(': ' || nullif(btrim(p_not), ''), '') || '. Site güncellenince yayında.',
+      case when b.tur = 'evren' then '#/ev/fan/' || p_slug else '#/fan' end);
+  else
+    perform public.kullaniciya_bildir(b.gonderen, '“' || b.baslik || '” ' || ad || ' reddedildi' || coalesce(': ' || nullif(btrim(p_not), ''), '.') || ' Düzeltip yeniden gönderebilirsin.', '#/sen');
+  end if;
+  delete from public.basvurular where durum in ('onaylandi', 'reddedildi') and karar_tarihi < now() - interval '60 days';
+  return jsonb_build_object('id', p_id, 'onay', p_onay, 'gonderen', b.gonderen);
+end;
+$$;
+
+-- kuyruk: tür, hedef evren ve güncelleme bilgisiyle (kurucu onayı bekleyenler moderatöre gelmez)
+create or replace function public.mod_kuyruk(p_token text) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.moderator_dogrula(p_token) then raise exception 'moderatör oturumu yok'; end if;
+  return coalesce((select jsonb_agg(to_jsonb(b) - 'gonderen' - 'kaynak_id' ||
+      jsonb_build_object('yazar_kadi', (select kullanici_adi from public.profiller where id = b.gonderen)) order by b.oncelik desc, b.tarih)
+    from public.basvurular b where b.durum = 'bekliyor'), '[]'::jsonb);
+end;
+$$;
+
+-- ---------- şikâyet ----------
+create table if not exists public.sikayetler (
+  no bigserial primary key,
+  tur text not null check (tur in ('evren', 'hikaye')),
+  slug text not null check (char_length(slug) <= 80),
+  neden text not null check (char_length(neden) between 3 and 400),
+  bildiren uuid not null references auth.users(id) on delete cascade,
+  zaman timestamptz not null default now(),
+  kapali boolean not null default false,
+  unique (tur, slug, bildiren)
+);
+alter table public.sikayetler enable row level security;
+
+create or replace function public.sikayet_et(p_tur text, p_slug text, p_neden text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then raise exception 'giriş gerekli'; end if;
+  if (select count(*) from public.sikayetler where bildiren = auth.uid() and zaman > now() - interval '1 day') >= 10 then raise exception 'bugün çok şikâyet ettin'; end if;
+  insert into public.sikayetler (tur, slug, neden, bildiren) values (p_tur, p_slug, left(btrim(p_neden), 400), auth.uid())
+  on conflict (tur, slug, bildiren) do update set neden = excluded.neden, zaman = now(), kapali = false;
+  return true;
+end;
+$$;
+revoke execute on function public.sikayet_et(text, text, text) from public, anon;
+grant execute on function public.sikayet_et(text, text, text) to authenticated;
+
+create or replace function public.mod_sikayetler(p_token text) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.moderator_dogrula(p_token) then raise exception 'moderatör oturumu yok'; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('tur', tur, 'slug', slug, 'sayi', sayi, 'nedenler', nedenler) order by sayi desc)
+    from (select tur, slug, count(*) sayi, jsonb_agg(neden order by zaman desc) nedenler from public.sikayetler where not kapali group by tur, slug) s), '[]'::jsonb);
+end;
+$$;
+revoke execute on function public.mod_sikayetler(text) from public;
+grant execute on function public.mod_sikayetler(text) to anon, authenticated;
+
+create or replace function public.mod_sikayet_kapat(p_token text, p_tur text, p_slug text) returns int
+language plpgsql security definer set search_path = '' as $$
+declare n int;
+begin
+  if not public.moderator_dogrula(p_token) then raise exception 'moderatör oturumu yok'; end if;
+  update public.sikayetler set kapali = true where tur = p_tur and slug = p_slug and not kapali;
+  get diagnostics n = row_count;
+  return n;
+end;
+$$;
+revoke execute on function public.mod_sikayet_kapat(text, text, text) from public;
+grant execute on function public.mod_sikayet_kapat(text, text, text) to anon, authenticated;
+
+create or replace function public.kurulum_surumu() returns text
+language sql immutable set search_path = '' as $$ select '4.2'::text $$;
