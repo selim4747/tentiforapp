@@ -97,9 +97,18 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
         /Test · fan-made/.test(evaStatuRozeti(evaStatu(sis.ad))) && !evaEvrengezerIzni(sis.ad).izin && evaEvrengezerIzni("Claude'un Evreni").izin &&
         !/Kanon evrende yeni hikâye: Claude/.test(kisiGoturHtml({}, "a:b")) && /Test evreninde deneme hikâyesi/.test(kisiGoturHtml({}, "a:b"));
     }));
-    ok("en altta kilitli 'Evrenini kur': seviye kapısı ve kod girişi", await Y.evaluate(function () {
+    ok("4.0: en altta 'Evrenini kur': seviye kilidi yok, ilk taslak ücretsiz", await Y.evaluate(function () {
       const k = document.querySelector("#anaEvrenler .ana-kur");
-      return !!k && k === document.querySelector("#anaEvrenler").lastElementChild && k.classList.contains("kilitli") && !!k.querySelector("[data-kod-ac]") && !k.querySelector("[data-es-yeni]") && /Seviye 15/.test(k.textContent);
+      return !!k && k === document.querySelector("#anaEvrenler").lastElementChild && !k.classList.contains("kilitli") && !!k.querySelector("[data-es-yeni]") && /Ücretsiz/.test(k.textContent) && uretimAcik("evren");
+    }));
+    ok("4.0: ikinci evren Pro penceresine takılır, kart kilitlenir ve Pro'yu gösterir", await Y.evaluate(function () {
+      const e1 = fanYeni("evren"), e2 = fanYeni("evren");
+      const p = !!document.querySelector("#perde .pro-pencere") && /Yaratıcı Pro/.test(document.querySelector("#perde").textContent);
+      perdeKapat(); anaEvrenlerCiz();
+      const k = document.querySelector("#anaEvrenler .ana-kur");
+      const r = !!e1 && e2 === null && p && k.classList.contains("kilitli") && !!k.querySelector("[data-pro-ac]") && !!k.querySelector("[data-kod-ac]");
+      fanEserlerimYaz(fanEserlerim().filter(function (x) { return x.id !== e1.id; })); anaEvrenlerCiz();
+      return r;
     }));
     /* 3.2: sade arayüz */
     ok("3.2: ikincil kutular kapalı 'Bugün sitede' bölümünde, bugün kartı ve arama dışarıda", await Y.evaluate(function () {
@@ -138,6 +147,7 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
     const U = await cihaz("uye", { seviye: 0 });
     await kayitOl(U, "Tek Evren", "tekevren31", "te31@ornek.test");
     await U.goto(adres + "/arsiv/"); await U.waitForFunction(veriVar, null, { timeout: 20000 }); await bekle(U, 1500);
+    await U.evaluate(function () { const e = fanYeni("evren"); evrenBenimDegistir(e.id, function (x) { x.ad = "İlk taslak"; }); });   /* 4.0: ücretsiz ilk taslak (dolu: yeniden açılmasın) */
     await U.evaluate(function () { return tekKodDene("birevren31", null); }); await bekle(U, 1800);
     ok("kod hesaba bağlanır, kilit açılır (seviye 15 değil)", await U.evaluate(function () {
       const k = document.querySelector("#anaEvrenler .ana-kur");
@@ -157,6 +167,7 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
     const U2 = await cihaz("uye2", { seviye: 0 });
     await kayitOl(U2, "İki Evren", "ikievren311", "ie311@ornek.test");
     await U2.goto(adres + "/arsiv/"); await U2.waitForFunction(veriVar, null, { timeout: 20000 }); await bekle(U2, 1500);
+    await U2.evaluate(function () { fanYeni("evren"); });   /* 4.0: ücretsiz ilk taslak */
     await U2.evaluate(function () { return tekKodDene("ikievren311", null); }); await bekle(U2, 1800);
     ok("Fan sayfasındaki '+ Yeni evren' de hakkı harcar; ikincisi açılmaz", await U2.evaluate(function () {
       const vardi = tekHakVar("evren1");
@@ -170,11 +181,52 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
     ok("hak yokken evren kopyalamak kapıya takılır", await U2.evaluate(function () {
       const n = fanEserlerim().filter(function (x) { return x.tur === "evren"; }).length;
       const b = document.createElement("button"); b.setAttribute("data-evs-kopyala", ""); document.body.appendChild(b); b.click(); b.remove();
-      const r = fanEserlerim().filter(function (x) { return x.tur === "evren"; }).length === n && !!document.querySelector("#perde .svk-pencere");
+      const r = fanEserlerim().filter(function (x) { return x.tur === "evren"; }).length === n && !!document.querySelector("#perde .pro-pencere");
       perdeKapat();
       return r;
     }));
     ok("kacir tırnakları da kaçırır (nitelik değerleri güvenli)", await U2.evaluate(function () { return kacir("a\"b'c<d") === "a&quot;b&#39;c&lt;d"; }));
+
+    /* ---------- 4.0: paketleme, güvenli önizleme, moderatör kodu, vitrin, Pro ---------- */
+    console.log("4.0 teslim ve moderasyon");
+    ok("4.0: evren tek .json.gz paketine sıkışır, açılınca aynı evren; kilitli lore pakete girmez", await U.evaluate(async function () {
+      const e = fanEserlerim().find(function (x) { return x.tur === "evren"; });
+      evrenBenimDegistir(e.id, function (x) { x.ad = "Paket Evreni"; x.ozet = "Bir paket denemesi: sıkıştırılıp açılır."; x.lorlar = [{ id: "l1", baslik: "Gizli", metin: "sır" }]; });
+      const p = await evrenPaketle(evrenBenimBul(e.id));
+      const j = JSON.parse(await tf4Ac(p.blob));
+      return p.blob.size > 50 && j.ad === "Paket Evreni" && j.tur === "evren" && !j.lorlar;
+    }));
+    ok("4.0: güvenli önizleme evreni açar, çıkınca cihazda kalmaz", await U.evaluate(async function () {
+      const e = fanEserlerim().find(function (x) { return x.tur === "evren"; });
+      const id = evrenMotoruAc(JSON.stringify(Object.assign({}, e, { ad: "Önizleme Evreni" })), { onizleme: true });
+      await new Promise(function (r) { setTimeout(r, 700); });
+      const acik = !!document.querySelector("#evrenSayfa") && document.documentElement.hasAttribute("data-onizleme") && fanAcilanlar().some(function (x) { return x.id === id; });
+      location.hash = "#/arsiv"; await new Promise(function (r) { setTimeout(r, 500); });
+      return acik && !fanAcilanlar().some(function (x) { return x.id === id; }) && !document.documentElement.hasAttribute("data-onizleme");
+    }));
+    await sahte.kokSorgu("insert into public.moderator_kodlari (ozet, ad) values (public.mod_ozet('MOD-TEST1-23456', '#mod'), 'Test') on conflict do nothing");
+    await sahte.kokSorgu("insert into public.basvurular (baslik, ozet, dosya_yolu, gonderen) select 'Kuyruktaki Evren', 'Onay bekliyor', id::text || '/1-k.json.gz', id from public.profiller where kullanici_adi = 'tekevren31'");
+    await sahte.kokSorgu("insert into public.yayindaki_evrenler (slug, baslik, ozet, dosya_yolu, yazar) values ('vitrin-evreni', 'Vitrin Evreni', 'Onaylanmış', 'vitrin-evreni.json.gz', 'Tek Evren') on conflict do nothing");
+    const M = await cihaz("moderator");
+    await M.goto(adres + "/#/moderasyon"); await M.waitForFunction(veriVar, null, { timeout: 20000 }); await bekle(M, 800);
+    ok("4.0: #/moderasyon kod ister (404 değil), kuyruk kodsuz görünmez", await M.evaluate(function () { return !document.querySelector("#yokSayfa") && !!document.querySelector("#perde #modKod") && !document.querySelector(".mod-basvuru"); }));
+    await M.fill("#modKod", "yanlis-kod-123"); await M.click("[data-mod-giris]"); await bekle(M, 1500);
+    ok("4.0: yanlış kod reddedilir", /geçersiz/.test(await M.textContent("#modDurum")));
+    await M.fill("#modKod", "mod-test1-23456"); await M.click("[data-mod-giris]"); await bekle(M, 2000);
+    ok("4.0: doğru kodla kuyruk açılır, gönderen kimliği gösterilmez", await M.evaluate(function () {
+      const k = document.querySelector(".mod-basvuru");
+      return !!k && /Kuyruktaki Evren/.test(k.textContent) && k.querySelector("[data-mod-slug]").value === "kuyruktaki-evren" && !!moderatorToken();
+    }));
+    await U.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(U, 600);
+    await U.evaluate(function () { document.querySelector("#yayinEvrenler").open = true; }); await bekle(U, 1500);
+    ok("4.0: ana sayfada onaylanan evrenler (açılınca okunur)", /Vitrin Evreni/.test(await U.textContent("#yayinListe")));
+    await sahte.kokSorgu("insert into public.kullanici_abonelik (kullanici, uyelik_tipi, abonelik_bitis) select id, 'pro', now() + interval '30 days' from public.profiller where kullanici_adi = 'tekevren31' on conflict (kullanici) do update set uyelik_tipi = 'pro', abonelik_bitis = excluded.abonelik_bitis");
+    ok("4.0: Pro üye: rozet, sınırsız evren, Kurucu'nun son adımında onaya gönder", await U.evaluate(async function () {
+      await tf4AbonelikYukle(true);
+      return tf4ProMu() && document.documentElement.classList.contains("tf-pro") && uretimAcik("evren") && !!fanYeni("evren") &&
+        /data-tf4-gonder/.test(teslimHtml()) && /önceliklisin/.test(teslimHtml()) && !/data-pro-ode/.test(proPencereHtml(""));
+    }));
+    await M.close(); await U.evaluate(function () { if (typeof perdeKapat === "function") { perdeKapat(); } });
 
     /* ---------- 3. E25 ---------- */
     console.log("3.1 E25");
