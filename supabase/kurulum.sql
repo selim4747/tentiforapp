@@ -2998,3 +2998,16 @@ begin
       with check (bucket_id = 'onay-kuyrugu' and (storage.foldername(name))[1] = auth.uid()::text)$p$;
   end if;
 end $$;
+
+-- 4.0.2: onaylanan evren kanon ya da fan-made olarak yayımlanır (moderatör ya da yönetici değiştirebilir)
+alter table public.yayindaki_evrenler add column if not exists kanon boolean not null default false;
+create or replace function public.yayin_kanon(p_token text, p_slug text, p_kanon boolean) returns boolean
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not (public.moderator_dogrula(p_token) or public.tam_yonetici_mi()) then raise exception 'yetki yok'; end if;
+  update public.yayindaki_evrenler set kanon = coalesce(p_kanon, false) where slug = p_slug;
+  return found;
+end;
+$$;
+revoke execute on function public.yayin_kanon(text, text, boolean) from public;
+grant execute on function public.yayin_kanon(text, text, boolean) to anon, authenticated;

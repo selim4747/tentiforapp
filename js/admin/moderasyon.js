@@ -47,9 +47,9 @@ async function moderasyonCiz() {
         '<div class="oyun-sira"><button type="button" class="dugme dugme-sade" data-mod-onizle>Güvenli önizleme</button><button type="button" class="dugme dugme-sade" data-mod-indir>İndir</button></div>' +
         '<label>Yayın adresi</label><input class="arac-giris" data-mod-slug value="' + kacir(slugYap(b.baslik)) + '" maxlength="60">' +
         '<label>Not (isteğe bağlı; gönderen görür)</label><input class="arac-giris" data-mod-not maxlength="400">' +
-        '<div class="oyun-sira"><button type="button" class="dugme" data-mod-onay>Onayla</button><button type="button" class="dugme dugme-sade" data-mod-red>Reddet</button></div>' +
+        '<div class="oyun-sira"><button type="button" class="dugme" data-mod-onay="fan">Fan-made olarak onayla</button><button type="button" class="dugme" data-mod-onay="kanon">Kanon olarak onayla</button><button type="button" class="dugme dugme-sade" data-mod-red>Reddet</button></div>' +
         '<p class="pencere-durum" role="status"></p></article>';
-    }).join("") : '<p class="oyun-not">Kuyruk boş.</p>') + moderasyonYoneticiHtml());
+    }).join("") : '<p class="oyun-not">Kuyruk boş.</p>') + await yayindakilerHtml() + moderasyonYoneticiHtml());
 }
 
 document.addEventListener("click", async function (ev) {
@@ -98,7 +98,11 @@ document.addEventListener("click", async function (ev) {
     yaz(onay ? "Yayına alınıyor…" : "Reddediliyor…", true);
     await tf4Fonksiyon("moderasyon", { islem: onay ? "onayla" : "reddet", token: token, id: id,
       slug: (kart.querySelector("[data-mod-slug]") || {}).value, not: (kart.querySelector("[data-mod-not]") || {}).value });
-    if (onay) { try { localStorage.removeItem(YAYIN_ONBELLEK); } catch (_) { /* yok */ } }
+    if (onay && b.getAttribute("data-mod-onay") === "kanon") {
+      const s = await tf4Istemci();
+      await s.rpc("yayin_kanon", { p_token: token, p_slug: String((kart.querySelector("[data-mod-slug]") || {}).value || "").toLowerCase(), p_kanon: true });
+    }
+    if (onay) { yayinListesiTazele(); }
     moderasyonCiz();
   } catch (e) { yaz(e.message || String(e), false); }
 });
@@ -119,3 +123,29 @@ if (typeof hataSayfasiAc === "function") {
     return eskiHSA40.apply(this, arguments);
   };
 }
+
+
+/* 4.0.2: yayındaki evrenler: kanon / fan-made arasında değiştirilebilir */
+function yayinListesiTazele() {
+  try { localStorage.removeItem(YAYIN_ONBELLEK); } catch (_) { /* yok */ }
+  if (typeof yayinListesiYukle === "function") { yayinListesiYukle(); }
+}
+async function yayindakilerHtml() {
+  let l = [];
+  try { l = await yayinlananEvrenler(true); } catch (_) { return ""; }
+  if (!l.length) { return ""; }
+  return '<h4>Yayındaki evrenler</h4><ul class="mod-yayin">' + l.map(function (x) {
+    return '<li><b>' + kacir(x.baslik) + "</b> · " + (x.kanon ? "kanon" : "fan-made") +
+      ' <button type="button" class="ic-bag" data-mod-kanon="' + kacir(x.slug) + '" data-kanon="' + (x.kanon ? "0" : "1") + '">' + (x.kanon ? "Fan-made yap" : "Kanon yap") + "</button></li>";
+  }).join("") + "</ul>";
+}
+document.addEventListener("click", async function (ev) {
+  const b = ev.target.closest && ev.target.closest("[data-mod-kanon]");
+  if (!b) { return; }
+  try {
+    const s = await tf4Istemci();
+    const r = await s.rpc("yayin_kanon", { p_token: moderatorToken() || null, p_slug: b.getAttribute("data-mod-kanon"), p_kanon: b.getAttribute("data-kanon") === "1" });
+    if (r.error) { throw r.error; }
+    yayinListesiTazele(); moderasyonCiz();
+  } catch (e) { if (typeof eckaBildir === "function") { eckaBildir("Değiştirilemedi: " + (e.message || e)); } }
+});

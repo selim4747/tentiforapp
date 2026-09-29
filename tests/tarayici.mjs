@@ -1746,13 +1746,13 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
         (!alt || !document.getElementById(alt).classList.contains("svk-bolum-kilitli"));
     }));
     await YZ.evaluate(function () { cuzdan.acilan = window.__acilan; SVK.onbellek = null; kanonKilitUygula(); });
-    ok("seviye 6: hikâye açılır, evren hâlâ kilitli; 15: evren de", await YZ.evaluate(function () {
+    ok("seviye 6: hikâye açılır; 4.0: evren seviyeye bağlı değil (ilk taslak ücretsiz)", await YZ.evaluate(function () {
       localStorage.setItem("tentiforapp_seviye_test", "6"); SVK.onbellek = null;
       const h = fanYeni("hikaye"); const e1 = evrenYeniKur();
       localStorage.setItem("tentiforapp_seviye_test", "15"); SVK.onbellek = null;
       const e2 = evrenYeniKur();
       localStorage.removeItem("tentiforapp_seviye_test"); SVK.onbellek = null;
-      return !!h && e1 === null && !!e2;
+      return !!h && !!e1 && !!e2;
     }));
 
     /* eçka penceresi, hesap, geri bildirim */

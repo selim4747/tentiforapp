@@ -7187,6 +7187,8 @@
       "surum": "4.0.2",
       "tarih": "2026-09-29",
       "maddeler": [
+        "Onaylanan evrenler artık sitenin evren listelerinde: moderatör “Kanon olarak onayla” ya da “Fan-made olarak onayla” der; evren ana sayfada Kanon evrenler ya da Okurların evrenleri grubunda, evren seçicide ve E25 kapılarında görünür. Moderasyon panelinde yayındaki evrenler kanon/fan-made arasında değiştirilebilir (kurulum.sql yeniden çalıştırılmalı)",
+        "Önizlenen ya da açılan onaylı evren yönetici panelinde yanlışlıkla “kanona aday” diye görünmüyor",
         "İç düzen: 89 eski betik alan klasörlerine taşındı (core, arayuz, arsiv, oyun, topluluk, engine, studio, admin); “dalga-5”, “surum-28” gibi adlar içeriği anlatan adlarla değişti. Site aynı çalışıyor, yayında yine 4 paket",
         "Testler tek tek çalıştırılabiliyor (npm run test:takim -- s31); klasörlerin anlatımı js/README.md'de"
       ]

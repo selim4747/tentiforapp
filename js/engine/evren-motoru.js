@@ -9,7 +9,7 @@ function evrenMotoruAc(ham, secenek) {
   const o = secenek || {};
   const e = typeof ham === "string" ? fanTemizle(JSON.parse(ham)) : fanTemizle(ham);
   if (!e || e.tur !== "evren") { throw new Error("Bu bir evren paketi değil."); }
-  e.id = (o.onizleme ? "onizle-" : "yayin-") + String(e.id).slice(0, 30);
+  e.id = (o.onizleme ? "onizle-" : "yayin-") + String(o.slug || e.id).slice(0, 30);
   fanAcilanEkle(e);
   MOTOR.onizleme = o.onizleme ? e.id : null;
   document.documentElement.toggleAttribute("data-onizleme", !!o.onizleme);
@@ -28,14 +28,14 @@ window.addEventListener("hashchange", function () {
 
 async function yayinlananEvrenler(zorla) {
   if (zorla) { try { localStorage.removeItem(YAYIN_ONBELLEK); } catch (_) { /* yok */ } }
-  return tf4AcikOku("/rest/v1/yayindaki_evrenler?select=slug,baslik,ozet,yazar,yayin_tarihi&order=yayin_tarihi.desc&limit=60", YAYIN_ONBELLEK, 30 * 60e3);
+  return tf4AcikOku("/rest/v1/yayindaki_evrenler?select=slug,baslik,ozet,yazar,yayin_tarihi,kanon&order=yayin_tarihi.desc&limit=60", YAYIN_ONBELLEK, 2 * 3600e3);
 }
 
 async function yayinlananEvreniAc(slug) {
   if (!/^[a-z0-9][a-z0-9-]{2,59}$/.test(slug)) { throw new Error("Adres geçersiz."); }
   const r = await fetch(tf4Adres("/storage/v1/object/public/yayindaki-evrenler/" + slug + ".json.gz"));
   if (!r.ok) { throw new Error("Evren dosyası inemedi (" + r.status + ")."); }
-  return evrenMotoruAc(await tf4Ac(await r.blob()), {});
+  return evrenMotoruAc(await tf4Ac(await r.blob()), { slug: slug });
 }
 
 /* ana sayfada katlı "Onaylanan evrenler": açılınca bir kez okunur (30 dk önbellek) — açmayana sunucu yükü yok */
@@ -46,9 +46,10 @@ async function yayinListeCiz() {
   const a = document.querySelector("#yayinListe");
   if (!a) { return; }
   try {
-    const l = await yayinlananEvrenler(false);
+    const l = await yayinlananEvrenler(true);   /* kişi kendisi açtı: taze liste (bir istek) */
+    if (typeof YAYIN !== "undefined") { YAYIN.liste = l; }
     a.innerHTML = l.length ? '<div class="ana-evren-liste">' + l.map(function (x) {
-      return '<button type="button" class="ana-evren fan" data-yayin-ac="' + kacir(x.slug) + '"><b class="ana-evren-ad">' + kacir(x.baslik) + "</b>" +
+      return '<button type="button" class="ana-evren ' + (x.kanon ? "kanon" : "fan") + '" data-yayin-ac="' + kacir(x.slug) + '"><b class="ana-evren-ad">' + kacir(x.baslik) + "</b>" +
         '<span class="ana-evren-not">' + kacir((x.yazar ? x.yazar + " · " : "") + String(x.ozet || "").slice(0, 90)) + "</span></button>";
     }).join("") + "</div>" : '<p class="oyun-not">Henüz onaylanan evren yok. İlkini sen kur: evrenini Kurucu’nun son adımından onaya gönder.</p>';
   } catch (_) { a.innerHTML = '<p class="oyun-not">Şu an okunamadı; biraz sonra yeniden dene.</p>'; }
@@ -76,3 +77,49 @@ function yayinAdresiBak() {
   if (m) { yayinlananEvreniAc(m[1]).catch(function (e) { if (typeof eckaBildir === "function") { eckaBildir(e.message); } }); }
 }
 
+
+
+/* 4.0.2: onaylanan evrenler sitenin evren listelerine girer (ana sayfa, evren seçici, E25 kapıları, tüm evrenler):
+   kanon onaylananlar "Kanon evrenler"de, ötekiler "Okurların evrenleri"nde (fan-made). Liste 2 saat cihazda saklanır. */
+const YAYIN = { liste: [] };
+function yayinListesiYukle() {
+  try { const o = JSON.parse(localStorage.getItem(YAYIN_ONBELLEK) || "null"); if (o && Array.isArray(o.v)) { YAYIN.liste = o.v; } } catch (_) { /* yok */ }
+  yayinlananEvrenler(false).then(function (l) {
+    const once = JSON.stringify(YAYIN.liste); YAYIN.liste = Array.isArray(l) ? l : [];
+    if (JSON.stringify(YAYIN.liste) !== once) { try { anaEvrenlerCiz(); } catch (_) { /* yok */ } }
+  }).catch(function () { /* çevrimdışı ya da kurulum yok: liste boş kalır */ });
+}
+document.addEventListener("tf-veri-hazir", function () { setTimeout(yayinListesiYukle, 0); });
+
+if (typeof evrenSeciciListesi === "function") {
+  const eskiESL402 = evrenSeciciListesi;
+  window.evrenSeciciListesi = function () {
+    const l = eskiESL402.apply(this, arguments);
+    const var_ = {};
+    l.site.concat(l.fan).forEach(function (x) { var_[String(x.ad || "").toLocaleLowerCase("tr")] = true; });
+    YAYIN.liste.forEach(function (x) {
+      if (var_[String(x.baslik || "").toLocaleLowerCase("tr")]) { return; }
+      const oge = { ad: x.baslik, git: "#/yayin/" + x.slug, not: (x.kanon ? "kanon · " : "fan-made · ") + (x.yazar || "okur evreni") };
+      if (x.kanon) { l.site.push(oge); } else { l.fan.push(oge); }
+    });
+    return l;
+  };
+}
+
+/* açılan onaylı evrenin statüsü: kanon onaylandıysa herkes fan hikâyesi ve Evrengezer hikâyesi yazabilir */
+if (typeof evaStatu === "function") {
+  const eskiES402 = evaStatu;
+  window.evaStatu = function (ad) {
+    const s = eskiES402.apply(this, arguments);
+    if (s.tur !== "serbest") { return s; }
+    const a = String(ad || "").toLocaleLowerCase("tr").trim();
+    const y = YAYIN.liste.find(function (x) { return String(x.baslik || "").toLocaleLowerCase("tr").trim() === a; });
+    return y ? { tur: y.kanon ? "kanon" : "fan", ad: y.baslik } : s;
+  };
+}
+
+/* onaylı evrenin cihazdaki kopyası "açılan dosya" sayılıp panelde "kanona aday" diye görünmesin */
+if (typeof kanonAdaylari === "function") {
+  const eskiKA402 = kanonAdaylari;
+  window.kanonAdaylari = function () { return eskiKA402.apply(this, arguments).filter(function (x) { return !(x.kaynak === "acilan" && /^(yayin|onizle)-/.test(x.e.id || "")); }); };
+}
