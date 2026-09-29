@@ -30,6 +30,38 @@ async function tf4AbonelikYukle(zorla) {
 try { const o = JSON.parse(localStorage.getItem(TF4_UYELIK_ANAHTAR) || "null"); if (o && o.v) { TF4.uyelik = o.v; } } catch (_) { /* yok */ }
 tf4UyelikUygula();
 
+/* ==================== 4.3: aktif evren ====================
+   Alt menüdeki Oku ve Oyna seçili evrene göre açılır. Aktif evren: { git, ad } (git: "#/ev/fan/<id>", "#/ev/e99",
+   "#/claude" …) ya da null (Tentiforverse). Evren seçicide seçilince ya da bir evren sayfası açılınca değişir;
+   seçicide Tentiforverse seçilince sıfırlanır. Cihazda saklanır. */
+const TF4_AKTIF_EVREN = "tf4_aktif_evren";
+
+function aktifEvren() {
+  if (TF4.aktifEvren === undefined) {
+    try { TF4.aktifEvren = JSON.parse(localStorage.getItem(TF4_AKTIF_EVREN) || "null"); } catch (_) { TF4.aktifEvren = null; }
+    if (TF4.aktifEvren && !/^#\/(ev\/|claude)/.test(TF4.aktifEvren.git || "")) { TF4.aktifEvren = null; }
+  }
+  return TF4.aktifEvren;
+}
+
+function aktifEvrenSec(git, ad) {
+  const yeni = /^#\/(ev\/|claude)/.test(git || "") ? { git: git, ad: String(ad || "").slice(0, 60) } : null;
+  const eski = aktifEvren();
+  if ((eski && eski.git) === (yeni && yeni.git) && (eski && eski.ad) === (yeni && yeni.ad)) { return; }
+  TF4.aktifEvren = yeni;
+  try { if (yeni) { localStorage.setItem(TF4_AKTIF_EVREN, JSON.stringify(yeni)); } else { localStorage.removeItem(TF4_AKTIF_EVREN); } } catch (_) { /* yok */ }
+  if (document.querySelector("#altMenu")) { altMenuCiz(); }
+}
+
+/** Alt menüde Oku ("oku") ya da Oyna ("oyna") nereye gider: aktif evrenin okuma rehberi / oyunları; aktif evren yoksa null
+    (Tentiforverse'in Oku ve Oyna sayfaları). */
+function aktifEvrenHedefi(tur) {
+  const a = aktifEvren();
+  if (!a) { return null; }
+  if (a.git === "#/claude") { return { git: a.git, ad: a.ad, ce: tur === "oku" ? "roman" : "oyunlar" }; }
+  return { git: a.git, ad: a.ad, sekme: tur === "oku" ? "rehber" : "oyunlar" };
+}
+
 /* ==================== 4.2: bildirimler (site ve uygulama içi) ====================
    Onay/red kararları, kurucu onayı istekleri: sunucudaki kullanici_bildirimleri. Girişte bir kez okunur (oturum başına),
    Sen sayfası açılınca tazelenir. Okunmamış varsa hesap düğmesinde nokta; Android uygulamasında yerel bildirim. */

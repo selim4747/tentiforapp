@@ -1,5 +1,5 @@
 {
-  "surum": "4.2.1",
+  "surum": "4.3.0",
   "guncelleme": "2026-09-29",
   "delilik": {
     "baslik": "Delilik",
@@ -7184,6 +7184,15 @@
   ],
   "degisiklik": [
     {
+      "surum": "4.3.0",
+      "tarih": "2026-09-29",
+      "maddeler": [
+        "Alt menüde Oku ve Oyna artık seçili evrene göre açılıyor: bir evren seçince ya da evren sayfasına girince Oku o evrenin okuma rehberini, Oyna o evrenin oyunlarını gösterir. Tentiforverse seçiliyken eskisi gibi.",
+        "Evrenlerde yeni “Okuma rehberi” sekmesi: numaralı sıra, kilitli ve kod isteyen maddeler, “Oku →” ile doğrudan bölüme gidiş. Rehber yazılmamışsa romandan kendiliğinden kurulur.",
+        "Evren Kurucu: okuma rehberi düzenleyicisi (sıra, hedef, kilit, kod) ve kurallarıyla oyun listesi (her oyuna kendi adı, kelimeleri ya da soruları). İkisi de evren paketine yazılır."
+      ]
+    },
+    {
       "surum": "4.2.1",
       "tarih": "2026-09-29",
       "maddeler": [
@@ -9001,7 +9010,9 @@
           "zemin": "#EEF5FB",
           "font": "serif"
         },
-        "test": true
+        "test": true,
+        "okuma_rehberi": [],
+        "oyun_listesi": []
       },
       {
         "bicim": "tentifor-eser",
@@ -9034,7 +9045,9 @@
           "zemin": "#F7F2EE",
           "font": "serif"
         },
-        "test": true
+        "test": true,
+        "okuma_rehberi": [],
+        "oyun_listesi": []
       }
     ],
     "kisiler": [
@@ -9122,7 +9135,9 @@
     "harita": {
       "yerler": []
     },
-    "oneriler": []
+    "oneriler": [],
+    "okuma_rehberi": [],
+    "oyun_listesi": []
   },
   "kanonEvrenleri": {
     "e26": {
@@ -9160,7 +9175,9 @@
           "ad": "Yabancı öğesi",
           "deger": "Saça bağlı bir konuşma topu."
         }
-      ]
+      ],
+      "okuma_rehberi": [],
+      "oyun_listesi": []
     },
     "e25": {
       "bicim": "tentifor-eser",
@@ -9183,7 +9200,9 @@
       "yerler": [],
       "tarih": [],
       "sozluk": [],
-      "ozelAlanlar": []
+      "ozelAlanlar": [],
+      "okuma_rehberi": [],
+      "oyun_listesi": []
     }
   },
   "bildirim": {

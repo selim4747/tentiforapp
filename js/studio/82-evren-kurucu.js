@@ -336,7 +336,7 @@ function evrKurucuHtml(v) {
   } else if (a.id === "gorunum") {
     govde = '<div class="evr-kartlar">' +
       [["stil", "🎨 Görünüm", "Renk, desen, yazı tipi, para"], ["yazi", "✎ Yazı çiz", "Kendi harflerini çiz"], ["lore", "🔒 Kilitli lore", "Kodla açılan gizli katmanlar"],
-        ["oyunlar", "🎲 Oyunlar", "Evrenine özel oyunlar"], ["roman", "📖 Roman", "Bölüm bölüm anlatı"], ["cizim", "🖌 Çizimler", "Evreninden görseller"],
+        ["rehber", "📖 Okuma rehberi", "Okurlar için sıra"], ["oyunlar", "🎲 Oyunlar", "Evrenine özel oyunlar"], ["roman", "📖 Roman", "Bölüm bölüm anlatı"], ["cizim", "🖌 Çizimler", "Evreninden görseller"],
         ["uygulama", "⌨ Uygulamalar", "Kodla küçük uygulamalar"], ["kod", "🔑 Kod", "Yönetici kodu ve paylaşım"]]
         .filter(function (x) { return var_(x[0]); })
         .map(function (x) { return '<button type="button" class="evr-kart" data-evs-sekme="' + x[0] + '"><b>' + x[1] + "</b><span>" + x[2] + "</span></button>"; }).join("") + "</div>";
@@ -406,4 +406,149 @@ document.addEventListener("click", function (ev) {
   evrenSayfaCiz();
   const s = document.querySelector("#evrenSayfa .evr-adim-baslik");
   if (s && s.scrollIntoView) { s.scrollIntoView({ block: "start" }); }
+});
+
+/* ==================== 4.3: okuma rehberi ve oyun listesi düzenleyicileri ====================
+   Rehber: okuma_rehberi (evren-motoru). Oyun listesi: oyun_listesi (51-evren-oyunlari). İkisi de evrenin JSON'una yazılır;
+   paketleyici fanTemizle → evrenEkTemizle ile ikisini de pakete koyar. Yazı alanları "change"te kaydedilir (yazarken sayfa yeniden çizilmez). */
+
+function evrRehberHedefleri(e) {
+  const l = [["", "— Yalnızca başlık —"]];
+  if (String(e.ozet || "").trim()) { l.push(["bolum:ozet", "Giriş (özet)"]); }
+  FAN_EVREN_GRUPLARI.forEach(function (g) { if ((e[g.k] || []).length) { l.push(["bolum:" + g.k, "Bilgi · " + g.ad]); } });
+  (((e.roman || {}).bolumler) || []).forEach(function (b, i) { l.push(["roman:" + b.id, "Roman · " + (b.baslik || "Bölüm " + (i + 1))]); });
+  (e.lorlar || []).forEach(function (x) { l.push(["lore:" + x.id, "Lore · " + (x.baslik || "Kilitli lore")]); });
+  return l;
+}
+
+function evrRehberDuzenHtml(e) {
+  const l = e.okuma_rehberi || [];
+  const hedef = evrRehberHedefleri(e);
+  return '<details class="kutu-y evr-rehber-duzen"' + (l.length ? "" : " open") + "><summary><b>Okuma rehberini düzenle</b></summary>" +
+    '<p class="oyun-not">Okurların hangi sırayla okuyacağını sen seç. Boş bırakırsan rehber romanından kendiliğinden kurulur. ' +
+      "“Kod ister” lore açılınca okunur; “kilitli” madde hiç açılmaz (yakında).</p>" +
+    l.map(function (x, i) {
+      const sec = hedef.some(function (h) { return h[0] === x.dosya; }) ? hedef : hedef.concat([[x.dosya, x.dosya]]);
+      return '<div class="evo-ayar-oyun" data-rehber-sira="' + i + '"><b>' + (i + 1) + ".</b> " +
+        '<input class="kod-giris arac-giris" maxlength="120" data-rehber-alan="baslik" aria-label="Başlık" placeholder="Başlık" value="' + kacir(x.baslik) + '">' +
+        '<select class="kod-giris arac-giris" data-rehber-alan="dosya" aria-label="Neyi açar">' + sec.map(function (h) {
+          return '<option value="' + kacir(h[0]) + '"' + (h[0] === x.dosya ? " selected" : "") + ">" + kacir(h[1]) + "</option>";
+        }).join("") + "</select>" +
+        '<label class="evo-onay"><input type="checkbox" data-rehber-alan="kilitli"' + (x.kilitli ? " checked" : "") + "> kilitli</label>" +
+        '<label class="evo-onay"><input type="checkbox" data-rehber-alan="kod_gerekli"' + (x.kod_gerekli ? " checked" : "") + "> kod ister</label>" +
+        '<span class="oyun-sira"><button type="button" class="ic-bag" data-rehber-is="yukari" aria-label="Yukarı"' + (i ? "" : " disabled") + ">↑</button>" +
+          '<button type="button" class="ic-bag" data-rehber-is="asagi" aria-label="Aşağı"' + (i < l.length - 1 ? "" : " disabled") + ">↓</button>" +
+          '<button type="button" class="ic-bag" data-rehber-is="sil">Sil</button></span></div>';
+    }).join("") +
+    '<div class="oyun-sira"><button type="button" class="dugme dugme-sade" data-rehber-is="ekle">+ Madde ekle</button>' +
+      '<button type="button" class="dugme dugme-sade" data-rehber-is="doldur">Otomatik doldur</button></div></details>';
+}
+
+function evrRehberYaz(fn, ciz) {
+  if (!EVS || EVS.kaynak !== "benim") { return; }
+  evrenBenimDegistir(EVS.id, function (e) {
+    const l = Array.isArray(e.okuma_rehberi) ? e.okuma_rehberi.slice() : [];
+    fn(l, e);
+    const t = rehberTemizle(l);
+    if (t.length) { e.okuma_rehberi = t; } else { delete e.okuma_rehberi; }
+  });
+  if (ciz) { evrenSayfaCiz(); }
+}
+
+document.addEventListener("click", function (ev) {
+  const b = ev.target.closest && ev.target.closest("[data-rehber-is]");
+  if (!b || !EVS || EVS.kaynak !== "benim") { return; }
+  const is = b.getAttribute("data-rehber-is");
+  const s = b.closest("[data-rehber-sira]");
+  const i = s ? Number(s.getAttribute("data-rehber-sira")) : -1;
+  evrRehberYaz(function (l, e) {
+    if (is === "ekle") { l.push({ baslik: "Yeni madde", dosya: "" }); }
+    else if (is === "doldur") {
+      const eski = e.okuma_rehberi; delete e.okuma_rehberi;
+      const o = evrenRehberi(e); e.okuma_rehberi = eski;
+      l.splice.apply(l, [0, l.length].concat(o.length ? o : [{ baslik: "Evrene giriş", dosya: String(e.ozet || "").trim() ? "bolum:ozet" : "" }]));
+    }
+    else if (is === "sil") { l.splice(i, 1); }
+    else if (is === "yukari" && i > 0) { l.splice(i - 1, 0, l.splice(i, 1)[0]); }
+    else if (is === "asagi" && i < l.length - 1) { l.splice(i + 1, 0, l.splice(i, 1)[0]); }
+  }, true);
+});
+
+document.addEventListener("change", function (ev) {
+  const el = ev.target.closest && ev.target.closest("[data-rehber-alan]");
+  const s = el && el.closest("[data-rehber-sira]");
+  if (!s || !EVS || EVS.kaynak !== "benim") { return; }
+  const i = Number(s.getAttribute("data-rehber-sira")), alan = el.getAttribute("data-rehber-alan");
+  evrRehberYaz(function (l) {
+    if (!l[i]) { return; }
+    l[i][alan] = el.type === "checkbox" ? el.checked : el.value;
+    if (alan === "baslik" && !String(el.value).trim()) { l[i].baslik = "Adsız madde"; }
+  }, el.tagName !== "INPUT" || el.type === "checkbox");
+});
+
+/* ---------- oyun listesi ---------- */
+
+function evrOyunListesiHtml(e) {
+  const l = e.oyun_listesi || [];
+  const soru = function (g) { return (g.ayarlar.sorular || []).map(function (q) { return [q.soru, q.dogru].concat(q.yanlis).join(" | "); }).join("\n"); };
+  return '<details class="kutu-y evo-ayar evr-oyun-liste"' + (l.length ? " open" : "") + "><summary><b>Oyun listesi (kurallarıyla)</b></summary>" +
+    '<p class="oyun-not">Liste doluysa Oyna yalnızca bu oyunları gösterir; her oyunun adı ve kendi kelimeleri/soruları olur. ' +
+      "Boşsa oyunlar içerikten kendiliğinden kurulur.</p>" +
+    l.map(function (g, i) {
+      return '<div class="evo-ayar-oyun" data-oyunl-sira="' + i + '">' +
+        '<select class="kod-giris arac-giris" data-oyunl-alan="tur" aria-label="Oyun türü">' + EVO_OYUNLAR.map(function (t) {
+          return '<option value="' + t.id + '"' + (t.id === g.tur ? " selected" : "") + ">" + kacir(t.ad) + "</option>";
+        }).join("") + "</select>" +
+        '<input class="kod-giris arac-giris" maxlength="60" data-oyunl-alan="ad" aria-label="Oyunun adı" placeholder="Oyunun adı" value="' + kacir(g.ad) + '">' +
+        (g.tur === "kelime" ? '<textarea class="kod-giris arac-giris" rows="3" data-oyunl-alan="kelimeler" aria-label="Kelimeler" placeholder="Her satıra bir kelime (4–7 harf)">' +
+          kacir((g.ayarlar.kelimeler || []).join("\n")) + "</textarea>" : "") +
+        (g.tur === "sinav" || g.tur === "dogru" ? '<textarea class="kod-giris arac-giris" rows="4" data-oyunl-alan="sorular" aria-label="Sorular" placeholder="Soru | doğru cevap | yanlış | yanlış | yanlış">' +
+          kacir(soru(g)) + "</textarea>" : "") +
+        '<span class="oyun-not">' + kacir(EVO_OYUNLAR.find(function (t) { return t.id === g.tur; }).ozet) + "</span>" +
+        '<button type="button" class="ic-bag" data-oyunl-is="sil">Sil</button></div>';
+    }).join("") +
+    (l.length < 20 ? '<div class="oyun-sira"><button type="button" class="dugme dugme-sade" data-oyunl-is="ekle">+ Oyun ekle</button></div>' : "") + "</details>";
+}
+
+function evrOyunListesiYaz(fn, ciz) {
+  if (!EVS || EVS.kaynak !== "benim") { return; }
+  evrenBenimDegistir(EVS.id, function (e) {
+    const l = Array.isArray(e.oyun_listesi) ? e.oyun_listesi.slice() : [];
+    fn(l);
+    const t = oyunListesiTemizle(l);
+    if (t.length) { e.oyun_listesi = t; } else { delete e.oyun_listesi; }
+  });
+  if (ciz) { evrenSayfaCiz(); }
+}
+
+document.addEventListener("click", function (ev) {
+  const b = ev.target.closest && ev.target.closest("[data-oyunl-is]");
+  if (!b || !EVS || EVS.kaynak !== "benim") { return; }
+  const s = b.closest("[data-oyunl-sira]");
+  const i = s ? Number(s.getAttribute("data-oyunl-sira")) : -1;
+  evrOyunListesiYaz(function (l) {
+    if (b.getAttribute("data-oyunl-is") === "ekle") { l.push({ id: "o" + Date.now().toString(36), tur: "sinav", ad: "", ayarlar: {} }); }
+    else { l.splice(i, 1); }
+  }, true);
+});
+
+document.addEventListener("change", function (ev) {
+  const el = ev.target.closest && ev.target.closest("[data-oyunl-alan]");
+  const s = el && el.closest("[data-oyunl-sira]");
+  if (!s || !EVS || EVS.kaynak !== "benim") { return; }
+  const i = Number(s.getAttribute("data-oyunl-sira")), alan = el.getAttribute("data-oyunl-alan");
+  evrOyunListesiYaz(function (l) {
+    const g = l[i];
+    if (!g) { return; }
+    g.ayarlar = Object.assign({}, g.ayarlar);
+    if (alan === "tur") { g.tur = el.value; if (!g.ad || EVO_OYUNLAR.some(function (t) { return t.ad === g.ad; })) { g.ad = ""; } }
+    else if (alan === "ad") { g.ad = el.value; }
+    else if (alan === "kelimeler") { g.ayarlar.kelimeler = el.value.split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean); }
+    else if (alan === "sorular") {
+      g.ayarlar.sorular = el.value.split(/\n+/).map(function (x) {
+        const p = x.split("|").map(function (y) { return y.trim(); });
+        return p.length >= 3 && p[0] && p[1] ? { soru: p[0], dogru: p[1], yanlis: p.slice(2, 5).filter(Boolean) } : null;
+      }).filter(Boolean);
+    }
+  }, alan === "tur");
 });

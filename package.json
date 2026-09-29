@@ -1,5 +1,6 @@
 {
   "name": "tentiforapp",
+  "version": "4.3.0",
   "private": true,
   "type": "module",
   "scripts": {
