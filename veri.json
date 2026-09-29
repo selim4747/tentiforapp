@@ -1,5 +1,5 @@
 {
-  "surum": "4.0.0",
+  "surum": "4.0.1",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7183,6 +7183,13 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "4.0.1",
+      "tarih": "2026-09-29",
+      "maddeler": [
+        "“Onaya gönder” artık kendi evreninin Bilgiler sekmesinde en üstte (önceden yalnızca Kurucu'nun son adımındaydı)"
+      ]
+    },
     {
       "surum": "4.0.0",
       "tarih": "2026-09-29",

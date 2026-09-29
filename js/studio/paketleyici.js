@@ -69,3 +69,12 @@ document.addEventListener("click", async function (ev) {
   catch (e) { yaz(e.message, false); }
   b.disabled = false;
 });
+
+/* 4.0.1: "Onaya gönder" kendi evreninin Bilgiler sekmesinde de, en üstte (Kurucu'nun son adımında kalmasın) */
+if (typeof evrenBilgiBolumu === "function") {
+  const eskiEBB40 = evrenBilgiBolumu;
+  window.evrenBilgiBolumu = function (v) {
+    const h = eskiEBB40.apply(this, arguments);
+    return (typeof EVS !== "undefined" && EVS && EVS.kaynak === "benim" ? teslimHtml() : "") + h;
+  };
+}
