@@ -36,7 +36,7 @@ async function basvurularim() {
 
 function teslimHtml() {
   return '<section class="kutu-y tf4-teslim" aria-label="Onaya gönder"><b>Siteye yayın için onaya gönder</b>' +
-    '<p class="oyun-not">Evrenin sıkıştırılıp kilitli kuyruğa gider; moderatörler önizleyip onaylayınca ana sayfadaki “Onaylanan evrenler”de herkese açılır.' + (tf4ProMu() ? " Pro: kuyrukta önceliklisin." : "") + "</p>" +
+    '<p class="oyun-not">Evrenin sıkıştırılıp kilitli kuyruğa gider; moderatörler önizleyip onaylayınca sitenin evrenlerine (fan-made ya da kanon) eklenir.' + (tf4ProMu() ? " Pro: kuyrukta önceliklisin." : "") + "</p>" +
     '<div class="oyun-sira"><button type="button" class="dugme" data-tf4-gonder>Onaya gönder</button><button type="button" class="dugme dugme-sade" data-tf4-basvurularim>Başvurularım</button></div>' +
     '<p class="pencere-durum" id="tf4TeslimDurum" role="status"></p><div id="tf4Basvurular"></div></section>';
 }

@@ -1,5 +1,5 @@
 {
-  "surum": "4.0.2",
+  "surum": "4.0.3",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7183,6 +7183,17 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "4.0.3",
+      "tarih": "2026-09-29",
+      "maddeler": [
+        "İki seviyeli moderatör: fan moderatör yalnızca fan-made onaylar; kanon moderatör fan-made ve kanon onaylar (yönetici kodu üretirken seçer)",
+        "Onaylanan evren Supabase'de tutulmaz: GitHub deposuna yazılır (evrenler/<adres>.json + veri.json); sitenin öteki fan evrenleri gibi listelere girer, çevrimdışı açılır. Supabase'de yalnızca geçici onay kuyruğu kalır, karar verilince silinir",
+        "Onay kayıtları siteyi kendiliğinden kurmaz: yönetici Yayınla'ya basınca yayına çıkar",
+        "Yönetici moderatör kodlarını görür ve tek tek siler (açık oturumu da hemen düşer)",
+        "Kanon moderatör, sitedeki okur evrenlerini kanon ile fan-made arasında değiştirebilir"
+      ]
+    },
     {
       "surum": "4.0.2",
       "tarih": "2026-09-29",

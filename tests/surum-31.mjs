@@ -206,7 +206,6 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
     }));
     await sahte.kokSorgu("insert into public.moderator_kodlari (ozet, ad) values (public.mod_ozet('MOD-TEST1-23456', '#mod'), 'Test') on conflict do nothing");
     await sahte.kokSorgu("insert into public.basvurular (baslik, ozet, dosya_yolu, gonderen) select 'Kuyruktaki Evren', 'Onay bekliyor', id::text || '/1-k.json.gz', id from public.profiller where kullanici_adi = 'tekevren31'");
-    await sahte.kokSorgu("insert into public.yayindaki_evrenler (slug, baslik, ozet, dosya_yolu, yazar) values ('vitrin-evreni', 'Vitrin Evreni', 'Onaylanmış', 'vitrin-evreni.json.gz', 'Tek Evren') on conflict do nothing");
     const M = await cihaz("moderator");
     await M.goto(adres + "/#/moderasyon"); await M.waitForFunction(veriVar, null, { timeout: 20000 }); await bekle(M, 800);
     ok("4.0: #/moderasyon kod ister (404 değil), kuyruk kodsuz görünmez", await M.evaluate(function () { return !document.querySelector("#yokSayfa") && !!document.querySelector("#perde #modKod") && !document.querySelector(".mod-basvuru"); }));
@@ -217,16 +216,16 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
       const k = document.querySelector(".mod-basvuru");
       return !!k && /Kuyruktaki Evren/.test(k.textContent) && k.querySelector("[data-mod-slug]").value === "kuyruktaki-evren" && !!moderatorToken();
     }));
-    await U.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(U, 600);
-    await U.evaluate(function () { document.querySelector("#yayinEvrenler").open = true; }); await bekle(U, 1500);
-    ok("4.0: ana sayfada onaylanan evrenler (açılınca okunur)", /Vitrin Evreni/.test(await U.textContent("#yayinListe")));
-    await sahte.kokSorgu("update public.yayindaki_evrenler set kanon = true where slug = 'vitrin-evreni'");
-    await U.evaluate(function () { localStorage.removeItem(YAYIN_ONBELLEK); yayinListesiYukle(); }); await bekle(U, 1500);
-    ok("4.0.2: kanon onaylanan evren Kanon evrenlerde, seçicide ve E25 kapılarında; panelde 'kanona aday' değil", await U.evaluate(function () {
-      const kanon = Array.from(document.querySelectorAll("#anaEvrenler .ana-evren.kanon")).map(function (x) { return x.textContent; }).join("|");
-      return /Vitrin Evreni/.test(kanon) && evrenSeciciListesi().site.some(function (x) { return x.git === "#/yayin/vitrin-evreni"; }) &&
-        e25Kapilar().some(function (k) { return k.git === "#/yayin/vitrin-evreni" && k.tur === "kanon"; }) && evaStatu("Vitrin Evreni").tur === "kanon" &&
-        !kanonAdaylari().some(function (x) { return /^yayin-/.test(x.e.id || ""); });
+    ok("4.0.3: fan moderatör yalnızca fan-made onaylar (kanon düğmesi yok)", await M.evaluate(function () {
+      const k = document.querySelector(".mod-basvuru");
+      return moderatorDuzey() === "fan" && !!k.querySelector('[data-mod-onay="fan"]') && !k.querySelector('[data-mod-onay="kanon"]') && /Fan moderatör/.test(document.querySelector("#perde").textContent);
+    }));
+    await M.evaluate(function () { moderatorCikis(); sessionStorage.removeItem("tf4_mod_duzey"); moderasyonCiz(); }); await bekle(M, 400);
+    await sahte.kokSorgu("insert into public.moderator_kodlari (ozet, ad, duzey) values (public.mod_ozet('MOD-KANON-12345', '#mod'), 'Kanon', 'kanon') on conflict do nothing");
+    await M.fill("#modKod", "mod-kanon-12345"); await M.click("[data-mod-giris]"); await bekle(M, 2000);
+    ok("4.0.3: kanon moderatör fan-made ve kanon onaylar", await M.evaluate(function () {
+      const k = document.querySelector(".mod-basvuru");
+      return moderatorDuzey() === "kanon" && !!k && !!k.querySelector('[data-mod-onay="fan"]') && !!k.querySelector('[data-mod-onay="kanon"]');
     }));
     await sahte.kokSorgu("insert into public.kullanici_abonelik (kullanici, uyelik_tipi, abonelik_bitis) select id, 'pro', now() + interval '30 days' from public.profiller where kullanici_adi = 'tekevren31' on conflict (kullanici) do update set uyelik_tipi = 'pro', abonelik_bitis = excluded.abonelik_bitis");
     ok("4.0: Pro üye: rozet, sınırsız evren, Kurucu'nun son adımında onaya gönder", await U.evaluate(async function () {
