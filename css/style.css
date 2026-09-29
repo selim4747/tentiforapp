@@ -3858,7 +3858,7 @@ html.evren-acik{overflow:hidden}
 .evl-kod .oyun-sira input{flex:1;min-width:160px}
 .evkod{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:13px;line-height:1.5;white-space:pre;overflow:auto}
 
-/* yeni sürüm çubuğu (js/46-guncelleme.js) */
+/* yeni sürüm çubuğu (js/core/46-guncelleme.js) */
 .guncelleme-cubugu{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:70;
   display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);box-sizing:border-box;padding:8px 8px 8px 14px;
   background:var(--beyaz);color:var(--murekkep);border:1px solid var(--deniz);border-radius:10px;box-shadow:0 6px 24px rgba(13,53,96,.18);font-size:14px}
@@ -3875,7 +3875,7 @@ html.evren-acik{overflow:hidden}
 .evs-sozluk dd{margin:2px 0 0}
 .evren-tasindi{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px}
 
-/* E25 kişileri ve konuklar (js/47-e25-kisiler.js) */
+/* E25 kişileri ve konuklar (js/engine/47-e25-kisiler.js) */
 .e25-kisiler{margin-top:18px}
 .kisi-kart{margin:10px 0}
 .kisi-bas{font-size:18px}
@@ -3890,7 +3890,7 @@ html.evren-acik{overflow:hidden}
 .konuk{border-top:1px solid var(--sig);padding:8px 0}
 .konuk-duzen{margin-top:10px}
 
-/* karşılama /basla/ ve ziyaret sayacı (js/48-karsilama.js) */
+/* karşılama /basla/ ve ziyaret sayacı (js/arayuz/48-karsilama.js) */
 .karsilama{z-index:58}
 .krs-govde{max-width:760px}
 .krs-govde h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,8vw,56px);line-height:1.05;margin:6px 0 12px}
@@ -3909,7 +3909,7 @@ html.evren-acik{overflow:hidden}
 .olay-tablo th,.olay-tablo td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--sig)}
 .olay-tablo td:not(:first-child),.olay-tablo th:not(:first-child){text-align:right;font-family:var(--mono)}
 
-/* EG mağazası (js/49-eg-magaza.js) */
+/* EG mağazası (js/engine/49-eg-magaza.js) */
 .eg-magaza{margin-top:14px;border-top:1px solid var(--sig);padding-top:10px}
 .eg-urun{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--sig)}
 .eg-urun-var{font-family:var(--mono);font-size:12px;color:var(--deniz)}
@@ -4355,7 +4355,7 @@ html.ecka-yeni #cuzdanTutar{visibility:hidden}
 .ce-rozet,.ce-okundu{color:var(--deniz);font-weight:700}
 .ce-gunluk{margin-bottom:14px}
 
-/* 2.0: çoklu evren (68-surum-2.js) */
+/* 2.0: çoklu evren (68-coklu-evren.js) */
 .es-simdiki{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:bottom}
 .es-ara{padding:0 0 8px}
 .es-ara input{width:100%}
@@ -5015,7 +5015,7 @@ html[data-ayar-tema="gece"] .eva-rozet.test{background:#3b2a5a;color:#e5d6ff}
 .sayfa-icerik-oge,.hesap-btn{font-family:var(--govde);letter-spacing:0}
 .sayfa-icerik-oge{font-size:13.5px}
 
-/* sayfa başlığı ile ilk bölüm başlığı aynıysa ikincisi gizli (js/86-surum-32.js) */
+/* sayfa başlığı ile ilk bölüm başlığı aynıysa ikincisi gizli (js/arayuz/86-sade-arayuz.js) */
 .bolum.baslik-tekrar > .bolum-basi h2,.bolum.baslik-tekrar > .bolum-basi .etiket{display:none}
 .bolum.baslik-tekrar{padding-top:20px}
 .sayfa-icerik.tek-cip{display:none}

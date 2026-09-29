@@ -1,5 +1,5 @@
 {
-  "surum": "4.0.1",
+  "surum": "4.0.2",
   "guncelleme": "2026-09-28",
   "delilik": {
     "baslik": "Delilik",
@@ -7183,6 +7183,14 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "4.0.2",
+      "tarih": "2026-09-29",
+      "maddeler": [
+        "İç düzen: 89 eski betik alan klasörlerine taşındı (core, arayuz, arsiv, oyun, topluluk, engine, studio, admin); “dalga-5”, “surum-28” gibi adlar içeriği anlatan adlarla değişti. Site aynı çalışıyor, yayında yine 4 paket",
+        "Testler tek tek çalıştırılabiliyor (npm run test:takim -- s31); klasörlerin anlatımı js/README.md'de"
+      ]
+    },
     {
       "surum": "4.0.1",
       "tarih": "2026-09-29",

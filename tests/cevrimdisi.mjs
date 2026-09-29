@@ -172,7 +172,7 @@ export async function cevrimdisiTestleri({ dizin }) {
     ok("yönetici betikleri sonradan iner", await p.evaluate(async function () { await yoneticiBetikleriYukle(); return yoneticiBetikleriHazir(); }));
     ok("hesap kütüphanesi sonradan iner", await p.evaluate(async function () { await hesapKutuphaneYukle(); return !!(window.supabase && window.supabase.createClient); }));
     ok("sonradan inen dosyalar da önbelleğe girer", await p.evaluate(async function () {
-      const u = ["js/vendor/supabase-2.117.2.js", "js/22b-yonetici-araclari.js", "js/25-panel-roman-ses-basin.js", "js/43-kurulum.js"];
+      const u = ["js/vendor/supabase-2.117.2.js", "js/admin/22b-yonetici-araclari.js", "js/admin/25-panel-roman-ses-basin.js", "js/admin/43-kurulum.js"];
       const var_ = [];
       for (const x of u) { const r = await caches.match(new URL(x, location.origin + "/").href, { ignoreSearch: true }); var_.push(!!r); }
       return var_.every(Boolean);

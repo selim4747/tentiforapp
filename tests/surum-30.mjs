@@ -72,7 +72,7 @@ export async function surum30Testleri({ adres, veritabani, dizin, kok }) {
         } };
       }
     }, { uygulama: !!s.uygulama, onbellek: !!s.onbellek });
-    await ctx.route(/\/js\/(?:28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
+    await ctx.route(/\/js\/(?:core\/28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
     await ctx.route(TEST_URL + "/**", function (r) { if (s.istekler) { s.istekler.push(r.request().method() + " " + new URL(r.request().url()).pathname.replace("/rest/v1", "")); } return sahte.isle(r); });
     const p = await ctx.newPage();
     p.on("pageerror", function (e) { hatalar.push(ad + ": " + e.message); });

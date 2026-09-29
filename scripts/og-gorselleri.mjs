@@ -13,7 +13,7 @@ const HEDEF = join(KOK, "ikon", "og");
 mkdirSync(HEDEF, { recursive: true });
 
 const veri = JSON.parse(readFileSync(join(KOK, "veri.json"), "utf8"));
-const gez = readFileSync(join(KOK, "js/18-dalga-7-gezinme.js"), "utf8");
+const gez = readFileSync(join(KOK, "js/arayuz/18-gezinme.js"), "utf8");
 const blok = gez.slice(gez.indexOf("const GEZINME"), gez.indexOf("];", gez.indexOf("const GEZINME")));
 const sayfalar = [...blok.matchAll(/\{\s*id:\s*"([^"]+)",\s*ad:\s*"([^"]+)"[\s\S]*?bolumler:\s*\[([\s\S]*?)\]\s*\}/g)]
   .map(function (m) { return { id: m[1], ad: m[2], alt: [...m[3].matchAll(/\[\s*"[^"]+",\s*"([^"]+)"\s*\]/g)].map(function (b) { return b[1]; }).slice(0, 5).join(" · ") }; })

@@ -1,6 +1,6 @@
 /* Yönetici paneli — araçlar (3.0'da 22-yonetici.js'ten ayrıldı).
    Yalnızca panelin kullandığı sekmeler: GitHub ayarları, denetim, hızlı karakter, yapımlar, haritalar, olaylar,
-   hikâyeler, görseller… Yayın paketinde ziyaretçiye inmez; panel açılınca js/65-yonetici-yukle.js yükler.
+   hikâyeler, görseller… Yayın paketinde ziyaretçiye inmez; panel açılınca js/admin/65-yonetici-yukle.js yükler.
    Geliştirirken index.html'de 22-yonetici.js'in hemen ardından yüklenir. */
 
 function yoneticiGithub() {

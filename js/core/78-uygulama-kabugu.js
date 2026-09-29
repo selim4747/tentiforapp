@@ -188,7 +188,7 @@ document.addEventListener("click", function (ev) {
    ana sayfada iki kez basınca uygulamadan çıkılır. */
 let kabukCikisIste = 0;
 
-/* site "#/sen"i adres çubuğunda /sen/ yapar (js/00-rota.js): rota() ikisini de okur */
+/* site "#/sen"i adres çubuğunda /sen/ yapar (js/core/00-rota.js): rota() ikisini de okur */
 function kabukRota() { return typeof rota === "function" ? rota() : location.hash; }
 
 function kabukKatmanIzi() {

@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const KOK = join(dirname(fileURLToPath(import.meta.url)), "..");
-const kod = readFileSync(join(KOK, "js/28-hesap.js"), "utf8");
+const kod = readFileSync(join(KOK, "js/core/28-hesap.js"), "utf8");
 
 function al(ad) {
   const re = new RegExp("function " + ad + "\\s*\\([^)]*\\)\\s*\\{");

@@ -604,7 +604,7 @@ async function yoneticiHatalarYukle() {
   if (!alan) { return; }
   const ist = await bakimIstemci(alan);
   if (!ist) { return; }
-  /* yalnızca yayındaki sürümün hataları (74-surum-24.js: guncelSurum) */
+  /* yalnızca yayındaki sürümün hataları (74-yonetim-kurulum.js: guncelSurum) */
   const surum = typeof guncelSurum === "function" ? guncelSurum() : "";
   let q = ist.from("hata_kayitlari").select("no,gun,mesaj,kaynak,adres,tarayici,surum,sayi,son");
   if (surum) { q = q.eq("surum", surum); }

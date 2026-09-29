@@ -22,7 +22,7 @@ if (typeof sayfaBasiCiz === "function") {
     return r;
   };
 }
-/* 1–9 tuşlarıyla sayfa atlama: sayfalar birbirinin devamı değil (18-dalga-7-gezinme.js'teki dinleyiciden önce) */
+/* 1–9 tuşlarıyla sayfa atlama: sayfalar birbirinin devamı değil (18-gezinme.js'teki dinleyiciden önce) */
 document.addEventListener("keydown", function (e) {
   const a = document.activeElement;
   if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT" || a.isContentEditable)) { return; }

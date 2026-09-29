@@ -62,7 +62,7 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
       } catch (e) { /* yok */ }
       window.__okumaOnbellegiKapali = true;
     }, { seviye: s.seviye === undefined ? 20 : s.seviye });
-    await ctx.route(/\/js\/(?:28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
+    await ctx.route(/\/js\/(?:core\/28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
     await ctx.route(TEST_URL + "/**", function (r) { return sahte.isle(r); });
     const p = await ctx.newPage();
     p.on("pageerror", function (e) { hatalar.push(ad + ": " + e.message); });

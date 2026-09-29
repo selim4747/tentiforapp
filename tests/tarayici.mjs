@@ -44,7 +44,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       await ctx.addInitScript(function () { try { localStorage.setItem("tentiforapp_hesap_hatirlat", JSON.stringify({ kapat: true })); } catch (e) { /* yok */ } });
     }
     await ctx.addInitScript(function () { window.__okumaOnbellegiKapali = true; });   /* testler sunucudaki son hâli okusun */
-    await ctx.route(/\/js\/(?:28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
+    await ctx.route(/\/js\/(?:core\/28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
     await ctx.route(TEST_URL + "/**", function (r) { return sahte.isle(r); });
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, function (r) { return r.abort(); });
     const p = await ctx.newPage();

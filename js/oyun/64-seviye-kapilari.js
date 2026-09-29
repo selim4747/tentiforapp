@@ -66,7 +66,7 @@ function svkYonetici() { return typeof yoneticiAcik === "function" && yoneticiAc
 
 function seviyeYeter(gereken) { return svkYonetici() || seviyeDurumu().seviye >= gereken; }
 
-/** Üretim kapısı açık mı: seviye yetiyor ya da seviye kodu girilmiş (68-surum-2.js; kod kendi seviyesine
+/** Üretim kapısı açık mı: seviye yetiyor ya da seviye kodu girilmiş (68-coklu-evren.js; kod kendi seviyesine
     kadarki bütün kapıları açar: evren kodu hikâye ve Evrengezer'i de). */
 function uretimAcik(tur) {
   const x = SEVIYE_URETIM[tur];

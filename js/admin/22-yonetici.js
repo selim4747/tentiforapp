@@ -879,7 +879,7 @@ let veriTabanHam = null;   /* açılışta inen veri.json metni; özet yalnızca
 
 function tabanOzeti() {
   if (!veriTabanOzeti && veriTabanHam) {
-    /* yayında veri parçalı iner (js/81-surum-30.js): özet GitHub'daki tam hâlinden çıkarılır */
+    /* yayında veri parçalı iner (js/core/81-hiz-veri-parcalari.js): özet GitHub'daki tam hâlinden çıkarılır */
     try {
       const o = JSON.parse(veriTabanHam);
       if (o.__parcalar && typeof veriParcalariUygula === "function") { veriParcalariUygula(o); }

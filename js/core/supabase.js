@@ -1,5 +1,5 @@
 /* TentiforApp 4.0 · core/supabase — veritabanı ve depolama istemcisi.
-   Kütüphane (213 KB) yalnızca gerçekten gerekince iner (js/28-hesap.js hesapGerekli). Herkese açık okumalar
+   Kütüphane (213 KB) yalnızca gerçekten gerekince iner (js/core/28-hesap.js hesapGerekli). Herkese açık okumalar
    (vitrin, yayındaki evren dosyaları) kütüphanesiz, düz fetch ile yapılır ve cihazda önbelleklenir. */
 
 const TF4 = { uyelik: { pro: false, tip: "ucretsiz", bitis: null }, moderator: null };

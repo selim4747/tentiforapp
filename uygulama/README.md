@@ -26,7 +26,7 @@ Uygulama ince bir Capacitor kabuğudur (`uygulama/kabuk/`): açılınca https://
 derlenir ve depoya girer → Yayınla. (Elle: Actions → Android APK → Run workflow, istersen "not" yaz.) Uygulamayı kullananlara "Yeni uygulama sürümü"
 şeridi çıkar; İndir'e basıp üstüne kurarlar, veriler (giriş, ilerleme) kaybolmaz. İmza anahtarı hep aynı kalmalıdır.
 
-Uygulamaya özel (js/78-uygulama-kabugu.js): geri tuşu önce açık pencereyi kapatır, ana sayfada iki basışta çıkar;
+Uygulamaya özel (js/core/78-uygulama-kabugu.js): geri tuşu önce açık pencereyi kapatır, ana sayfada iki basışta çıkar;
 "İndir" düğmeleri dosyayı kaydedip telefonun Kaydet/Paylaş menüsünü açar; başka sitelere giden bağlantılar telefonun
 tarayıcısında açılır; sesli okuma telefonun sesiyle; günün kelimesi hatırlatması telefon bildirimiyle (19:00, uygulama
 her açılışta 7 günlüğünü kurar); aşağı çekince yenilenir; titreşim telefonun motoruyla; odak modunda ekran
@@ -46,7 +46,7 @@ Bilinen sınır: Google ile giriş uygulamada yok (Google'ın kuralı).
 Site bugün zaten bir PWA: Chrome/Edge'de "Uygulamayı yükle" ile kurulur, internetsiz açılır (sw.js),
 kısayolları, paylaşım hedefi ve dosya açıcısı vardır (manifest.webmanifest). Mağazaya çıkmak için sitenin
 kodunu değiştirmek gerekmez; üstüne ince bir kabuk konur. Kabuk ne olursa olsun site ona yalnızca
-`window.TentiforKopru` üzerinden dokunur (js/74-surum-24.js): `ortam()`, `paylas()`, `titret()`, `surum()`.
+`window.TentiforKopru` üzerinden dokunur (js/admin/74-yonetim-kurulum.js): `ortam()`, `paylas()`, `titret()`, `surum()`.
 Yerel bir özellik eklenince yalnızca bu nesne değişir.
 
 ## Yol 1 — Google Play: TWA (önerilen ilk adım)

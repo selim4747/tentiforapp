@@ -1,6 +1,6 @@
 /* Sürüm 3.0 — Evren Kurucu: kendi evrenin 24. Evren (Tömye) kadar derin olabilsin.
 
-   Yeni bilgi türleri (js/40-fan-atolye.js, FAN_EVREN_GRUPLARI): zengin kişi kayıtları (yaş, yer, söz, etiket),
+   Yeni bilgi türleri (js/studio/40-fan-atolye.js, FAN_EVREN_GRUPLARI): zengin kişi kayıtları (yaş, yer, söz, etiket),
    çağlara ayrılan tarih, belgeler (mektup, günlük, alıntı…), evrenin kendi takvimi (aylar, özel günler, yıl sayımı).
    Okur için: kişi kartları, bağlardan aile ağacı, çağlara göre zaman çizelgesi, takvim, belge kâğıtları ve
    evrenin içindekiler şeridi. Kurucu için: "🧭 Kurucu" sekmesi — adım adım (Temel, Dünya, Kişiler, Zaman, Belgeler,
