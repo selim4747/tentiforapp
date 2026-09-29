@@ -15,3 +15,19 @@ function tf4EvrenSinirsiz() {
 }
 
 document.addEventListener("tf4-uyelik", function () { try { anaEvrenlerCiz(); } catch (_) { /* yok */ } });
+
+/** 4.4 Atölye Şeması: v4.4 alanlarını doğrular ve geriye dönük uyumluluk sağlar */
+function evrenSemasiDogrula(e) {
+  if (!e || typeof e !== "object") { return e; }
+  e.surum = e.surum || "4.4.0";
+  if (!Array.isArray(e.okuma_rehberi)) { e.okuma_rehberi = []; }
+  if (typeof e.ana_evren_id === "undefined") { e.ana_evren_id = null; }
+  if (typeof e.kok_zaman_cizgisi === "undefined") { e.kok_zaman_cizgisi = null; }
+  if (typeof e.paralel_dal === "undefined") { e.paralel_dal = null; }
+  if (!e.roman || typeof e.roman !== "object") { e.roman = { baslik: "", ozet: "", bolumler: [] }; }
+  if (!Array.isArray(e.roman.bolumler)) { e.roman.bolumler = []; }
+  e.roman.bolumler.forEach(function (b) {
+    if (!Array.isArray(b.kararlar)) { b.kararlar = []; }
+  });
+  return e;
+}

@@ -158,9 +158,39 @@ function ortamSesBaslat() {
     o.connect(g); g.connect(somdo); o.start(); t.start();
   });
 
-  ortamSesi = { a: a, ana: ana, tomye: tomye, somdo: somdo, mod: null, zaman: null };
+  /* 4.4: Derin Uzay Rezonans Drone */
+  const uzay = a.createGain(); uzay.gain.value = 0; uzay.connect(ana);
+  [55, 55.5, 110, 110.8].forEach(function (freq, idx) {
+    const osc = a.createOscillator(); osc.type = idx % 2 === 0 ? "sawtooth" : "sine"; osc.frequency.value = freq;
+    const flt = a.createBiquadFilter(); flt.type = "lowpass"; flt.frequency.value = 220; flt.Q.value = 3;
+    const g = a.createGain(); g.gain.value = 0.02;
+    osc.connect(flt); flt.connect(g); g.connect(uzay);
+    osc.start();
+  });
+
+  /* 4.4: Siberpunk Prosedürel Arpej Vuruşları */
+  const siberpunk = a.createGain(); siberpunk.gain.value = 0; siberpunk.connect(ana);
+  const synthOsc = a.createOscillator(); synthOsc.type = "triangle"; synthOsc.frequency.value = 220;
+  const synthGain = a.createGain(); synthGain.gain.value = 0.025;
+  synthOsc.connect(synthGain); synthGain.connect(siberpunk);
+  synthOsc.start();
+
+  ortamSesi = { a: a, ana: ana, tomye: tomye, somdo: somdo, uzay: uzay, siberpunk: siberpunk, mod: null, zaman: null };
   ortamSesOlaylar();
   ortamSesModGuncelle();
+}
+
+/** 4.4 Manuel prosedürel ambiyans değiştirici: 'tomye', 'somdo', 'uzay', 'siberpunk' */
+function prosedurelAmbiyansAyarla(mod) {
+  if (!ortamSesi) { ortamSesBaslat(); }
+  if (!ortamSesi) { return; }
+  const a = ortamSesi.a;
+  const t = a.currentTime;
+  ortamSesi.mod = mod;
+  if (ortamSesi.tomye) { ortamSesi.tomye.gain.setTargetAtTime(mod === "tomye" ? 1 : 0, t, 0.8); }
+  if (ortamSesi.somdo) { ortamSesi.somdo.gain.setTargetAtTime(mod === "somdo" ? 1 : 0, t, 0.8); }
+  if (ortamSesi.uzay) { ortamSesi.uzay.gain.setTargetAtTime(mod === "uzay" ? 1 : 0, t, 0.8); }
+  if (ortamSesi.siberpunk) { ortamSesi.siberpunk.gain.setTargetAtTime(mod === "siberpunk" ? 1 : 0, t, 0.8); }
 }
 
 /* ara sıra: Tömye'de buz çatırtısı, Şomdo'da uzak tıkırtı */

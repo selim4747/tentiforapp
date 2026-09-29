@@ -74,7 +74,16 @@ function evrDenetim(e) {
 }
 
 function evrDenetimHtml(e) {
-  const l = evrDenetim(e);
+  let l = evrDenetim(e);
+  /* 4.4: Kanon Çelişki Denetleyicisi sonuçlarını tutarlılık denetimine dahil et */
+  if (typeof kanonCeliskileriniDenetle === "function") {
+    const kDenetim = kanonCeliskileriniDenetle(e);
+    if (kDenetim && Array.isArray(kDenetim.paradokslar)) {
+      kDenetim.paradokslar.forEach(function (p) {
+        l.unshift({ seviye: p.seviye || "hata", adim: "kisiler", mesaj: p.metin });
+      });
+    }
+  }
   const ikon = { hata: "⛔", uyari: "⚠", bilgi: "ℹ" };
   return '<details class="evr-denetim"' + (l.some(function (x) { return x.seviye === "hata"; }) ? " open" : "") + '><summary><b>Tutarlılık denetimi</b> · ' +
     (l.length ? l.length + " not" : "her şey yerli yerinde") + "</summary>" +

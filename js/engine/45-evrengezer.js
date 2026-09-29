@@ -657,6 +657,8 @@ function evrenEkSekmeler(v) {
     if (k === "benim" || cizim) { l.push(["cizim", "Çizimler" + (cizim ? " (" + cizim + ")" : "")]); }
   }
   if (evrenDefterAnahtari()) { l.push(["defter", "Ziyaretçi defteri"]); }
+  /* 4.4: Paralel boyutlar & çatallanma */
+  l.push(["paralel", "🌌 Paralel Boyutlar"]);
   if (["benim", "fan", "acilan"].indexOf(k) !== -1 &&
       (k === "benim" || iaBaglarTemizle(e.baglar).length || (e.tarih || []).some(function (t) { return t && (t.zaman || t.olay); }))) {
     l.push(["ag", "Bağlar ve zaman"]);
@@ -706,6 +708,7 @@ function evrenEkBolum(v) {
         '<p class="oyun-not">Çizilmemiş harfler soluk görünür.</p></div>' : "");
   }
   if (s === "rehber") { return evrenRehberBolumu(v); }
+  if (s === "paralel") { return typeof evrenParalelBoyutlarHtml === "function" ? evrenParalelBoyutlarHtml(v.eser) : ""; }
   if (s === "kodstil" && k === "benim") { return eksKodBolumu(v); }
   if (s === "vitrin") { return eksVitrinBolumu(v); }
   if (s === "oyunlar") { return evrenOyunlarBolumu(v); }

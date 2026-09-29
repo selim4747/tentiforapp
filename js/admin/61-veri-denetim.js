@@ -80,7 +80,78 @@ function veriDenetle(v) {
       }
     });
   });
-  return { sorunlar: sorunlar };
+
+  /* 4.4: Kanon Çelişki Denetleyicisi */
+  const c = kanonCeliskileriniDenetle(v);
+  c.paradokslar.forEach(function (p) {
+    sorunlar.push({ metin: p.metin });
+  });
+
+  return { sorunlar: sorunlar, paradokslar: c.paradokslar };
+}
+
+/** 4.4 Kanon Çelişki Denetleyicisi (Lore Consistency Linter)
+    - Karakterlerin doğum/ölüm tarihleri ile olaylar arasındaki çelişkileri yakalar
+    - Gezegenler arası mesafe/hız ve olay tarihleri arasındaki mantıksal zaman paradokslarını tespit eder */
+function kanonCeliskileriniDenetle(v) {
+  v = v || (typeof veri !== "undefined" ? veri : {});
+  const paradokslar = [];
+  const karakterler = v.karakterler || (v.eser && v.eser.kisiler) || [];
+  const olaylar = v.olaylar || v.tarih || (v.eser && (v.eser.olaylar || v.eser.tarih)) || [];
+
+  karakterler.forEach(function (k) {
+    if (!k) { return; }
+    const dogum = Number(k.dogum || (k.yas && k.yas.dogum)) || null;
+    const olum = Number(k.olum || (k.yas && k.yas.olum)) || null;
+
+    (Array.isArray(olaylar) ? olaylar : []).forEach(function (olay) {
+      if (!olay) { return; }
+      const yil = Number(olay.yil || olay.zaman || olay.tarih) || null;
+      if (!yil) { return; }
+      const katildi = (olay.kisiler && olay.kisiler.indexOf(k.ad || k.id) !== -1) ||
+                      (olay.metin && olay.metin.indexOf(k.ad) !== -1);
+      if (katildi) {
+        if (dogum !== null && yil < dogum) {
+          paradokslar.push({
+            tur: "zaman_dogum",
+            seviye: "hata",
+            metin: "Kanon Paradoksu: " + k.ad + " (Doğum: " + dogum + "), " + yil + " yılındaki “" + (olay.baslik || olay.olay || "Olay") + "” olayında yer alamaz."
+          });
+        }
+        if (olum !== null && yil > olum) {
+          paradokslar.push({
+            tur: "zaman_olum",
+            seviye: "hata",
+            metin: "Kanon Paradoksu: " + k.ad + " (Ölüm: " + olum + "), " + yil + " yılındaki “" + (olay.baslik || olay.olay || "Olay") + "” olayına katılamaz (ölümünden sonra)."
+          });
+        }
+      }
+    });
+  });
+
+  karakterler.forEach(function (k) {
+    if (!Array.isArray(k.yol) || k.yol.length < 2) { return; }
+    for (let i = 0; i < k.yol.length - 1; i++) {
+      const a = k.yol[i], b = k.yol[i + 1];
+      const t1 = Number(a.yil || a.zaman), t2 = Number(b.yil || b.zaman);
+      if (t1 && t2 && a.gezegen && b.gezegen && a.gezegen !== b.gezegen) {
+        const fark = t2 - t1;
+        if (fark <= 0) {
+          paradokslar.push({
+            tur: "isiktan_hizli",
+            seviye: "uyari",
+            metin: "Kanon Paradoksu (Işıktan Hızlı Seyahat): " + k.ad + ", " + a.gezegen + " gezegeninden " + b.gezegen + " gezegenine " + (fark === 0 ? "aynı yıl" : "zamanda geriye giderek") + " geçemez."
+          });
+        }
+      }
+    }
+  });
+
+  return {
+    paradokslar: paradokslar,
+    hataSayisi: paradokslar.filter(function (p) { return p.seviye === "hata"; }).length,
+    uyariSayisi: paradokslar.filter(function (p) { return p.seviye === "uyari"; }).length
+  };
 }
 
 /** Sorunları gösterir; düzeltilebilenleri düzeltir. Kaydetmeye devam edilsin mi? */

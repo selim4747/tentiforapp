@@ -85,10 +85,20 @@ function gezinmeTemelCiz() {
       const g = x[0], i = x[1];
       const bu = aktifSayfa === g.id;
       const yeni = (typeof ziyaretSayfaSayisi === "function") ? ziyaretSayfaSayisi(g.id) : 0;
-      return '<a class="gez-btn' + (bu ? " bu-sayfa" : "") + '" href="#/' + g.id + '"' +
+      let href = '#/' + g.id;
+      let etiket = g.ad;
+      if ((g.id === "okuma" || g.id === "oyunlar") && typeof state !== "undefined" && state.aktifEvrenId) {
+        const tur = g.id === "okuma" ? "oku" : "oyna";
+        const h = typeof state.aktifEvrenHedefi === "function" ? state.aktifEvrenHedefi(tur) : null;
+        if (h && h.git) {
+          href = h.git;
+          etiket = g.ad + (h.ad ? " (" + h.ad + ")" : "");
+        }
+      }
+      return '<a class="gez-btn' + (bu ? " bu-sayfa" : "") + '" href="' + kacir(href) + '"' +
                ' title="' + (i + 1) + ". sayfa" + (yeni ? " · " + yeni + " yenilik" : "") + '"' +
                (bu ? ' aria-current="page"' : "") + ">" +
-               kacir(g.ad) + (yeni ? '<span class="gez-yeni" aria-label="' + yeni + ' yenilik"></span>' : "") + "</a>";
+               kacir(etiket) + (yeni ? '<span class="gez-yeni" aria-label="' + yeni + ' yenilik"></span>' : "") + "</a>";
     }).join("") +
     '<button class="komut-tetik" id="komutTetikBtn" aria-label="Hızlı arama (Ctrl+K)" title="Hızlı arama (Ctrl+K)">⌘K</button>';
 

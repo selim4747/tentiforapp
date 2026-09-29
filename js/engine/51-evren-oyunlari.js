@@ -721,7 +721,9 @@ function evrenRomanGovde(v) {
       return '<li><button class="ic-bag" data-evr-sec="' + kacir(x.id) + '">' + kacir(x.baslik || "Bölüm " + (j + 1)) + "</button></li>";
     }).join("") + "</ol></details>" +
     '<h4 class="evr-bolum-baslik">' + kacir(evrBolumAdi(b, i)) + "</h4>" +
-    '<div class="okuma-metin fan-metin">' + paragraf(b.metin) + "</div>" +
+    '<div class="okuma-metin fan-metin">' + (typeof akilliTerimDedektoru === "function" ? akilliTerimDedektoru(paragraf(b.metin), e) : paragraf(b.metin)) + "</div>" +
+    (typeof bolumKararlariHtml === "function" ? bolumKararlariHtml(b, e.id) : "") +
+    (typeof kararAkisAgaciHtml === "function" ? kararAkisAgaciHtml(bolumler, b.id, e.id) : "") +
     '<div class="oyun-sira evr-gez">' +
       (i > 0 ? '<button class="dugme dugme-sade" data-evr-sec="' + kacir(bolumler[i - 1].id) + '">← Önceki</button>' : "") +
       (i + 1 < bolumler.length ? '<button class="dugme" data-evr-sec="' + kacir(bolumler[i + 1].id) + '">Sonraki bölüm →</button>' : "") +

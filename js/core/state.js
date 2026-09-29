@@ -53,6 +53,35 @@ function aktifEvrenSec(git, ad) {
   if (document.querySelector("#altMenu")) { altMenuCiz(); }
 }
 
+const state = {
+  get aktifEvrenId() {
+    const a = aktifEvren();
+    if (!a) { return null; }
+    if (a.id) { return a.id; }
+    if (a.git === "#/claude") { return "claude"; }
+    if (a.git === "#/ev/e99") { return "e99"; }
+    const m = String(a.git || "").match(/#\/ev\/(?:site|fan|benim|acilan)\/([^\/?]+)/);
+    return m ? m[1] : null;
+  },
+  set aktifEvrenId(val) {
+    if (!val || val === "tomye" || val === "24") {
+      aktifEvrenSec(null);
+    } else if (val === "claude") {
+      aktifEvrenSec("#/claude", "Claude'un Evreni");
+    } else if (val === "e99") {
+      aktifEvrenSec("#/ev/e99", "E99");
+    } else if (/^e\d+$/i.test(val)) {
+      aktifEvrenSec("#/ev/site/" + val.toLowerCase(), val.toUpperCase());
+    } else {
+      aktifEvrenSec("#/ev/fan/" + val, val);
+    }
+    try { window.dispatchEvent(new CustomEvent("tf-evren-degisti", { detail: { evrenId: val } })); } catch (_) {}
+  },
+  aktifEvren: aktifEvren,
+  aktifEvrenSec: aktifEvrenSec,
+  aktifEvrenHedefi: aktifEvrenHedefi
+};
+
 /** Alt menüde Oku ("oku") ya da Oyna ("oyna") nereye gider: aktif evrenin okuma rehberi / oyunları; aktif evren yoksa null
     (Tentiforverse'in Oku ve Oyna sayfaları). */
 function aktifEvrenHedefi(tur) {
