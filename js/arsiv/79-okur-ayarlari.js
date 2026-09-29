@@ -418,27 +418,6 @@ function kutuyaGit(k) {
 
 /* ==================== altını çiz ve Defterin ==================== */
 
-/* vurgulama artık bütün okuma metinlerinde (eski sürüm yalnızca dört türde çalışıyordu) */
-window.vurguSecimDenetle = function () {
-  const secim = window.getSelection ? window.getSelection() : null;
-  if (!secim || secim.isCollapsed || !secim.toString().trim()) { vurguBalonuKapat(); return; }
-  const metin = secim.toString().replace(/\s+/g, " ").trim();
-  if (metin.length < 4 || metin.length > 400) { vurguBalonuKapat(); return; }
-  const kapsayici = secim.anchorNode && (secim.anchorNode.nodeType === 1 ? secim.anchorNode : secim.anchorNode.parentElement);
-  const okumaAlani = kapsayici && kapsayici.closest && kapsayici.closest(VURGU_SECICI);
-  if (!okumaAlani || okumaAlani.closest("[contenteditable], textarea")) { vurguBalonuKapat(); return; }
-  const kutu = secim.getRangeAt(0).getBoundingClientRect();
-  vurguBalonuKapat();
-  const b = document.createElement("button");
-  b.className = "vurgu-balon";
-  b.textContent = "✎ altını çiz";
-  b.style.top = Math.max(window.scrollY + 4, window.scrollY + kutu.top - 42) + "px";
-  b.style.left = Math.max(8, Math.min(window.scrollX + kutu.left + kutu.width / 2 - 48, window.scrollX + document.documentElement.clientWidth - 110)) + "px";
-  b.dataset.vurguMetin = metin;
-  document.body.appendChild(b);
-  vurguBalonu = b;
-};
-
 /** Seçimin nereden geldiği: sayfa rotası, kutu anahtarı, başlık; roman penceresinde bölüm no. */
 function vurguBaglami() {
   const secim = window.getSelection ? window.getSelection() : null;
@@ -464,26 +443,6 @@ function vurguBaglami() {
   return b;
 }
 
-if (typeof vurguKaydet === "function") {
-  const eskiVK27 = vurguKaydet;
-  window.vurguKaydet = function (metin, kaynak) {
-    const b = vurguBaglami();
-    const r = eskiVK27.call(this, metin, kaynak || b.baslik || "");
-    const l = vurguListesi();
-    const v = l.find(function (x) { return x.metin === metin; });
-    if (v && !v.git && !v.roman) {
-      if (b.git) { v.git = b.git; }
-      if (b.oku) { v.oku = b.oku; }
-      if (b.roman) { v.roman = b.roman; }
-      if (!v.kaynak && b.baslik) { v.kaynak = b.baslik; }
-      kayitYaz(VURGU_ANAHTAR, JSON.stringify(l));
-      vurgularimCiz();
-    }
-    setTimeout(isaretleriTazele, 50);
-    return r;
-  };
-}
-
 function vurguBul(t) { return vurguListesi().find(function (v) { return String(v.t) === String(t); }) || null; }
 
 /** Vurguların metindeki yerleri (işaretli görünür). */
@@ -504,24 +463,6 @@ function vurguIsaretle() {
   }
   CSS.highlights.set("tf-vurgu", h);
 }
-
-window.vurgularimCiz = function () {
-  const alan = document.querySelector("#vurguAlan");
-  if (!alan) { return; }
-  const liste = vurguListesi().slice().reverse();
-  alan.innerHTML = liste.length
-    ? '<div class="alinti-izgara vurgu-liste">' + liste.map(function (v) {
-        const tarih = v.t ? new Date(v.t).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }) : "";
-        return '<figure class="alinti vurgu-kart"><blockquote>' + kacir(v.metin) + "</blockquote>" +
-          "<figcaption>" + kacir([v.kaynak, tarih].filter(Boolean).join(" · ")) + "</figcaption>" +
-          '<div class="vurgu-eylem">' +
-            (v.git || v.roman ? '<button type="button" class="dugme dugme-sade y-kucuk" data-vurgu-git="' + kacir(v.t) + '">↗ Yerinde oku</button>' : "") +
-            '<button type="button" class="dugme dugme-sade y-kucuk" data-vurgu-kart="' + kacir(v.t) + '">🖼 Kart</button>' +
-            '<button type="button" class="dugme dugme-sade y-kucuk" data-vurgu-sil="' + kacir(v.t) + '" aria-label="Vurguyu sil">✕</button>' +
-          "</div></figure>";
-      }).join("") + "</div>"
-    : '<p class="oyun-not">Okurken bir cümle seç, çıkan "✎ altını çiz" düğmesine bas. Vurguların metinde işaretli görünür, buradan yerine dönersin.</p>';
-};
 
 function vurguSil(t) {
   kayitYaz(VURGU_ANAHTAR, JSON.stringify(vurguListesi().filter(function (v) { return String(v.t) !== String(t); })));
@@ -640,6 +581,8 @@ function bugunOyunlari() {
   });
   const h = haviHarita();
   if (h) { l.push({ id: "harita|" + h.id, ad: "Harita Avı", git: "havi" }); }
+  const s = bulmacaDurum();   /* haftanın bulmacası (80) */
+  if (s.b) { l.push({ id: "bulmaca|" + s.d.hafta, ad: "Haftanın bulmacası", git: "bulmaca", bitti: !!s.d.cozuldu }); }
   return l.map(function (o) { o.bitti = typeof oyunXpAlindi === "function" && oyunXpAlindi(o.id); return o; });
 }
 
@@ -683,7 +626,10 @@ function bugunGit(hedef) {
   setTimeout(function () {
     let el = null;
     if (hedef === "gk") { el = document.querySelector("#gkAlan"); }
-    else {
+    else if (hedef === "bulmaca" || hedef === "atlas") {
+      oyunSekmesiAc("gunluk");
+      el = document.querySelector(hedef === "bulmaca" ? "#haftaBulmaca" : "#atlasAlan") || document.querySelector("#panel-gunluk");
+    } else {
       oyunSekmesiAc("gunluk");
       el = hedef === "havi" ? (document.querySelector("#haviAlan") || document.querySelector("#panel-gunluk")) : document.querySelector("#panel-gunluk");
     }
@@ -733,6 +679,7 @@ function haviDurum() {
 
 function haviKaydet(d) {
   jsonYaz(HAVI_ANAHTAR, { gun: d.gun, harita: d.harita, yer: d.yer, tahmin: d.tahmin, bitti: d.bitti, kazandi: d.kazandi });
+  if (d.kazandi) { atlasEkle(d.harita, d.yer); }   /* bulunan yer Harita Atlası'na (80) */
 }
 
 function haviSicaklik(uz) {
@@ -771,7 +718,13 @@ function haviSvg(d) {
     '<rect class="havi-deniz" x="0" y="0" width="100" height="100"/>' + kara + isaretler + hedef + "</svg>";
 }
 
+/** Harita Avı kartı ve altında Harita Atlası. */
 function haviCiz() {
+  haviKartCiz();
+  try { atlasCiz(); } catch (e) { console.error("[TentiforApp] atlas:", e); }
+}
+
+function haviKartCiz() {
   const alan = document.querySelector("#gunlukOyunAlan");
   if (!alan) { return; }
   let k = document.querySelector("#haviAlan");

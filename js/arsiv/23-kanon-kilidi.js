@@ -45,7 +45,12 @@ function kanonProfilEkle(id) {
 }
 
 /** { hepsi, tumEvren, bolumler:Set, evrenler:Set } — bu cihazdaki erişim. */
+/** Okurun kanon erişimi: girilen kodların profilleri ve tek kullanımlık kişi kodları. */
 function kanonErisim() {
+  return tekKisiErisimiEkle(kanonKodErisimi());
+}
+
+function kanonKodErisimi() {
   /* sınırlı yönetici de bütün bölümleri ve evrenleri görür (düzenleyebilmek için); buz katmanları hariç */
   const yon = (typeof panelAcik === "function") ? panelAcik() : ((typeof yoneticiAcik === "function") && yoneticiAcik());
   if (kanonOnbellek && kanonOnbellekYonetici === yon) { return kanonOnbellek; }
@@ -107,7 +112,8 @@ function kanonBolumAdi(id) {
 
 /** Menülerde kilitli bölümün yanına küçük kilit koyar. */
 function kanonKilitIsareti(id) {
-  return bolumErisimi(id) ? "" : ' <span class="gez-kilit" title="Kilitli">' + KANON_KILIT_SVG + "</span>";
+  if (!bolumErisimi(id)) { return ' <span class="gez-kilit" title="Kilitli">' + KANON_KILIT_SVG + "</span>"; }
+  return seviyeBolumKilitli(id) ? ' <span class="gez-kilit svk-menu" title="Seviye ' + SEVIYE_BOLUMLER[id] + "'te açılır\">Sv " + SEVIYE_BOLUMLER[id] + "</span>" : "";
 }
 
 /** Herkese açık başlangıç profili (veri.baslangicKodu). */

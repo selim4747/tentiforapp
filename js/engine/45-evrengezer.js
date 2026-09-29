@@ -323,6 +323,7 @@ function evrenZiyaretOdulu() {
   egKaydet();
   egBakiyeDegistir(anahtar, n, "Evren gezisi");
   if (typeof eckaBildir === "function") { eckaBildir("+" + n + " " + p.ad + " · " + (v.eser.ad || "evren") + " gezisi"); }
+  hesapHatirlat("evren");
   return n;
 }
 
@@ -396,6 +397,11 @@ function evrenSayfaStili(e) {
   if (evHex(s.ana)) { p.push("--deniz:" + s.ana, "--yarik:" + s.ana); }
   if (EV_FONTLAR[s.font]) { p.push("--govde:" + EV_FONTLAR[s.font], "--display:" + EV_FONTLAR[s.font], "font-family:" + EV_FONTLAR[s.font]); }
   if (typeof s.kose === "number") { p.push("--evs-kose:" + s.kose + "px"); }
+  /* desen, yazı boyu, hiza (72-sayfa-duzeni) */
+  const d = EVG_DESENLER[s.desen] && s.desen ? evgDesenArka(s.desen, s.ana) : "";
+  if (d) { p.push("background-image:" + d); }
+  if (s.boyut === "kucuk") { p.push("font-size:15px"); } else if (s.boyut === "buyuk") { p.push("font-size:19px"); }
+  if (s.hiza === "orta") { p.push("--evs-hiza:center"); }
   return p.join(";");
 }
 
@@ -526,6 +532,7 @@ async function evrenKodDene(e, kod) {
       const ck = lorAnahtarCoz(l.sy, "evyonk|" + e.id + "|" + k + "|" + l.tuz);
       if (ck && lorIcCoz(l, ck) !== null) { evlKaydet(e.id, l.id, ck); n++; }
     });
+    const d = jsonOku(EVY25, {}) || {}; d[e.id] = true; jsonYaz(EVY25, d);   /* bu cihazda evrenin yöneticisi */
     return { tur: "evren", n: n };
   }
   const ozet = lorKodOzet(e.id, k);
@@ -579,13 +586,16 @@ function evrenYoneticiKoduKur(e, kod) {
   const k = evKodTemiz(kod);
   if (k.replace(/[^A-Z0-9]/g, "").length < EV_KOD_EN_AZ) { return { hata: "Yönetici kodu en az " + EV_KOD_EN_AZ + " harf ve rakam olsun (Kod üret ile rastgele oluştur)." }; }
   const acik = evlAcilan(e.id);
+  const yetki = evy25SeciliYetki(e);   /* formda seçilen yetkiler (75) */
   let sarilan = 0, kalan = 0;
   evrenBenimDegistir(e.id, function (x) {
     x.yoneticiOzet = evYonOzet(x.id, k);
+    x.yoneticiYetki = yetki;
     (x.lorlar || []).forEach(function (l) {
       const ck = acik[l.id];
-      if (ck && lorIcCoz(l, ck) !== null) { l.sy = sifrele(ck, "evyonk|" + x.id + "|" + k + "|" + l.tuz); sarilan++; }
-      else { delete l.sy; kalan++; }
+      if (ck && lorIcCoz(l, ck) !== null) {
+        if (!yetki.lorlar || yetki.lorlar.indexOf(l.id) !== -1) { l.sy = sifrele(ck, "evyonk|" + x.id + "|" + k + "|" + l.tuz); sarilan++; } else { delete l.sy; }
+      } else { delete l.sy; kalan++; }
     });
   });
   evkYaz(e.id, function (d) { d.yon = k; });
@@ -604,13 +614,16 @@ async function evrenEgSarEksik(e) {
   return Object.keys(sarlar).length;
 }
 
+/** Kendi evrenini değiştirir. Ortak yazılan evrende: önce sürüm geçmişine kayıt, sonra öbür yazara gönderim. */
 function evrenBenimDegistir(id, fn) {
+  if (!ORTAK.uyguluyor) { gcmKaydet(id, "otomatik"); }
   const l = fanEserlerim();
   const e = l.find(function (x) { return x.id === id && x.tur === "evren"; });
   if (!e) { return; }
   fn(e);
   e.guncelleme = new Date().toISOString();
   fanEserlerimYaz(l);
+  if (!ORTAK.uyguluyor) { ortakYazZamanla(id); }
 }
 
 /* ==================== evren sayfası: ek sekmeler ==================== */
@@ -624,6 +637,17 @@ function evrenEkSekmeler(v) {
     if (k === "benim" || lorlar) { l.push(["lore", "Kilitli lore" + (lorlar ? " (" + lorlar + ")" : "")]); }
     if (k === "benim") { l.push(["stil", "Stil ve para"]); l.push(["kod", "Kod"]); }
     if (e.alfabe && e.alfabe.harfler && k !== "benim") { l.push(["alfabe", "Alfabe"]); }
+  }
+  if (k !== "site") {
+    /* oyunlar, roman, çizimler (51-evren-oyunlari); E99'da yalnızca oyunlar */
+    const oyun = evoOynanabilir(e).length;
+    if (k === "benim" || oyun) { l.push(["oyunlar", "Oyunlar" + (oyun ? " (" + oyun + ")" : "")]); }
+    if (k !== "e99") {
+      const bolum = ((e.roman || {}).bolumler || []).length;
+      if (k === "benim" || bolum) { l.push(["roman", "Roman" + (bolum ? " (" + bolum + ")" : "")]); }
+      const cizim = (e.cizimler || []).length;
+      if (k === "benim" || cizim) { l.push(["cizim", "Çizimler" + (cizim ? " (" + cizim + ")" : "")]); }
+    }
   }
   if (evrenDefterAnahtari()) { l.push(["defter", "Ziyaretçi defteri"]); }
   if (["benim", "fan", "acilan"].indexOf(k) !== -1 &&
@@ -643,6 +667,12 @@ function evrenEkSekmeler(v) {
     if (stil) { on.push(["stil", "🎨 Görünüm"]); }
     if (yazi) { on.push(["yazi", "✎ Yazı çiz"]); }
     l = on.concat(l);
+  }
+  /* vitrin (kurucunun görünüm kodu) en önde; kendi evreninde "Kod ile stil" Görünüm'ün ardında (73-evren-kod-stil) */
+  if (k !== "site" && (k === "benim" || String(e.gorunumKodu || "").trim())) { l.unshift(["vitrin", "✦ Vitrin"]); }
+  if (k === "benim") {
+    const i = l.findIndex(function (x) { return x[0] === "stil"; });
+    l.splice(i === -1 ? 1 : i + 1, 0, ["kodstil", "{ } Kod ile stil"]);
   } else {
     /* kurucunun gizlediği sekmeler (sekme yetkisi verilen yönetici hepsini görür) */
     const d = e.sekmeDuzen;
@@ -668,6 +698,11 @@ function evrenEkBolum(v) {
         '<div class="oyun-sira"><button class="dugme" data-yk-png>PNG indir</button><button class="dugme dugme-sade" data-yk-paylas>Paylaş</button></div>' +
         '<p class="oyun-not">Çizilmemiş harfler soluk görünür.</p></div>' : "");
   }
+  if (s === "kodstil" && k === "benim") { return eksKodBolumu(v); }
+  if (s === "vitrin") { return eksVitrinBolumu(v); }
+  if (s === "oyunlar") { return evrenOyunlarBolumu(v); }
+  if (s === "roman" && k !== "e99") { return evrenRomanBolumu(v); }
+  if (s === "cizim" && k !== "e99") { return evrenCizimBolumu(v); }
   if (s === "uygulama") { return evuBolum(v); }
   if (s === "ag" && ["benim", "fan", "acilan"].indexOf(k) !== -1) { return iaEvrenBolumu(v); }
   if (s === "defter") { return evrenDefterBolumu(); }
@@ -739,6 +774,7 @@ function evrenYoneticiKoduHtml(e, kodlar) {
     (biliniyor ? '<p class="oyun-not">Şu anki kod: <code>' + kacir(kodlar.yon) + "</code></p>" : (kurulu ? '<p class="oyun-not">Bir yönetici kodu kurulu (bu cihazda kayıtlı değil).</p>' : "")) +
     '<div class="oyun-sira"><input class="kod-giris arac-giris" id="evyKod" maxlength="60" autocomplete="off" spellcheck="false" placeholder="Yeni yönetici kodu">' +
       '<button class="dugme dugme-sade" data-evy-uret>Kod üret</button><button class="dugme" data-evy-kur>' + (kurulu ? "Değiştir" : "Kur") + "</button></div>" +
+    evy25YetkiKutusu(e) +   /* bu kodun yetkileri (75) */
     '<p class="pencere-durum" id="evyDurum" role="status"></p></div>';
 }
 
@@ -751,7 +787,8 @@ function evrenStilBolumu(v) {
   const hs = (e.harita && e.harita.stil) || {};
   const al = (e.alfabe && e.alfabe.harfler) || {};
   const renk = function (yol, deger, yedek, etiket) {
-    return '<label class="evst-renk">' + etiket + ' <input type="color" data-evst="' + yol + '" value="' + kacir(deger || yedek) + '"></label>';
+    return evgGorunumKutusu(e) +   /* desen, yazı boyu, hiza */
+    '<label class="evst-renk">' + etiket + ' <input type="color" data-evst="' + yol + '" value="' + kacir(deger || yedek) + '"></label>';
   };
   const secim = function (yol, deger, secenekler) {
     return '<select class="kod-giris arac-giris" data-evst="' + yol + '">' + secenekler.map(function (s) {

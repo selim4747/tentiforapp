@@ -121,7 +121,8 @@ function eksHtmlTemizle(html, e) {
 
 function eksKodBolumu(v) {
   const e = v.eser;
-  return '<div class="kutu-y eks-kod"><label for="eksStil">Stil kodu (CSS)</label>' +
+  return eksDuzenKutusu(e) +   /* sekme düzeni (74-yonetim-kurulum) */
+    '<div class="kutu-y eks-kod"><label for="eksStil">Stil kodu (CSS)</label>' +
       '<p class="oyun-not">Evreninin sayfasını kendi CSS\'inle biçimlendir. Yalnızca bu evrenin sayfasına uygulanır. ' +
         "Örnek: <code>h2 { letter-spacing: .2em }</code>, <code>.evs-sekme.secili { background: #222; color: gold }</code>, <code>.eks-vitrin .kart { … }</code>. " +
         "Dış adresler ve @import çalışmaz.</p>" +

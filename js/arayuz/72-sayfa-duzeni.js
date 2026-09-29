@@ -8,13 +8,6 @@
 
 /* ==================== apayrı sayfalar ==================== */
 
-if (typeof sayfalamaCiz === "function") {
-  window.sayfalamaCiz = function () {
-    const c = document.querySelector("#sayfalama");
-    if (c) { c.hidden = true; c.innerHTML = ""; }
-  };
-}
-
 /* 1–9 tuşlarıyla sayfa atlama: sayfalar birbirinin devamı değil (18-gezinme.js'teki dinleyiciden önce) */
 document.addEventListener("keydown", function (e) {
   const a = document.activeElement;
@@ -55,19 +48,6 @@ function evgDesenArka(desen, ana) {
   return svg ? "url(\"data:image/svg+xml," + encodeURIComponent(svg) + "\")" : "";
 }
 
-if (typeof evrenSayfaStili === "function") {
-  const eskiStil = evrenSayfaStili;
-  window.evrenSayfaStili = function (e) {
-    const p = [eskiStil.apply(this, arguments)];
-    const s = (e && e.stil) || {};
-    const d = EVG_DESENLER[s.desen] && s.desen ? evgDesenArka(s.desen, s.ana) : "";
-    if (d) { p.push("background-image:" + d); }
-    if (s.boyut === "kucuk") { p.push("font-size:15px"); } else if (s.boyut === "buyuk") { p.push("font-size:19px"); }
-    if (s.hiza === "orta") { p.push("--evs-hiza:center"); }
-    return p.filter(Boolean).join(";");
-  };
-}
-
 function evgGorunumKutusu(e) {
   const st = e.stil || {};
   const secim = function (yol, deger, l) {
@@ -87,13 +67,6 @@ function evgGorunumKutusu(e) {
         "<label>Yazı boyutu" + secim("stil.boyut", st.boyut, EVG_BOYUT) + "</label>" +
         "<label>Başlık hizası" + secim("stil.hiza", st.hiza, EVG_HIZA) + "</label>" +
       "</div></div>";
-}
-
-if (typeof evrenStilBolumu === "function") {
-  const eskiStilBol = evrenStilBolumu;
-  window.evrenStilBolumu = function (v) {
-    return evgGorunumKutusu(v.eser) + eskiStilBol.apply(this, arguments);
-  };
 }
 
 document.addEventListener("click", function (ev) {

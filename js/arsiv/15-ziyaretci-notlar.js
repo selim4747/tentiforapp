@@ -161,6 +161,7 @@ function madalyaVar(id) {
 
 function madalyaVer(id) {
   if (madalyaVar(id)) { return; }
+  hesapHatirlat("madalya");
   const m = jsonOku(MADALYA_ANAHTAR, []) || [];
   m.push(id);
   jsonYaz(MADALYA_ANAHTAR, m);

@@ -627,12 +627,16 @@ function gunKelimesiCiz(uyari) {
     '<div class="gk-izgara">' + satirlar.join("") + "</div>" +
     (d.bitti
       ? '<p class="gk-son">' + (d.cozuldu ? "Buldun! " + d.tahminler.length + "/" + d.hak : "Bugünkü kelime: <b>" + kacir(String(d.cevap || "").toLocaleUpperCase("tr")) + "</b>") + "</p>" +
-        '<button class="dugme dugme-sade" data-gk-paylas="1">Sonucu paylaş</button>'
+        '<button class="dugme dugme-sade" data-gk-paylas="1">Sonucu paylaş</button>' +
+        /* kelimenin anlamı, istatistik, hikâyede paylaş (50-kelime-oyunu) */
+        (d.cevap ? gkKelimeBilgi(koNormal(d.cevap)) : "") + '<div data-gk-istat></div>' +
+        '<div class="oyun-sira ko-paylas"><button class="dugme" data-gk-hikaye>Hikâyende paylaş</button></div>'
       : '<form data-gk-form="1" class="yaris-form"><input class="kod-giris yaris-giris" id="gkGiris" maxlength="' + d.uzunluk + '" ' +
           'autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="' + d.uzunluk + ' harfli bir kelime"><button class="dugme" type="submit">Dene</button></form>' +
         '<p class="oyun-not">Mavi: doğru yerde · sarı: kelimede var · gri: yok. Tentiforverse\'ün kendi adlarından biri.</p>') +
     (uyari ? '<p class="pencere-durum kotu">' + kacir(uyari) + "</p>" : "") +
     "</div>";
+  if (d.bitti) { gkIstatistikYukle(); }
 }
 
 async function gunKelimesiTahmin(k) {

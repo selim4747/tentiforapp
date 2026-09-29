@@ -226,20 +226,6 @@ document.addEventListener("click", function (ev) {
   if (ev.target.closest('[data-oyun-sekme="gunluk"]')) { gunlukOyunlarCiz(); }
 });
 
-/* günün kelimesi (kolay) çözülünce XP */
-if (typeof gkKolayOyunu === "function") {
-  const eskiGkKolay = gkKolayOyunu;
-  window.gkKolayOyunu = function () {
-    const o = eskiGkKolay.apply(this, arguments);
-    const eskiBitince = o.bitince;
-    o.bitince = function (cozuldu) {
-      if (typeof eskiBitince === "function") { eskiBitince.apply(this, arguments); }
-      if (cozuldu) { oyunXpVer("tomye|kelime"); }
-    };
-    return o;
-  };
-}
-
 document.addEventListener("DOMContentLoaded", function () { gunlukOyunlarCiz(); });
 
 /* ==================== Google ile girenlere: kullanıcı adı seç ====================
@@ -259,14 +245,6 @@ function kadiUyarisiCiz() {
   document.body.appendChild(el);
 }
 
-if (typeof hesapProfilKaydet === "function") {
-  const eskiProfilKaydet = hesapProfilKaydet;
-  window.hesapProfilKaydet = async function () {
-    const r = await eskiProfilKaydet.apply(this, arguments);
-    kadiUyarisiCiz();
-    return r;
-  };
-}
 document.addEventListener("click", function (ev) {
   if (!ev.target.closest("[data-kadi-sec]")) { return; }
   setTimeout(function () { const i = document.querySelector("#hpKadi"); if (i) { i.focus(); i.scrollIntoView({ block: "center" }); } }, 300);

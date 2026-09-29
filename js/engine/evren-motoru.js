@@ -33,12 +33,6 @@ function yayinAdresiBak() {
   if (m) { location.hash = "#/ev/fan/" + m[1]; }
 }
 
-/* önizlenen evrenin cihazdaki kopyası panelde "kanona aday" diye görünmesin */
-if (typeof kanonAdaylari === "function") {
-  const eskiKA402 = kanonAdaylari;
-  window.kanonAdaylari = function () { return eskiKA402.apply(this, arguments).filter(function (x) { return !(x.kaynak === "acilan" && /^(yayin|onizle|acilan)-/.test(x.e.id || "")); }); };
-}
-
 document.addEventListener("click", function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-evren-bildir]");
   if (!b || typeof sikayetEt !== "function") { return; }

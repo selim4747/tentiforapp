@@ -2106,7 +2106,6 @@ function haritaDuzenAc(ac) {
   if (HT.duzen) { haritaToast("Geliştirici modu açık: yerleri sürükleyebilirsin"); }
 }
 
-
 /** Karakter kartına "yolunu haritada göster" düğmesi (yolu varsa). */
 function karakterYoluDugmesi(k) {
   if (!k.yol || !k.yol.length) { return ""; }

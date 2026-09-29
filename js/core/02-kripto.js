@@ -165,7 +165,6 @@ function base64tenBayt(b64) {
   return bayt;
 }
 
-
 /* Panoya kopyalama — her ortamda çalışır.
    navigator.clipboard yalnızca güvenli bağlamda (https) tanımlıdır; file:// ile
    açıldığında yoktur. Eskiden bu durumda düğmeler sessizce patlıyordu. */

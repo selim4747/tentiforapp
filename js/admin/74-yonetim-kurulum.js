@@ -159,9 +159,12 @@ function sekmeDuzenTemizle(d) {
   return Object.keys(o).length ? o : null;
 }
 
+/** Kurucunun sekme düzeni (ilk sekme, gizliler); sekme yetkisi olan yönetici gizlenenleri de görür. */
 function evrenDuzeni() {
-  const v = typeof evrenSayfaVerisi === "function" ? evrenSayfaVerisi() : null;
-  return (v && v.eser && v.eser.sekmeDuzen) || null;
+  const v = evrenSayfaVerisi();
+  const d = (v && v.eser && v.eser.sekmeDuzen) || null;
+  if (d && evy25Var(v.eser, "sekmeler")) { return d.ilk ? { ilk: d.ilk } : null; }
+  return d;
 }
 
 let sekmeDuzenSon = null;   /* ilk sekme yalnızca evren açılırken bir kez (yeniden çizimlerde okurun seçtiği kalır) */
@@ -195,11 +198,6 @@ function eksDuzenKutusu(e) {
       '<p class="oyun-not">Sen her sekmeyi görmeye devam edersin; gizleme ziyaretçiler içindir.</p></div>';
 }
 
-if (typeof eksKodBolumu === "function") {
-  const eskiEks = eksKodBolumu;
-  window.eksKodBolumu = function (v) { return eksDuzenKutusu(v.eser) + eskiEks.apply(this, arguments); };
-}
-
 document.addEventListener("change", function (ev) {
   const t = ev.target;
   if (!t || !EVS || EVS.kaynak !== "benim" || typeof evrenBenimDegistir !== "function") { return; }
@@ -224,20 +222,6 @@ document.addEventListener("click", function (ev) {
 function yaziCozKelimeleri(e) {
   if (!e || !e.yazi || typeof eyDolu !== "function" || !eyDolu(e.yazi) || typeof evoKelimeler !== "function") { return []; }
   return evoKelimeler(e).filter(function (k) { return eyParcala(k, e.yazi).every(function (p) { return !!p.isaret; }); });
-}
-
-if (typeof EVO_OYUNLAR !== "undefined" && !EVO_OYUNLAR.some(function (g) { return g.id === "yazicoz"; })) {
-  EVO_OYUNLAR.push({ id: "yazicoz", ad: "Yazıyı çöz", ozet: "Evrenin kendi yazısıyla yazılmış adı bul. İşaretler Yazı sekmesinde." });
-  EVO_EN_AZ.yazicoz = 4;
-  EVO_SORU_OYUNU.yazicoz = true;
-  const eskiDurum = evoDurumlari;
-  window.evoDurumlari = function (e) {
-    return eskiDurum.apply(this, arguments).map(function (d) {
-      if (d.id !== "yazicoz") { return d; }
-      const n = yaziCozKelimeleri(e).length;
-      return Object.assign({}, d, { sayi: n, yeter: n >= EVO_EN_AZ.yazicoz });
-    });
-  };
 }
 
 function yaziCozBaslat(e) {
@@ -340,11 +324,7 @@ function kesifCiz() {
       (e.ozet ? "<span>" + kacir(String(e.ozet).slice(0, 140)) + "</span>" : "") +
       '<span class="kesif-sayi">' + [[s.kisi, "kişi"], [s.yer, "yer"], [s.bolum, "bölüm"]].filter(function (x) { return x[0]; }).map(function (x) { return x[0] + " " + x[1]; }).join(" · ") + "</span></button>";
   }).join("") : '<p class="oyun-not">Aramana uyan evren yok.</p>';
-}
-
-if (typeof fanEvrenCiz === "function") {
-  const eskiFE = fanEvrenCiz;
-  window.fanEvrenCiz = function () { const r = eskiFE.apply(this, arguments); kesifCiz(); return r; };
+  kesifEkleri();   /* önizle, cihazda, haftanın evreni (75) */
 }
 
 document.addEventListener("input", function (e) { if (e.target && e.target.id === "kesifAra") { KESIF.ara = e.target.value; kesifCiz(); } });
@@ -366,22 +346,6 @@ function buCihazAdi() {
   const sis = /Android/.test(ua) ? "Android" : /iPhone|iPad/.test(ua) ? "iPhone/iPad" : /Windows/.test(ua) ? "Windows" : /Mac OS/.test(ua) ? "Mac" : /Linux/.test(ua) ? "Linux" : "Cihaz";
   const tar = /Edg\//.test(ua) ? "Edge" : /Firefox\//.test(ua) ? "Firefox" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "tarayıcı";
   return sis + " · " + tar + (TentiforKopru.ortam() !== "web" ? " (uygulama)" : "");
-}
-
-if (typeof esitBulutaYaz === "function") {
-  const eskiBY = esitBulutaYaz;
-  window.esitBulutaYaz = function (g) {
-    try {
-      const o = JSON.parse(g[CIHAZLAR] || "{}") || {};
-      o[buCihazId()] = { ad: buCihazAdi(), son: new Date().toISOString() };
-      /* en çok 12 cihaz: en eskiler düşer */
-      const k = Object.keys(o).sort(function (a, b) { return String(o[b].son).localeCompare(String(o[a].son)); });
-      k.slice(12).forEach(function (x) { delete o[x]; });
-      g[CIHAZLAR] = JSON.stringify(o);
-      localStorage.setItem(CIHAZLAR, g[CIHAZLAR]);
-    } catch (_) { /* yoksay */ }
-    return eskiBY.apply(this, arguments);
-  };
 }
 
 function cihazlarimHtml() {

@@ -190,19 +190,15 @@ const EVT_DERIN = {
   mitoloji: { kisiler: [["Kâhin", "kehanet", "Kehaneti söyler ama anlamını bilmez."], ["Yarı tanrı", "kahraman", "Annesi tanrıça, babası çoban; iki dünyaya da ait değil."], ["Unutulan tanrı", "tanrı", "Adına sunak kalmamış; yine de dinliyor."]] }
 };
 
-if (typeof evtUygula === "function") {
-  const eskiEvtUygula33 = evtUygula;
-  window.evtUygula = function (id, turId) {
-    const r = eskiEvtUygula33.apply(this, arguments);
-    const d = Object.assign({}, EVT_DERIN._genel, EVT_DERIN[turId] || {});
-    evrenBenimDegistir(id, function (e) {
-      const bos = function (l, alan) { return !(l || []).some(function (x) { return x && String(x[alan] || "").trim(); }); };
-      if (bos(e.kisiler, "ad")) { e.kisiler = d.kisiler.map(function (k) { return { ad: k[0], rol: k[1], aciklama: k[2] }; }); }
-      if (bos(e.tarih, "olay")) { e.tarih = d.tarih.map(function (k) { return { zaman: k[0], cag: k[1], olay: k[2] }; }); }
-      if (bos(e.belgeler, "metin")) { e.belgeler = d.belgeler.map(function (k) { return { tur: k[0], baslik: k[1], kimden: k[2], kime: k[3], metin: k[4] }; }); }
-    });
-    return r;
-  };
+/** Şablonun derin içeriği: boş olan kişiler, tarih ve belgeler doldurulur. */
+function evtDerinUygula(id, turId) {
+  const d = Object.assign({}, EVT_DERIN._genel, EVT_DERIN[turId] || {});
+  evrenBenimDegistir(id, function (e) {
+    const bos = function (l, alan) { return !(l || []).some(function (x) { return x && String(x[alan] || "").trim(); }); };
+    if (bos(e.kisiler, "ad")) { e.kisiler = d.kisiler.map(function (k) { return { ad: k[0], rol: k[1], aciklama: k[2] }; }); }
+    if (bos(e.tarih, "olay")) { e.tarih = d.tarih.map(function (k) { return { zaman: k[0], cag: k[1], olay: k[2] }; }); }
+    if (bos(e.belgeler, "metin")) { e.belgeler = d.belgeler.map(function (k) { return { tur: k[0], baslik: k[1], kimden: k[2], kime: k[3], metin: k[4] }; }); }
+  });
 }
 
 /* ==================== 9. Evrengezer yolculuk şablonu ==================== */

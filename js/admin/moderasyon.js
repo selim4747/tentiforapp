@@ -122,23 +122,6 @@ document.addEventListener("click", async function (ev) {
 });
 document.addEventListener("keydown", function (ev) { if (ev.key === "Enter" && ev.target && ev.target.id === "modKod") { const b = document.querySelector("[data-mod-giris]"); if (b) { b.click(); } } });
 
-
-
-/* #/moderasyon ve #/yayin/<adres> sayfa değil: yönlendirici bunları "bulunamadı" saymasın; altta ana sayfa açılır */
-if (typeof hataSayfasiAc === "function") {
-  const eskiHSA40 = hataSayfasiAc;
-  window.hataSayfasiAc = function (istenen) {
-    const s = String(istenen || "");
-    if (/^(moderasyon|yayin\/)/.test(s)) {
-      if (typeof sayfaGoster === "function" && typeof aktifSayfa !== "undefined" && !aktifSayfa) { sayfaGoster("arsiv", false); }
-      setTimeout(/^moderasyon/.test(s) ? moderasyonCiz : yayinAdresiBak, 0);
-      return;
-    }
-    return eskiHSA40.apply(this, arguments);
-  };
-}
-
-
 /* 4.0.3: moderatörün düzeyi (fan / kanon) bu sekmede saklanır; asıl denetim sunucuda (moderasyon fonksiyonu) */
 function moderatorDuzey() { try { return sessionStorage.getItem("tf4_mod_duzey") || "fan"; } catch (_) { return "fan"; } }
 async function moderatorDuzeyYukle() {

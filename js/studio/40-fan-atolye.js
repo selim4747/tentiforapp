@@ -330,7 +330,7 @@ function fanKartHtml(e, kaynak) {
 }
 
 function fanHikayeCiz() { fanCiz("hikaye"); }
-function fanEvrenCiz() { fanCiz("evren"); }
+function fanEvrenCiz() { fanCiz("evren"); kesifCiz(); }   /* keşif listesi de tazelenir */
 
 function fanCiz(tur) {
   const alan = document.querySelector(tur === "hikaye" ? "#fanHikayeAlan" : "#fanEvrenAlan");
@@ -707,6 +707,8 @@ function fanEposta() {
 }
 
 function fanGonderBilgi(e) {
+  const n = evaHikayeDenetle(e);   /* hikâyenin evreni buna izin vermiyorsa (83) */
+  if (n) { return '<p class="pencere-durum kotu" role="alert">' + kacir(n) + "</p>"; }
   const adres = fanEposta();
   if (!adres) {
     return '<div class="kutu-y fan-gonder"><p class="oyun-not">Fanmade olarak sitede yayımlanmasını istiyorsan dosyayı indirip yazara ulaştır. ' +

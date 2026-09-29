@@ -147,12 +147,6 @@ const EVR_EG_IZIN = "tf30_eg_izin";   /* { evrenId: true } bu cihazda Evrengezer
 function evrEgIzinOzeti(eid, kod) { return dogrulamaOzeti("egizin|" + eid + "|" + String(kod || "").trim().toUpperCase()); }
 function evrEgIzinVar(eid) { const d = jsonOku(EVR_EG_IZIN, {}) || {}; return !!d[eid]; }
 
-/* izin kodu girmiş kişi de "yetkili" sayılır (83-evren-atolyesi.js) */
-if (typeof evaYetkili === "function") {
-  const eskiYet30 = evaYetkili;
-  window.evaYetkili = function (s) { return eskiYet30.apply(this, arguments) || !!(s && s.id && evrEgIzinVar(s.id)); };
-}
-
 function evrEgIzinYonetHtml(e) {
   if (e.durum === "kanonAday") { return ""; }
   const l = e.egIzinleri || [];
@@ -346,7 +340,19 @@ document.addEventListener("click", async function (ev) {
 /* ==================== 6. Evrengezerler: hepsi E25'te ==================== */
 
 /** Bütün eserlerdeki konuk Evrengezerler (sitedeki hikâye ve evrenler, senin taslakların, açtığın dosyalar). */
+/* 3.1.1: konuk havuzu bir çizimde onlarca kez isteniyor (her kart, salon, sıralama): aynı iş parçasında bir kez hesaplanır,
+   taslak yazılınca hemen tazelenir (fanEserlerimYaz) */
+let evrHavuzBellek = null;
+
+/** Eserlere konuk olarak götürülmüş Evrengezerler. */
 function evrKonukHavuzu() {
+  if (evrHavuzBellek) { return evrHavuzBellek; }
+  evrHavuzBellek = evrKonukHavuzuHesapla();
+  setTimeout(function () { evrHavuzBellek = null; }, 0);
+  return evrHavuzBellek;
+}
+
+function evrKonukHavuzuHesapla() {
   const l = [];
   const tara = function (liste, nerede) {
     (liste || []).forEach(function (x) { (x.konuklar || []).forEach(function (k) { l.push({ k: k, eser: x, nerede: nerede }); }); });
@@ -355,35 +361,6 @@ function evrKonukHavuzu() {
   tara(fanEserlerim().filter(function (x) { return x.tur !== "kisi"; }), "benim");
   tara(typeof fanAcilanlar === "function" ? fanAcilanlar() : [], "acilan");
   return l;
-}
-
-if (typeof e25Kisileri === "function") {
-  window.e25Kisileri = function () {
-    const gorulen = {};
-    const l = [];
-    const ekle = function (e, kaynak, konuk) {
-      if (!e || e.tur !== "kisi" || !e.id || gorulen[e.id]) { return; }
-      gorulen[e.id] = true;
-      l.push({ e: e, kaynak: kaynak, konuk: !!konuk });
-    };
-    /* nerede yaratılmış olursa olsun (e.evren) her Evrengezer E25'te doğar ve burada görünür */
-    fanEserlerim().forEach(function (e) { ekle(e, "benim"); });
-    fanSiteListesi("kisi").forEach(function (e) { ekle(e, "site"); });
-    fanAcilanlar().forEach(function (e) { ekle(e, "acilan"); });
-    evrKonukHavuzu().forEach(function (x) { ekle(typeof kisiTemizle === "function" ? kisiTemizle(x.k) : x.k, "site", true); });
-    return l;
-  };
-}
-
-/* konuk olarak bulunan Evrengezer: kisiBul onu da bulsun (götür, kart) */
-if (typeof kisiBul === "function") {
-  const eskiKB30 = kisiBul;
-  window.kisiBul = function (kaynak, id) {
-    const e = eskiKB30.apply(this, arguments);
-    if (e) { return e; }
-    const x = evrKonukHavuzu().find(function (y) { return y.k && y.k.id === id; });
-    return x ? (typeof kisiTemizle === "function" ? kisiTemizle(x.k) : x.k) : null;
-  };
 }
 
 function evrKonukYerleri(id) {
@@ -461,12 +438,3 @@ function evrGecitSvg() {
     }).join("") + "</ul></figure>";
 }
 
-if (typeof evrenAtolyeCiz === "function") {
-  const eskiAC30 = evrenAtolyeCiz;
-  window.evrenAtolyeCiz = function () {
-    eskiAC30.apply(this, arguments);
-    const a = document.querySelector("#evrenAtolyeAlan");
-    if (a && !a.querySelector(".evr-gecit, .evr-gecit-bos")) { a.insertAdjacentHTML("beforeend", '<h3 class="eva-bolum">Evrenler arası geçitler</h3><div class="evr-gecit-bos">' + evrGecitSvg() + "</div>"); }
-  };
-  if (typeof GEC_CIZILENLER !== "undefined") { GEC_CIZILENLER.evrenAtolye = "evrenAtolyeCiz"; }
-}

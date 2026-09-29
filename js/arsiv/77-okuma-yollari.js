@@ -51,7 +51,10 @@ function yolIlerleme(y) {
 }
 
 /** Tek yol (bütün yolları hesaplamadan). */
+/** Kimliğe göre okuma yolu: kar:<karakter>, ce:<Claude'un Evreni kişisi>, oz:<okurun kendi yolu>. */
 function okumaYolu(id) {
+  const oz = /^oz:(.+)$/.exec(id || "");
+  if (oz) { const y = ozelYollar().find(function (x) { return x.id === oz[1]; }); return y ? ozelYolNesnesi(y) : null; }
   const m = /^(kar|ce):(.+)$/.exec(id || "");
   if (!m) { return null; }
   const l = okumaYollariKaynak(m[1] === "kar" ? function (k) { return k.id === m[2]; } : null, m[1] === "ce" ? function (k) { return k.id === m[2]; } : null);
@@ -62,7 +65,7 @@ function yolAktif() { const d = jsonOku(YOL_AKTIF, null); return d && d.id ? oku
 function yollarHtml() {
   let l;
   try { l = okumaYollari(); } catch (_) { l = []; }
-  if (!l.length) { return '<p class="oyun-not">Okuma yolları, kodlarla açtığın bölümlerdeki kutulardan kurulur.</p>'; }
+  if (!l.length) { return '<p class="oyun-not">Okuma yolları, kodlarla açtığın bölümlerdeki kutulardan kurulur.</p>' + ozelYolHtml(); }
   const aktif = jsonOku(YOL_AKTIF, null);
   return '<p class="oyun-not">Bir konuyu baştan sona okumak için sıralı kutular. Yol bitince o konunun rozeti de gelir.</p>' +
     '<ul class="yol-liste">' + l.slice(0, 30).map(function (y) {
@@ -72,7 +75,7 @@ function yollarHtml() {
       return '<li class="' + (bitti ? "bitti" : "") + (secili ? " secili" : "") + '"><span><b>' + kacir(y.ad) + "</b>" +
         '<span class="oyun-not"> · ' + o.toplam + " kutu · ~" + y.dakika + " dk · " + (bitti ? "✓ bitti" : o.okunan + " okundu") + "</span></span>" +
         (bitti ? "" : '<button class="dugme dugme-sade y-kucuk" data-yol-basla="' + kacir(y.id) + '">' + (secili ? "Sıradaki →" : (o.okunan ? "Devam et" : "Başla")) + "</button>") + "</li>";
-    }).join("") + "</ul>";
+    }).join("") + "</ul>" + ozelYolHtml();   /* okurun kendi yolları (80) */
 }
 
 /** Yol çubuğu: seçili yol varken altta küçük bir düğme (sıradaki kutu). */
@@ -111,20 +114,6 @@ document.addEventListener("click", function (ev) {
 });
 
 window.addEventListener("hashchange", function () { setTimeout(yolCubuguCiz, 300); });
-
-/* karakter penceresinde: bu karakterin yolu */
-if (typeof rozetKutusuHtml === "function") {
-  const eskiRKH = rozetKutusuHtml;
-  window.rozetKutusuHtml = function (k) {
-    const h = eskiRKH.apply(this, arguments);
-    const y = okumaYolu("kar:" + k.id);
-    if (!y) { return h; }
-    const o = yolIlerleme(y);
-    if (!o.sonraki) { return h; }
-    return h.replace(/<\/div>$/, '<div class="oyun-sira"><button class="dugme dugme-sade y-kucuk" data-yol-basla="' + kacir(y.id) + '">📖 Okuma yolu: ' +
-      o.okunan + "/" + o.toplam + " · ~" + y.dakika + " dk</button></div></div>");
-  };
-}
 
 /* ==================== çevrimdışı okuma paketi ==================== */
 
@@ -188,41 +177,8 @@ function oiBenimAdim() {
   return String((p && (p.gorunen_ad || p.kullanici_adi)) || "Bir yazar").slice(0, 40);
 }
 
-/* giden kayda "kim, hangi sekmede, ne zaman" eklenir (sunucuda ek sütun gerekmez; evrenle birlikte gider) */
-if (typeof ortakGonderim === "function") {
-  const eskiOG = ortakGonderim;
-  window.ortakGonderim = function (e) {
-    const o = eskiOG.apply(this, arguments);
-    o.ortakIz = { kim: oiBenimAdim(), sekme: (typeof EVS !== "undefined" && EVS && EVS.id === e.id) ? String(EVS.sekme || "") : "", zaman: new Date().toISOString() };
-    return o;
-  };
-}
-
 function oiDegisenAlanlar(eski, yeni) {
   return Object.keys(ORTAK_ALANLAR).filter(function (k) { return JSON.stringify((eski || {})[k]) !== JSON.stringify((yeni || {})[k]); });
-}
-
-/* başka yazarın hâli gelince: neyin değiştiğini günlüğe yaz, geçmiş kaydı kimin değişikliğinden önce olduğunu söylesin */
-if (typeof ortakUzaktanUygula === "function") {
-  const eskiOU = ortakUzaktanUygula;
-  window.ortakUzaktanUygula = async function (id, d) {
-    const once = evrenBenimBul(id);
-    const eskiKopya = once ? JSON.parse(JSON.stringify(once)) : null;
-    const iz = (d && d.veri && d.veri.ortakIz) || {};
-    const kim = iz.kim || d.guncelleyen || "Ortak yazar";
-    const eskiGK = window.gcmKaydet;
-    window.gcmKaydet = function (eid, neden, zorla) { return eskiGK.call(this, eid, neden === "ortak yazardan önce" ? kim + "'in değişikliğinden önce" : neden, zorla); };
-    let r;
-    try { r = await eskiOU.apply(this, arguments); } finally { window.gcmKaydet = eskiGK; }
-    const sonra = evrenBenimBul(id);
-    const alanlar = oiDegisenAlanlar(eskiKopya, sonra);
-    if (eskiKopya && alanlar.length) {
-      const g = jsonOku(ORTAK_GUNLUK, {}) || {};
-      g[id] = [{ kim: kim, zaman: iz.zaman || d.guncelleme || new Date().toISOString(), sekme: iz.sekme || "", alanlar: alanlar }].concat(g[id] || []).slice(0, 30);
-      jsonYaz(ORTAK_GUNLUK, g);
-    }
-    return r;
-  };
 }
 
 function oiNeZaman(t) {
@@ -250,15 +206,6 @@ function oiGunlukHtml(id) {
   return '<details class="oi-gunluk"><summary>Değişiklik günlüğü · ' + g.length + "</summary><ul>" + g.slice(0, 15).map(function (x) {
     return "<li><b>" + kacir(x.kim) + "</b> · " + kacir(oiNeZaman(x.zaman)) + " · " + kacir(x.alanlar.map(function (a) { return ORTAK_ALANLAR[a] || a; }).join(", ")) + "</li>";
   }).join("") + '</ul><p class="oyun-not">Bir değişikliği geri almak için Sürüm geçmişinde o kişinin adının geçtiği “… değişikliğinden önce” kaydına dön.</p></details>';
-}
-
-if (typeof ortakKutusu === "function") {
-  const eskiOK = ortakKutusu;
-  window.ortakKutusu = function (e) {
-    const h = eskiOK.apply(this, arguments);
-    if (!e.ortak) { return h; }
-    return h.replace('<p class="pencere-durum" id="ortakDurum"', oiGunlukHtml(e.id) + '<p class="pencere-durum" id="ortakDurum"');
-  };
 }
 
 /* sekmeye dönünce (en çok dakikada bir) açık ortak evrenin güncel hâli — canlı yoklama yok */

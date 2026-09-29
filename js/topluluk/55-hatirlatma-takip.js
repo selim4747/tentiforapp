@@ -27,6 +27,11 @@ function tkpFanEvren(id) {
 
 /** Servis çalışanının ayarını tazeler; bölüm sayılarında büyük olan kalır (iki taraf da günceller). */
 async function swAyarEsitle(ek) {
+  /* uygulamada: bugün oynandı → hatırlatmalar yeniden kurulur */
+  if (kabukMu() && ek && ek.oynanan) {
+    try { localStorage.setItem(KABUK_BLD.oynanan, kabukBugun()); } catch (_) { /* yok */ }
+    kabukHatirlatmaKur();
+  }
   if (typeof caches === "undefined") { return; }
   try {
     const c = await caches.open("tf-ayar");
@@ -43,7 +48,9 @@ async function swAyarEsitle(ek) {
 }
 
 /** Günlük arka plan kontrolünü kaydeder. Hata varsa açıklamasını döner. */
+/** Günlük hatırlatmayı kurar; boş dize ya da neden kurulamadığı. Android uygulamasında yerel bildirimle (78). */
 async function gunlukKontrolKaydet(izinIste) {
+  if (kabukMu() && kabukEklenti("LocalNotifications")) { return kabukGunlukKur(izinIste); }
   if (!("Notification" in window) || !("serviceWorker" in navigator)) { return "Bu tarayıcı bildirim göstermiyor."; }
   let reg = null;
   try { reg = await Promise.race([navigator.serviceWorker.ready, new Promise(function (c) { setTimeout(function () { c(null); }, 3000); })]); } catch (_) { reg = null; }
@@ -65,6 +72,7 @@ async function gunlukKontrolKaydet(izinIste) {
 }
 
 async function gunlukKontrolKaldirGerekirse() {
+  if (kabukMu()) { kabukHatirlatmaKur(); }   /* uygulamada yerel bildirimler yeniden kurulur */
   if (jsonOku(HTR_ANAHTAR, false) === true || Object.keys(tkpListe()).length) { return; }
   try { const reg = await navigator.serviceWorker.ready; if (reg.periodicSync) { await reg.periodicSync.unregister("tf-gunluk"); } } catch (_) { /* yok */ }
 }

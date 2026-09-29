@@ -105,6 +105,18 @@ function evrenSeciciListesi() {
   const acilan = fanAcilanlar().filter(function (e) { return e.tur === "evren"; }).map(function (e) {
     return { ad: e.ad, git: "#/ev/acilan/" + e.id, not: "dosyadan" };
   });
+  /* notlar: kanon / test / fan-made, kanona aday */
+  const siteFan = (veri.fanEserleri || {}).evrenler || [];
+  fan.forEach(function (x) {
+    const e = siteFan.find(function (y) { return "#/ev/fan/" + y.id === x.git; });
+    x.not = (e && e.kanon === true ? "kanon" : (e && e.test === true ? "test · fan-made" : "fan-made")) + (x.not ? " · " + x.not : "");
+  });
+  site.forEach(function (x) { if (x.git === "#/claude") { x.not = "test evreni"; } });   /* Claude'un Evreni: test evreni */
+  const eserler = fanEserlerim();
+  benim.forEach(function (x) {
+    const e = eserler.find(function (y) { return "#/ev/benim/" + y.id === x.git; });
+    if (e && e.durum === "kanonAday") { x.not += " · kanona aday"; }
+  });
   return { site: site, fan: fan, benim: benim, acilan: acilan };
 }
 
@@ -137,6 +149,7 @@ function evrenSeciciAc() {
   document.body.appendChild(k);
   const ilk = k.querySelector(".es-oge");
   if (ilk) { ilk.focus({ preventScroll: true }); }
+  evrenSeciciZenginlestir();   /* son gezilenler, arama (68-coklu-evren) */
 }
 
 function evrenSeciciKapat() {
@@ -145,6 +158,9 @@ function evrenSeciciKapat() {
 }
 
 function evrenGit(git) {
+  /* seçiciden gidilen evren "son gezilenler"e */
+  const ad = document.querySelector('#evrenSecici [data-evren-git="' + CSS.escape(git) + '"] .es-ad, .evren-serit [data-evren-git="' + CSS.escape(git) + '"] .es-ad');
+  if (ad && git.indexOf("harita:") !== 0) { sonEvrenEkle(ad.textContent.trim(), git); }
   evrenSeciciKapat();
   if (git.indexOf("harita:") === 0) {
     const id = git.slice(7);
@@ -189,6 +205,7 @@ function evrenBosMu(e) {
 /** Yeni evren: yarım bırakılmış boş bir taslak varsa onu açar (her dokunuşta yeni "Adsız evren" birikmesin).
     Kaydedilemezse (depolama dolu/kapalı) söyler ve null döner. */
 function evrenYeniKur() {
+  if (!uretimAcik("evren")) { seviyeUyari("evren"); return null; }
   const bos = fanEserlerim().find(evrenBosMu);
   if (bos) { return bos.id; }
   const e = fanYeni("evren");

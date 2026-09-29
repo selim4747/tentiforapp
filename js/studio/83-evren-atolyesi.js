@@ -47,7 +47,8 @@ function evaStatu(ad) {
 }
 
 /** Bu cihazda bu evrenin yetkilisi mi (evren yönetici kodu girildi)? */
-function evaYetkili(s) { return !!(s && s.id && typeof evy25Acik === "function" && evy25Acik(s.id)); }
+/** Bu fan-made evrene Evrengezer getirebilir mi: evren yöneticisi ya da Evrengezer izni kodu (84). */
+function evaYetkili(s) { return !!(s && s.id && (evy25Acik(s.id) || evrEgIzinVar(s.id))); }
 
 /** Evrengezer (konuk kişi) bu evrende yer alabilir mi? */
 function evaEvrengezerIzni(ad) {
@@ -98,22 +99,6 @@ function evaStatuNotu(ad) {
 
 /* ==================== Evrengezer götürme ==================== */
 
-if (typeof kisiGoturHtml === "function") {
-  const eskiGH30 = kisiGoturHtml;
-  window.kisiGoturHtml = function (e, anahtar) {
-    const h = eskiGH30.apply(this, arguments);
-    const kanon = [];
-    (veri.haritalar || []).forEach(function (x) { if (x && x.ad && x.id !== "claude" && (typeof kanonEvrenErisimi !== "function" || kanonEvrenErisimi(x.id))) { kanon.push(x.ad); } });
-    (typeof fanSiteListesi === "function" ? fanSiteListesi("evren") : []).forEach(function (x) { if (x.kanon === true && x.ad) { kanon.push(x.ad); } });
-    const claude = (veri.haritalar || []).find(function (x) { return x && x.id === "claude"; });
-    const secenek = kanon.filter(function (x, i, a) { return a.indexOf(x) === i; }).map(function (a) {
-      return '<option value="yeni-hikaye@' + kacir(a) + '">Kanon evrende yeni hikâye: ' + kacir(a) + "</option>";
-    }).join("") + (claude ? '<option value="yeni-hikaye@' + kacir(claude.ad) + '">Test evreninde deneme hikâyesi: ' + kacir(claude.ad) + "</option>" : "");
-    return h.replace("</select>", secenek + "</select>")
-      .replace('<p class="oyun-not">Kişi oraya konuk olarak girer.', '<p class="oyun-not">Kanon evrenlerde herkes Evrengezer hikâyesi yazabilir; fan-made evrenlere Evrengezeri yalnızca sahibi ve yetkilileri getirir. Kişi oraya konuk olarak girer.');
-  };
-}
-
 /* hikâye dosyası indirilirken, paylaşılırken, gönderilirken kurallar */
 ["fanIndir", "fanPaylas"].forEach(function (ad) {
   const eski = window[ad];
@@ -124,14 +109,6 @@ if (typeof kisiGoturHtml === "function") {
     return eski.apply(this, arguments);
   };
 });
-if (typeof fanGonderBilgi === "function") {
-  const eskiGB30 = fanGonderBilgi;
-  window.fanGonderBilgi = function (e) {
-    const n = evaHikayeDenetle(e);
-    return n ? '<p class="pencere-durum kotu" role="alert">' + kacir(n) + "</p>" : eskiGB30.apply(this, arguments);
-  };
-}
-
 /* hikâye düzenleyicisinde: seçilen evrenin kuralı evren alanının hemen altında */
 function evaHikayeNotuYaz() {
   const g = document.querySelector('[data-fan-form="hikaye"] [data-fan-alan="evren"]');
@@ -251,27 +228,6 @@ function evaYolHtml(e) {
     "</div>";
 }
 
-/* evren seçicide: fan evrenlerinin statüsü */
-if (typeof evrenSeciciListesi === "function") {
-  const eskiESL30 = evrenSeciciListesi;
-  window.evrenSeciciListesi = function () {
-    const r = eskiESL30.apply(this, arguments);
-    const site = (veri.fanEserleri || {}).evrenler || [];
-    (r.fan || []).forEach(function (x) {
-      const e = site.find(function (y) { return "#/ev/fan/" + y.id === x.git; });
-      x.not = (e && e.kanon === true ? "kanon" : (e && e.test === true ? "test · fan-made" : "fan-made")) + (x.not ? " · " + x.not : "");
-    });
-    /* Claude'un Evreni: test evreni (kanon değil) */
-    (r.site || []).forEach(function (x) { if (x.git === "#/claude") { x.not = "test evreni"; } });
-    const benim = typeof fanEserlerim === "function" ? fanEserlerim() : [];
-    (r.benim || []).forEach(function (x) {
-      const e = benim.find(function (y) { return "#/ev/benim/" + y.id === x.git; });
-      if (e && e.durum === "kanonAday") { x.not += " · kanona aday"; }
-    });
-    return r;
-  };
-}
-
 /* ==================== Evren Atölyesi sayfası (#/atolye) ==================== */
 
 function evaEvrenKarti(ad, alt, git, rozet, ek) {
@@ -329,6 +285,9 @@ function evrenAtolyeCiz() {
       '<p class="oyun-not">Kanon değil: sitenin özelliklerinin denendiği ve gösterildiği evrenler. Bakıp öğren, kendi evreninde uygula.</p><div class="eva-kartlar">' +
       (claude ? evaEvrenKarti(claude.ad, "Test evreni", "#/claude", evaStatuRozeti({ tur: "test" }), '<button class="dugme dugme-sade y-kucuk" data-eva-hikaye="' + kacir(claude.ad) + '">✎ Deneme hikâyesi</button>') : "") +
       testler.map(function (e) { return evaEvrenKarti(e.ad, kacir(e.yazar || "örnek"), "#/ev/fan/" + e.id, evaStatuRozeti({ tur: "fan", test: true }), ""); }).join("") + "</div>" : "");
+  /* evrenler arası geçitler (84) */
+  const a = document.querySelector("#evrenAtolyeAlan");
+  if (a && !a.querySelector(".evr-gecit, .evr-gecit-bos")) { a.insertAdjacentHTML("beforeend", '<h3 class="eva-bolum">Evrenler arası geçitler</h3><div class="evr-gecit-bos">' + evrGecitSvg() + "</div>"); }
 }
 if (typeof GEC_CIZILENLER !== "undefined") { GEC_CIZILENLER.evrenAtolye = "evrenAtolyeCiz"; }
 

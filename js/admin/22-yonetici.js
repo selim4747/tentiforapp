@@ -237,7 +237,9 @@ function yoneticiDurum(mesaj, iyi) {
   el.className = "pencere-durum " + (iyi ? "iyi" : "kotu");
 }
 
-function yoneticiDisaAktar() {
+async function yoneticiDisaAktar() {
+  /* veri.json'un bütün parçaları gelmeden dışa aktarılmaz (yoksa eksik) */
+  try { await veriParcalariTam(); } catch (e) { yoneticiDurum("Dışa aktarılamadı: " + e.message, false); return; }
   const metin = JSON.stringify(veri, null, 2);
 
   panoyaKopyala(metin).then(function () {
@@ -265,9 +267,13 @@ const Y_GRUPLARI = {
 
 let yoneticiGrup = "icerik";
 
+/** Gruptaki sekmeler; sınırlı yönetici yalnızca izinli olanları (tek kodla verilen yetkiler) görür. */
 function yoneticiSekmeleri(grup) {
   const l = Y_GRUPLARI[grup || yoneticiGrup].sekmeler;
-  return yoneticiAcik() ? l : l.filter(function (s) { return SINIRLI_SEKMELER.indexOf(s) !== -1; });
+  if (yoneticiAcik()) { return l; }
+  const sinirli = l.filter(function (s) { return SINIRLI_SEKMELER.indexOf(s) !== -1; });
+  const izin = y25YetkiSekmeleri();
+  return izin ? sinirli.filter(function (s) { return izin.indexOf(s) !== -1; }) : sinirli;
 }
 
 /** Yönetici paneli. Yayında panel betikleri (22b, 25, 43) ayrı yüklenir: yüklenene kadar panel eksik sekmelerle
@@ -384,6 +390,8 @@ function yoneticiTemelCiz() {
 }
 
 function yoneticiListe() {
+  if (yoneticiSekme === "icbildirim") { return yoneticiIcerikBildirimleri(); }   /* 75-yonetim-yetkileri */
+  if (yoneticiSekme === "vitrin") { return yoneticiVitrin(); }
   const liste = yoneticiKayitlar();
   const karakterMi = yoneticiSekme === "karakterler";
 
@@ -406,6 +414,8 @@ function yoneticiListe() {
 }
 
 function yoneticiForm() {
+  if (yoneticiSekme === "icbildirim") { return yoneticiIcerikBildirimleri(); }   /* 75-yonetim-yetkileri */
+  if (yoneticiSekme === "vitrin") { return yoneticiVitrin(); }
   const liste = yoneticiKayitlar();
   const o = liste[yoneticiSecili];
   const karakterMi = yoneticiSekme === "karakterler";

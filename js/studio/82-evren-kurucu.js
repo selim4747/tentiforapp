@@ -109,7 +109,8 @@ function evrAileSvg(e) {
 
 /* ==================== okur görünümleri ==================== */
 
-function evrKisilerCiz(liste, e) {
+/** Kişi kartları; evren sayfasında adına dokununca kişi sayfası açılır (dosyada düz ad). */
+function evrKisilerCiz(liste, e, dosya) {
   if (!liste.length) { return ""; }
   if (liste.some(function (x) { return x.kutu; })) { return null; }   /* E25 konuk kutuları: eski görünüm */
   const baglar = Array.isArray(e.baglar) ? e.baglar : [];
@@ -119,7 +120,8 @@ function evrKisilerCiz(liste, e) {
       return (g.a === x.ad ? g.b : g.a) + (g.etiket ? " (" + g.etiket + ")" : "");
     });
     const et = String(x.etiketler || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 8);
-    return '<article class="evr-kisi"><h3>' + kacir(x.ad || "Adsız") + "</h3>" +
+    const ad = kacir(x.ad || "Adsız");
+    return '<article class="evr-kisi"><h3>' + (dosya ? ad : '<button type="button" class="evr-kisi-ad" data-evr-kisi="' + ad + '">' + ad + "</button>") + "</h3>" +
       (ust.length ? '<p class="evr-kisi-ust">' + ust.map(kacir).join(" · ") + "</p>" : "") +
       paragraf(x.aciklama) +
       (String(x.soz || "").trim() ? '<blockquote class="evr-soz">“' + kacir(x.soz.trim()) + "”</blockquote>" : "") +

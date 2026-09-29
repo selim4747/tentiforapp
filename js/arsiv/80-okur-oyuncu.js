@@ -213,15 +213,6 @@ function sesCubukCiz() {
   yaz('[data-dinle="uyku"]', "☾ " + uykuAd, "Uyku zamanlayıcısı: " + uykuAd);
 }
 
-/* "▶ Dinle" düğmesi artık kesintisiz dinlemeyi başlatır (32-bakim.js'teki düğmeler aynı) */
-window.sesliDugmeOku = function (dugme) {
-  if (SES.aktif && SES.dugme === dugme) { dinlemeDurdur(); return; }
-  const el = dugme.nextElementSibling;
-  if (!el) { return; }
-  sesBaslat(el, dugme);
-};
-window.sesliDurdur = function () { dinlemeDurdur(); };
-
 /* ==================== Harita Atlası ==================== */
 
 function atlasHaritalari() {
@@ -253,16 +244,6 @@ function atlasDurum(h) {
   const l = h.yerler.filter(haviAdayMi);
   const b = l.filter(function (y) { return atlastaMi(h.id, y.id); });
   return { toplam: l.length, bulunan: b.length, yerler: b };
-}
-
-/* Harita Avı kazanılınca yer atlasa */
-if (typeof haviKaydet === "function") {
-  const eskiHK28 = haviKaydet;
-  window.haviKaydet = function (d) {
-    const r = eskiHK28.apply(this, arguments);
-    if (d && d.kazandi) { atlasEkle(d.harita, d.yer); }
-    return r;
-  };
 }
 
 const SERBEST = { d: null };   /* XP'siz tur: { h, y, tahmin: [], bitti, kazandi } */
@@ -340,15 +321,6 @@ function atlasCiz() {
         "</div>";
     }).join("") + "</div>" +
     (serbestAcik ? "" : '<p class="oyun-not">Serbest turlar günün Harita Avı bitince açılır.</p>') + tur;
-}
-
-if (typeof haviCiz === "function") {
-  const eskiHC28 = haviCiz;
-  window.haviCiz = function () {
-    const r = eskiHC28.apply(this, arguments);
-    try { atlasCiz(); } catch (e) { console.error("[TentiforApp] atlas:", e); }
-    return r;
-  };
 }
 
 /* ==================== haftalık Tömye bulmacası ==================== */
@@ -582,29 +554,6 @@ document.addEventListener("focusin", function (e) {
   const dikeyVar = s.b.hucre[p[0] + "," + (p[1] - 1)] || s.b.hucre[p[0] + "," + (p[1] + 1)];
   if (yatayVar && !dikeyVar) { BUL.yon = true; } else if (dikeyVar && !yatayVar) { BUL.yon = false; }
 });
-
-/* Bugün kartında haftanın bulmacası ve okuma hedefi */
-if (typeof bugunOyunlari === "function") {
-  const eskiBO28 = bugunOyunlari;
-  window.bugunOyunlari = function () {
-    const l = eskiBO28.apply(this, arguments);
-    const s = bulmacaDurum();
-    if (s.b) { l.push({ id: "bulmaca|" + s.d.hafta, ad: "Haftanın bulmacası", git: "bulmaca", bitti: !!s.d.cozuldu }); }
-    return l;
-  };
-}
-if (typeof bugunGit === "function") {
-  const eskiBG28 = bugunGit;
-  window.bugunGit = function (hedef) {
-    if (hedef !== "bulmaca" && hedef !== "atlas") { return eskiBG28.apply(this, arguments); }
-    if (typeof rota === "function" && rota().indexOf("#/oyunlar") !== 0) { location.hash = "#/oyunlar"; }
-    setTimeout(function () {
-      if (typeof oyunSekmesiAc === "function") { oyunSekmesiAc("gunluk"); }
-      const el = document.querySelector(hedef === "bulmaca" ? "#haftaBulmaca" : "#atlasAlan") || document.querySelector("#panel-gunluk");
-      if (el) { el.scrollIntoView({ block: "start", behavior: "smooth" }); }
-    }, 250);
-  };
-}
 
 /* ==================== okuma hedefi ve haftalık özet ==================== */
 
@@ -859,16 +808,6 @@ function ozelYolNesnesi(y) {
   return { id: "oz:" + y.id, ad: y.ad, adimlar: adimlar, dakika: Math.max(1, Math.round(sn / 60)), ozel: true };
 }
 
-if (typeof okumaYolu === "function") {
-  const eskiOY28 = okumaYolu;
-  window.okumaYolu = function (id) {
-    const m = /^oz:(.+)$/.exec(id || "");
-    if (!m) { return eskiOY28.apply(this, arguments); }
-    const y = ozelYollar().find(function (x) { return x.id === m[1]; });
-    return y ? ozelYolNesnesi(y) : null;
-  };
-}
-
 function yolKoduYap(y) {
   const j = JSON.stringify({ ad: String(y.ad || "").slice(0, 60), a: (y.a || []).slice(0, 40) });
   return btoa(unescape(encodeURIComponent(j))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -911,11 +850,6 @@ function ozelYolHtml() {
         '<button class="dugme dugme-sade y-kucuk" data-ozy-sil="' + kacir(y.id) + '" aria-label="' + kacir(y.ad) + ' yolunu sil">✕</button></span></li>';
     }).join("") + "</ul>" : "") +
     '<button type="button" class="dugme y-kucuk" data-ozy-yeni>+ Kendi yolunu kur</button></div>';
-}
-
-if (typeof yollarHtml === "function") {
-  const eskiYH28 = yollarHtml;
-  window.yollarHtml = function () { return eskiYH28.apply(this, arguments) + ozelYolHtml(); };
 }
 
 function ozyPanelIc() {

@@ -605,7 +605,6 @@ function ozelSonucSatiri() {
   return liste.length ? '<p class="oyun-not">Senin öğelerin bu evrende: ' + liste.map(kacir).join(" · ") + "</p>" : "";
 }
 
-
 function baloncukBaslat() {
   E = { kurallar: [], yabancilar: [], sonuc: null, melez: false };
   baloncukGrup = "hepsi";

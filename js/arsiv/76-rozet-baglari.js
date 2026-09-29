@@ -230,21 +230,6 @@ function rbIlerleme(anahtar) {
   return { l: l, okunan: l.filter(function (a) { return okunduMu(a); }) };
 }
 
-/* karakter rozeti: evren maddeleri (ve öbür ad bağları) da hakkındaki kutulara girer */
-if (typeof karakterKutulari === "function") {
-  const eskiKK = karakterKutulari;
-  window.karakterKutulari = function (k) {
-    const l = eskiKK.apply(this, arguments);
-    const var_ = {};
-    l.forEach(function (x) { var_[x.anahtar] = true; });
-    rbBaglar("kar:" + k.id).forEach(function (b) {
-      if (var_[b.anahtar] || /^kar:/.test(b.anahtar)) { return; }   /* başka karakterin kaydı onun rozetidir */
-      l.push({ anahtar: b.anahtar, ad: b.ad, git: b.git, kilitli: false });
-    });
-    return l;
-  };
-}
-
 /** Kutu rozetlerini verir (karakter kutuları hariç: onların karakter rozeti var). */
 function rbRozetleriDenetle() {
   if (typeof cuzdan === "undefined" || typeof kilitAcik !== "function") { return; }
@@ -264,15 +249,6 @@ function rbRozetleriDenetle() {
   if (typeof eckaKazan === "function") { eckaKazan(ecka, ozet); } else if (typeof cuzdanKaydet === "function") { cuzdanKaydet(); }
   if (typeof eckaBildir === "function") { eckaBildir(ozet + " (+" + ecka + " eçka)"); }
   rbSeritleriTazele();
-}
-
-if (typeof rozetleriDenetle === "function") {
-  const eskiRD = rozetleriDenetle;
-  window.rozetleriDenetle = function () {
-    const r = eskiRD.apply(this, arguments);
-    try { rbRozetleriDenetle(); } catch (_) { /* rozet hesabı hiçbir şeyi bozmasın */ }
-    return r;
-  };
 }
 
 /* ---------- kutunun altında: bağlı kutular ve rozet durumu ---------- */
@@ -320,16 +296,10 @@ function rbSeritleriTazele() {
   });
 }
 
-if (typeof okuTara === "function") {
-  const eskiOT = okuTara;
-  /* 3.0: bağ ağı ilk kez kurulurken ağır; tarayıcı boşalınca eklenir */
-  let rbBoslukSira = 0;
-  window.okuTara = function () {
-    const r = eskiOT.apply(this, arguments);
-    if (!rbBoslukSira) {
-      rbBoslukSira = (window.requestIdleCallback || setTimeout)(function () { rbBoslukSira = 0; try { rbSeritleriEkle(); } catch (_) { /* yok */ } }, { timeout: 1200 });
-    }
-    return r;
-  };
+/* 3.0: bağ ağı ilk kez kurulurken ağır; şeritler tarayıcı boşalınca eklenir */
+let rbBoslukSira = 0;
+function rbSeritleriZamanla() {
+  if (rbBoslukSira) { return; }
+  rbBoslukSira = (window.requestIdleCallback || setTimeout)(function () { rbBoslukSira = 0; try { rbSeritleriEkle(); } catch (_) { /* yok */ } }, { timeout: 1200 });
 }
 

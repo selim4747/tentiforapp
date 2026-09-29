@@ -242,39 +242,21 @@ async function kabukHatirlatmaKur() {
   try { await ln.schedule({ notifications: liste }); return ""; } catch (e) { return "Bildirim kurulamadı: " + ((e && e.message) || e); }
 }
 
-if (typeof gunlukKontrolKaydet === "function") {
-  const eskiGkk = gunlukKontrolKaydet;
-  window.gunlukKontrolKaydet = async function (izinIste) {
-    const ln = kabukEklenti("LocalNotifications");
-    if (!kabukMu() || !ln) { return eskiGkk.apply(this, arguments); }
-    try {
-      let d = await ln.checkPermissions();
-      if (d.display !== "granted") {
-        if (!izinIste) { return "Bildirim izni yok."; }
-        d = await ln.requestPermissions();
-        if (d.display !== "granted") { return "Bildirim izni verilmedi (Ayarlar → Uygulamalar → TentiforApp → Bildirimler)."; }
-      }
-    } catch (_) { /* sorulamadı; kurmayı dene */ }
-    /* ayar bu çağrıdan sonra yazılır (js/55): önce işaretleyip kur */
-    jsonYaz(HTR_ANAHTAR, true);
-    return kabukHatirlatmaKur();
-  };
-}
-if (typeof gunlukKontrolKaldirGerekirse === "function") {
-  const eskiKal = gunlukKontrolKaldirGerekirse;
-  window.gunlukKontrolKaldirGerekirse = function () { if (kabukMu()) { kabukHatirlatmaKur(); } return eskiKal.apply(this, arguments); };
-}
-if (typeof swAyarEsitle === "function") {
-  const eskiSw = swAyarEsitle;
-  window.swAyarEsitle = function (ek) {
-    if (kabukMu() && ek && ek.oynanan) {
-      try { localStorage.setItem(KABUK_BLD.oynanan, kabukBugun()); } catch (_) { /* yok */ }
-      kabukHatirlatmaKur();
+/** Android uygulamasında günlük hatırlatma: yerel bildirim izni ve kurulumu. */
+async function kabukGunlukKur(izinIste) {
+  const ln = kabukEklenti("LocalNotifications");
+  try {
+    let d = await ln.checkPermissions();
+    if (d.display !== "granted") {
+      if (!izinIste) { return "Bildirim izni yok."; }
+      d = await ln.requestPermissions();
+      if (d.display !== "granted") { return "Bildirim izni verilmedi (Ayarlar → Uygulamalar → TentiforApp → Bildirimler)."; }
     }
-    return eskiSw.apply(this, arguments);
-  };
+  } catch (_) { /* sorulamadı; kurmayı dene */ }
+  /* ayar bu çağrıdan sonra yazılır (js/55): önce işaretleyip kur */
+  jsonYaz(HTR_ANAHTAR, true);
+  return kabukHatirlatmaKur();
 }
-
 /* ==================== aşağı çekip yenileme ==================== */
 const KABUK_CEK = { y: null, mesafe: 0, esik: 90 };
 

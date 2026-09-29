@@ -193,6 +193,7 @@ function evtUygula(id, turId) {
       }
     }
   });
+  evtDerinUygula(id, turId);   /* kişiler, tarih, belgeler (87) */
 }
 
 document.addEventListener("click", function (ev) {

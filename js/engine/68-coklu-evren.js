@@ -15,7 +15,8 @@ function seviyeKoduSeviyesi() {
   if (typeof cuzdan === "undefined" || !Array.isArray(cuzdan.acilan)) { return 0; }
   let s = 0;
   cuzdan.acilan.forEach(function (x) { const m = /^svkod_(\d+)$/.exec(x); if (m) { s = Math.max(s, Number(m[1])); } });
-  return s;
+  /* tek kullanımlık kodlar: evren kodu 15, Evrengezer kodu 10 sayılır */
+  return Math.max(s, tekHakVar("evren") ? 15 : (tekHakVar("evrengezer") ? 10 : 0));
 }
 
 function seviyeKoduDene(kod, durum) {
@@ -150,23 +151,6 @@ function evrenSeciciSuz(q) {
     const var_ = g.querySelector(".es-oge:not([hidden])");
     g.hidden = !!s && !var_;
   });
-}
-
-if (typeof evrenSeciciAc === "function") {
-  const eskiAc = evrenSeciciAc;
-  window.evrenSeciciAc = function () {
-    const r = eskiAc.apply(this, arguments);
-    evrenSeciciZenginlestir();
-    return r;
-  };
-}
-if (typeof evrenGit === "function") {
-  const eskiGit = evrenGit;
-  window.evrenGit = function (git) {
-    const b = document.querySelector('#evrenSecici [data-evren-git="' + (window.CSS && CSS.escape ? CSS.escape(git) : git) + '"] .es-ad, .evren-serit [data-evren-git="' + (window.CSS && CSS.escape ? CSS.escape(git) : git) + '"] .es-ad');
-    if (b && git.indexOf("harita:") !== 0) { sonEvrenEkle(b.textContent.trim(), git); }
-    return eskiGit.apply(this, arguments);
-  };
 }
 
 /* ana sayfa: evren şeridi */

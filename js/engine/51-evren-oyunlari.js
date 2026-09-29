@@ -16,10 +16,11 @@ const EVO_OYUNLAR = [
   { id: "sinav", ad: "Evren sınavı", ozet: "Kişiler, yerler, sözlük ve tarihten 10 soru." },
   { id: "harita", ad: "Harita bulmacası", ozet: "Adı verilen yeri etiketsiz haritada bul." },
   { id: "dogru", ad: "Doğru mu?", ozet: "8 iddia: evrenin kişileri, yerleri, sözlüğü. Doğru mu, yanlış mı?" },
-  { id: "zaman", ad: "Zaman sırası", ozet: "Tarihten 4 olayı sıraya koy; üç turun ikisini bil." }
+  { id: "zaman", ad: "Zaman sırası", ozet: "Tarihten 4 olayı sıraya koy; üç turun ikisini bil." },
+  { id: "yazicoz", ad: "Yazıyı çöz", ozet: "Evrenin kendi yazısıyla yazılmış adı bul. İşaretler Yazı sekmesinde." }
 ];
-const EVO_EN_AZ = { kelime: 5, sinav: 4, harita: 4, dogru: 4, zaman: 4 };
-const EVO_SORU_OYUNU = { sinav: true, dogru: true };
+const EVO_EN_AZ = { kelime: 5, sinav: 4, harita: 4, dogru: 4, zaman: 4, yazicoz: 4 };
+const EVO_SORU_OYUNU = { sinav: true, dogru: true, yazicoz: true };
 const EVO_ODUL_EG = 1;            /* varsayılan ödül: 1 EG değerinde evren parası */
 const EVO_ODUL_TAVAN_EG = 3;      /* kurucu en fazla 3 EG değerinde ödül koyabilir */
 const EVO_GUNLUK = 10;            /* günde en fazla bu kadar oyun ödülü (bütün evrenler) */
@@ -313,7 +314,7 @@ function evoSoruHavuzu(e) {
 /** Hangi oyun oynanabilir: açık mı, yeterli içerik var mı? */
 function evoDurumlari(e) {
   return EVO_OYUNLAR.map(function (g) {
-    const sayi = g.id === "kelime" ? evoKelimeler(e).length : (EVO_SORU_OYUNU[g.id] ? evoSoruHavuzu(e).length
+    const sayi = g.id === "kelime" ? evoKelimeler(e).length : g.id === "yazicoz" ? yaziCozKelimeleri(e).length : (EVO_SORU_OYUNU[g.id] ? evoSoruHavuzu(e).length
       : (g.id === "zaman" ? evoZamanOlaylari(e).length : evoHaritaYerleri(e).length));
     return { id: g.id, ad: evoAd(e, g.id), ozet: g.ozet, acik: evoAyar(e, g.id).acik !== false, sayi: sayi, yeter: sayi >= EVO_EN_AZ[g.id] };
   });
@@ -332,6 +333,7 @@ function evoOdulMiktari(e, p) {
 /** Ödül verilmeyen durumun nedeni; verilebiliyorsa "". */
 function evoOdulEngeli() {
   if (!EVS) { return "Evren açık değil."; }
+  if (onizlemeMi()) { return "Önizlemede ödül yok; ziyaretçiler oynayınca kazanır."; }
   if (EVS.kaynak === "benim" || (EVS.kaynak === "fan" && evrenKendisininMi(EVS.id))) { return "Kendi evreninde oyunlar ödül vermez; deneme için oynayabilirsin."; }
   if (EVS.kaynak === "acilan") { return "Dosyadan açılan evrenlerde ödül yok; evren sitede yayımlanınca verir."; }
   return "";
@@ -618,7 +620,7 @@ function evrDurum() {
   return EVR;
 }
 
-function evrenRomanBolumu(v) {
+function evrenRomanGovde(v) {
   const e = v.eser;
   const r = e.roman || { baslik: "", ozet: "", bolumler: [] };
   const d = evrDurum();

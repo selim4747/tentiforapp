@@ -371,7 +371,6 @@ document.addEventListener("click", function (ev) {
   }
 });
 
-
 /* ==================== gezi çizelgesi: ortak bileşen ==================== */
 /* Bir "bağlam" çizelgenin nerede olduğunu anlatır (evren sayfası ya da kanon haritanın gezi penceresi):
    { kisiler: [{i, ad, yol}], secili, duzenle, yerler: [{id, ad, g}], gruplar: [{g, ad}], yerBul(adim), gAd(g),

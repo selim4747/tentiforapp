@@ -41,6 +41,7 @@ function tekHaklariUygula() {
     if (typeof seviyeKapilariUygula === "function") { seviyeKapilariUygula(); }
     if (typeof yoneticiCiz === "function") { yoneticiCiz(); }
     if (typeof arsiviTazele === "function") { arsiviTazele(); }
+    anaEvrenlerCiz();   /* ana sayfadaki "Evrenini kur" kilidi */
   } catch (_) { /* sayfa henüz hazır değil */ }
 }
 
@@ -65,30 +66,20 @@ async function tekHaklariYukle() {
 
 /* ---------- haklar siteye ---------- */
 
-if (typeof seviyeKoduSeviyesi === "function") {
-  const eskiSvk = seviyeKoduSeviyesi;
-  window.seviyeKoduSeviyesi = function () {
-    return Math.max(eskiSvk.apply(this, arguments), tekHakVar("evren") ? 15 : (tekHakVar("evrengezer") ? 10 : 0));
-  };
-}
-
-if (typeof kanonErisim === "function") {
-  const eskiErisim = kanonErisim;
-  let onb = null;
-  window.kanonErisim = function () {
-    const e = eskiErisim.apply(this, arguments);
-    const kisiler = TEK.haklar.filter(function (h) { return h.tur === "kisi"; });
-    if (!kisiler.length || e.hepsi) { return e; }
-    if (onb && onb.taban === e && onb.surum === TEK.surum) { return onb.e; }
-    const k = { hepsi: e.hepsi, tumEvren: e.tumEvren, bolumler: new Set(e.bolumler), evrenler: new Set(e.evrenler) };
-    kisiler.forEach(function (h) {
-      const er = (h.veri && h.veri.erisim) || {};
-      (er.bolumler || []).forEach(function (b) { k.bolumler.add(b); });
-      (er.evrenler || []).forEach(function (x) { k.evrenler.add(x); });
-    });
-    onb = { taban: e, surum: TEK.surum, e: k };
-    return k;
-  };
+/* tek kullanımlık "kişi" kodlarının açtığı bölüm ve evrenler (önbellekli) */
+let tekErisimOnb = null;
+function tekKisiErisimiEkle(e) {
+  const kisiler = TEK.haklar.filter(function (h) { return h.tur === "kisi"; });
+  if (!kisiler.length || e.hepsi) { return e; }
+  if (tekErisimOnb && tekErisimOnb.taban === e && tekErisimOnb.surum === TEK.surum) { return tekErisimOnb.e; }
+  const k = { hepsi: e.hepsi, tumEvren: e.tumEvren, bolumler: new Set(e.bolumler), evrenler: new Set(e.evrenler) };
+  kisiler.forEach(function (h) {
+    const er = (h.veri && h.veri.erisim) || {};
+    (er.bolumler || []).forEach(function (b) { k.bolumler.add(b); });
+    (er.evrenler || []).forEach(function (x) { k.evrenler.add(x); });
+  });
+  tekErisimOnb = { taban: e, surum: TEK.surum, e: k };
+  return k;
 }
 
 /* ---------- kod girişi ---------- */
@@ -199,6 +190,7 @@ function yoneticiTekKodlar() {
       '<label for="tekAdet">Kaç kod (her biri ayrı kişi için)</label><input class="kod-giris arac-giris" id="tekAdet" type="number" min="1" max="20" value="' + t.adet + '">' +
       '<label for="tekSure">Geçerlilik (bağlandıktan sonra kaç gün; boşsa süresiz)</label><input class="kod-giris arac-giris" id="tekSure" type="number" min="1" max="3650" value="' + kacir(t.sure) + '" placeholder="süresiz">' +
       kisiAlanlari +
+      (t.tur === "yonetici" ? tekYetkiKutusu() : "") +   /* sınırlı yöneticinin sekmeleri (75) */
       '<div class="y-kisi-dugmeler"><button class="dugme" data-tek-uret>Kodları üret</button></div>' +
       (t.durum ? '<p class="pencere-durum">' + kacir(t.durum) + "</p>" : "") +
       (t.yeni ? '<div class="y-kod-kutu"><p class="oyun-not"><b>Kodlar yalnızca şimdi görünür; kopyala ve sakla.</b></p>' +
@@ -225,6 +217,7 @@ function tekPanelOku() {
 
 /** Kodları üretir, sunucuya yalnızca özetlerini yollar; düz kodları döndürür. */
 async function tekKodlariOlustur(tur, ad, adet, secim) {
+  if (tur === "yonetici") { return tekYoneticiKodlari(ad, adet, secim); }   /* yetkileriyle (75) */
   const kodlar = [], satirlar = [];
   for (let i = 0; i < adet; i++) {
     const kod = kod10();

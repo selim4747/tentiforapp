@@ -14,16 +14,4 @@ function tf4EvrenSinirsiz() {
     (typeof seviyeKoduSeviyesi === "function" && typeof SEVIYE_URETIM !== "undefined" && seviyeKoduSeviyesi() >= SEVIYE_URETIM.evren.seviye);
 }
 
-/* 85'teki tek seferlik hak mantığı "taban"a bakar: taban = sınırsız ya da ilk taslak */
-window.evrenTabanAcik = function () { return tf4EvrenSinirsiz() || tf4EvrenSayisi() < 1; };
-
-if (typeof seviyeUyari === "function") {
-  const eskiSU40 = seviyeUyari;
-  window.seviyeUyari = function (tur) {
-    if (tur === "evren") { proPencereAc("Ücretsiz planda 1 evren taslağı var; " + tf4EvrenSayisi() + " evrenin hazır. Daha fazlası için Yaratıcı Pro."); return; }
-    return eskiSU40.apply(this, arguments);
-  };
-}
-if (typeof SEVIYE_URETIM !== "undefined" && SEVIYE_URETIM.evren) { SEVIYE_URETIM.evren.ad = "Fan evreni (1 taslak ücretsiz, Pro’da sınırsız)"; }
-
 document.addEventListener("tf4-uyelik", function () { try { anaEvrenlerCiz(); } catch (_) { /* yok */ } });

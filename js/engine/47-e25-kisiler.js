@@ -31,6 +31,11 @@ function kisiTemizle(ham) {
     if (a && s) { e.imza = { a: a, s: s }; }
   }
   if (!e.ad.trim()) { return null; }
+  /* doğum: çıktığı kapı ve ilk sözü */
+  if (ham.dogum && typeof ham.dogum === "object") {
+    const d = { kapi: fanMetin(ham.dogum.kapi, 80), soz: fanMetin(ham.dogum.soz, 200), t: fanMetin(ham.dogum.t, 30) };
+    if (d.kapi.trim() || d.soz.trim()) { e.dogum = d; }
+  }
   return e;
 }
 
@@ -154,17 +159,20 @@ function konukGovde(e, dosya) {
   }).join("");
 }
 
+/** E25'in Evrengezerleri: kendi, sitedeki, dosyadan açılan ve eserlere konuk olarak gelenler (nerede yaratılmış olursa olsun). */
 function e25Kisileri() {
   const gorulen = {};
   const l = [];
-  const ekle = function (e, kaynak) {
-    if (!e || e.tur !== "kisi" || (e.evren || "e25") !== "e25" || gorulen[e.id]) { return; }
+  const ekle = function (e, kaynak, konuk) {
+    if (!e || e.tur !== "kisi" || !e.id || gorulen[e.id]) { return; }
     gorulen[e.id] = true;
-    l.push({ e: e, kaynak: kaynak });
+    l.push({ e: e, kaynak: kaynak, konuk: !!konuk });
   };
+  /* nerede yaratılmış olursa olsun (e.evren) her Evrengezer E25'te doğar ve burada görünür */
   fanEserlerim().forEach(function (e) { ekle(e, "benim"); });
   fanSiteListesi("kisi").forEach(function (e) { ekle(e, "site"); });
   fanAcilanlar().forEach(function (e) { ekle(e, "acilan"); });
+  evrKonukHavuzu().forEach(function (x) { ekle(kisiTemizle(x.k), "site", true); });
   return l;
 }
 
@@ -173,13 +181,22 @@ let kisiGoturulen = null;    /* götürme seçicisi açık olan kişi: "kaynak:i
 
 function kisiBul(kaynak, id) {
   const l = kaynak === "benim" ? fanEserlerim() : (kaynak === "site" ? fanSiteListesi("kisi") : fanAcilanlar());
-  return l.find(function (x) { return x.tur === "kisi" && x.id === id; }) || null;
+  const e = l.find(function (x) { return x.tur === "kisi" && x.id === id; });
+  if (e) { return e; }
+  /* bir esere konuk olarak gelmiş Evrengezer */
+  const x = evrKonukHavuzu().find(function (y) { return y.k && y.k.id === id; });
+  return x ? kisiTemizle(x.k) : null;
 }
 
 function kisiFormHtml(e) {
   const hal = (e && e.kisilik || []).map(function (h) { return (h.ad || "") + ": " + String(h.aciklama || "").replace(/\n+/g, " "); }).join("\n");
   const yazar = (e && e.yazar) || (typeof hesapProfil !== "undefined" && hesapProfil && (hesapProfil.gorunen_ad || hesapProfil.kullanici_adi)) || "";
-  return '<div class="kisi-form" data-kisi-form="' + kacir(e ? e.id : "") + '">' +
+  /* yeni Evrengezer: doğum (hangi kapıdan çıktı, ilk sözü) */
+  const dogum = e ? "" : '<div class="e25-dogum-form"><b>Doğum</b><span class="oyun-not">Her Evrengezer E25’te doğar: bir kapıdan çıkar ve ilk sözünü söyler.</span>' +
+    '<label for="kisiKapi">Hangi kapıdan çıktı?</label><select class="kod-giris arac-giris" id="kisiKapi"><option value="">E25’in sisinden</option>' +
+      e25Kapilar().filter(function (k) { return !k.kilitli; }).map(function (k) { return '<option value="' + kacir(k.ad) + '">' + kacir(k.ad) + "</option>"; }).join("") + "</select>" +
+    '<label for="kisiIlkSoz">İlk sözü</label><input class="kod-giris arac-giris" id="kisiIlkSoz" maxlength="200" placeholder="Burası neresi? Taşım neden sıcak?"></div>';
+  return '<div class="kisi-form" data-kisi-form="' + kacir(e ? e.id : "") + '">' + dogum +
     '<label for="kisiAd">Adı</label><input class="kod-giris arac-giris" id="kisiAd" maxlength="80" value="' + kacir(e ? e.ad : "") + '">' +
     '<label for="kisiUnvan">Unvanı</label><input class="kod-giris arac-giris" id="kisiUnvan" maxlength="80" value="' + kacir(e ? e.unvan : "") + '" placeholder="Taş taşıyıcısı, gezgin, kaçak…">' +
     '<label for="kisiOzet">Kim o?</label><textarea class="kod-giris arac-giris fan-uzun" id="kisiOzet" rows="4" maxlength="2000">' + kacir(e ? e.ozet : "") + "</textarea>" +
@@ -200,10 +217,22 @@ function kisiGoturHtml(e, anahtar) {
       '<option value="yeni-hikaye">Yeni bir hikâye yaz</option>' +
       hikayeler.map(function (h) { return '<option value="hikaye:' + kacir(h.id) + '">Hikâye: ' + kacir(fanAd(h)) + "</option>"; }).join("") +
       evrenler.map(function (v) { return '<option value="evren:' + kacir(v.id) + '">Evren: ' + kacir(fanAd(v)) + "</option>"; }).join("") +
+      kanonHikayeSecenekleri() +
     "</select>" +
-    '<p class="oyun-not">Kişi oraya konuk olarak girer. Onu istediğin hikâyede yazabilirsin; kişilik halleri yaratıcısına ait kalır.</p>' +
+    '<p class="oyun-not">Kanon evrenlerde herkes Evrengezer hikâyesi yazabilir; fan-made evrenlere Evrengezeri yalnızca sahibi ve yetkilileri getirir. Kişi oraya konuk olarak girer. Onu istediğin hikâyede yazabilirsin; kişilik halleri yaratıcısına ait kalır.</p>' +
     '<div class="oyun-sira"><button class="dugme" data-kisi-gotur-onay="' + kacir(anahtar) + '">Götür</button>' +
     '<button class="dugme dugme-sade" data-kisi-gotur-kapat>Vazgeç</button></div></div>';
+}
+
+/** "Nereye götürülsün?" listesinde kanon evrenlerde (ve test evreninde) yeni hikâye seçenekleri. */
+function kanonHikayeSecenekleri() {
+  const kanon = [];
+  (veri.haritalar || []).forEach(function (x) { if (x && x.ad && x.id !== "claude" && kanonEvrenErisimi(x.id)) { kanon.push(x.ad); } });
+  fanSiteListesi("evren").forEach(function (x) { if (x.kanon === true && x.ad) { kanon.push(x.ad); } });
+  const claude = (veri.haritalar || []).find(function (x) { return x && x.id === "claude"; });
+  return kanon.filter(function (x, i, a) { return a.indexOf(x) === i; }).map(function (a) {
+    return '<option value="yeni-hikaye@' + kacir(a) + '">Kanon evrende yeni hikâye: ' + kacir(a) + "</option>";
+  }).join("") + (claude ? '<option value="yeni-hikaye@' + kacir(claude.ad) + '">Test evreninde deneme hikâyesi: ' + kacir(claude.ad) + "</option>" : "");
 }
 
 function kisiKartHtml(x) {

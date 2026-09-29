@@ -220,7 +220,6 @@ document.addEventListener("click", function (e) {
   if (c) { caprazAc(c.dataset.capraz); }
 });
 
-
 /** aileCiz() ve SVG bağ çizgilerini tek adımda çalıştırır.
     İki ayrı sistemde (başlangıç ve geç çizim) aynı isimle kayıtlı olduğundan
     tek fonksiyon kullanmak, birinin diğerinin SVG'sini silmesini önler. */

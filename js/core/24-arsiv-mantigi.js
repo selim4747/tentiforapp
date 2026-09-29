@@ -453,8 +453,11 @@ function kodPenceresi() {
 }
 
 function perdeKapat() {
+  $("#perde").classList.remove("evr-perde-ust");
   $("#perde").hidden = true;
   $("#perde").innerHTML = "";
+  /* kod ya da seviye penceresi kapanınca ana sayfadaki kilit güncel olsun */
+  try { anaEvrenlerCiz(); } catch (_) { /* yok */ }
 }
 
 /** Kişiye özel kod: sarılmış katman kodlarını açar, her birini doğrular ve çözülenlere ekler. */
@@ -607,7 +610,6 @@ document.addEventListener("keydown", function (e) {
   }
 });
 
-
 /* ---------- zaman çizelgesi ---------- */
 
 function katmanOzeti(katmanId) {
@@ -638,7 +640,6 @@ function cizZaman() {
 
   if (typeof zamanSvgCiz === "function") { zamanSvgCiz(); }
 }
-
 
 /* ---------- yapımlar ---------- */
 
@@ -732,7 +733,6 @@ function arsiviTazele() {
   if (typeof kanonKilitUygula === "function") { kanonKilitUygula(); }
   if (typeof gezinmeCiz === "function") { try { gezinmeCiz(); } catch (hata) { console.error("[TentiforApp] menü tazelenemedi:", hata); } }
 }
-
 
 /* ---------- başlat ---------- */
 acilanlariYukle();
@@ -840,7 +840,6 @@ veriKaynak
       '<div class="bos">veri.json yüklenemedi.<br>' +
       "Sayfayı bir sunucu üzerinden aç (GitHub Pages veya yerel sunucu).</div>";
   });
-
 
 /* çevrimdışı destek — yalnızca sunucudan açıldığında çalışır */
 if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {

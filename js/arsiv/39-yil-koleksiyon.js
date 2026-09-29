@@ -213,6 +213,7 @@ function kartParlak(k) { return !!k && (k.gunler || []).length >= ((veri.koleksi
 
 /** Kart kazanma/ilerletme. kaynak: okuma | test | nobet */
 function kartKazan(id, kaynak) {
+  if (kaynak === "okuma" && !OKU.okumaIzni) { return; }   /* okuma kartı yalnızca okumaBitti'den */
   const kar = (veri.karakterler || []).find(function (k) { return k.id === id; });
   if (!kar || kar.kart === false) { return; }
   const t = koleksiyonOku();
@@ -225,6 +226,7 @@ function kartKazan(id, kaynak) {
   jsonYaz(KOLEKSIYON_ANAHTAR, t);
 
   if (yeni) {
+    hesapHatirlat("kart");   /* hesabı yoksa: kazandığını kaybetme */
     eckaKazan(5, "Karakter kartı: " + kar.ad);
     yilGuncelle(function (y) { if (y.kart.indexOf(id) === -1) { y.kart.push(id); } });
     ilkHaftaIsaretle("kart");

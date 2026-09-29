@@ -64,20 +64,6 @@ function yasalSayfaCiz(tur) {
     '<p class="oyun-not">' + Object.keys(TF4_YASAL).map(function (k) { return '<a href="#/yasal/' + k + '">' + kacir(TF4_YASAL[k]) + "</a>"; }).join(" · ") + "</p></div>";
   p.hidden = false;
 }
-if (typeof hataSayfasiAc === "function") {
-  const eskiHSA42 = hataSayfasiAc;
-  window.hataSayfasiAc = function (istenen) {
-    /* yönlendirici yalnızca ilk parçayı ("yasal") verir; türü adresten oku */
-    const m = /^yasal/.test(String(istenen || "")) ? /^#\/yasal\/([a-z]+)/.exec(typeof rota === "function" ? rota() : location.hash) : null;
-    if (m && TF4_YASAL[m[1]]) {
-      if (typeof sayfaGoster === "function" && typeof aktifSayfa !== "undefined" && !aktifSayfa) { sayfaGoster("arsiv", false); }
-      setTimeout(function () { yasalSayfaCiz(m[1]); }, 0);
-      return;
-    }
-    return eskiHSA42.apply(this, arguments);
-  };
-}
-
 /* ödemeden dönüş: #/sen?odeme=tamam */
 function odemeDonusBak() {
   if (!/odeme=tamam/.test(location.href)) { return; }

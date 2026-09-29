@@ -856,6 +856,14 @@ let hesapEsitSuruyor = false;
 
 /** Görüntüyü buluta yazar. Profil özeti yalnızca değiştiyse yazılır. */
 async function esitBulutaYaz(g) {
+  /* bu cihaz "cihazlarım" listesine (en çok 12 cihaz: en eskiler düşer) */
+  try {
+    const o = JSON.parse(g[CIHAZLAR] || "{}") || {};
+    o[buCihazId()] = { ad: buCihazAdi(), son: new Date().toISOString() };
+    Object.keys(o).sort(function (a, b) { return String(o[b].son).localeCompare(String(o[a].son)); }).slice(12).forEach(function (x) { delete o[x]; });
+    g[CIHAZLAR] = JSON.stringify(o);
+    localStorage.setItem(CIHAZLAR, g[CIHAZLAR]);
+  } catch (_) { /* yoksay */ }
   const simdi = new Date().toISOString();
   const { error } = await hesapIstemci.from("ilerlemeler").upsert({ id: hesapKullanici.id, veri: await esitSikistir(g), guncelleme: simdi });
   if (error) { throw error; }
@@ -1207,6 +1215,7 @@ async function hesapProfilKaydet(form) {
   hesapDugmesiCiz();
   hesapCiz();
   hesapBildir("Profil kaydedildi");
+  kadiUyarisiCiz();
 }
 
 /* ==================== herkese açık profil: #/u/kullaniciadi ==================== */

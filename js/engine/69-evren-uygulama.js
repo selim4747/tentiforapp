@@ -84,6 +84,10 @@ function evuCalistir(kap, e, u) {
   kap.appendChild(f);
   evuCerceve = { pencere: f.contentWindow, cerceve: f, evren: e, uygulama: u };
   if (typeof evuSkorTablosu === "function") { evuSkorTablosu(kap, u); }
+  /* okur evreninde: uygulamayı bildir (içerik bildirimi) */
+  if (EVS && EVS.kaynak === "fan" && !onizlemeMi() && kap.parentNode && !kap.parentNode.querySelector(".ib-uygulama")) {
+    kap.insertAdjacentHTML("afterend", '<p class="oyun-not ib-uygulama">' + ibDugme("uygulama", "fan:" + EVS.id + "/" + u.id, u.ad) + "</p>");
+  }
 }
 
 window.addEventListener("message", function (ev) {

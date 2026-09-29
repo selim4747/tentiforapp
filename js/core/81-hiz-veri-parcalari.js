@@ -56,24 +56,6 @@ function veriParcalariUygula(o) {
   return o;
 }
 
-if (typeof yoneticiDisaAktar === "function") {
-  const eskiDA30 = yoneticiDisaAktar;
-  window.yoneticiDisaAktar = function () {
-    const bu = this, arg = arguments;
-    return veriParcalariTam().then(function () { return eskiDA30.apply(bu, arg); }, function (e) {
-      if (typeof yoneticiDurum === "function") { yoneticiDurum("Dışa aktarılamadı: " + e.message, false); }
-    });
-  };
-}
-if (typeof yDegisiklikEkle === "function") {
-  const eskiDE30 = yDegisiklikEkle;
-  window.yDegisiklikEkle = function () {
-    const bu = this, arg = arguments;
-    if (veriParcalariHazir()) { return eskiDE30.apply(bu, arg); }
-    return veriParcalariTam().then(function () { return eskiDE30.apply(bu, arg); });
-  };
-}
-
 /* ==================== 2. Değişiklikler sayfası ==================== */
 
 const DG_SON = "tf30_degisiklik_son";   /* bu cihazda en son görülen sürüm */

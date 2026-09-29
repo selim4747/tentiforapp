@@ -24,10 +24,8 @@ async function evren1Harca() {
 }
 
 /** Seviye ya da kalıcı seviye kodu evren kurmaya yetiyor mu (tek seferlik hak sayılmadan). */
-function evrenTabanAcik() {
-  const g = (typeof SEVIYE_URETIM !== "undefined" && SEVIYE_URETIM.evren) ? SEVIYE_URETIM.evren.seviye : 15;
-  return typeof seviyeYeter === "function" && (seviyeYeter(g) || (typeof seviyeKoduSeviyesi === "function" && seviyeKoduSeviyesi() >= g));
-}
+/** Tek seferlik hak harcamadan evren kurulabilir mi: sınırsız (Pro, yönetici, seviye kodu) ya da ücretsiz ilk taslak (studio/editor). */
+function evrenTabanAcik() { return tf4EvrenSinirsiz() || tf4EvrenSayisi() < 1; }
 
 function evren1Kullan() {
   TEK.haklar = TEK.haklar.filter(function (h, i, l) { return !(h.tur === "evren1" && l.findIndex(function (x) { return x.tur === "evren1"; }) === i); });
@@ -107,38 +105,9 @@ function anaEvrenlerCiz() {
 
 document.addEventListener("tf-veri-hazir", function () { setTimeout(anaEvrenlerCiz, 0); });
 window.addEventListener("hashchange", function () { if (typeof aktifSayfa !== "undefined" && aktifSayfa === "arsiv") { anaEvrenlerCiz(); } });
-if (typeof tekHaklariUygula === "function") {
-  const eskiTHU31 = tekHaklariUygula;
-  window.tekHaklariUygula = function () { const r = eskiTHU31.apply(this, arguments); try { anaEvrenlerCiz(); } catch (_) { /* yok */ } return r; };
-}
-
 /* ==================== 3. E25: doğum, pasaport, Kapılar Salonu, eşleştirme, sıralamalar ==================== */
 
 let evrDogumSon = null;   /* az önce doğan Evrengezer: sahne gösterilir */
-
-/* doğum bilgisi (kapı, ilk söz) dosyada kalsın */
-if (typeof kisiTemizle === "function") {
-  const eskiKT31 = kisiTemizle;
-  window.kisiTemizle = function (ham) {
-    const e = eskiKT31.apply(this, arguments);
-    if (e && ham && ham.dogum && typeof ham.dogum === "object") {
-      const d = { kapi: fanMetin(ham.dogum.kapi, 80), soz: fanMetin(ham.dogum.soz, 200), t: fanMetin(ham.dogum.t, 30) };
-      if (d.kapi.trim() || d.soz.trim()) { e.dogum = d; }
-    }
-    return e;
-  };
-}
-
-/* 3.1.1: konuk havuzu bir çizimde onlarca kez isteniyor (her kart, salon, sıralama): aynı iş parçasında bir kez hesaplanır,
-   taslak yazılınca hemen tazelenir */
-let evrHavuzBellek = null;
-if (typeof evrKonukHavuzu === "function") {
-  const eskiEKH311 = evrKonukHavuzu;
-  window.evrKonukHavuzu = function () {
-    if (!evrHavuzBellek) { evrHavuzBellek = eskiEKH311.apply(this, arguments); setTimeout(function () { evrHavuzBellek = null; }, 0); }
-    return evrHavuzBellek;
-  };
-}
 
 /** E25'in kapıları: bütün evrenler (kanon, okurların, senin). Yeni kurulan her evren bir kapı. */
 function e25Kapilar() {
@@ -233,21 +202,6 @@ function e25DogumSahnesiHtml() {
     '<button type="button" class="pencere-kapat" data-e25-dogum-kapat aria-label="Kapat">✕</button></div></section>';
 }
 
-/* yeni Evrengezer formunda: doğum (kapı ve ilk söz) */
-if (typeof kisiFormHtml === "function") {
-  const eskiKF31 = kisiFormHtml;
-  window.kisiFormHtml = function (e) {
-    const h = eskiKF31.apply(this, arguments);
-    if (e) { return h; }
-    const kapilar = e25Kapilar().filter(function (k) { return !k.kilitli; });
-    return h.replace('<label for="kisiAd">Adı</label>', '<div class="e25-dogum-form"><b>Doğum</b><span class="oyun-not">Her Evrengezer E25’te doğar: bir kapıdan çıkar ve ilk sözünü söyler.</span>' +
-      '<label for="kisiKapi">Hangi kapıdan çıktı?</label><select class="kod-giris arac-giris" id="kisiKapi"><option value="">E25’in sisinden</option>' +
-        kapilar.map(function (k) { return '<option value="' + kacir(k.ad) + '">' + kacir(k.ad) + "</option>"; }).join("") + "</select>" +
-      '<label for="kisiIlkSoz">İlk sözü</label><input class="kod-giris arac-giris" id="kisiIlkSoz" maxlength="200" placeholder="Burası neresi? Taşım neden sıcak?"></div>' +
-      '<label for="kisiAd">Adı</label>');
-  };
-}
-
 document.addEventListener("click", function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-e25-bulus], [data-e25-dogum-kapat]");
   if (!b) { return; }
@@ -306,17 +260,6 @@ function evrKisiSayfasiHtml(e, ad) {
     "</div>";
 }
 
-/* kişi kartlarında ad: dokununca kişi sayfası */
-if (typeof evrKisilerCiz === "function") {
-  const eskiEKC31 = evrKisilerCiz;
-  window.evrKisilerCiz = function (liste, e, dosya) {
-    const h = eskiEKC31.apply(this, arguments);
-    if (!h || dosya) { return h; }
-    return h.replace(/<article class="evr-kisi"><h3>([^<]*)<\/h3>/g, function (t, ad) { return '<article class="evr-kisi"><h3><button type="button" class="evr-kisi-ad" data-evr-kisi="' + ad + '">' + ad + "</button></h3>"; });
-  };
-  (function () { const g = typeof FAN_EVREN_GRUPLARI !== "undefined" && FAN_EVREN_GRUPLARI.find(function (x) { return x.k === "kisiler"; }); if (g) { g.ciz = function () { return window.evrKisilerCiz.apply(this, arguments); }; } })();
-}
-
 document.addEventListener("click", function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-evr-kisi]");
   if (!b || typeof EVS === "undefined" || !EVS) { return; }
@@ -368,17 +311,6 @@ function evrFark(eski, yeni) {
     if (p !== q) { l.push({ tur: q > p ? "+" : "-", metin: x[0] + ": " + p + " → " + q }); }
   });
   return l;
-}
-
-if (typeof gcmListeCiz === "function") {
-  const eskiGLC31 = gcmListeCiz;
-  window.gcmListeCiz = async function (id) {
-    await eskiGLC31.apply(this, arguments);
-    document.querySelectorAll("#gcmListe [data-gcm-don]").forEach(function (b) {
-      if (b.parentNode.querySelector("[data-gcm-fark]")) { return; }
-      b.insertAdjacentHTML("beforebegin", '<button type="button" class="dugme dugme-sade y-kucuk" data-gcm-fark="' + b.getAttribute("data-gcm-don") + '">Şimdikiyle karşılaştır</button>');
-    });
-  };
 }
 
 document.addEventListener("click", async function (ev) {
@@ -450,7 +382,8 @@ function kanonAdaylari() {
   (typeof fanAcilanlar === "function" ? fanAcilanlar() : []).forEach(function (e) {
     if (e.tur === "evren" && e.durum === "kanonAday") { l.push({ e: e, ozet: e, kaynak: "acilan" }); }
   });
-  return l;
+  /* önizlenen ya da paylaşım adresinden açılan evrenin cihazdaki kopyası aday sayılmaz */
+  return l.filter(function (x) { return !(x.kaynak === "acilan" && /^(yayin|onizle|acilan)-/.test(x.e.id || "")); });
 }
 
 function yListeKanonAday() {
@@ -479,25 +412,3 @@ document.addEventListener("click", function (ev) {
   if (typeof yoneticiCiz === "function") { yoneticiCiz(); }
 });
 
-/* kişi sayfası evren sayfasının üstünde açılır; kapanınca perde eski katmanına döner */
-if (typeof perdeKapat === "function") {
-  const eskiPK31 = perdeKapat;
-  window.perdeKapat = function () {
-    const p = document.querySelector("#perde"); if (p) { p.classList.remove("evr-perde-ust"); }
-    const r = eskiPK31.apply(this, arguments);
-    /* 3.1.1: kod penceresi ya da seviye penceresi kapanınca ana sayfadaki kilit güncel olsun */
-    try { anaEvrenlerCiz(); } catch (_) { /* yok */ }
-    return r;
-  };
-}
-/* 3.1.1: girişten sonra sunucudaki XP gelince kilit açılmış olabilir */
-if (typeof svkSunucuYukle === "function") {
-  const eskiSSY311 = svkSunucuYukle;
-  window.svkSunucuYukle = async function () {
-    const once = SVK.sunucu;
-    const r = await eskiSSY311.apply(this, arguments);
-    /* yalnızca XP değiştiyse (seviyeDurumu bunu her çağrıda tetikler: döngü olmasın) */
-    if (SVK.sunucu !== once) { try { anaEvrenlerCiz(); } catch (_) { /* yok */ } }
-    return r;
-  };
-}

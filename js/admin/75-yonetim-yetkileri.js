@@ -40,31 +40,16 @@ function y25YetkiSekmeleri() {
   return Object.keys(s);
 }
 
-if (typeof yoneticiSekmeleri === "function") {
-  const eskiYS = yoneticiSekmeleri;
-  window.yoneticiSekmeleri = function (grup) {
-    const l = eskiYS.apply(this, arguments);
-    if (typeof yoneticiAcik === "function" && yoneticiAcik()) { return l; }
-    const izin = y25YetkiSekmeleri();
-    return izin ? l.filter(function (s) { return izin.indexOf(s) !== -1; }) : l;
-  };
-}
-
 /* panelde üretirken: yönetici koduna verilecek yetkiler */
 const TEK25 = { yetkiler: null };
-if (typeof yoneticiTekKodlar === "function") {
-  const eskiTK = yoneticiTekKodlar;
-  window.yoneticiTekKodlar = function () {
-    const h = eskiTK.apply(this, arguments);
-    if (typeof TEK_PANEL === "undefined" || TEK_PANEL.tur !== "yonetici") { return h; }
-    const secili = TEK25.yetkiler || SINIRLI_SEKMELER.slice();
-    const kutu = '<label>Yetkiler (sınırlı yönetici yalnızca bu sekmeleri görür; sunucu da denetler)</label><div class="y-alan-izgara">' +
-      SINIRLI_SEKMELER.map(function (s) {
-        return '<label class="y-alan-secim"><input type="checkbox" data-tek-yetki="' + s + '"' + (secili.indexOf(s) !== -1 ? " checked" : "") + "> " + kacir(Y25_SEKME_ADLARI[s] || s) + "</label>";
-      }).join("") + '</div><div class="oyun-sira"><button class="dugme dugme-sade y-kucuk" data-tek-yetki-hepsi="1">Hepsini seç</button>' +
-      '<button class="dugme dugme-sade y-kucuk" data-tek-yetki-hepsi="0">Hiçbiri</button></div>';
-    return h.replace('<div class="y-kisi-dugmeler"><button class="dugme" data-tek-uret>', kutu + '<div class="y-kisi-dugmeler"><button class="dugme" data-tek-uret>');
-  };
+/** Tek kodla verilecek sınırlı yöneticiliğin sekme yetkileri. */
+function tekYetkiKutusu() {
+  const secili = TEK25.yetkiler || SINIRLI_SEKMELER.slice();
+  return '<label>Yetkiler (sınırlı yönetici yalnızca bu sekmeleri görür; sunucu da denetler)</label><div class="y-alan-izgara">' +
+    SINIRLI_SEKMELER.map(function (s) {
+      return '<label class="y-alan-secim"><input type="checkbox" data-tek-yetki="' + s + '"' + (secili.indexOf(s) !== -1 ? " checked" : "") + "> " + kacir(Y25_SEKME_ADLARI[s] || s) + "</label>";
+    }).join("") + '</div><div class="oyun-sira"><button class="dugme dugme-sade y-kucuk" data-tek-yetki-hepsi="1">Hepsini seç</button>' +
+    '<button class="dugme dugme-sade y-kucuk" data-tek-yetki-hepsi="0">Hiçbiri</button></div>';
 }
 
 function tek25YetkiOku() {
@@ -80,22 +65,20 @@ document.addEventListener("click", function (e) {
 }, false);
 document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("[data-tek-uret]")) { tek25YetkiOku(); } }, true);
 
-if (typeof tekKodlariOlustur === "function") {
-  const eskiOlustur = tekKodlariOlustur;
-  window.tekKodlariOlustur = async function (tur, ad, adet, secim) {
-    if (tur !== "yonetici") { return eskiOlustur.apply(this, arguments); }
-    const yetkiler = (TEK25.yetkiler || SINIRLI_SEKMELER.slice()).filter(function (s) { return SINIRLI_SEKMELER.indexOf(s) !== -1; });
-    if (!yetkiler.length) { throw new Error("En az bir yetki seç."); }
-    const kodlar = [], satirlar = [];
-    for (let i = 0; i < adet; i++) {
-      const kod = kod10();
-      kodlar.push(kod);
-      satirlar.push({ ozet: tekOzet(kod), tur: tur, ad: ad, veri: { yetkiler: yetkiler }, sure_gun: Number(secim.sure) || null });
-    }
-    const r = await hesapIstemci.rpc("tek_kod_olustur", { p_kodlar: satirlar });
-    if (r.error) { throw r.error; }
-    return kodlar;
-  };
+/** Sınırlı yönetici kodları: seçilen sekme yetkileriyle. */
+async function tekYoneticiKodlari(ad, adet, secim) {
+  const tur = "yonetici";
+  const yetkiler = (TEK25.yetkiler || SINIRLI_SEKMELER.slice()).filter(function (s) { return SINIRLI_SEKMELER.indexOf(s) !== -1; });
+  if (!yetkiler.length) { throw new Error("En az bir yetki seç."); }
+  const kodlar = [], satirlar = [];
+  for (let i = 0; i < adet; i++) {
+    const kod = kod10();
+    kodlar.push(kod);
+    satirlar.push({ ozet: tekOzet(kod), tur: tur, ad: ad, veri: { yetkiler: yetkiler }, sure_gun: Number(secim.sure) || null });
+  }
+  const r = await hesapIstemci.rpc("tek_kod_olustur", { p_kodlar: satirlar });
+  if (r.error) { throw r.error; }
+  return kodlar;
 }
 
 /* ==================== 2. evren yönetici kodunun yetkileri ==================== */
@@ -107,61 +90,29 @@ function evy25Yetki(e) { return (e && e.yoneticiYetki) || { sekmeler: false, ipu
 /** Bu cihazda bu evrenin yönetici kodu girildi ve kod bu yetkiyi veriyor mu? */
 function evy25Var(e, yetki) { return !!(e && e.yoneticiOzet && evy25Acik(e.id) && evy25Yetki(e)[yetki]); }
 
-if (typeof evrenYoneticiKoduHtml === "function") {
-  const eskiEYH = evrenYoneticiKoduHtml;
-  window.evrenYoneticiKoduHtml = function (e, kodlar) {
-    const h = eskiEYH.apply(this, arguments);
-    const y = evy25Yetki(e);
-    const lorlar = e.lorlar || [];
-    const secili = function (id) { return !Array.isArray(y.lorlar) || y.lorlar.indexOf(id) !== -1; };
-    const kutu = '<div class="evy-yetki"><span class="oyun-etiket">Bu kodun yetkileri</span>' +
-      (lorlar.length ? '<p class="oyun-not">Açacağı kilitli lorelar:</p><div class="y-alan-izgara">' + lorlar.map(function (l) {
-        return '<label class="y-alan-secim"><input type="checkbox" data-evy-lore="' + kacir(l.id) + '"' + (secili(l.id) ? " checked" : "") + "> " + kacir(l.baslik || l.id) + "</label>";
-      }).join("") + "</div>" : '<p class="oyun-not">Evrende henüz kilitli lore yok; eklenince bu kod hepsini açar.</p>') +
-      '<label class="hf-onay"><input type="checkbox" id="evyYetkiSekme"' + (y.sekmeler ? " checked" : "") + "> Ziyaretçilerden gizlediğin sekmeleri görsün</label>" +
-      '<label class="hf-onay"><input type="checkbox" id="evyYetkiIpucu"' + (y.ipucu ? " checked" : "") + "> Lore ipuçlarını parasız alsın</label>" +
-      '<p class="oyun-not">Yetkiler, kodu kurunca ya da değiştirince uygulanır.</p></div>';
-    return h.replace('<p class="pencere-durum" id="evyDurum"', kutu + '<p class="pencere-durum" id="evyDurum"');
-  };
+/** Evren yönetici kodunun yetkileri: hangi lorelar, gizli sekmeler, bedava ipucu. */
+function evy25YetkiKutusu(e) {
+  const y = evy25Yetki(e);
+  const lorlar = e.lorlar || [];
+  const secili = function (id) { return !Array.isArray(y.lorlar) || y.lorlar.indexOf(id) !== -1; };
+  return '<div class="evy-yetki"><span class="oyun-etiket">Bu kodun yetkileri</span>' +
+    (lorlar.length ? '<p class="oyun-not">Açacağı kilitli lorelar:</p><div class="y-alan-izgara">' + lorlar.map(function (l) {
+      return '<label class="y-alan-secim"><input type="checkbox" data-evy-lore="' + kacir(l.id) + '"' + (secili(l.id) ? " checked" : "") + "> " + kacir(l.baslik || l.id) + "</label>";
+    }).join("") + "</div>" : '<p class="oyun-not">Evrende henüz kilitli lore yok; eklenince bu kod hepsini açar.</p>') +
+    '<label class="hf-onay"><input type="checkbox" id="evyYetkiSekme"' + (y.sekmeler ? " checked" : "") + "> Ziyaretçilerden gizlediğin sekmeleri görsün</label>" +
+    '<label class="hf-onay"><input type="checkbox" id="evyYetkiIpucu"' + (y.ipucu ? " checked" : "") + "> Lore ipuçlarını parasız alsın</label>" +
+    '<p class="oyun-not">Yetkiler, kodu kurunca ya da değiştirince uygulanır.</p></div>';
 }
 
-if (typeof evrenYoneticiKoduKur === "function") {
-  const eskiEYK = evrenYoneticiKoduKur;
-  window.evrenYoneticiKoduKur = function (e, kod) {
-    const kutular = document.querySelectorAll("[data-evy-lore]");
-    const lorlar = kutular.length ? Array.prototype.slice.call(kutular).filter(function (c) { return c.checked; }).map(function (c) { return c.getAttribute("data-evy-lore"); }) : null;
-    const yetki = { sekmeler: !!(document.querySelector("#evyYetkiSekme") || {}).checked, ipucu: !!(document.querySelector("#evyYetkiIpucu") || {}).checked };
-    if (lorlar && lorlar.length < (e.lorlar || []).length) { yetki.lorlar = lorlar; }
-    const s = eskiEYK.apply(this, arguments);
-    if (s && s.hata) { return s; }
-    let cikan = 0;
-    evrenBenimDegistir(e.id, function (x) {
-      x.yoneticiYetki = yetki;
-      if (yetki.lorlar) { (x.lorlar || []).forEach(function (l) { if (yetki.lorlar.indexOf(l.id) === -1 && l.sy) { delete l.sy; cikan++; } }); }
-    });
-    if (s) { s.sarilan = Math.max(0, (s.sarilan || 0) - cikan); }
-    return s;
-  };
+/** Evren yönetici kodu formunda seçilen yetkiler. */
+function evy25SeciliYetki(e) {
+  const kutular = document.querySelectorAll("[data-evy-lore]");
+  const lorlar = kutular.length ? Array.prototype.slice.call(kutular).filter(function (c) { return c.checked; }).map(function (c) { return c.getAttribute("data-evy-lore"); }) : null;
+  const yetki = { sekmeler: !!(document.querySelector("#evyYetkiSekme") || {}).checked, ipucu: !!(document.querySelector("#evyYetkiIpucu") || {}).checked };
+  if (lorlar && lorlar.length < (e.lorlar || []).length) { yetki.lorlar = lorlar; }
+  return yetki;
 }
 
-if (typeof evrenKodDene === "function") {
-  const eskiEKD = evrenKodDene;
-  window.evrenKodDene = async function (e) {
-    const s = await eskiEKD.apply(this, arguments);
-    if (s && s.tur === "evren" && e && e.id) { const d = jsonOku(EVY25, {}) || {}; d[e.id] = true; jsonYaz(EVY25, d); }
-    return s;
-  };
-}
-
-if (typeof evrenDuzeni === "function") {
-  const eskiDuz25 = evrenDuzeni;
-  window.evrenDuzeni = function () {
-    const d = eskiDuz25.apply(this, arguments);
-    const v = typeof evrenSayfaVerisi === "function" ? evrenSayfaVerisi() : null;
-    if (d && v && evy25Var(v.eser, "sekmeler")) { return d.ilk ? { ilk: d.ilk } : null; }
-    return d;
-  };
-}
 /* bedava ipucu */
 document.addEventListener("click", function (ev) {
   const b = ev.target.closest && ev.target.closest("[data-evl-ipucu]");
@@ -322,24 +273,6 @@ document.addEventListener("click", function (ev) {
   yoneticiCiz();
 });
 
-/* yeni sekmelerin gövdesi (22'deki zincir bilmediği sekmede listeye düşer) ve adları */
-if (typeof yoneticiListe === "function") {
-  const eskiListe = yoneticiListe;
-  window.yoneticiListe = function () {
-    if (yoneticiSekme === "icbildirim") { return yoneticiIcerikBildirimleri(); }
-    if (yoneticiSekme === "vitrin") { return yoneticiVitrin(); }
-    return eskiListe.apply(this, arguments);
-  };
-}
-if (typeof yoneticiForm === "function") {
-  const eskiForm = yoneticiForm;
-  window.yoneticiForm = function () {
-    if (yoneticiSekme === "icbildirim") { return yoneticiIcerikBildirimleri(); }
-    if (yoneticiSekme === "vitrin") { return yoneticiVitrin(); }
-    return eskiForm.apply(this, arguments);
-  };
-}
-
 /* ==================== 5. sürüm geçmişi (bu cihazda, IndexedDB) ==================== */
 
 const GCM = { db: null, son: {}, EN_COK: 20, ARALIK: 10 * 60 * 1000 };
@@ -429,6 +362,12 @@ async function gcmListeCiz(id) {
     return '<li><span><b>' + kacir(y25Zaman(x.zaman)) + "</b> · " + kacir(x.neden) + '<span class="oyun-not"> · ' + kacir(x.ad || "Adsız") + " · " + kacir(ozet) + "</span></span>" +
       '<button class="dugme dugme-sade y-kucuk" data-gcm-don="' + x.zaman + '">Bu hâle dön</button></li>';
   }).join("") + "</ol>" : '<p class="oyun-not">Henüz kayıtlı hâl yok. Evrenini değiştirdikçe burada birikir.</p>';
+  /* her sürümde "Şimdikiyle karşılaştır" (85) */
+  document.querySelectorAll("#gcmListe [data-gcm-don]").forEach(function (b) {
+    if (!b.parentNode.querySelector("[data-gcm-fark]")) {
+      b.insertAdjacentHTML("beforebegin", '<button type="button" class="dugme dugme-sade y-kucuk" data-gcm-fark="' + b.getAttribute("data-gcm-don") + '">Şimdikiyle karşılaştır</button>');
+    }
+  });
 }
 
 document.addEventListener("toggle", function (ev) {
@@ -460,7 +399,13 @@ function ortakTaban(id, deger) {
 }
 
 /** Sunucuya giden hâl: evrenin kendisi (yerel işaretler hariç). */
-function ortakGonderim(e) { const o = JSON.parse(JSON.stringify(e)); delete o.ortak; return o; }
+/** Ortak yazara giden kopya: ortaklık bilgisi çıkar, kimin hangi sekmede değiştirdiği (iz) eklenir. */
+function ortakGonderim(e) {
+  const o = JSON.parse(JSON.stringify(e));
+  delete o.ortak;
+  o.ortakIz = { kim: oiBenimAdim(), sekme: EVS && EVS.id === e.id ? String(EVS.sekme || "") : "", zaman: new Date().toISOString() };
+  return o;
+}
 
 /** Sunucudan gelen hâl: sitedeki fan evrenleri gibi temizlenir. */
 function ortakTemizle(ham, id) {
@@ -507,11 +452,22 @@ async function ortakYaz(id) {
 }
 
 /** Başka yazarın hâlini uygular; bu cihazdaki hâl önce sürüm geçmişine konur. */
+/** Öbür yazarın hâlini uygular: önceki hâl sürüm geçmişine, değişen alanlar ortak günlüğe. */
 async function ortakUzaktanUygula(id, d, catisma) {
   const t = ortakTemizle(d.veri || {}, id);
   if (!t) { return; }
-  await gcmKaydet(id, "ortak yazardan önce", true);
+  const once = evrenBenimBul(id);
+  const eskiKopya = once ? JSON.parse(JSON.stringify(once)) : null;
+  const iz = (d.veri && d.veri.ortakIz) || {};
+  const kim = iz.kim || d.guncelleyen || "Ortak yazar";
+  await gcmKaydet(id, kim + "'in değişikliğinden önce", true);
   ortakYerelYaz(id, t);
+  const alanlar = oiDegisenAlanlar(eskiKopya, evrenBenimBul(id));
+  if (eskiKopya && alanlar.length) {
+    const g = jsonOku(ORTAK_GUNLUK, {}) || {};
+    g[id] = [{ kim: kim, zaman: iz.zaman || d.guncelleme || new Date().toISOString(), sekme: iz.sekme || "", alanlar: alanlar }].concat(g[id] || []).slice(0, 30);
+    jsonYaz(ORTAK_GUNLUK, g);
+  }
   ORTAK.bekleyen[id] = false;
   ortakTaban(id, d.guncelleme);
   if (typeof eckaBildir === "function" && catisma) {
@@ -535,16 +491,6 @@ async function ortakCek(id) {
 }
 
 function ortakDurumYaz(m, iyi) { y25Durum("#ortakDurum", m, iyi); }
-
-if (typeof evrenBenimDegistir === "function") {
-  const eskiBD = evrenBenimDegistir;
-  window.evrenBenimDegistir = function (id) {
-    if (!ORTAK.uyguluyor) { gcmKaydet(id, "otomatik"); }
-    const r = eskiBD.apply(this, arguments);
-    if (!ORTAK.uyguluyor) { ortakYazZamanla(id); }
-    return r;
-  };
-}
 
 async function ortakAc(id) {
   const e = evrenBenimBul(id);
@@ -654,6 +600,7 @@ function ortakKutusu(e) {
       '<input class="kod-giris arac-giris" readonly value="' + kacir(davet) + '" id="ortakDavetKod">' +
       '<input class="kod-giris arac-giris" readonly value="' + kacir(typeof tekDavetBaglantisi === "function" ? tekDavetBaglantisi(davet) : davet) + '" id="ortakDavetBag">' +
       '<button class="dugme dugme-sade" data-ortak-kopyala>Bağlantıyı kopyala</button></div>' : "") +
+    oiGunlukHtml(e.id) +   /* kim ne değiştirdi (77) */
     '<p class="pencere-durum" id="ortakDurum" role="status"></p></div>';
 }
 
@@ -772,14 +719,6 @@ function eviKutusu(e) {
 const ONZ = { bekleyen: null };
 function onizlemeMi() { return typeof EVS !== "undefined" && !!EVS && EVS.kaynak === "fan" && (EVS.onizle === true || ONZ.bekleyen === EVS.id); }
 
-if (typeof evoOdulEngeli === "function") {
-  const eskiOE = evoOdulEngeli;
-  window.evoOdulEngeli = function () {
-    if (onizlemeMi()) { return "Önizlemede ödül yok; ziyaretçiler oynayınca kazanır."; }
-    return eskiOE.apply(this, arguments);
-  };
-}
-
 /** Evren sayfasına 2.5 kutuları: kurucuya (bilgi sekmesi) ve okura. */
 function y25EvrenEkleri() {
   const g = document.querySelector("#evrenSayfa .evs-govde");
@@ -812,18 +751,6 @@ document.addEventListener("click", function (ev) {
   evrenSayfaAc(b.hasAttribute("data-ev-onizle") ? "onizle" : "benim", id);
   const s = document.querySelector("#evrenSayfa"); if (s) { s.scrollTop = 0; }
 });
-
-/* uygulama çerçevesinin altında bildir */
-if (typeof evuCalistir === "function") {
-  const eskiEvu = evuCalistir;
-  window.evuCalistir = function (kap, e, u) {
-    const r = eskiEvu.apply(this, arguments);
-    if (typeof EVS !== "undefined" && EVS && EVS.kaynak === "fan" && !onizlemeMi() && kap && kap.parentNode && !kap.parentNode.querySelector(".ib-uygulama")) {
-      kap.insertAdjacentHTML("afterend", '<p class="oyun-not ib-uygulama">' + ibDugme("uygulama", "fan:" + EVS.id + "/" + u.id, u.ad) + "</p>");
-    }
-    return r;
-  };
-}
 
 /* keşif: önizleme kartı, cihazda işareti, haftanın evreni */
 function kesif25Onizle(id) {
@@ -866,29 +793,25 @@ document.addEventListener("click", async function (ev) {
   if (typeof kesifCiz === "function") { kesifCiz(); }
 });
 
-if (typeof kesifCiz === "function") {
-  const eskiKC = kesifCiz;
-  window.kesifCiz = function () {
-    const r = eskiKC.apply(this, arguments);
-    const indirilen = typeof evdIndirilenler === "function" ? evdIndirilenler() : {};
-    document.querySelectorAll("#evrenKesif .kesif-kart").forEach(function (k) {
-      const m = /#\/ev\/fan\/([\w-]+)$/.exec(k.getAttribute("data-evren-git") || "");
-      if (!m || k.parentNode.classList.contains("kesif-sar")) { return; }
-      const sar = document.createElement("div");
-      sar.className = "kesif-sar";
-      k.parentNode.insertBefore(sar, k);
-      sar.appendChild(k);
-      sar.insertAdjacentHTML("beforeend", '<div class="kesif-alt">' + (indirilen[m[1]] ? '<span class="oyun-not">📥 cihazda</span>' : "<span></span>") +
-        '<button class="ic-bag" data-kesif-onizle="' + kacir(m[1]) + '">Önizle</button></div>');
-    });
-    const kutu = document.querySelector("#evrenKesif");
-    if (kutu) {
-      const eski = kutu.querySelector(".hafta-evren"); if (eski) { eski.remove(); }
-      const h = haftaninEvreniHtml();
-      if (h) { kutu.insertAdjacentHTML("afterbegin", h); }
-    }
-    return r;
-  };
+/** Keşif kartlarına "Önizle" ve "cihazda"; üstte haftanın evreni. */
+function kesifEkleri() {
+  const indirilen = typeof evdIndirilenler === "function" ? evdIndirilenler() : {};
+  document.querySelectorAll("#evrenKesif .kesif-kart").forEach(function (k) {
+    const m = /#\/ev\/fan\/([\w-]+)$/.exec(k.getAttribute("data-evren-git") || "");
+    if (!m || k.parentNode.classList.contains("kesif-sar")) { return; }
+    const sar = document.createElement("div");
+    sar.className = "kesif-sar";
+    k.parentNode.insertBefore(sar, k);
+    sar.appendChild(k);
+    sar.insertAdjacentHTML("beforeend", '<div class="kesif-alt">' + (indirilen[m[1]] ? '<span class="oyun-not">📥 cihazda</span>' : "<span></span>") +
+      '<button class="ic-bag" data-kesif-onizle="' + kacir(m[1]) + '">Önizle</button></div>');
+  });
+  const kutu = document.querySelector("#evrenKesif");
+  if (kutu) {
+    const eski = kutu.querySelector(".hafta-evren"); if (eski) { eski.remove(); }
+    const h = haftaninEvreniHtml();
+    if (h) { kutu.insertAdjacentHTML("afterbegin", h); }
+  }
 }
 
 /* ==================== 9. okuma listesi ve kaldığın yer ==================== */
@@ -901,34 +824,32 @@ let oklAcilis = null, oklDevamBolum = null;
 function oklOku() { const d = jsonOku(OKL, {}); return d && typeof d === "object" && !Array.isArray(d) ? d : {}; }
 function oklAnahtar() { return EVS.kaynak + ":" + EVS.id; }
 
-if (typeof evrenRomanBolumu === "function") {
-  const eskiRB = evrenRomanBolumu;
-  window.evrenRomanBolumu = function (v) {
-    const okur = (EVS.kaynak !== "benim" || (typeof evrDurum === "function" && evrDurum().onizle));
-    const kaydet = !onizlemeMi() && EVS.kaynak !== "benim";
-    if (!okur || EVS.kaynak === "e99") { return eskiRB.apply(this, arguments); }
-    const d = evrDurum();
-    const k = oklAnahtar();
-    const l = oklOku();
-    const bolumler = ((v.eser.roman || {}).bolumler) || [];
-    if (d.secili === null && l[k] && l[k].bolum && bolumler.some(function (b) { return b.id === l[k].bolum; })) { d.secili = l[k].bolum; }
-    /* evren her açıldığında ilk roman görünümünde: kaldığın yer */
-    if (oklAcilis !== k) {
-      oklAcilis = k;
-      oklDevamBolum = kaydet && l[k] && l[k].bolum === d.secili && l[k].sira > 0 ? d.secili : null;
-    }
-    const devam = !!oklDevamBolum && oklDevamBolum === d.secili;   /* başka bölüme geçene kadar */
-    const h = eskiRB.apply(this, arguments);
-    if (!bolumler.length) { return h; }
-    const i = Math.max(0, bolumler.findIndex(function (b) { return b.id === d.secili; }));
-    const o = l[k] || {};
-    const kayit = { ad: v.eser.ad || "Evren", git: "#/ev/" + EVS.kaynak + "/" + EVS.id, bolum: bolumler[i].id, sira: i, toplam: bolumler.length,
-      zaman: Date.now(), liste: !!o.liste, bitti: !!o.bitti || i === bolumler.length - 1 };
-    if (kaydet && (o.bolum !== kayit.bolum || o.toplam !== kayit.toplam || o.bitti !== kayit.bitti)) { l[k] = kayit; jsonYaz(OKL, l); }
-    const listede = !!(l[k] && l[k].liste);
-    return '<div class="okl-serit">' + (devam ? '<span class="oyun-not">📖 Kaldığın yerden: ' + (i + 1) + ". bölüm</span>" : '<span class="oyun-not">' + (i + 1) + " / " + bolumler.length + "</span>") +
-      (!kaydet ? "" : '<button class="dugme dugme-sade y-kucuk" data-okl-liste>' + (listede ? "✓ Okuma listende" : "+ Okuma listeme ekle") + "</button>") + "</div>" + h;
-  };
+/** Evrenin roman sekmesi; okurda üstte okuma listesi şeridi ve kaldığın yer. */
+function evrenRomanBolumu(v) {
+  const okur = (EVS.kaynak !== "benim" || (typeof evrDurum === "function" && evrDurum().onizle));
+  const kaydet = !onizlemeMi() && EVS.kaynak !== "benim";
+  if (!okur || EVS.kaynak === "e99") { return evrenRomanGovde(v); }
+  const d = evrDurum();
+  const k = oklAnahtar();
+  const l = oklOku();
+  const bolumler = ((v.eser.roman || {}).bolumler) || [];
+  if (d.secili === null && l[k] && l[k].bolum && bolumler.some(function (b) { return b.id === l[k].bolum; })) { d.secili = l[k].bolum; }
+  /* evren her açıldığında ilk roman görünümünde: kaldığın yer */
+  if (oklAcilis !== k) {
+    oklAcilis = k;
+    oklDevamBolum = kaydet && l[k] && l[k].bolum === d.secili && l[k].sira > 0 ? d.secili : null;
+  }
+  const devam = !!oklDevamBolum && oklDevamBolum === d.secili;   /* başka bölüme geçene kadar */
+  const h = evrenRomanGovde(v);
+  if (!bolumler.length) { return h; }
+  const i = Math.max(0, bolumler.findIndex(function (b) { return b.id === d.secili; }));
+  const o = l[k] || {};
+  const kayit = { ad: v.eser.ad || "Evren", git: "#/ev/" + EVS.kaynak + "/" + EVS.id, bolum: bolumler[i].id, sira: i, toplam: bolumler.length,
+    zaman: Date.now(), liste: !!o.liste, bitti: !!o.bitti || i === bolumler.length - 1 };
+  if (kaydet && (o.bolum !== kayit.bolum || o.toplam !== kayit.toplam || o.bitti !== kayit.bitti)) { l[k] = kayit; jsonYaz(OKL, l); }
+  const listede = !!(l[k] && l[k].liste);
+  return '<div class="okl-serit">' + (devam ? '<span class="oyun-not">📖 Kaldığın yerden: ' + (i + 1) + ". bölüm</span>" : '<span class="oyun-not">' + (i + 1) + " / " + bolumler.length + "</span>") +
+    (!kaydet ? "" : '<button class="dugme dugme-sade y-kucuk" data-okl-liste>' + (listede ? "✓ Okuma listende" : "+ Okuma listeme ekle") + "</button>") + "</div>" + h;
 }
 
 document.addEventListener("click", function (ev) {
@@ -1033,12 +954,6 @@ document.addEventListener("click", async function (e) {
 
 /* Sen sayfasına her gelişte güncel (okuma listesi, takip, indirilenler başka sayfalarda değişir) */
 window.addEventListener("hashchange", function () { if (typeof rota === "function" && rota().indexOf("#/sen") === 0) { setTimeout(ayar25Ciz, 60); } });
-
-/* Sen sayfası açılınca (adres, menü ya da ilk açılış) ayarlar çizilir */
-if (typeof sayfaGoster === "function") {
-  const eskiSG25 = sayfaGoster;
-  window.sayfaGoster = function () { const r = eskiSG25.apply(this, arguments); if (aktifSayfa === "sen") { ayar25Ciz(); } return r; };
-}
 
 /* ==================== 11. evren yazısı klavyesi ==================== */
 
