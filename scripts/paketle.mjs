@@ -14,7 +14,7 @@ const HEDEF = process.env.PAKET_HEDEF || join(KOK, "dist");   /* PAKET_HEDEF: te
 /* Sitenin kalıcı adresi: Cloudflare Pages'teki SITE_URL ortam değişkeni. */
 const SITE = (process.env.SITE_URL || "https://tentiforapp.pages.dev").replace(/\/$/, "");
 const KOPYALA = ["index.html", "veri.json", "sw.js", "manifest.webmanifest", "paylasim.png", "robots.txt", "_headers", "css", "js", "ikon", "yazitipi", "evrenler", ".well-known", "google-dogrulama.txt"];   /* .well-known/assetlinks.json: Play Store (TWA) uygulaması siteyle eşleşsin (uygulama/README.md) */
-/* evrenler/: sitedeki fan evrenlerinin ayrı dosyaları (js/54-evren-dosyalari.js) */
+/* evrenler/: sitedeki fan evrenlerinin ayrı dosyaları (js/engine/54-evren-dosyalari.js) */
 
 rmSync(HEDEF, { recursive: true, force: true });
 mkdirSync(HEDEF, { recursive: true });
@@ -37,7 +37,7 @@ writeFileSync(join(HEDEF, "_redirects"),
      bu yüzden aynı adresten yönlendirmesiz (200) metin dosyası verilir */
   "/googleda80bdd466b16c3e.html  /google-dogrulama.txt  200\n");
 
-/* Panelin kurulum yardımcısı (js/43-kurulum.js) telefondan kopyalayabilsin diye; gizli bilgi içermezler. */
+/* Panelin kurulum yardımcısı (js/admin/43-kurulum.js) telefondan kopyalayabilsin diye; gizli bilgi içermezler. */
 mkdirSync(join(HEDEF, "kurulum"), { recursive: true });
 cpSync(join(KOK, "supabase/kurulum.sql"), join(HEDEF, "kurulum/kurulum.sql"));
 cpSync(join(KOK, "supabase/functions/bildirim-gonder/index.ts"), join(HEDEF, "kurulum/bildirim-gonder.ts"));
@@ -47,9 +47,15 @@ let once = 0, sonra = 0;
 
 /* JS: her dosya kendi başına küçültülür. Düz betik olarak kalır; üst düzey adlar
    (dosyalar arası paylaşılan fonksiyonlar) değişmez. */
-for (const ad of readdirSync(join(HEDEF, "js"))) {
-  if (!ad.endsWith(".js")) { continue; }
-  const yol = join(HEDEF, "js", ad);
+/* 4.0: betikler alan klasörlerinde (js/core, js/arsiv, …); js/vendor küçültülmez */
+const jsDosyalari = [];
+(function gez(d) {
+  for (const ad of readdirSync(d, { withFileTypes: true })) {
+    if (ad.isDirectory()) { if (ad.name !== "vendor") { gez(join(d, ad.name)); } } else if (ad.name.endsWith(".js")) { jsDosyalari.push(join(d, ad.name)); }
+  }
+})(join(HEDEF, "js"));
+jsDosyalari.sort();
+for (const yol of jsDosyalari) {
   const kaynak = readFileSync(yol, "utf8");
   const { code } = await transform(kaynak, { loader: "js", minify: true, target: "es2019", charset: "utf8", legalComments: "none" });
   writeFileSync(yol, code);
@@ -58,9 +64,9 @@ for (const ad of readdirSync(join(HEDEF, "js"))) {
 }
 
 /* Yalnızca yöneticinin kullandığı betikler ziyaretçiye inmez: index.html'den ve servis çalışanının listesinden çıkar,
-   panel açılınca js/65-yonetici-yukle.js yükler. (Tek dosyada birleştirmek denendi: satır içi çalışan kod tarayıcının
+   panel açılınca js/admin/65-yonetici-yukle.js yükler. (Tek dosyada birleştirmek denendi: satır içi çalışan kod tarayıcının
    akışlı derlemesini ve kod önbelleğini kullanamadığı için soğuk açılışta ~%5 yavaştı; ayrı dosyalar kaldı.) */
-const YONETICI_BETIKLERI = ["js/22b-yonetici-araclari.js", "js/25-panel-roman-ses-basin.js", "js/43-kurulum.js"];
+const YONETICI_BETIKLERI = ["js/admin/22b-yonetici-araclari.js", "js/admin/25-panel-roman-ses-basin.js", "js/admin/43-kurulum.js"];
 {
   const anaYol0 = join(HEDEF, "index.html");
   let ana = readFileSync(anaYol0, "utf8");
@@ -75,11 +81,11 @@ const YONETICI_BETIKLERI = ["js/22b-yonetici-araclari.js", "js/25-panel-roman-se
 /* 3.0 — betik paketleri: ziyaretçinin 79 ayrı isteği birkaç dosyada birleşir (aynı sıra, aynı kod; her parça
    kendi satırında başlar). Her dosya ayrı küçültüldüğü ve sıra korunduğu için davranış aynı kalır; bunu
    tests/paketler.mjs birleşik ve ayrı sürümde bütün fonksiyonları karşılaştırarak denetler.
-   Paket içindeki hata satırı hangi dosyaya ait: window.__PAKET__ tablosu (js/01-tanilama.js okur).
+   Paket içindeki hata satırı hangi dosyaya ait: window.__PAKET__ tablosu (js/core/01-tanilama.js okur).
    PAKETSIZ=1 ile eski düzen (her dosya ayrı) üretilir. */
 /* panel betiklerinin yükleyicisi paketin içine girmeden önce sürümlü adresleri alır */
 {
-  const yukleYol = join(HEDEF, "js/65-yonetici-yukle.js");
+  const yukleYol = join(HEDEF, "js/admin/65-yonetici-yukle.js");
   writeFileSync(yukleYol, readFileSync(yukleYol, "utf8").replace(/(js\/[A-Za-z0-9._\/-]+\.js)(?=["'])/g, function (tam, yol) {
     if (yol.indexOf("js/vendor/") === 0) { return yol; }
     try { return yol + "?v=" + createHash("sha256").update(readFileSync(join(HEDEF, yol))).digest("hex").slice(0, 10); } catch (e) { return yol; }
@@ -89,9 +95,9 @@ const PAKET_SAYISI = 4;
 if (!process.env.PAKETSIZ) {
   const anaYolP = join(HEDEF, "index.html");
   let ana = readFileSync(anaYolP, "utf8");
-  /* js/24-arsiv-mantigi.js en sonda ayrı kalır: veri'yi ve paylaşılan adları o tanımlar; önceki dosyalar onları
+  /* js/core/24-arsiv-mantigi.js en sonda ayrı kalır: veri'yi ve paylaşılan adları o tanımlar; önceki dosyalar onları
      "typeof" ile yoklar. Aynı betikte olsalar tanım henüz çalışmadan yoklama hata verirdi (let/const). */
-  const SON_AYRI = "js/24-arsiv-mantigi.js";
+  const SON_AYRI = "js/core/24-arsiv-mantigi.js";
   const betikler = [...ana.matchAll(/<script src="(js\/[^"]+\.js)"><\/script>\n?/g)].map(function (m) { return m[1]; }).filter(function (y) { return y !== SON_AYRI; });
   const boyut = betikler.map(function (y) { return statSync(join(HEDEF, y)).size; });
   const toplam = boyut.reduce(function (a, b) { return a + b; }, 0);
@@ -149,7 +155,7 @@ ozet.update(readFileSync(join(HEDEF, "veri.json")));
 const veriYol = join(HEDEF, "veri.json");
 /* 3.0 — veri parçaları: açılışta gerekmeyen uzun listeler ayrı dosyaya çıkar (veri-<ad>.json). veri.json'da
    yerinde ilk birkaç kaydı kalır ve __parcalar hangi dosyada tamamının olduğunu söyler. Site gerekince indirir;
-   panel kaydetmeden ve dışa aktarmadan önce hepsini yerine koyar (js/81-surum-30.js). Anahtar sırası değişmez. */
+   panel kaydetmeden ve dışa aktarmadan önce hepsini yerine koyar (js/core/81-hiz-veri-parcalari.js). Anahtar sırası değişmez. */
 const VERI_PARCALARI = { degisiklik: 3 };
 {
   const v = JSON.parse(readFileSync(veriYol, "utf8"));
@@ -181,13 +187,13 @@ const surumle = function (metin) {
   });
 };
 /* paket kimliği: içerik özeti. Açık sayfa kendi kimliğini (index.html'deki etiket) surum.json'dakiyle
-   karşılaştırır; farklıysa yeni sürüm yayındadır (js/46-guncelleme.js). */
+   karşılaştırır; farklıysa yeni sürüm yayındadır (js/core/46-guncelleme.js). */
 const paket = ozet.digest("hex").slice(0, 12);
 const veriSurum = JSON.parse(readFileSync(join(HEDEF, "veri.json"), "utf8")).surum || "";
 /* 3.2: kuruldu — her kurulumda değişir; içerik aynı olsa da panel "yayında" diyebilsin */
 writeFileSync(join(HEDEF, "surum.json"), JSON.stringify({ paket: paket, surum: veriSurum, kuruldu: new Date().toISOString() }));
 
-/* (js/65-yonetici-yukle.js'in sürümlü adresleri paketlerden önce yazıldı) */
+/* (js/admin/65-yonetici-yukle.js'in sürümlü adresleri paketlerden önce yazıldı) */
 
 const anaYol = join(HEDEF, "index.html");
 writeFileSync(anaYol, surumle(readFileSync(anaYol, "utf8")).replace("</head>", '<meta name="tentifor-paket" content="' + paket + '">\n</head>'));
@@ -195,7 +201,7 @@ writeFileSync(anaYol, surumle(readFileSync(anaYol, "utf8")).replace("</head>", '
 /* 3.0 — kritik CSS: ilk ekranın (betikler çalışmadan görünen HTML'in) kuralları sayfaya gömülür, tam CSS bekletmeden
    iner. Kurallar index.html'deki sınıf/kimlik/etiketlerden kendiliğinden seçilir (CSS değişince elle güncellenmez).
    Tekrar ziyarette (servis çalışanı varken) CSS önbellekten gelir: eskisi gibi hemen uygulanır.
-   Veri çizimi tam CSS'i bekler (js/24-arsiv-mantigi.js cssBekle): biçimsiz içerik bir an bile görünmez. */
+   Veri çizimi tam CSS'i bekler (js/core/24-arsiv-mantigi.js cssBekle): biçimsiz içerik bir an bile görünmez. */
 {
   let ana = readFileSync(anaYol, "utf8");
   const m = /<link rel="stylesheet" href="(css\/style\.css\?v=\w+)">/.exec(ana);
@@ -258,8 +264,8 @@ writeFileSync(sw, surumle(readFileSync(sw, "utf8")).replace(/tentiforapp-[^"]+"/
 
 /* Her sayfa kendi adresinde: /arsiv/, /dunya/, /evren/e25/, /fan/hikaye/<id>/ …
    Her biri uygulamanın tam bir kopyasıdır (yönlendirme yok): kendi başlığı, açıklaması ve kanonik adresi
-   vardır; uygulama rotayı yoldan okur (js/00-rota.js). Böylece arama motorları her sayfayı ayrı dizinler. */
-const gez = readFileSync(join(KOK, "js/18-dalga-7-gezinme.js"), "utf8");
+   vardır; uygulama rotayı yoldan okur (js/core/00-rota.js). Böylece arama motorları her sayfayı ayrı dizinler. */
+const gez = readFileSync(join(KOK, "js/arayuz/18-gezinme.js"), "utf8");
 const blok = gez.slice(gez.indexOf("const GEZINME"), gez.indexOf("];", gez.indexOf("const GEZINME")));
 const sayfalar = [...blok.matchAll(/\{\s*id:\s*"([^"]+)",\s*ad:\s*"([^"]+)"[\s\S]*?bolumler:\s*\[([\s\S]*?)\]\s*\}/g)]
   .map(function (m) {

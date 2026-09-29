@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "paketle": "node scripts/paketle.mjs",
-    "test": "node tests/calistir.mjs"
+    "test": "node tests/calistir.mjs",
+    "test:takim": "node tests/calistir.mjs"
   },
   "dependencies": {
     "esbuild": "0.28.2"

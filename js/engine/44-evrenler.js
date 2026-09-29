@@ -912,7 +912,7 @@ document.addEventListener("click", async function (ev) {
   if (h.id === "evrenSecBtn" || h.hasAttribute("data-evren-sec")) { evrenSeciciAc(); return; }
   if (d.evrenGit) { evrenGit(d.evrenGit); return; }
   if (h.hasAttribute("data-es-kapat")) { evrenSeciciKapat(); return; }
-  /* 3.0: yeni evren Evren Kurucu'yla açılır (js/82-evren-kurucu.js), yoksa bilgi sekmesiyle */
+  /* 3.0: yeni evren Evren Kurucu'yla açılır (js/studio/82-evren-kurucu.js), yoksa bilgi sekmesiyle */
   if (h.hasAttribute("data-es-yeni")) { const id = evrenYeniKur(); if (!id) { return; } evrenSonrakiSekme = typeof evrKurucuHtml === "function" ? "kurucu" : "bilgi"; evrenGit("#/ev/benim/" + id); return; }
   if (h.hasAttribute("data-evs-kapat")) { evrenSayfaKapat(); return; }
   if (h.hasAttribute("data-evs-kod")) { const b = document.querySelector("#btnKod"); if (b) { b.click(); } return; }

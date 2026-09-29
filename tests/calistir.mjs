@@ -21,6 +21,14 @@ import { surum30Testleri } from "./surum-30.mjs";
 import { surum31Testleri } from "./surum-31.mjs";
 
 const KOK = new URL("..", import.meta.url).pathname;
+
+/* Tek takım çalıştırmak için: TAKIM=s31 npm test  ya da  npm run test:takim -- s31,tarayici
+   Takımlar: vt, fonksiyon, tarayici, cevrimdisi, s25, yuk, s26, s27, s28, s30, s31, kabuk. Boşsa hepsi. */
+const TAKIMLAR = ["vt", "fonksiyon", "tarayici", "cevrimdisi", "s25", "yuk", "s26", "s27", "s28", "s30", "s31", "kabuk"];
+const SECILI = (process.env.TAKIM || process.argv.slice(2).join(",")).split(",").map(function (x) { return x.trim(); }).filter(Boolean);
+SECILI.forEach(function (t) { if (TAKIMLAR.indexOf(t) === -1) { console.error("Bilinmeyen takım: " + t + " (seçenekler: " + TAKIMLAR.join(", ") + ")"); process.exit(2); } });
+const calis = function (t) { return !SECILI.length || SECILI.indexOf(t) !== -1; };
+if (SECILI.length) { console.log("Yalnızca: " + SECILI.join(", ")); }
 const DB = process.env.TEST_DB || "tentifor_test";
 
 function psql(veritabani, argumanlar) {
@@ -40,7 +48,7 @@ function adim(ad, fn) {
    (fonksiyon) ya da ikinci dosyayı hiç çalıştırmaz (let/const). */
 adim("üst düzey ad çakışması", function () {
   const ad = {}, cakisan = [];
-  const dosyalar = readFileSync(join(KOK, "index.html"), "utf8").match(/js\/[0-9][^"?]+\.js/g);
+  const dosyalar = readFileSync(join(KOK, "index.html"), "utf8").match(/js\/(?!vendor\/)[^"?]+\.js/g);
   for (const f of dosyalar) {
     const s = readFileSync(join(KOK, f), "utf8");
     for (const m of s.matchAll(/^(?:let|const|var|function|async function|class)\s+([A-Za-z_$][\w$]*)/gm)) {
@@ -58,14 +66,14 @@ adim("veritabanı sıfırlanıyor", function () {
 });
 adim("kurulum.sql (1. kez)", function () { psql(DB, ["-f", join(KOK, "supabase/kurulum.sql")]); });
 adim("kurulum.sql (2. kez, tekrar çalıştırılabilir olmalı)", function () { psql(DB, ["-f", join(KOK, "supabase/kurulum.sql")]); });
-adim("veritabanı testleri", function () {
+if (calis("vt")) adim("veritabanı testleri", function () {
   const cikti = execFileSync("psql", ["-X", "-v", "ON_ERROR_STOP=1", "-d", DB, "-f", join(KOK, "tests/veritabani.sql")],
     { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
   void cikti;
 });
 /* notice'ları ayrıca göstermek yerine sayıyı raporla */
-const sqlSayisi = (readFileSync(join(KOK, "tests/veritabani.sql"), "utf8").match(/test\.ok\(/g) || []).length;
-console.log("  " + sqlSayisi + " veritabanı kontrolü geçti");
+const sqlSayisi = calis("vt") ? (readFileSync(join(KOK, "tests/veritabani.sql"), "utf8").match(/test\.ok\(/g) || []).length : 0;
+if (calis("vt")) { console.log("  " + sqlSayisi + " veritabanı kontrolü geçti"); }
 
 /* test için temiz veritabanı: tarayıcı testleri kendi kullanıcılarını açar */
 adim("tarayıcı testleri için veritabanı", function () {
@@ -98,30 +106,29 @@ const sunucu = createServer(function (istek, yanit) {
 await new Promise(function (r) { sunucu.listen(0, "127.0.0.1", r); });
 const adres = "http://127.0.0.1:" + sunucu.address().port;
 
-console.log("• bildirim fonksiyonu (Edge Function)");
+const ortak = { adres, veritabani: DB + "_e2e", dizin: DIZIN };
+const TAKIM_ISLERI = [
+  ["fonksiyon", "bildirim fonksiyonu (Edge Function)", function () { return bildirimFonksiyonTestleri(KOK); }],
+  ["tarayici", "tarayıcı testleri (" + adres + ")", function () { return tarayiciTestleri(ortak); }],
+  ["cevrimdisi", "çevrimdışı (service worker)", function () { return cevrimdisiTestleri({ dizin: DIZIN }); }],
+  ["s25", "sürüm 2.5", function () { return surum25Testleri(ortak); }],
+  ["yuk", "sunucu yükü", function () { return sunucuYukuTestleri(ortak); }],
+  ["s26", "sürüm 2.6", function () { return surum26Testleri(ortak); }],
+  ["s27", "sürüm 2.7", function () { return surum27Testleri(Object.assign({ kok: KOK }, ortak)); }],
+  ["s28", "sürüm 2.8", function () { return surum28Testleri(ortak); }],
+  ["s30", "sürüm 3.0", function () { return surum30Testleri(Object.assign({ kok: KOK }, ortak)); }],
+  ["s31", "sürüm 3.1 ve 4.0", function () { return surum31Testleri(ortak); }],
+  ["kabuk", "Android uygulama kabuğu", function () { return uygulamaKabuguTestleri({ dizin: DIZIN }); }]
+];
 try {
-  const f = await bildirimFonksiyonTestleri(KOK);
-  console.log("• tarayıcı testleri (" + adres + ")");
-  const n = await tarayiciTestleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
-  console.log("• çevrimdışı (service worker)");
-  const c = await cevrimdisiTestleri({ dizin: DIZIN });
-  console.log("• sürüm 2.5");
-  const s25 = await surum25Testleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
-  console.log("• sunucu yükü");
-  const yk = await sunucuYukuTestleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
-  console.log("• sürüm 2.6");
-  const s26 = await surum26Testleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
-  console.log("• sürüm 2.7");
-  const s27 = await surum27Testleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN, kok: KOK });
-  console.log("• sürüm 2.8");
-  const s28 = await surum28Testleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
-  console.log("• sürüm 3.0");
-  const s30 = await surum30Testleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN, kok: KOK });
-  console.log("• sürüm 3.1");
-  const s31 = await surum31Testleri({ adres, veritabani: DB + "_e2e", dizin: DIZIN });
-  console.log("• Android uygulama kabuğu");
-  const ak = await uygulamaKabuguTestleri({ dizin: DIZIN });
-  console.log("\nHepsi geçti: " + sqlSayisi + " veritabanı + " + f + " fonksiyon + " + (n + s25 + yk + s26 + s27 + s28 + s30 + s31 + ak) + " tarayıcı + " + c + " çevrimdışı kontrolü.");
+  const say = { fonksiyon: 0, tarayici: 0, cevrimdisi: 0 };
+  for (const [ad, baslik, fn] of TAKIM_ISLERI) {
+    if (!calis(ad)) { continue; }
+    console.log("• " + baslik);
+    const n = await fn();
+    if (ad === "fonksiyon" || ad === "cevrimdisi") { say[ad] += n; } else { say.tarayici += n; }
+  }
+  console.log("\n" + (SECILI.length ? "Seçilen takımlar geçti: " : "Hepsi geçti: ") + sqlSayisi + " veritabanı + " + say.fonksiyon + " fonksiyon + " + say.tarayici + " tarayıcı + " + say.cevrimdisi + " çevrimdışı kontrolü.");
 } catch (e) {
   console.error("\n" + (e.stack || e.message || e));
   process.exitCode = 1;

@@ -1,13 +1,13 @@
 /* Cloudflare Pages Function: /api/pano?t=<tablo>
    Herkese aynı görünen liderlik listelerini Supabase'den bir kez okur, Cloudflare'in önbelleğinde 10 dakika tutar.
-   Böylece her ziyaretçi ayrı ayrı Supabase'e gitmez: istek ve log sayısı düşer. Site (js/29-liderlik.js) önce buraya
+   Böylece her ziyaretçi ayrı ayrı Supabase'e gitmez: istek ve log sayısı düşer. Site (js/oyun/29-liderlik.js) önce buraya
    bakar; bu adres yoksa ya da hata verirse eskisi gibi doğrudan Supabase'e gider. Kişiye özel hiçbir şey burada yok. */
 
 const SUPABASE = "https://wlgtjbrlquefnzavwein.supabase.co";
 const ANAHTAR = "sb_publishable_CHM9EAA3V5nZeQcmKtR0UQ__Xyb4b_F";   /* publishable key — sitede de görünür, gizli değildir */
 const SURE = 600;   /* saniye */
 
-/* js/29-liderlik.js'teki sıralama tabloları (liderlik görünümünün sütunları) */
+/* js/oyun/29-liderlik.js'teki sıralama tabloları (liderlik görünümünün sütunları) */
 const SIRALAMA = ["haftalik", "sezonluk", "tamlik", "ecka_toplam", "seri", "katman", "madalya", "nobet", "cevirmen", "vardiya", "yazi", "boyut", "baloncuk"];
 const SATIR = 20;
 

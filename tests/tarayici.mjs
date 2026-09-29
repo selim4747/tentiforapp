@@ -44,7 +44,7 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
       await ctx.addInitScript(function () { try { localStorage.setItem("tentiforapp_hesap_hatirlat", JSON.stringify({ kapat: true })); } catch (e) { /* yok */ } });
     }
     await ctx.addInitScript(function () { window.__okumaOnbellegiKapali = true; });   /* testler sunucudaki son hâli okusun */
-    await ctx.route(/\/js\/(?:28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
+    await ctx.route(/\/js\/(?:core\/28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
     await ctx.route(TEST_URL + "/**", function (r) { return sahte.isle(r); });
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, function (r) { return r.abort(); });
     const p = await ctx.newPage();
@@ -1746,13 +1746,13 @@ export async function tarayiciTestleri({ adres, veritabani, dizin }) {
         (!alt || !document.getElementById(alt).classList.contains("svk-bolum-kilitli"));
     }));
     await YZ.evaluate(function () { cuzdan.acilan = window.__acilan; SVK.onbellek = null; kanonKilitUygula(); });
-    ok("seviye 6: hikâye açılır, evren hâlâ kilitli; 15: evren de", await YZ.evaluate(function () {
+    ok("seviye 6: hikâye açılır; 4.0: evren seviyeye bağlı değil (ilk taslak ücretsiz)", await YZ.evaluate(function () {
       localStorage.setItem("tentiforapp_seviye_test", "6"); SVK.onbellek = null;
       const h = fanYeni("hikaye"); const e1 = evrenYeniKur();
       localStorage.setItem("tentiforapp_seviye_test", "15"); SVK.onbellek = null;
       const e2 = evrenYeniKur();
       localStorage.removeItem("tentiforapp_seviye_test"); SVK.onbellek = null;
-      return !!h && e1 === null && !!e2;
+      return !!h && !!e1 && !!e2;
     }));
 
     /* eçka penceresi, hesap, geri bildirim */

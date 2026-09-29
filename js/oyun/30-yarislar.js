@@ -548,7 +548,7 @@ function yarisSonucHtml() {
 /* ==================== Nöbet haftalık meydan ==================== */
 
 function yarisNobetBasla() {
-  /* 15-dalga-5.js'teki meydan altyapısı: aynı tohum = aynı geceler */
+  /* 15-ziyaretci-notlar.js'teki meydan altyapısı: aynı tohum = aynı geceler */
   meydan = { oyun: "nobet", tohum: Number(Y2.tohum) >>> 0, skor: 0, haftalik: true };
   if (typeof oyunSifirla === "function") { meydanTohumla("nobet"); oyunSifirla(false); }
   const btn = document.querySelector('[data-oyun-sekme="nobet"]');
@@ -558,7 +558,7 @@ function yarisNobetBasla() {
   if (typeof meydanCiz === "function") { meydanCiz(); }
 }
 
-/** meydanBitir (15-dalga-5.js) haftalık meydanda buraya gelir. */
+/** meydanBitir (15-ziyaretci-notlar.js) haftalık meydanda buraya gelir. */
 function yarisMeydanBitti(skor) {
   if (!Y2 || Y2.yaris !== "nobet_meydan" || Y2.sonuc) { return; }
   Y2.skor = skor;

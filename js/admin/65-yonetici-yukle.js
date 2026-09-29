@@ -1,7 +1,7 @@
 /* Yalnızca yöneticinin kullandığı betikler (roman/ses/basın düzenleyicisi, kurulum yardımcısı) yayın paketinde
    index.html'e konmaz (scripts/paketle.mjs); panel açılınca burada yüklenir. Geliştirirken hepsi zaten yüklüdür. */
 
-const YONETICI_BETIKLERI = ["js/22b-yonetici-araclari.js", "js/25-panel-roman-ses-basin.js", "js/43-kurulum.js"];
+const YONETICI_BETIKLERI = ["js/admin/22b-yonetici-araclari.js", "js/admin/25-panel-roman-ses-basin.js", "js/admin/43-kurulum.js"];
 let yoneticiBetikSozu = null;
 
 function yoneticiBetikleriHazir() {

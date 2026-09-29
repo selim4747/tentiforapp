@@ -526,3 +526,8 @@ select test.ok('karar verilen başvuru kuyruktan düşer', jsonb_array_length(pu
 select test.ok('ödeme ve kod tabloları okunamaz', test.patlar($q$select * from public.odemeler$q$) or (select count(*) from public.moderator_kodlari) = 0);
 reset role;
 select test.ok('kod kapatılınca oturum düşer', public.moderator_dogrula(current_setting('test.mod')) and (select count(*) from public.moderator_kodlari where aktif) = 1);
+set role anon;
+select test.ok('moderatör onaylı evreni kanon yapar', public.yayin_kanon(current_setting('test.mod'), 'ikinci-evren', true));
+select test.ok('kanon işareti vitrinde görünür', (select kanon from public.yayindaki_evrenler where slug = 'ikinci-evren'));
+select test.ok('oturumsuz kanon değiştirilemez', test.patlar($q$select public.yayin_kanon('uydurma', 'ikinci-evren', false)$q$));
+reset role;

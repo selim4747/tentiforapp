@@ -1,7 +1,7 @@
 /* Sürüm 3.3 — Tömye bağlantıları, yıldızlı evrenler, okuma ayarları, evren doluluğu, şablonla başla,
    tüm evrenler süzgeci, Evrengezer yolculuk şablonu. Hepsi cihazda: sunucuya yük yok. */
 
-/* 1. Tömye bağlantıları 3.2.2'de (js/86-surum-32.js) */
+/* 1. Tömye bağlantıları 3.2.2'de (js/arayuz/86-sade-arayuz.js) */
 
 /* ==================== 8. yıldızlı evrenler ==================== */
 const YILDIZ_ANAHTAR = "tf33_yildizli";

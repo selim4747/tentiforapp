@@ -485,7 +485,7 @@ async function arsivciKartUret() {
   return t;
 }
 
-/** 13-dalga-3.js'teki arşivci kartı düğmesi buraya gelir. */
+/** 13-arsivci-karti-hikaye.js'teki arşivci kartı düğmesi buraya gelir. */
 async function arsivciKartDisari(tur) {
   const durum = document.querySelector("#arsivciDurum");
   const t = await arsivciKartUret();

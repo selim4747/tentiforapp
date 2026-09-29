@@ -96,7 +96,7 @@ function fanHaritaTemizle(h) {
     }
     /* geçit: başka bir evrene kapı (yalnızca sitenin kendi evren adresleri) */
     if (y && typeof y.gecit === "string" && FAN_GECIT.test(y.gecit)) { t.gecit = y.gecit; }
-    /* şehir haritası: binalar, caddeler, alanlar (js/57-sehir-yol.js) */
+    /* şehir haritası: binalar, caddeler, alanlar (js/engine/57-sehir-yol.js) */
     const sehir = y && y.sehir && typeof sehirTemizle === "function" ? sehirTemizle(y.sehir) : null;
     if (sehir) { t.sehir = sehir; }
     return t;
@@ -178,7 +178,7 @@ function fanEserGovde(e, dosya) {
     ((e.lorlar || []).length ? "<h2>Kilitli lore</h2><ul>" + e.lorlar.map(function (l) { return "<li>" + kacir(l.baslik) + " · kodla açılır</li>"; }).join("") + "</ul>" : "") +
     FAN_EVREN_GRUPLARI.map(function (g) {
       const liste = (e[g.k] || []).filter(function (x) { return Object.keys(x).some(function (k) { return String(x[k] || "").trim(); }); });
-      /* 3.0: zengin görünüm (kişi kartları, zaman çizelgesi, takvim, belgeler): js/82-evren-kurucu.js */
+      /* 3.0: zengin görünüm (kişi kartları, zaman çizelgesi, takvim, belgeler): js/studio/82-evren-kurucu.js */
       if (typeof g.ciz === "function") {
         const h = g.ciz(liste, e, dosya);
         if (h !== null) { return h ? '<section class="fan-grup" data-grup="' + g.k + '"><h2>' + kacir(g.ad) + "</h2>" + h + "</section>" : ""; }
@@ -382,7 +382,7 @@ function fanEvrenFormHtml(e, basliklar) {
     FAN_EVREN_GRUPLARI.map(function (g) { return fanEvrenGrupHtml(e, g); }).join("") + fanEvrenListeleri();
 }
 
-/** Tek bir bilgi grubunun düzenleyicisi (Evren Kurucu adım adım bunu kullanır: js/82-evren-kurucu.js). */
+/** Tek bir bilgi grubunun düzenleyicisi (Evren Kurucu adım adım bunu kullanır: js/studio/82-evren-kurucu.js). */
 function fanEvrenGrupHtml(e, g, sec) {
   const l = e[g.k] || [];
   /* katla: uzun listelerde her kayıt başlığıyla kapalı durur (Evren Kurucu); son kayıt ve boş olanlar açık */

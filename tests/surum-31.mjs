@@ -62,7 +62,7 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
       } catch (e) { /* yok */ }
       window.__okumaOnbellegiKapali = true;
     }, { seviye: s.seviye === undefined ? 20 : s.seviye });
-    await ctx.route(/\/js\/(?:28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
+    await ctx.route(/\/js\/(?:core\/28-hesap|paket-\d+)\.js(\?|$)/, function (r) { return r.fulfill({ status: 200, contentType: "application/javascript", body: readFileSync(dizin + new URL(r.request().url()).pathname, "utf8").replace(/https:\/\/[a-z0-9]+\.supabase\.co/g, TEST_URL) }); });
     await ctx.route(TEST_URL + "/**", function (r) { return sahte.isle(r); });
     const p = await ctx.newPage();
     p.on("pageerror", function (e) { hatalar.push(ad + ": " + e.message); });
@@ -220,6 +220,14 @@ export async function surum31Testleri({ adres, veritabani, dizin }) {
     await U.evaluate(function () { location.hash = "#/arsiv"; }); await bekle(U, 600);
     await U.evaluate(function () { document.querySelector("#yayinEvrenler").open = true; }); await bekle(U, 1500);
     ok("4.0: ana sayfada onaylanan evrenler (açılınca okunur)", /Vitrin Evreni/.test(await U.textContent("#yayinListe")));
+    await sahte.kokSorgu("update public.yayindaki_evrenler set kanon = true where slug = 'vitrin-evreni'");
+    await U.evaluate(function () { localStorage.removeItem(YAYIN_ONBELLEK); yayinListesiYukle(); }); await bekle(U, 1500);
+    ok("4.0.2: kanon onaylanan evren Kanon evrenlerde, seçicide ve E25 kapılarında; panelde 'kanona aday' değil", await U.evaluate(function () {
+      const kanon = Array.from(document.querySelectorAll("#anaEvrenler .ana-evren.kanon")).map(function (x) { return x.textContent; }).join("|");
+      return /Vitrin Evreni/.test(kanon) && evrenSeciciListesi().site.some(function (x) { return x.git === "#/yayin/vitrin-evreni"; }) &&
+        e25Kapilar().some(function (k) { return k.git === "#/yayin/vitrin-evreni" && k.tur === "kanon"; }) && evaStatu("Vitrin Evreni").tur === "kanon" &&
+        !kanonAdaylari().some(function (x) { return /^yayin-/.test(x.e.id || ""); });
+    }));
     await sahte.kokSorgu("insert into public.kullanici_abonelik (kullanici, uyelik_tipi, abonelik_bitis) select id, 'pro', now() + interval '30 days' from public.profiller where kullanici_adi = 'tekevren31' on conflict (kullanici) do update set uyelik_tipi = 'pro', abonelik_bitis = excluded.abonelik_bitis");
     ok("4.0: Pro üye: rozet, sınırsız evren, Kurucu'nun son adımında onaya gönder", await U.evaluate(async function () {
       await tf4AbonelikYukle(true);
