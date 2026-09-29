@@ -225,3 +225,88 @@ if (typeof evrKurucuHtml === "function") {
     try { return evrenDolulukHtml(v && v.eser) + h; } catch (_) { return h; }
   };
 }
+
+/* ==================== 5. şablonla başla: türler kişi, tarih ve belgeyle gelir ==================== */
+if (typeof EVT_TURLER !== "undefined") {
+  EVT_TURLER.push(
+    { id: "kiyamet", ad: "Kıyamet sonrası", ozet: "Yıkılmış şehirler, kıt su, yeniden kurulan topluluklar.",
+      kurallar: [["Su", "kaynak", "Temiz su para yerine geçer; kuyuların yeri sır olarak saklanır."],
+        ["Eski dünya", "tarih", "Yıkımdan önceki şeyler kutsal sayılır ama kimse nasıl çalıştıklarını bilmez."]],
+      para: { ad: "matara", simge: "", kur: 0.1 }, sozluk: [["Önce", "Yıkımdan önceki dünya."], ["Kül", "Yıkımın bıraktığı, hâlâ tehlikeli bölgeler."]],
+      ozelAlanlar: [["Gökyüzü", "Hep sarımsı; güneş nadiren net görünür."]], stil: { ana: "#8A5A2B", zemin: "#F6F1EA" }, harita: "kita" },
+    { id: "mitoloji", ad: "Mitoloji", ozet: "Tanrılar, kahramanlar, kehanetler.",
+      kurallar: [["Tanrıların payı", "din", "Her hasadın onda biri tanrılara bırakılır; bırakılmazsa kıtlık gelir."],
+        ["Kehanet", "kader", "Kehanetler hep doğru çıkar ama hiçbiri söylendiği gibi anlaşılmaz."]],
+      para: { ad: "sikke", simge: "", kur: 0.1 }, sozluk: [["Sunak", "Tanrılara adak bırakılan taş."], ["Kâhin", "Kehanetleri dile getiren kişi."]],
+      ozelAlanlar: [["Takvim", "Yıl, tanrıların on iki şölenine göre sayılır."]], stil: { ana: "#9A6B12", zemin: "#FAF5EA", font: "serif" }, harita: "takimada" }
+  );
+}
+
+const EVT_DERIN = {
+  _genel: {
+    kisiler: [["Anlatıcı", "tanık", "Olayların çoğunu gören ama hiçbirine karışmayan biri."], ["Kurucu", "ata", "Bu dünyanın ilk düzenini kuran kişi; adı her yerde anılır."], ["Yabancı", "gelen", "Başka bir yerden gelen ve her şeyi değiştiren kişi."]],
+    tarih: [["0", "Kuruluş", "Dünyanın bilinen düzeni kurulur."], ["120", "Bölünme", "İlk büyük kavga: topluluk ikiye ayrılır."], ["300", "Bugün", "Hikâyelerin geçtiği zaman."]],
+    belgeler: [["Mektup", "İlk mektup", "Anlatıcı", "Kurucu", "Buraya geldiğimizde hiçbir şey yoktu. Şimdi her şey var ve hiçbirinin sahibi yok."]]
+  },
+  fantastik: { kisiler: [["Yaşlı büyücü", "öğretmen", "Çok büyü yaptığı için adını unutmuş; herkes ona Usta der."], ["Genç kraliçe", "hükümdar", "Tahta erken çıktı; eski dili okuyabilen son kişi."], ["Kule bekçisi", "koruyucu", "Kulenin kapısını yüz yıldır aynı aile korur."]] },
+  bilimkurgu: { kisiler: [["Kaptan", "gemi", "Uykudan her uyandığında dünyayı biraz daha yabancı bulur."], ["Gemi aklı", "yapay akıl", "Yedi kaptan tanıdı; hepsini hatırlıyor."], ["İstasyon yöneticisi", "yönetim", "Havayı ve suyu dağıtan kişi, yani yasanın ta kendisi."]] },
+  kiyamet: { kisiler: [["Kuyu bilen", "rehber", "Temiz kuyuların yerini bilen son kişi."], ["Önceci", "bilge", "Yıkımdan önceki dünyayı hatırladığını söyler."], ["Kervan başı", "tüccar", "Su ve haber taşır, ikisini de pahalıya satar."]] },
+  mitoloji: { kisiler: [["Kâhin", "kehanet", "Kehaneti söyler ama anlamını bilmez."], ["Yarı tanrı", "kahraman", "Annesi tanrıça, babası çoban; iki dünyaya da ait değil."], ["Unutulan tanrı", "tanrı", "Adına sunak kalmamış; yine de dinliyor."]] }
+};
+
+if (typeof evtUygula === "function") {
+  const eskiEvtUygula33 = evtUygula;
+  window.evtUygula = function (id, turId) {
+    const r = eskiEvtUygula33.apply(this, arguments);
+    const d = Object.assign({}, EVT_DERIN._genel, EVT_DERIN[turId] || {});
+    evrenBenimDegistir(id, function (e) {
+      const bos = function (l, alan) { return !(l || []).some(function (x) { return x && String(x[alan] || "").trim(); }); };
+      if (bos(e.kisiler, "ad")) { e.kisiler = d.kisiler.map(function (k) { return { ad: k[0], rol: k[1], aciklama: k[2] }; }); }
+      if (bos(e.tarih, "olay")) { e.tarih = d.tarih.map(function (k) { return { zaman: k[0], cag: k[1], olay: k[2] }; }); }
+      if (bos(e.belgeler, "metin")) { e.belgeler = d.belgeler.map(function (k) { return { tur: k[0], baslik: k[1], kimden: k[2], kime: k[3], metin: k[4] }; }); }
+    });
+    return r;
+  };
+}
+
+/* Kurucu'nun ilk adımında da tür seçimi (boş evrende) */
+if (typeof evrKurucuHtml === "function") {
+  const eskiEKH33b = evrKurucuHtml;
+  window.evrKurucuHtml = function (v) {
+    const h = eskiEKH33b.apply(this, arguments);
+    const e = v && v.eser;
+    if (!e || typeof EVT_TURLER === "undefined" || h.indexOf("data-evt-tur") !== -1) { return h; }
+    if ((typeof EVR_ADIM !== "undefined" ? EVR_ADIM[e.id] || "temel" : "temel") !== "temel") { return h; }
+    const bos = !(e.kurallar || []).some(function (x) { return x && String(x.ad || "").trim(); }) && !(e.kisiler || []).some(function (x) { return x && String(x.ad || "").trim(); });
+    if (!bos) { return h; }
+    return h + '<div class="evt-turler"><span class="oyun-not">Şablonla başla: kurallar, kişiler, tarih, belge ve harita gelir; yalnızca boş alanları doldurur, hepsini sonra değiştirirsin.</span>' +
+      EVT_TURLER.map(function (t) { return '<button class="evt-tur" data-evt-tur="' + t.id + '"><b>' + kacir(t.ad) + "</b><small>" + kacir(t.ozet) + "</small></button>"; }).join("") + "</div>";
+  };
+}
+
+/* ==================== 9. Evrengezer yolculuk şablonu ==================== */
+function yolculukIskeleti(kisi, evren) {
+  const ad = (kisi && kisi.ad) || "Evrengezer", yer = evren || "yeni bir evren";
+  return "1. Kapı\n" + ad + " E25’in sisinde bir kapının aralandığını görür. Kapının öbür yanından " + yer + "’in kokusu gelir: …\n\n" +
+    "2. Varış\n" + ad + " " + yer + "’e adım atar. İlk gördüğü şey …; kimse onun başka bir evrenden geldiğini bilmiyor.\n\n" +
+    "3. Kural\n" + yer + "’in bir kuralı " + ad + "’ın bildiği her şeye ters düşer: …\n\n" +
+    "4. Karşılaşma\n" + ad + " burada biriyle tanışır: … Onun istediği şey: …\n\n" +
+    "5. Bedel\nGeri dönmek için " + ad + " bir şeyini burada bırakmak zorunda: …\n\n" +
+    "6. Dönüş\nE25’e döndüğünde pasaportunda yeni bir damga var: " + yer + ". Ama yanında getirdiği şey …";
+}
+
+if (typeof kisiGotur === "function") {
+  const eskiKG33 = kisiGotur;
+  window.kisiGotur = function (kisi, hedef) {
+    const r = eskiKG33.apply(this, arguments);
+    if (r && r.id && /^yeni-hikaye@/.test(String(hedef || ""))) {
+      const l = fanEserlerim(), h = l.find(function (x) { return x.id === r.id; });
+      if (h && !String(h.metin || "").trim()) {
+        h.metin = yolculukIskeleti(kisi, String(hedef).slice("yeni-hikaye@".length) || h.evren);
+        if (!String(h.baslik || "").trim()) { h.baslik = ((kisi && kisi.ad) || "Evrengezer") + "’ın yolculuğu"; }
+        fanEserlerimYaz(l);
+      }
+    }
+    return r;
+  };
+}
