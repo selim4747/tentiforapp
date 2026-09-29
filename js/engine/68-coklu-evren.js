@@ -688,7 +688,13 @@ function boyutGezegenSec(index) {
   });
 
   const ray = document.querySelector("#boyutGezegenRayi");
-  if (ray) {
+  const alani = document.querySelector("#boyutKaydiriciAlani");
+  const seciliEl = ogeler[boyutAktifGezegenIndex];
+  if (ray && alani && seciliEl) {
+    const merkez = alani.offsetWidth / 2;
+    const elMerkez = seciliEl.offsetLeft + (seciliEl.offsetWidth / 2);
+    ray.style.transform = "translateX(" + (merkez - elMerkez) + "px)";
+  } else if (ray) {
     const ofset = -1 * (boyutAktifGezegenIndex - Math.floor(gezegenler.length / 2)) * 140;
     ray.style.transform = "translateX(" + ofset + "px)";
   }
@@ -803,10 +809,18 @@ function boyutGezegeneInisYap(git) {
     if (git.indexOf("harita:") === 0) {
       const hid = git.slice(7);
       if (typeof haritaSeciliId !== "undefined") { haritaSeciliId = hid; }
-      if (location.hash !== "#/harita") { location.hash = "#/harita"; }
+      if (location.hash !== "#/harita") {
+        location.hash = "#/harita";
+      } else if (typeof haritaCiz === "function") {
+        try { haritaCiz(); } catch (_) {}
+      }
       setTimeout(function () { if (typeof haritaCiz === "function") { try { haritaCiz(); } catch (_) {} } }, 60);
     } else {
-      location.hash = git;
+      if (location.hash === git) {
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
+      } else {
+        location.hash = git;
+      }
     }
   }, 320);
 }
