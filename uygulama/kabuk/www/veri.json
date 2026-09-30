@@ -1,5 +1,5 @@
 {
-  "surum": "4.7.4",
+  "surum": "5.0.0",
   "guncelleme": "2026-09-30",
   "delilik": {
     "baslik": "Delilik",
@@ -7233,6 +7233,15 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "5.0.0",
+      "tarih": "2026-09-30",
+      "maddeler": [
+        "Mobil Kütüphanem: cihaz içi notlar, favoriler ve kaldığın yere dönme.",
+        "Çevrimdışı paket hazırlama, mobil paylaşım ve APK’ye özel kişisel kütüphane.",
+        "Tentiforverse APK’si GitHub Actions üzerinden yeniden derlenebilir hale getirildi."
+      ]
+    },
     {
       "surum": "4.7.4",
       "tarih": "2026-09-30",

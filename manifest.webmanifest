@@ -1,8 +1,8 @@
 {
-  "name": "Tentiforverse — Evren Arşivi",
+  "name": "Tentiforverse 5.0 — Kişisel Kütüphane",
   "short_name": "Tentiforverse",
-  "version": "4.7.4",
-  "description": "Tentiforverse evren arşivi: karakterler, kozmoloji, hikâyeler ve oyunlar.",
+  "version": "5.0.0",
+  "description": "Tentiforverse 5.0: evren arşivi, çevrimdışı kütüphane, notlar ve hikâyeler.",
   "lang": "tr",
   "start_url": "./",
   "scope": "./",
