@@ -1,0 +1,30 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Access-Control-Allow-Origin: *
+
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/veri.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+/surum.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/yazitipi/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/ikon/*
+  Cache-Control: public, max-age=31536000, immutable
