@@ -3193,6 +3193,21 @@ end;
 $$;
 revoke execute on function public.kullaniciya_bildir(uuid, text, text) from public, anon, authenticated;
 
+create or replace function public.yonetici_kisisel_bildirim(p_kullanici_adi text, p_baslik text, p_metin text, p_baglanti text default '#/sen') returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare hedef uuid; baslik text := left(btrim(coalesce(p_baslik, '')), 80); metin text := left(btrim(coalesce(p_metin, '')), 300); adres text := case when coalesce(p_baglanti, '') like '#/%' then p_baglanti else '#/sen' end;
+begin
+  if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
+  select id into hedef from public.profiller where kullanici_adi = lower(btrim(p_kullanici_adi)) limit 1;
+  if hedef is null then return jsonb_build_object('durum', 'hedef_yok'); end if;
+  if baslik = '' then return jsonb_build_object('durum', 'baslik_yok'); end if;
+  perform public.kullaniciya_bildir(hedef, left(baslik || case when metin = '' then '' else ': ' || metin end, 400), adres);
+  return jsonb_build_object('durum', 'tamam', 'uygulama', 1, 'hedef', lower(btrim(p_kullanici_adi)));
+end;
+$$;
+revoke execute on function public.yonetici_kisisel_bildirim(text, text, text, text) from public, anon;
+grant execute on function public.yonetici_kisisel_bildirim(text, text, text, text) to authenticated;
+
 create or replace function public.bildirimlerim() returns jsonb
 language sql stable security definer set search_path = '' as $$
   select coalesce(jsonb_agg(jsonb_build_object('no', no, 'metin', metin, 'baglanti', baglanti, 'okundu', okundu, 'zaman', zaman) order by zaman desc), '[]'::jsonb)
