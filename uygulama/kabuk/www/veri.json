@@ -1,5 +1,5 @@
 {
-  "surum": "5.0.1",
+  "surum": "5.0.2",
   "guncelleme": "2026-09-30",
   "delilik": {
     "baslik": "Delilik",
@@ -7233,6 +7233,16 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "5.0.2",
+      "tarih": "2026-09-30",
+      "maddeler": [
+        "Web Push bildirim alanları servis çalışanıyla uyumlu hale getirildi.",
+        "APK çevrimdışı bildirim kuyruğu başarısız planlamada bildirimi kaybetmiyor.",
+        "Native bildirim tıklaması ilgili uygulama sayfasını açıyor.",
+        "Yönetici hedefli bildirim sonucu web cihazı ve uygulama kuyruğunu ayrı gösteriyor."
+      ]
+    },
     {
       "surum": "5.0.1",
       "tarih": "2026-09-30",

@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
     if (abonelikHatasi) return cevap({ durum: 'hata', mesaj: 'Abonelikler okunamadı' }, 500);
 
     webpush.setVapidDetails('mailto:admin@tentiforapp.pages.dev', vapidPublic, vapidPrivate);
-    const payload = JSON.stringify({ title: baslik, body: metin, url: adres });
+    const payload = JSON.stringify({ baslik, metin, adres: uygulamaAdresi });
     let gonderilen = 0;
     let silinen = 0;
     let hata = 0;
