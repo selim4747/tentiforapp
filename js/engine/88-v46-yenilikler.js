@@ -1,9 +1,6 @@
 (function () {
   'use strict';
 
-  /* ==========================================================================
-     1. GEZİNME & MODEL EVRENİ ENTEGRASYONU
-     ========================================================================== */
   function evrenGezinmeKur() {
     if (typeof window.GEZINME !== 'undefined' && Array.isArray(window.GEZINME)) {
       const varMi = window.GEZINME.some(g => g.id === 'eterya' || g.id === 'modelEvren');
@@ -39,23 +36,16 @@
     if (typeof modelEvrenCiz === 'function') modelEvrenCiz();
   }
 
-  /* ==========================================================================
-     2. UYGULAMA İÇİ BİLDİRİM AYARLARI & MOBİL MODERASYON ENTEGRASYONU
-     ========================================================================== */
   function senSayfasiAyarEkle() {
     const ayarAlani = document.querySelector('#ayar25Alan') || document.querySelector('#hesapAlan');
     if (!ayarAlani || document.querySelector('#v46EkAyarlar')) return;
-
     const div = document.createElement('div');
     div.id = 'v46EkAyarlar';
     div.style.marginTop = '18px';
-
     const bildirimDurumu = localStorage.getItem('tentiforapp_ayar_guncelleme_bildirim') !== '0';
-
     div.innerHTML = `
-      <!-- UYGULAMA İÇİ BİLDİRİM AYARLARI -->
       <details class="kutu-y ayar25" open style="margin-bottom:14px;">
-        <summary><b>🔔 Güncelleme & İçerik Bildirimleri (v4.6.1)</b></summary>
+        <summary><b>🔔 Güncelleme & İçerik Bildirimleri (v4.7.0)</b></summary>
         <div class="ayar25-satir" style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--renk-kenar, #eee);">
           <div>
             <b>Yeni Sürüm ve İçerik Uyarıları</b>
@@ -73,8 +63,6 @@
           <button type="button" class="dugme y-kucuk" id="v46TestBildirimBtn">Test Bildirimi Gönder</button>
         </div>
       </details>
-
-      <!-- MOBİL & MASAÜSTÜ MODERASYON ERİŞİMİ -->
       <details class="kutu-y ayar25" open>
         <summary><b>🛡️ Moderasyon & Yönetim Paneli</b></summary>
         <p class="oyun-not">Okur evrenlerini, fan hikâyelerini, şikâyetleri ve topluluk başvurularını incelemek için tek tıkla moderasyon paneline git:</p>
@@ -85,10 +73,7 @@
         </div>
       </details>
     `;
-
     ayarAlani.appendChild(div);
-
-    // Event listenerlar
     const toggleBtn = div.querySelector('#v46BildirimToggle');
     if (toggleBtn) {
       toggleBtn.onclick = function () {
@@ -102,7 +87,6 @@
         }
       };
     }
-
     const testBtn = div.querySelector('#v46TestBildirimBtn');
     if (testBtn) {
       testBtn.onclick = async function () {
@@ -113,30 +97,21 @@
             if (izinMetin) izinMetin.textContent = 'Durum: ' + perm;
           }
           if (Notification.permission === "granted") {
-            new Notification("TentiforApp v4.6.1", {
+            new Notification("TentiforApp v4.7.0", {
               body: "Bildirim sistemi başarıyla çalışıyor! Yeni sürüm ve evrenlerden anında haberdar olacaksınız.",
               icon: "ikon/ikon-192.png"
             });
-            if (typeof window.eckaBildir === 'function') {
-              window.eckaBildir('Test bildirimi gönderildi!');
-            }
-          } else {
-            if (typeof window.eckaBildir === 'function') {
-              window.eckaBildir('Tarayıcı bildirim izni verilmedi.');
-            }
+            if (typeof window.eckaBildir === 'function') window.eckaBildir('Test bildirimi gönderildi!');
+          } else if (typeof window.eckaBildir === 'function') {
+            window.eckaBildir('Tarayıcı bildirim izni verilmedi.');
           }
-        } else {
-          if (typeof window.eckaBildir === 'function') {
-            window.eckaBildir('Bu tarayıcı bildirimleri desteklemiyor.');
-          }
+        } else if (typeof window.eckaBildir === 'function') {
+          window.eckaBildir('Bu tarayıcı bildirimleri desteklemiyor.');
         }
       };
     }
   }
 
-  /* ==========================================================================
-     3. SUPABASE YÜKÜNÜ AZALTAN AKILLI ÖNBELLEK VE DEDUPLICATION
-     ========================================================================== */
   function supabaseYukOnleyici() {
     let sonBildirimZamani = 0;
     if (typeof window.bildirimleriYukle === 'function') {
@@ -150,7 +125,6 @@
         return orjBildirim.apply(this, arguments);
       };
     }
-
     if (typeof window.yon24Sor === 'function') {
       const orjYon24 = window.yon24Sor;
       window.yon24Sor = async function () {
@@ -171,37 +145,27 @@
         } catch {}
       };
     }
-
     const aktifIstekler = new Map();
     if (typeof window.tf4AcikOku === 'function') {
       const orjAcikOku = window.tf4AcikOku;
       window.tf4AcikOku = function (adres) {
-        if (aktifIstekler.has(adres)) {
-          return aktifIstekler.get(adres);
-        }
-        const promise = orjAcikOku.apply(this, arguments).finally(() => {
-          aktifIstekler.delete(adres);
-        });
+        if (aktifIstekler.has(adres)) return aktifIstekler.get(adres);
+        const promise = orjAcikOku.apply(this, arguments).finally(() => { aktifIstekler.delete(adres); });
         aktifIstekler.set(adres, promise);
         return promise;
       };
     }
   }
 
-  /* ==========================================================================
-     4. ÇOKLU EVREN GEÇİT & KURAL ÇATIŞMASI SİMÜLATÖRÜ
-     ========================================================================== */
   window.gecitSimulasyonuAc = function () {
     const perde = document.getElementById('perde');
     if (!perde) return;
-
     const evrenler = [
       { id: 'tomye', ad: 'Tömye Evreni', kurallar: ['Gökyüzünde ay yoktur, aylar 28 gündür', 'Buz altı enerjisi ve Kyldo kimliği', 'Taş taşıyan Evrengezerler'] },
       { id: 'eterya', ad: 'Eterya: Yıldız Kırıkları (Test)', kurallar: ['Eter kırıkları ve saf ışık', 'Çapraz yerçekimi', 'Işık glifleri alfabesi', 'Rezonans kristalleri'] },
       { id: 'claude', ad: "Claude'un Evreni (Şomdo)", kurallar: ['Işığın yürüme hızında gitmesi', 'Düşünce kristalleşmesi'] },
       { id: 'e25', ad: 'E25 Evreni', kurallar: ['Sürekli sis ve boyut çatlağı', 'Kütüphane koruyuculuğu'] }
     ];
-
     if (typeof window.fanEserlerim === 'function') {
       window.fanEserlerim().forEach(fe => {
         if (fe.tur === 'evren') {
@@ -213,7 +177,6 @@
         }
       });
     }
-
     perde.innerHTML = `
       <div class="pencere sim-pencere" role="dialog" aria-modal="true">
         <button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button>
@@ -242,59 +205,47 @@
       </div>
     `;
     perde.hidden = false;
-
     function calistir() {
       const aId = document.getElementById('simEvrenA').value;
       const bId = document.getElementById('simEvrenB').value;
       const alan = document.getElementById('simSonucAlani');
       if (!alan) return;
-
       if (aId === bId) {
-        alan.innerHTML = `
-          <div class="kutu-y" style="border-left:4px solid #2ecc71;">
-            <b>✓ Tam Uyum (%100)</b>
-            <p class="oyun-not" style="margin-top:6px;">Aynı evren içinde geçit açıldı. Herhangi bir kural çatışması veya boyutsal sapma gözlenmez.</p>
-          </div>
-        `;
+        alan.innerHTML = `<div class="kutu-y" style="border-left:4px solid #2ecc71;"><b>✓ Tam Uyum (%100)</b><p class="oyun-not" style="margin-top:6px;">Aynı evren içinde geçit açıldı. Herhangi bir kural çatışması veya boyutsal sapma gözlenmez.</p></div>`;
         return;
       }
-
       const evA = evrenler.find(x => x.id === aId) || { ad: aId };
       const evB = evrenler.find(x => x.id === bId) || { ad: bId };
-
       const tohum = (aId.charCodeAt(0) * 17 + bId.charCodeAt(0) * 31) % 100;
       const kararlilik = Math.max(40, Math.min(94, 100 - (tohum % 45)));
-
       alan.innerHTML = `
         <div class="kutu-y" style="border-left:4px solid var(--renk-vurgu, #2f81f7);">
           <span class="oyun-etiket">Geçit Kararlılığı: %${kararlilik}</span>
-          <div style="margin-top:8px; font-size:13.5px; line-height:1.5;">
-            <b>🌀 Doğa Kanunları & Fizik:</b> ${evA.ad} ile ${evB.ad} sınırında rezonans dalgalanması yaşanır. Kural çatışması geçici bir yerçekimi kırılması oluşturur.
-          </div>
-          <div style="margin-top:6px; font-size:13.5px; line-height:1.5;">
-            <b>💎 Evrengezer Taşı Tepkisi:</b> ${kararlilik > 70 ? 'Taş normal frekansta rezonans sağlar, geçiş güvenlidir.' : 'Taş yüzeyinde ısınma gözlenir; 48 saatten uzun kalınması önerilmez.'}
-          </div>
-          <div style="margin-top:6px; font-size:13.5px; line-height:1.5;">
-            <b>⏳ Zaman Akışı:</b> 1 ${evA.ad} günü ≈ ${(0.8 + (tohum % 8) * 0.1).toFixed(1)} ${evB.ad} gününe denk düşer.
-          </div>
-        </div>
-      `;
+          <div style="margin-top:8px; font-size:13.5px; line-height:1.5;"><b>🌀 Doğa Kanunları & Fizik:</b> ${evA.ad} ile ${evB.ad} sınırında rezonans dalgalanması yaşanır.</div>
+          <div style="margin-top:6px; font-size:13.5px; line-height:1.5;"><b>💎 Evrengezer Taşı Tepkisi:</b> ${kararlilik > 70 ? 'Taş normal frekansta rezonans sağlar, geçiş güvenlidir.' : 'Taş yüzeyinde ısınma gözlenir; 48 saatten uzun kalınması önerilmez.'}</div>
+          <div style="margin-top:6px; font-size:13.5px; line-height:1.5;"><b>⏳ Zaman Akışı:</b> 1 ${evA.ad} günü ≈ ${(0.8 + (tohum % 8) * 0.1).toFixed(1)} ${evB.ad} gününe denk düşer.</div>
+        </div>`;
     }
-
     const hBtn = document.getElementById('simHesaplaBtn');
     if (hBtn) hBtn.onclick = calistir;
     calistir();
   };
 
-  /* ==========================================================================
-     BAŞLATMA
-     ========================================================================== */
+  function v47IcEvrenYukle() {
+    if (document.querySelector('script[data-v47]')) return;
+    const s = document.createElement('script');
+    s.src = 'js/engine/89-v47-ic-evren.js?v=470';
+    s.defer = true;
+    s.setAttribute('data-v47', '1');
+    document.head.appendChild(s);
+  }
+
   function baslat() {
     evrenGezinmeKur();
     supabaseYukOnleyici();
+    v47IcEvrenYukle();
     setInterval(senSayfasiAyarEkle, 500);
     setTimeout(eteryaSayfasiniAc, 0);
-
     window.addEventListener('hashchange', () => {
       evrenGezinmeKur();
       setTimeout(senSayfasiAyarEkle, 100);
