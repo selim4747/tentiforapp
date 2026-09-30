@@ -1,5 +1,17 @@
 [
   {
+    "surum": "4.6.0",
+    "tarih": "2026-09-30",
+    "maddeler": [
+      "Yapım ve Karakter Entegrasyonu: Yapımlara kısa karakter rolleri ekleme ve karakter profilinde 'Yer Aldığı Yapımlar' çift yönlü bağlantısı getirildi (Supabase'e sıfır yük).",
+      "Evren Ansiklopedisi (World Bible): Evren Kurucu ve evren sayfalarında tek tıkla Markdown (.md) ve şık yazdırılabilir tek sayfa (.html) kitapçık indirme eklendi.",
+      "Akıllı Lore & Karakter İpuçları: Anlatı metinlerinde geçen karakter ve terimler için anlık mini bilgi kartı (Smart Lore Tooltip) açılır hâle getirildi.",
+      "Karakter Detayında Mini İlişki Çemberi: Karakter profilinde o kişiye doğrudan bağlı diğer karakterleri ve bağ türlerini gösteren hızlı geçiş alanı eklendi.",
+      "Geçit & Kural Çatışması Simülatörü: İki evren arasında geçit açıldığında fizik kuralları, doğa kanunları, zaman akışı ve Evrengezer taşı kararlılık simülasyonu eklendi.",
+      "Supabase İstek Optimizasyonu: Bildirimler, hata sorguları ve genel okuma istekleri için akıllı TTL önbelleği ve promise birleştirme (coalescing) uygulanarak sunucu yükü minimuma indirildi."
+    ]
+  },
+  {
     "surum": "4.5.0",
     "tarih": "2026-09-30",
     "maddeler": [

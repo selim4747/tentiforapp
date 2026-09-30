@@ -1,5 +1,5 @@
 {
-  "surum": "4.5.0",
+  "surum": "4.6.0",
   "guncelleme": "2026-09-29",
   "delilik": {
     "baslik": "Delilik",
@@ -2784,14 +2784,24 @@
       "tur": "Oyun",
       "sinif": "UH",
       "durum": "Yapımda",
-      "not": "Yarılandı. Google Play erken erişim yakında; test için Windows derlemesi hazır."
+      "not": "Yarılandı. Google Play erken erişim yakında; test için Windows derlemesi hazır.",
+      "karakterler": [
+        "Tarı (Başrol - Kütüphane Çırağı)",
+        "Afor (Yol Arkadaşı)",
+        "Necale (Kütüphane Görevlisi)"
+      ]
     },
     {
       "ad": "Delilik",
       "tur": "Roman",
       "sinif": "UH",
       "durum": "Yazımda",
-      "not": "Dört bölüm. Yapı hastalığı taklit eder: diyalogla başlar, anlatımla biter."
+      "not": "Dört bölüm. Yapı hastalığı taklit eder: diyalogla başlar, anlatımla biter.",
+      "karakterler": [
+        "Tarı (Başrol - Kütüphane Çırağı)",
+        "Afor (Yol Arkadaşı)",
+        "Necale (Kütüphane Görevlisi)"
+      ]
     },
     {
       "ad": "İkinci oyun",
@@ -2805,42 +2815,71 @@
       "tur": "Oyun",
       "sinif": "UH",
       "durum": "Planda",
-      "not": "Unreal, ders projesi. Düşman UHT (Ucuz Hidrojen Tedarikçileri); arkasında güneşlerin hidrojenini çalan zengin bir iş adamı var. 20 hafıza parçası L25'in tüm geçmişini içerir; en az 200 yıldız sistemi planlanıyor."
+      "not": "Unreal, ders projesi. Düşman UHT (Ucuz Hidrojen Tedarikçileri); arkasında güneşlerin hidrojenini çalan zengin bir iş adamı var. 20 hafıza parçası L25'in tüm geçmişini içerir; en az 200 yıldız sistemi planlanıyor.",
+      "karakterler": [
+        "L25 (Kaptan)",
+        "Zal (Mühendis)"
+      ]
     },
     {
       "ad": "Delilik 2",
       "tur": "Oyun + Kitap",
       "sinif": "UH",
       "durum": "Planda",
-      "not": "Afor'un hikâyesi. Fısıltı mekaniği buradan çıkar. Boyut kütüphaneleri ayrı evrenlerdeki kütüphanelerdir. Necale hem kütüphanenin sahibi hem geceleri yardıma gelen bir savaşçı olarak devam eder. Kitap ve oyun bir ay arayla çıkar; oyun kaybedilirse en baştan ya da son geceden başlanır. Steam sürümünde (Derin Delilik) Egir, Zafkı Eşci ve Oyunbozan birer hayal olarak NPC'dir; beş uzuvlu yaratık Tarı'nın takıntı hâline geldiği bir hayaldir. Çıkıştan önceki son güncellemeyle oyunun \"son 10 gün\" finali gelir: beş gün Afor'a öğretmenlik yapılır, beş gün Afor oynanır."
+      "not": "Afor'un hikâyesi. Fısıltı mekaniği buradan çıkar. Boyut kütüphaneleri ayrı evrenlerdeki kütüphanelerdir. Necale hem kütüphanenin sahibi hem geceleri yardıma gelen bir savaşçı olarak devam eder. Kitap ve oyun bir ay arayla çıkar; oyun kaybedilirse en baştan ya da son geceden başlanır. Steam sürümünde (Derin Delilik) Egir, Zafkı Eşci ve Oyunbozan birer hayal olarak NPC'dir; beş uzuvlu yaratık Tarı'nın takıntı hâline geldiği bir hayaldir. Çıkıştan önceki son güncellemeyle oyunun \"son 10 gün\" finali gelir: beş gün Afor'a öğretmenlik yapılır, beş gün Afor oynanır.",
+      "karakterler": [
+        "Afor (Ana Karakter)",
+        "Necale (Savaşçı / Kütüphaneci)",
+        "Egir (Hayal NPC)",
+        "Zafkı Eşci",
+        "Oyunbozan"
+      ]
     },
     {
       "ad": "Saek Köken Filmi",
       "tur": "Film",
       "sinif": "UH",
       "durum": "Planda",
-      "not": "Açılış bıçak, cam, üç kat. Ruh virüsü olduğu gerçeği after-credit sahnesinde açıklanır."
+      "not": "Açılış bıçak, cam, üç kat. Ruh virüsü olduğu gerçeği after-credit sahnesinde açıklanır.",
+      "karakterler": [
+        "Saek Luyot (Kırmızı Melez)",
+        "Yulkom Luyot"
+      ]
     },
     {
       "ad": "Sabıka Birlikteliği",
       "tur": "Film",
       "sinif": "UH",
       "durum": "Planda",
-      "not": "Feil ve Saek birlikte Evrengezer evrenine gitmeye çalışır, zorlanır, sonunda varır ve orada bir süre geçirirler. Pileg ziyareti post-credit değil, filmin son sahnelerindedir."
+      "not": "Feil ve Saek birlikte Evrengezer evrenine gitmeye çalışır, zorlanır, sonunda varır ve orada bir süre geçirirler. Pileg ziyareti post-credit değil, filmin son sahnelerindedir.",
+      "karakterler": [
+        "Feil Luyot (Beyaz Melez)",
+        "Saek Luyot (Kırmızı Melez)",
+        "Pileg"
+      ]
     },
     {
       "ad": "Evrengezer",
       "tur": "Seri",
       "sinif": "UH",
       "durum": "Planda",
-      "not": "Genç Zal; Saek'in katılımı."
+      "not": "Genç Zal; Saek'in katılımı.",
+      "karakterler": [
+        "Zal (Genç Evrengezer)",
+        "Saek Luyot"
+      ]
     },
     {
       "ad": "Ruh Virüsü",
       "tur": "Dizi",
       "sinif": "UH",
       "durum": "Olasılık",
-      "not": "Yayımlanan adı \"EvrenGezer\"dir; Yejen'in gözünden anlatılır. Rastgele bir günden, evren gezme okulunun ilk günlerinden başlar — ilk evrenler, amatör geziler. L25 ve Saek büyük olasılıkla görünür, hatta ortak bir bölüm olabilir. Format animasyon; en az 100 bölüm planlanıyor (sezon başına 20). Evrengezerler serisiyle crossover yapabilir."
+      "not": "Yayımlanan adı \"EvrenGezer\"dir; Yejen'in gözünden anlatılır. Rastgele bir günden, evren gezme okulunun ilk günlerinden başlar — ilk evrenler, amatör geziler. L25 ve Saek büyük olasılıkla görünür, hatta ortak bir bölüm olabilir. Format animasyon; en az 100 bölüm planlanıyor (sezon başına 20). Evrengezerler serisiyle crossover yapabilir.",
+      "karakterler": [
+        "Yejen (Gözlemci)",
+        "L25",
+        "Saek Luyot"
+      ]
     },
     {
       "ad": "Final Hikâyesi",
@@ -2868,21 +2907,32 @@
       "tur": "Oyun",
       "sinif": "UD",
       "durum": "Fikir",
-      "not": "Korkunç bir denizin dünyası. Yabancı öğe: bitmeyen elma fıçısı. George'un rüzgârla dostluğu ise yabancı öğe değil, o evrenin kendi tuhaflığı."
+      "not": "Korkunç bir denizin dünyası. Yabancı öğe: bitmeyen elma fıçısı. George'un rüzgârla dostluğu ise yabancı öğe değil, o evrenin kendi tuhaflığı.",
+      "karakterler": [
+        "George (Kaptan)"
+      ]
     },
     {
       "ad": "GTBT (Good Times Bad Times)",
       "tur": "Alternatif Zaman Çizgisi",
       "sinif": "UH",
       "durum": "Planda",
-      "not": "Tanrı, Kaelan'ı affettikten sonra bu zaman çizgisinde bazı şeylerin kötü gittiğini fark eder ve yeni bir zaman çizgisi yaratır — Yaşam ile Kaelan'a istedikleri zaman gidip bakabileceklerini söyler. Sonsuz dallanan bir \"What If\" değildir; kökler aynı kalır, yalnızca bazı sonuçlar değişir."
+      "not": "Tanrı, Kaelan'ı affettikten sonra bu zaman çizgisinde bazı şeylerin kötü gittiğini fark eder ve yeni bir zaman çizgisi yaratır — Yaşam ile Kaelan'a istedikleri zaman gidip bakabileceklerini söyler. Sonsuz dallanan bir \"What If\" değildir; kökler aynı kalır, yalnızca bazı sonuçlar değişir.",
+      "karakterler": [
+        "Kaelan Luyot",
+        "Yaşam"
+      ]
     },
     {
       "ad": "Denizci George — Buzaltı Deliliği",
       "tur": "Oyun (DLC)",
       "sinif": "UD",
       "durum": "Fikir",
-      "not": "GTBT'ye bağlı bir UD parçası. Oyuncuyu, farkında olmadan, Tarı'nın GTBT'deki alternatif hâlini oynatır."
+      "not": "GTBT'ye bağlı bir UD parçası. Oyuncuyu, farkında olmadan, Tarı'nın GTBT'deki alternatif hâlini oynatır.",
+      "karakterler": [
+        "George",
+        "Tarı (Alternatif Hâl)"
+      ]
     }
   ],
   "oylama": [],
@@ -7184,6 +7234,18 @@
   ],
   "degisiklik": [
     {
+      "surum": "4.6.0",
+      "tarih": "2026-09-30",
+      "maddeler": [
+        "Yapım ve Karakter Entegrasyonu: Yapımlara kısa karakter rolleri ekleme ve karakter profilinde 'Yer Aldığı Yapımlar' çift yönlü bağlantısı getirildi (Supabase'e sıfır yük).",
+        "Evren Ansiklopedisi (World Bible): Evren Kurucu ve evren sayfalarında tek tıkla Markdown (.md) ve şık yazdırılabilir tek sayfa (.html) kitapçık indirme eklendi.",
+        "Akıllı Lore & Karakter İpuçları: Anlatı metinlerinde geçen karakter ve terimler için anlık mini bilgi kartı (Smart Lore Tooltip) açılır hâle getirildi.",
+        "Karakter Detayında Mini İlişki Çemberi: Karakter profilinde o kişiye doğrudan bağlı diğer karakterleri ve bağ türlerini gösteren hızlı geçiş alanı eklendi.",
+        "Geçit & Kural Çatışması Simülatörü: İki evren arasında geçit açıldığında fizik kuralları, doğa kanunları, zaman akışı ve Evrengezer taşı kararlılık simülasyonu eklendi.",
+        "Supabase İstek Optimizasyonu: Bildirimler, hata sorguları ve genel okuma istekleri için akıllı TTL önbelleği ve promise birleştirme (coalescing) uygulanarak sunucu yükü minimuma indirildi."
+      ]
+    },
+    {
       "surum": "4.5.0",
       "tarih": "2026-09-30",
       "maddeler": [
@@ -8614,7 +8676,7 @@
   "__parcalar": {
     "degisiklik": {
       "dosya": "veri-degisiklik.json?v=a1aad374ff",
-      "toplam": 59
+      "toplam": 60
     }
   }
 }

@@ -95,4 +95,40 @@ if (fs.existsSync(path.dirname(wwwDir))) {
   console.log('✓ uygulama/kabuk/www yerel APK varlıkları güncellendi');
 }
 
+// 6. Cloudflare Pages uyumluluğu için dist dizinini senkronize et
+const distDir = path.join(ROOT_DIR, 'dist');
+fs.mkdirSync(distDir, { recursive: true });
+
+const distDosyalarVeDizinler = [
+  'index.html',
+  'veri.json',
+  'veri-degisiklik.json',
+  'surum.json',
+  'manifest.webmanifest',
+  'sw.js',
+  'robots.txt',
+  'paylasim.png',
+  'google-dogrulama.txt',
+  '_headers',
+  'css',
+  'js',
+  'ikon',
+  'yazitipi',
+  'evrenler'
+];
+
+for (const oge of distDosyalarVeDizinler) {
+  const kaynak = path.join(ROOT_DIR, oge);
+  const hedef = path.join(distDir, oge);
+  if (fs.existsSync(kaynak)) {
+    const stats = fs.statSync(kaynak);
+    if (stats.isDirectory()) {
+      fs.cpSync(kaynak, hedef, { recursive: true });
+    } else {
+      fs.copyFileSync(kaynak, hedef);
+    }
+  }
+}
+console.log('✓ dist üretim dizini senkronize edildi (Cloudflare Pages uyumlu)');
+
 console.log('✨ Paketleme başarıyla tamamlandı.');

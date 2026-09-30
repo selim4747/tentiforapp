@@ -1,6 +1,6 @@
 /* TentiforApp servis çalışanı — sayfa ve veri önce ağdan (yavaşsa son kopya), sürümlü dosyalar önbellekten.
    Yeni bir sürüm yayınlanınca sayfalar kendiliğinden yenilenir; eski kopya yalnızca çevrimdışı ya da yavaş ağda kullanılır. */
-const ONBELLEK = "tentiforapp-307e3becf717";
+const ONBELLEK = "tentiforapp-e1b7d3c99cf3";
 /* Hesap kütüphanesi burada yok: yalnızca hesabı kullanan indirir (ilk kullanımda önbelleğe girer). */
 const ILK = ["./", "index.html", "css/style.css?v=300bde5f91", "veri.json", "veri-degisiklik.json?v=a1aad374ff", "js/paket-1.js?v=6507313a04", "js/paket-2.js?v=8c1fddc7db", "js/paket-3.js?v=0abfc7bcf1", "js/paket-4.js?v=d6c566e7fa", "manifest.webmanifest", "ikon/ikon-192.png", "yazitipi/karla-normal-400-latin.woff2", "js/core/24-arsiv-mantigi.js?v=3b01d5d917"];
 
