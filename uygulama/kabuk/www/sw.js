@@ -1,6 +1,6 @@
 /* TentiforApp servis çalışanı — sayfa ve veri önce ağdan (yavaşsa son kopya), sürümlü dosyalar önbellekten.
    Yeni bir sürüm yayınlanınca sayfalar kendiliğinden yenilenir; eski kopya yalnızca çevrimdışı ya da yavaş ağda kullanılır. */
-const ONBELLEK = "tentiforapp-bb3112e3c441";
+const ONBELLEK = "tentiforapp-103ae8873852";
 /* Hesap kütüphanesi burada yok: yalnızca hesabı kullanan indirir (ilk kullanımda önbelleğe girer). */
 const ILK = ["./", "index.html", "css/style.css?v=300bde5f91", "veri.json", "veri-degisiklik.json?v=a1aad374ff", "js/paket-1.js?v=3d381d29b0", "js/paket-2.js?v=8c1fddc7db", "js/paket-3.js?v=00429b607e", "js/paket-4.js?v=d6c566e7fa", "manifest.webmanifest", "ikon/ikon-192.png", "yazitipi/karla-normal-400-latin.woff2", "js/core/24-arsiv-mantigi.js?v=3b01d5d917", "js/arsiv/34b-model-evreni.js", "js/engine/88-v46-yenilikler.js?v=b1134c748a", "evrenler/fornek-eterya.json"];
 
@@ -21,7 +21,7 @@ self.addEventListener("push", function (e) {
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { metin: e.data ? e.data.text() : "" }; }
   /* sessiz saatte de gösterilir (tarayıcı ister) ama sessiz ve titreşimsiz */
   e.waitUntil(ayarOku().then(function (a) {
-    return self.registration.showNotification(String(d.baslik || "TentiforApp").slice(0, 80), {
+    return self.registration.showNotification(String(d.baslik || "Tentiforverse").slice(0, 80), {
       body: String(d.metin || "").slice(0, 200), icon: "ikon/ikon-192.png", badge: "ikon/ikon-192.png",
       tag: "tentifor-bildirim", data: { adres: d.adres || "/" }, silent: sessizMi(a)
     });
@@ -66,7 +66,7 @@ async function gunlukKontrol() {
   const bugun = new Date().toISOString().slice(0, 10);
   if (a.kelime && a.oynanan !== bugun && a.hatirlatilan !== bugun) {
     a.hatirlatilan = bugun;
-    await self.registration.showNotification("Günün kelimesi hazır", {
+    await self.registration.showNotification("Tentiforverse · Günün kelimesi hazır", {
       body: "Bugünün Tentiforverse kelimesini bul: 6 hak.", icon: "ikon/ikon-192.png", badge: "ikon/ikon-192.png",
       tag: "tf-kelime", data: { adres: "/yarislar/" } });
   }

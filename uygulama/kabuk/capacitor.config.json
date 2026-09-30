@@ -1,30 +1,27 @@
 {
   "appId": "dev.pages.tentiforapp",
-  "appName": "TentiforApp",
+  "appName": "Tentiforverse",
   "webDir": "www",
+  "bundledWebRuntime": false,
   "android": {
     "allowMixedContent": false,
-    "backgroundColor": "#F4F9FD",
+    "backgroundColor": "#102A43",
     "adjustMarginsForEdgeToEdge": "auto"
   },
   "plugins": {
     "LocalNotifications": {
-      "iconColor": "#3A7CA5"
+      "iconColor": "#F4B942",
+      "sound": "default"
     },
     "SplashScreen": {
-      "launchShowDuration": 6000,
+      "launchShowDuration": 1200,
       "launchAutoHide": true,
-      "launchFadeOutDuration": 200,
-      "backgroundColor": "#F4F9FD",
+      "launchFadeOutDuration": 220,
+      "backgroundColor": "#102A43",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,
       "splashFullScreen": false,
       "splashImmersive": false
     }
-  },
-  "server": {
-    "url": "https://tentiforapp.pages.dev",
-    "cleartext": false,
-    "errorPath": "hata.html"
   }
 }

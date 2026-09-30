@@ -1,8 +1,8 @@
 {
-  "name": "TentiforApp — Tentiforverse Arşivi",
-  "short_name": "TentiforApp",
+  "name": "Tentiforverse — Evren Arşivi",
+  "short_name": "Tentiforverse",
   "version": "4.7.4",
-  "description": "Tentiforverse evren arşivi: karakterler, kozmoloji, isim sistemi, takvim ve oyunlar.",
+  "description": "Tentiforverse evren arşivi: karakterler, kozmoloji, hikâyeler ve oyunlar.",
   "lang": "tr",
   "start_url": "./",
   "scope": "./",
@@ -15,8 +15,8 @@
   },
   "handle_links": "preferred",
   "prefer_related_applications": false,
-  "background_color": "#F4F9FD",
-  "theme_color": "#F4F9FD",
+  "background_color": "#102A43",
+  "theme_color": "#102A43",
   "icons": [
     {
       "src": "ikon/ikon-192.png",
@@ -113,7 +113,8 @@
   "categories": [
     "books",
     "entertainment",
-    "games"
+    "games",
+    "education"
   ],
   "share_target": {
     "action": "./paylasim-al",

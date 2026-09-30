@@ -1,40 +1,75 @@
-# TentiforApp APK dağıtımı
+# Tentiforverse mobil dağıtımı
 
-Bu dizin, TentiforApp web sürümünü açan Android APK kabuğunu ve indirme metadata dosyalarını içerir.
+Bu dizin, Tentiforverse web sürümünü açan Android kabuğunu, mobil kimlik ayarlarını ve APK indirme metadata dosyalarını içerir.
 
-## Gerçek çalışma şekli
+## Hazırlanan mobil davranış
 
-- APK yalnızca `https://tentiforapp.pages.dev` web sürümünü açar.
-- Uygulama içeriği APK'nın içine gömülü değildir.
-- Bu nedenle APK'nın çalışması için internet bağlantısı gerekir.
-- Web sitesi güncellendiğinde, aynı APK tekrar yayınlanmadan güncel web sürümü açılır.
-- İnternet yoksa APK'nın içerik göstermemesi beklenen davranıştır; bu sürüm çevrimdışı APK değildir.
+### Çevrimdışı çalışma
 
-## Bu bilgisayarda yapılabilecekler
+`uygulama/kabuk/capacitor.config.json` artık `server.url` kullanmıyor. Bir sonraki native APK derlemesinde `www/` içindeki web dosyaları APK'ya gömülecek; böylece uygulama internet yokken de açılabilecek.
 
-Android Studio, Android SDK ve JDK kurulu değilse native APK yeniden derlenemez. Bu bilgisayarda yapılabilecek güvenli işlemler şunlardır:
+Web/PWA tarafındaki `sw.js` zaten:
+
+- uygulama dosyalarını önbelleğe alır,
+- yavaş ağda cihazdaki son kopyayı açar,
+- internet yokken daha önce açılmış içerikleri gösterir,
+- bağlantı geri gelince yeni kopyayı arka planda alır.
+
+Çevrimdışı çalışmada Supabase, hesap eşitleme ve yeni içerik erişilemez; cihazdaki yerel ilerleme bağlantı gelince eşitlenir.
+
+### Bildirimler
+
+- Native APK için `LocalNotifications` ayarları hazırlandı.
+- Web/PWA için mevcut Service Worker bildirim altyapısı korunuyor.
+- Kullanıcı bildirim izni vermelidir.
+- Android 13 ve sonrasında işletim sistemi bildirim izni ayrıca ister.
+- Günlük hatırlatma ve takip edilen evren bildirimi kullanıcı ayarlarından açılır.
+
+### Mobil kimlik
+
+Bir sonraki APK/PWA kurulumu şu adla görünür:
+
+```text
+Tentiforverse
+```
+
+Ayrıca koyu lacivert açılış ekranı, altın bildirim rengi ve Tentiforverse manifest adı kullanılır. `appId` güncelleme uyumluluğu bozulmasın diye değiştirilmedi.
+
+## Önemli sınırlama
+
+Bu sandbox'ta Android Studio, Android SDK, JDK ve Gradle native derleme araçları yoktur. Bu nedenle bu turda mevcut `uygulama/indir/tentiforapp.apk` binary dosyası yeniden derlenmedi.
+
+Yani:
+
+- Mevcut indirilebilir APK hâlâ eski web-kabuk davranışını taşır.
+- Aşağıdaki ayarlar bir sonraki native APK derlemesine hazırlandı.
+- Yeni ayarların telefonda görünmesi için APK'nın Android araçları bulunan bir bilgisayarda yeniden derlenmesi gerekir.
+- Web/PWA kurulumu için manifest değişiklikleri `npm run build` sonrasında yayına alınabilir.
+
+## Derleme zamanı
+
+Android araçları bulunan bilgisayarda:
 
 ```bash
 npm install
 npm run build
+cd uygulama/kabuk
+npm install
+npx cap sync android
+npx cap open android
 ```
 
-Bu işlem web sürümünü paketler ve aşağıdaki dosyaları production `dist/` çıktısına kopyalar:
-
-- `uygulama/indir/tentiforapp.apk`
-- `uygulama/indir/apk.json`
-- `.well-known/assetlinks.json`
-
-Yeni APK dosyası dışarıdan hazırlandığında yalnızca şu dosyanın üzerine konur:
+Android Studio'da APK üretildikten sonra:
 
 ```text
 uygulama/indir/tentiforapp.apk
 ```
 
-Ardından APK boyutu ve sürüm bilgisi `uygulama/indir/apk.json` içinde güncellenir ve tekrar `npm run build` çalıştırılır.
+dosyası değiştirilir. Ardından `uygulama/indir/apk.json` içindeki boyut, sürüm ve tarih güncellenir; son olarak tekrar `npm run build` çalıştırılır.
 
-## Dizin yapısı
+## Dosyalar
 
-- `kabuk/`: Web adresini açan Capacitor yapılandırması.
-- `indir/`: APK dosyası ve indirme metadata dosyası.
-- `ac/`: Android uygulama bağlantıları için açılış sayfası.
+- `kabuk/capacitor.config.json`: yerel-first APK, bildirim, açılış ekranı ve uygulama adı ayarları.
+- `indir/`: indirilecek APK ve metadata.
+- `../manifest.webmanifest`: web/PWA uygulama adı, ikon ve tema ayarları.
+- `../sw.js`: çevrimdışı önbellek ve web bildirimleri.
