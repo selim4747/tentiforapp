@@ -64,7 +64,7 @@
   function evrenKotaAcik() { return evrenSinirsiz() || (gezerPlan() ? say('evren') < limit('evren') : evrenSayisi() < 1); }
   function gezegenKotaAcik(eser) { return !gezerPlan() || !eser || (eser.gezegenler || []).length < limit('gezegen'); }
   function planEtiketi() { return plan() === 'ucretsiz' ? 'Ücretsiz' : PLAN[plan()].ad; }
-  function ortakKullanimNotu() { return 'Ortak kullanım sunucuya bağlanmaz: evren paketi dosya olarak dışa aktarılır, diğer cihazda içe aktarılır. Canlı ortak düzenleme ve Supabase ortak üyelik tablosu kullanılmaz.'; }
+  function ortakKullanimNotu() { return 'Ortak evrenler Supabase kimlik ve davet kontrolüyle, içerik ise GitHub private deposuyla korunur.'; }
   function planKartHtml() {
     var p = plan(), aktif = p !== 'ucretsiz';
     return '<div class="kutu-y pro-kart" data-uyelik-kart><b>' + (aktif ? planEtiketi() + ' üyesisin ✓' : 'Üyelik planları') + '</b>' +
@@ -79,13 +79,13 @@
       '<h3>Planlar</h3><p class="pencere-alt">Aktif planın: <b>' + planEtiketi() + '</b>. Aşağıda her planın tam sınırlarını ve açık özelliklerini görebilirsin.</p>' +
       '<div class="pro-katmanlar plan-karsilastirma">' +
       '<div class="pro-katman ' + (p === 'ucretsiz' ? 'plan-secili' : '') + '"><b>Ücretsiz</b>' + rozet('ucretsiz') +
-        '<ul><li>1 evren taslağı</li><li>Kanon evrenleri gezme ve okuma</li><li>Temel arşiv, oyun ve hikâye deneyimi</li><li>Takım paketi ve co-op dosya aktarımı kapalı</li><li>Evren düzenleyicisi ve gelişmiş editörler kapalı</li></ul></div>' +
+        '<ul><li>1 evren taslağı</li><li>Kanon evrenleri gezme ve okuma</li><li>Temel arşiv, oyun ve hikâye deneyimi</li><li>Ortak evren başlatma ve davet sistemi kapalı</li><li>Evren düzenleyicisi ve gelişmiş editörler kapalı</li></ul></div>' +
       '<div class="pro-katman ' + (p === 'evrengezer' ? 'plan-secili' : '') + '"><b>EvrenGezer</b>' + rozet('evrengezer') +
         '<p><strong>Ayda 5 evren · 12 Evrengezer · 42 fan hikâyesi</strong></p>' +
-        '<ul><li>Co-op evren: sahibi dahil en fazla 2 kişi</li><li>Yerel takım paketi açık; ikinci kişiyle dosya aktarımı üzerinden geliştirme</li><li>Her evrende en fazla 5 gezegen</li><li>Yalnızca 1 baloncuk evren</li><li>Çoklu ve iç içe evren kullanılamaz</li><li>Arayüz, görünüm ve kod editörleri kapalı</li><li>Gezme, okuma ve kendi evrenlerini temel düzeyde oluşturma</li></ul>' +
+        '<ul><li>Co-op evren: sahibi dahil en fazla 2 kişi</li><li>GitHub private evreninde ortak çalışma; sahip dahil en fazla 2 kişi</li><li>Her evrende en fazla 5 gezegen</li><li>Yalnızca 1 baloncuk evren</li><li>Çoklu ve iç içe evren kullanılamaz</li><li>Arayüz, görünüm ve kod editörleri kapalı</li><li>Gezme, okuma ve kendi evrenlerini temel düzeyde oluşturma</li></ul>' +
         '<button type="button" class="dugme dugme-sade" data-uyelik-ode="evrengezer">EvrenGezer’e geç</button></div>' +
       '<div class="pro-katman pro-one ' + (p === 'evrenyazar' ? 'plan-secili' : '') + '"><b>EvrenYazar · 249 TL / ay</b>' + rozet('evrenyazar') +
-        '<ul><li>Evren, Evrengezer, fan hikâyesi ve takım üyesi sınırı yok</li><li>Sınırsız kişiyle yerel takım paketi ve co-op dosya aktarımı</li><li>Gezegen, baloncuk, çoklu ve iç içe evren sınırı yok</li><li>Arayüz, görünüm ve kod editörleri açık</li><li>Tam evren özelleştirme ve gelişmiş üretim araçları</li></ul>' +
+        '<ul><li>Evren, Evrengezer, fan hikâyesi ve takım üyesi sınırı yok</li><li>GitHub private evreninde sınırsız ortak çalışma</li><li>Gezegen, baloncuk, çoklu ve iç içe evren sınırı yok</li><li>Arayüz, görünüm ve kod editörleri açık</li><li>Tam evren özelleştirme ve gelişmiş üretim araçları</li></ul>' +
         '<button type="button" class="dugme" data-uyelik-ode="evrenyazar">EvrenYazar’a geç</button></div>' +
       '</div><p class="oyun-not">Yönetici, kullanıcı adını kullanarak EvrenGezer veya EvrenYazar planını ücretsiz hediye edebilir.</p><p class="pencere-durum" id="uyelikDurum" role="status"></p></div>';
   }
