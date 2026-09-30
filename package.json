@@ -1,6 +1,6 @@
 {
   "name": "tentiforapp",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "TentiforApp — Tentiforverse Arşivi",
   "type": "module",
   "main": "server.js",
@@ -9,7 +9,8 @@
     "start": "node server.js",
     "build": "node scripts/paketle.mjs",
     "paketle": "node scripts/paketle.mjs",
-    "lint": "node -e 'console.log(\"Lint passed\")'"
+    "test": "node scripts/test.mjs",
+    "lint": "node scripts/lint.mjs"
   },
   "keywords": [
     "tentifor",

@@ -26,20 +26,38 @@ try {
   process.exit(1);
 }
 
-// 2. Paket karması hesapla
-const karma = crypto.createHash('md5')
-  .update(veriIcerik)
-  .update(Date.now().toString())
-  .digest('hex')
-  .substring(0, 12);
+// 2. Paket karması hesapla. Tarih kullanılmaz; aynı girdiler aynı cache adını üretir.
+const hashGirdileri = [
+  'index.html', 'manifest.webmanifest', 'package.json', 'veri.json',
+  'veri-degisiklik.json', 'css', 'js', 'ikon', 'yazitipi', 'evrenler'
+];
+function hashGirdisi(relative) {
+  const full = path.join(ROOT_DIR, relative);
+  if (!fs.existsSync(full)) return;
+  const stat = fs.statSync(full);
+  if (stat.isDirectory()) {
+    for (const child of fs.readdirSync(full).sort()) hashGirdisi(path.join(relative, child));
+    return;
+  }
+  let content = fs.readFileSync(full);
+  if (relative === 'index.html') {
+    content = Buffer.from(content.toString('utf8').replace(/<meta name="tentifor-paket" content="[^"]*">/, '<meta name="tentifor-paket" content="<paket>">'));
+  }
+  paketHash.update(relative).update('\0').update(content).update('\0');
+}
+const paketHash = crypto.createHash('md5');
+hashGirdileri.forEach(hashGirdisi);
+const karma = paketHash.digest('hex').substring(0, 12);
 
 console.log(`✓ Yeni paket karması: ${karma}`);
 
 // 3. surum.json güncelle
+let eskiSurum = null;
+try { eskiSurum = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'surum.json'), 'utf8')); } catch {}
 const surumVeri = {
   paket: karma,
   surum: veri.surum || '4.5.0',
-  kuruldu: new Date().toISOString()
+  kuruldu: eskiSurum && eskiSurum.paket === karma && eskiSurum.kuruldu ? eskiSurum.kuruldu : new Date().toISOString()
 };
 
 fs.writeFileSync(
@@ -82,6 +100,9 @@ if (fs.existsSync(indexPath)) {
 // 5. Capacitor kabuk için www dizinini senkronize et
 const wwwDir = path.join(ROOT_DIR, 'uygulama', 'kabuk', 'www');
 if (fs.existsSync(path.dirname(wwwDir))) {
+  const hataSayfasi = path.join(wwwDir, 'hata.html');
+  const hataIcerigi = fs.existsSync(hataSayfasi) ? fs.readFileSync(hataSayfasi) : null;
+  fs.rmSync(wwwDir, { recursive: true, force: true });
   fs.mkdirSync(wwwDir, { recursive: true });
   
   const dosyalarVeDizinler = [
@@ -112,11 +133,13 @@ if (fs.existsSync(path.dirname(wwwDir))) {
       }
     }
   }
+  if (hataIcerigi) fs.writeFileSync(hataSayfasi, hataIcerigi);
   console.log('✓ uygulama/kabuk/www yerel APK varlıkları güncellendi');
 }
 
 // 6. Cloudflare Pages uyumluluğu için dist dizinini senkronize et
 const distDir = path.join(ROOT_DIR, 'dist');
+fs.rmSync(distDir, { recursive: true, force: true });
 fs.mkdirSync(distDir, { recursive: true });
 
 const distDosyalarVeDizinler = [

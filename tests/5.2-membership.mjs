@@ -6,14 +6,14 @@ assert(s.includes('takim: Infinity'));
 assert(s.includes("'d30-'"));
 assert(s.includes('30 * 24 * 60 * 60 * 1000'));
 assert(s.includes('sahibi dahil en fazla 2 kişi'));
-assert(s.includes('Sınırsız kişiyle yerel takım paketi'));
-assert(s.includes('Ortak kullanım sunucuya bağlanmaz'));
+assert(s.includes('Sınırsız evren, Evrengezer, fan hikâyesi ve yerel takım paketi'));
+assert(s.includes('Ortak evrenler Supabase kimlik ve davet kontrolüyle, içerik ise GitHub private deposuyla korunur.'));
 assert(!s.includes('evren_uyeleri'));
 assert(!s.includes('evren_davetleri'));
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const data = JSON.parse(fs.readFileSync('veri.json', 'utf8'));
-assert.equal(pkg.version, '5.2.0');
-assert.equal(data.surum, '5.2.0');
+assert.equal(pkg.version, '5.2.1');
+assert.equal(data.surum, '5.2.1');
 
 const evren = fs.readFileSync('js/engine/54-evren-dosyalari.js', 'utf8');
 assert(evren.includes('"evren/"+String(n).replace'));

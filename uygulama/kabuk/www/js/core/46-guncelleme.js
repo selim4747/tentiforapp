@@ -8,7 +8,7 @@ function sayfaPaketi() {
 
 function yerelSurum() {
   return (typeof veri !== "undefined" && veri && veri.surum) ||
-         (document.querySelector('meta[name="tentifor-surum"]') || {}).content || "4.7.4";
+         (document.querySelector('meta[name="tentifor-surum"]') || {}).content || "5.2.1";
 }
 
 async function guncellemeFetch(url) {

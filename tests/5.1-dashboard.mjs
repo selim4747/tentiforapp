@@ -17,5 +17,5 @@ for (const marker of [
 ]) assert(module.includes(marker), `missing 5.1 feature: ${marker}`);
 
 assert(index.includes('js/engine/92-v51-dashboard.js?v=510'));
-assert.match(data.surum, /^5\.2\.0$/);
+assert.match(data.surum, /^5\.2\.1$/);
 console.log('5.1 dashboard feature assertions: PASS');
