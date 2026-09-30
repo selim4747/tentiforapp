@@ -8,20 +8,35 @@
     if (typeof window.GEZINME !== 'undefined' && Array.isArray(window.GEZINME)) {
       const varMi = window.GEZINME.some(g => g.id === 'eterya' || g.id === 'modelEvren');
       if (!varMi) {
-        window.GEZINME.push({
+        const claudeIdx = window.GEZINME.findIndex(g => g.id === 'claude');
+        const kayit = {
           id: 'eterya',
           ad: 'Eterya (Test)',
           ikon: '✧',
           bolumler: [['modelEvren', 'Eterya']]
-        });
-        if (typeof window.SAYFA_BASLIK !== 'undefined') {
-          window.SAYFA_BASLIK['eterya'] = 'Eterya: Yıldız Kırıkları (Test)';
-        }
+        };
+        if (claudeIdx >= 0) window.GEZINME.splice(claudeIdx + 1, 0, kayit);
+        else window.GEZINME.push(kayit);
+      }
+      if (typeof window.SAYFA_BASLIK !== 'undefined') {
+        window.SAYFA_BASLIK['eterya'] = 'Eterya: Yıldız Kırıkları (Test)';
       }
     }
     if (typeof window.GEC_CIZILENLER !== 'undefined') {
       window.GEC_CIZILENLER['modelEvren'] = 'modelEvrenCiz';
     }
+    if (typeof cizildi !== 'undefined' && cizildi) delete cizildi.modelEvren;
+    if (typeof gezinmeCiz === 'function') {
+      try { gezinmeCiz(); } catch (e) {}
+    }
+  }
+
+  function eteryaSayfasiniAc() {
+    evrenGezinmeKur();
+    const hash = (location.hash || '').replace(/^#\/?/, '').split('/')[0];
+    if (hash !== 'eterya' && hash !== 'modelEvren') return;
+    if (typeof sayfaYonlendir === 'function') sayfaYonlendir();
+    if (typeof modelEvrenCiz === 'function') modelEvrenCiz();
   }
 
   /* ==========================================================================
@@ -278,15 +293,12 @@
     evrenGezinmeKur();
     supabaseYukOnleyici();
     setInterval(senSayfasiAyarEkle, 500);
+    setTimeout(eteryaSayfasiniAc, 0);
 
     window.addEventListener('hashchange', () => {
       evrenGezinmeKur();
       setTimeout(senSayfasiAyarEkle, 100);
-      if (location.hash === '#/eterya' || location.hash === '#/modelEvren') {
-        if (typeof window.modelEvrenCiz === 'function') {
-          setTimeout(window.modelEvrenCiz, 50);
-        }
-      }
+      setTimeout(eteryaSayfasiniAc, 50);
     });
   }
 
