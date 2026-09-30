@@ -27,9 +27,6 @@ Deno.serve(async (req) => {
     if (!token || !supabaseUrl || !anonKey || !serviceKey) {
       return cevap({ durum: 'hata', mesaj: 'Sunucu yapılandırması eksik' }, 500);
     }
-    if (!vapidPublic || !vapidPrivate) {
-      return cevap({ durum: 'hata', mesaj: 'VAPID anahtarları eksik' }, 500);
-    }
 
     const authClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: `Bearer ${token}` } },
@@ -60,6 +57,24 @@ Deno.serve(async (req) => {
       hedefId = profil.id;
     }
 
+    let uygulama = 0;
+    // APK/WebView ortamında Web Push API bulunmayabilir. Hedefli gönderimde
+    // aynı mesajı uygulama içi bildirim kutusuna da bırak; APK bunu hesabı
+    // açınca Supabase'den çeker ve yerel bildirim olarak gösterebilir.
+    if (hedefId) {
+      const { error: uygulamaHatasi } = await adminClient.from('kullanici_bildirimleri').insert({
+        kullanici: hedefId,
+        metin: `${baslik}: ${metin}`.slice(0, 400),
+        baglanti: adres,
+      });
+      if (uygulamaHatasi) return cevap({ durum: 'hata', mesaj: 'Uygulama bildirimi kaydedilemedi' }, 500);
+      uygulama = 1;
+    }
+    if (!vapidPublic || !vapidPrivate) {
+      return hedefId
+        ? cevap({ durum: 'tamam', gonderilen: 0, uygulama, silinen: 0, hata: 0, hedef: hedefKullanici })
+        : cevap({ durum: 'hata', mesaj: 'VAPID anahtarları eksik' }, 500);
+    }
     const query = adminClient.from('bildirim_abonelikleri').select('endpoint,p256dh,auth,kullanici');
     const { data: abonelikler, error: abonelikHatasi } = hedefId
       ? await query.eq('kullanici', hedefId)
@@ -85,7 +100,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return cevap({ durum: 'tamam', gonderilen, silinen, hata, hedef: hedefKullanici || 'herkes' });
+    return cevap({ durum: 'tamam', gonderilen, uygulama, silinen, hata, hedef: hedefKullanici || 'herkes' });
   } catch (error) {
     return cevap({ durum: 'hata', mesaj: error instanceof Error ? error.message : String(error) }, 400);
   }
