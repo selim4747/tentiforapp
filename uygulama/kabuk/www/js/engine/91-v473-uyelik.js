@@ -68,7 +68,21 @@
   }
   function planPencere() {
     var p = plan();
-    return '<div class="pencere pro-pencere" role="dialog" aria-modal="true" aria-label="Üyelik planları"><button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button><h3>EvrenGezer ve EvrenYazar</h3><p class="pencere-alt">' + (p === 'ucretsiz' ? 'Şu an Ücretsiz plandasın.' : 'Aktif planın: <b>' + planEtiketi() + '</b>.') + '</p><div class="pro-katmanlar"><div class="pro-katman"><b>EvrenGezer</b><p><strong>Ayda 5 evren · 12 Evrengezer · 42 fan hikâyesi</strong></p><ul><li>Evren başına 5 gezegen</li><li>Tek baloncuk evren; çoklu ve iç içe evren yok</li><li>Arayüz, görünüm ve kod editörleri kapalı</li></ul><button type="button" class="dugme dugme-sade" data-uyelik-ode="evrengezer">EvrenGezer’e geç</button></div><div class="pro-katman pro-one"><b>EvrenYazar · 249 TL / ay</b><ul><li>Evren, Evrengezer ve fan hikâyesi sınırı yok</li><li>Arayüz, görünüm ve kod editörleri açık</li><li>Gezegen ve baloncuk evren sınırı yok</li></ul><button type="button" class="dugme" data-uyelik-ode="evrenyazar">EvrenYazar’a geç</button></div></div><p class="oyun-not">Ödeme PayTR güvenli ödeme sayfasında yapılır. Yönetici, kullanıcı adını yazarak her iki planı da hediye edebilir.</p><p class="pencere-durum" id="uyelikDurum" role="status"></p></div>';
+    var rozet = function (id) { return p === id ? '<span class="plan-aktif">Şu an sende</span>' : ''; };
+    return '<div class="pencere pro-pencere" role="dialog" aria-modal="true" aria-label="Üyelik planları">' +
+      '<button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button>' +
+      '<h3>Planlar</h3><p class="pencere-alt">Aktif planın: <b>' + planEtiketi() + '</b>. Aşağıda her planın tam sınırlarını ve açık özelliklerini görebilirsin.</p>' +
+      '<div class="pro-katmanlar plan-karsilastirma">' +
+      '<div class="pro-katman ' + (p === 'ucretsiz' ? 'plan-secili' : '') + '"><b>Ücretsiz</b>' + rozet('ucretsiz') +
+        '<ul><li>1 evren taslağı</li><li>Kanon evrenleri gezme ve okuma</li><li>Temel arşiv, oyun ve hikâye deneyimi</li><li>Evren düzenleyicisi ve gelişmiş editörler kapalı</li></ul></div>' +
+      '<div class="pro-katman ' + (p === 'evrengezer' ? 'plan-secili' : '') + '"><b>EvrenGezer</b>' + rozet('evrengezer') +
+        '<p><strong>Ayda 5 evren · 12 Evrengezer · 42 fan hikâyesi</strong></p>' +
+        '<ul><li>Her evrende en fazla 5 gezegen</li><li>Yalnızca 1 baloncuk evren</li><li>Çoklu ve iç içe evren kullanılamaz</li><li>Arayüz, görünüm ve kod editörleri kapalı</li><li>Gezme, okuma ve kendi evrenlerini temel düzeyde oluşturma</li></ul>' +
+        '<button type="button" class="dugme dugme-sade" data-uyelik-ode="evrengezer">EvrenGezer’e geç</button></div>' +
+      '<div class="pro-katman pro-one ' + (p === 'evrenyazar' ? 'plan-secili' : '') + '"><b>EvrenYazar · 249 TL / ay</b>' + rozet('evrenyazar') +
+        '<ul><li>Evren, Evrengezer ve fan hikâyesi sınırı yok</li><li>Gezegen, baloncuk, çoklu ve iç içe evren sınırı yok</li><li>Arayüz, görünüm ve kod editörleri açık</li><li>Tam evren özelleştirme ve gelişmiş üretim araçları</li></ul>' +
+        '<button type="button" class="dugme" data-uyelik-ode="evrenyazar">EvrenYazar’a geç</button></div>' +
+      '</div><p class="oyun-not">Yönetici, kullanıcı adını kullanarak EvrenGezer veya EvrenYazar planını ücretsiz hediye edebilir.</p><p class="pencere-durum" id="uyelikDurum" role="status"></p></div>';
   }
   function ac() { var e = document.querySelector('#perde'); if (!e) return; e.innerHTML = planPencere(); e.hidden = false; }
   function editorKapali() { return sinirliPlan(); }
