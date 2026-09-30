@@ -1,6 +1,6 @@
 {
   "name": "tentiforapp",
-  "version": "4.7.0",
+  "version": "4.7.1",
   "description": "TentiforApp — Tentiforverse Arşivi",
   "type": "module",
   "main": "server.js",
@@ -11,12 +11,7 @@
     "paketle": "node scripts/paketle.mjs",
     "lint": "node -e 'console.log(\"Lint passed\")'"
   },
-  "keywords": [
-    "tentifor",
-    "tentiforverse",
-    "tomye",
-    "pwa"
-  ],
+  "keywords": ["tentifor", "tentiforverse", "tomye", "pwa"],
   "author": "Tentifor",
   "license": "MIT",
   "devDependencies": {
