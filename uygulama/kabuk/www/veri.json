@@ -1,5 +1,5 @@
 {
-  "surum": "5.0.2",
+  "surum": "5.0.3",
   "guncelleme": "2026-09-30",
   "delilik": {
     "baslik": "Delilik",
@@ -7233,6 +7233,17 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "5.0.3",
+      "tarih": "2026-09-30",
+      "maddeler": [
+        "Service Worker kurulumu tek bir yavaş dosya yüzünden yarıda kalmıyor.",
+        "Önbelleksiz ilk açılışta bağlantı sonsuza kadar beklemiyor; sınırlı sürede kontrollü çevrimdışı yanıt veriyor.",
+        "Yavaş bağlantı istekleri AbortController ile sonlandırılıyor.",
+        "APK sürüm metadata’sı çevrimdışı yerel kopyadan okunuyor.",
+        "Bildirim RPC’si yavaş bağlantıda arayüzü kilitlememesi için zaman aşımına sahip."
+      ]
+    },
     {
       "surum": "5.0.2",
       "tarih": "2026-09-30",
