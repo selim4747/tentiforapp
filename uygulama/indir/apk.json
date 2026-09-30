@@ -1,13 +1,13 @@
 {
   "kod": 510,
   "surum": "5.1.0",
-  "boyut": 6761175,
-  "tarih": "2026-09-30T22:46:30+03:00",
-  "not": "Tentiforverse 5.1: Evrenler merkezi, plan kullanımı, çevrimdışı evren yönetimi, oluşturma sihirbazı ve cihaz eşitleme iyileştirmeleri.",
-  "sha256": "8b4d096bbe4e2523a44e8afd0e2b414cb535fc5759f44b9fcc58c1e846bac551",
+  "boyut": 6761409,
+  "tarih": "2026-09-30T22:57:00+03:00",
+  "not": "Tentiforverse 5.1: eski evren kartları kaldırıldı; Evrenler, Planlar ve Bildirim merkezi menüye sabitlendi.",
+  "sha256": "f190ea33e3b311efdf59868f54b31107283be4fa720830ec72c886357aaca451",
   "version": "5.1.0",
-  "size": 6761175,
-  "sizeBytes": 6761175,
-  "updatedAt": "2026-09-30T19:46:30Z",
-  "notes": "Tentiforverse 5.1: Evrenler merkezi, plan kullanımı, çevrimdışı evren yönetimi, oluşturma sihirbazı ve cihaz eşitleme iyileştirmeleri."
+  "size": 6761409,
+  "sizeBytes": 6761409,
+  "updatedAt": "2026-09-30T19:57:00Z",
+  "notes": "Tentiforverse 5.1: eski evren kartları kaldırıldı; Evrenler, Planlar ve Bildirim merkezi menüye sabitlendi."
 }
