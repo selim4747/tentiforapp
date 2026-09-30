@@ -1,5 +1,5 @@
 {
-  "surum": "4.6.0",
+  "surum": "4.7.3",
   "guncelleme": "2026-09-29",
   "delilik": {
     "baslik": "Delilik",
@@ -7234,6 +7234,16 @@
   ],
   "degisiklik": [
     {
+      "surum": "4.6.1",
+      "tarih": "2026-09-30",
+      "maddeler": [
+        "Model Vitrin Evreni (Eterya: Yıldız Kırıkları): Evren Kurucu'nun tüm özelliklerini (harita, kurallar, kişiler, zaman çizgisi, yapımlar, glif alfabesi ve okuma rehberi) insanlara sergilemek amacıyla test evreni olarak yayına alındı.",
+        "Akıllı Güncelleme ve İçerik Bildirimleri: Sonsuz güncelleme döngüsü giderildi; artık yalnızca gerçek sürüm farkında 'Yeni sürüm yayında', yönetici yeni evren/içerik eklediğinde ise 'Yeni içerik eklendi' uyarısı verilir ve kapatılınca tekrarlanmaz.",
+        "Uygulama İçi Bildirim Ayarları: Sen sayfasına yeni güncelleme ve içerik bildirimleri açma/kapatma ayarı eklendi.",
+        "Mobil Moderasyon Erişimi: Mobil uygulama ve telefon tarayıcılarında tek tıkla moderasyon paneline erişim bağlantısı Sen sayfasına eklendi."
+      ]
+    },
+    {
       "surum": "4.6.0",
       "tarih": "2026-09-30",
       "maddeler": [
@@ -8490,6 +8500,50 @@
         "test": true,
         "okuma_rehberi": [],
         "oyun_listesi": []
+      },
+      {
+        "bicim": "tentifor-eser",
+        "surum": 1,
+        "tur": "evren",
+        "id": "fornek-eterya",
+        "ad": "Eterya: Yıldız Kırıkları",
+        "yazar": "Model Vitrini",
+        "ozet": "Gökyüzünün cam gibi çatladığı ve kırıklardan saf eter ışığının süzüldüğü bir dünya. İnsanlar sözcükleri sesle değil, havaya çizdikleri ışık glifleriyle söyler; yerçekimi gezegenin merkezine değil, en yakın eter kırığına doğrudur.\n\nBu bir model test ve vitrin evrenidir: TentiforApp Evren Kurucu'nun tüm yeteneklerini (harita, kurallar, kişiler, zaman çizgisi, yapımlar, glif alfabesi ve okuma rehberi) insanlara sergilemek amacıyla hazırlanmıştır.",
+        "dosya": "evrenler/fornek-eterya.json",
+        "boyut": 5200,
+        "sayilar": {
+          "kural": 4,
+          "kisi": 3,
+          "yer": 4,
+          "gezegen": 1,
+          "bolum": 1,
+          "cizim": 0
+        },
+        "eklenme": "2026-09-30",
+        "olusturma": "2026-09-30T10:00:00.000Z",
+        "guncelleme": "2026-09-30T10:00:00.000Z",
+        "para": {
+          "ad": "kristal",
+          "simge": "✧",
+          "kur": 0.2
+        },
+        "stil": {
+          "ana": "#0284c7",
+          "zemin": "#081325",
+          "font": "sans"
+        },
+        "test": true,
+        "okuma_rehberi": [
+          {
+            "baslik": "Kırılmanın Doğuşu",
+            "dosya": "bolum:ozet"
+          },
+          {
+            "baslik": "Doğa Kanunları ve Glifler",
+            "dosya": "bolum:kurallar"
+          }
+        ],
+        "oyun_listesi": []
       }
     ],
     "kisiler": [
@@ -8676,7 +8730,219 @@
   "__parcalar": {
     "degisiklik": {
       "dosya": "veri-degisiklik.json?v=a1aad374ff",
-      "toplam": 60
+      "toplam": 61
+    }
+  },
+  "modelEvreni": {
+    "ad": "Eterya: Yıldız Kırıkları",
+    "altBaslik": "Yapay zekâ tarafından yapılan test evreni",
+    "test": true,
+    "surum": "4.6.1",
+    "ozet": "Gökyüzünün cam gibi çatladığı ve kırıklardan saf eter ışığının döküldüğü bir dünya. Sözcükler ses telleriyle değil, parmak uçlarıyla havaya çizilen ışık glifleriyle söylenir; yerçekimi merkeze değil, en yakın eter kırığına doğrudur. Tentiforverse kanonuna dahil değildir; Claude tarafından yapılan evren gibi, Evren Kurucu\\x27nun tüm yeteneklerini (kurallar, harita, kişiler, ilişki ağı, hikâyeler, mektuplar, sözlük, sorular ve glif alfabesi) insanlara sergilemek amacıyla test evreni olarak hazırlanmıştır.",
+    "kurallar": [
+      {
+        "id": "me-kural-1",
+        "ad": "Eter Kırıkları",
+        "tur": "gökyüzü",
+        "aciklama": "Gökyüzündeki çatlaklardan mavi ve kehribar rengi saf eter ışığı dökülür. Kırığın altına giren nesneler hafifler, zihinler birbirinin düşünce titreşimini duymaya başlar."
+      },
+      {
+        "id": "me-kural-2",
+        "ad": "Çapraz Yerçekimi",
+        "tur": "fizik",
+        "aciklama": "Dağlar yeryüzüne dik değil, en parlak eter kırığına doğru eğik durur. Şehirler dev uçan kayaların ters ve eğik yüzeylerine kurulur."
+      },
+      {
+        "id": "me-kural-3",
+        "ad": "Işık Glifleri",
+        "tur": "dil",
+        "aciklama": "Ses telleri havadaki eteri titreştiremez. Canlılar parmak uçlarındaki ışık bezeleriyle havada saniyelerce asılı kalan parıldayan simgeler çizer."
+      },
+      {
+        "id": "me-kural-4",
+        "ad": "Rezonans Kristalleri",
+        "tur": "madde",
+        "aciklama": "Yere düşen eter damlaları katılaşarak kristale dönüşür. Bu kristaller kendisine fısıldanan veya çizilen glifleri bin yıl boyunca titreşerek saklar."
+      }
+    ],
+    "yerler": [
+      {
+        "id": "me-yer-1",
+        "ad": "Kristal Kule",
+        "tur": "Başkent",
+        "not": "İlk kırığın tam altına inşa edilen, ışık glifleriyle yönetilen başkent.",
+        "x": 38.5,
+        "y": 42
+      },
+      {
+        "id": "me-yer-2",
+        "ad": "Kırık Vadi",
+        "tur": "Bölge",
+        "not": "Yerçekiminin sıfırlandığı, dev kayaların havada süzüldüğü kadim vadi.",
+        "x": 62,
+        "y": 31
+      },
+      {
+        "id": "me-yer-3",
+        "ad": "Fısıltı Mağarası",
+        "tur": "Tapınak / Arşiv",
+        "not": "Rezonans kristallerinin doğal olarak filizlendiği kadim ses tapınağı.",
+        "x": 25,
+        "y": 68
+      },
+      {
+        "id": "me-yer-4",
+        "ad": "Cam Çölü",
+        "tur": "Çöl",
+        "not": "Eter damlalarının kuma dönüşerek ışıltılı dalgalar oluşturduğu ıssız sahra.",
+        "x": 75,
+        "y": 72
+      }
+    ],
+    "kisiler": [
+      {
+        "id": "vaelen",
+        "ad": "Vaelen",
+        "unvan": "Eter Çırağı",
+        "ozet": "Kırıkların fısıltısını duyan ve glifleri havaya dokumadan önce zihninde gören genç gezgin.",
+        "detay": "Kristal Kule\\x27nin alt katında büyüdü. Ustası Kael\\x27in büyük kırığa adım atmasından sonra onun izini sürmek için Fısıltı Mağarası\\x27na doğru tek başına yola çıktı."
+      },
+      {
+        "id": "seris",
+        "ad": "Seris",
+        "unvan": "Kırık Muhafızı",
+        "ozet": "Gökyüzü çatlaklarının daha fazla genişlemesini önlemek için rezonans kılıçlarıyla nöbet tutan savaşçı.",
+        "detay": "Gözleri eter ışığına doğrudan bakmaktan parıldayan bir maviye dönmüştür. Vaelen\\x27i korumakla görevlidir ancak onun gökyüzünü kapatmak yerine daha da açmak istediğinden şüphelenir."
+      },
+      {
+        "id": "kael",
+        "ad": "Kael",
+        "unvan": "Kayıp Glif Ustası",
+        "ozet": "Eterya\\x27nın ilk yazılı sözlüğünü havaya kazıyan, gökyüzünün ötesine geçtiği söylenen kadim bilge.",
+        "detay": "On yıl önce en derin gökyüzü kırığına doğru adım attı. Geride yalnızca parıldayan bir günlük ve Vaelen\\x27e bıraktığı rezonans taşını bıraktı."
+      },
+      {
+        "id": "yuna",
+        "ad": "Yuna",
+        "unvan": "Kristal Kâşifi",
+        "ozet": "Cam Çölü\\x27ndeki rezonans kristallerini toplayıp haritalandıran cesur göçebe.",
+        "detay": "Kendi tasarladığı hafifleme kayığıyla çapraz yerçekimi akıntılarını kullanarak vadiler arasında hızla süzülebilir."
+      }
+    ],
+    "baglar": [
+      {
+        "a": "vaelen",
+        "b": "kael",
+        "etiket": "Öğrencisi & Ustası"
+      },
+      {
+        "a": "vaelen",
+        "b": "seris",
+        "etiket": "Yol arkadaşı & Muhafızı"
+      },
+      {
+        "a": "seris",
+        "b": "kael",
+        "etiket": "Eski Muhafız yoldaşı"
+      },
+      {
+        "a": "vaelen",
+        "b": "yuna",
+        "etiket": "Çöl rehberi & Müttefik"
+      }
+    ],
+    "hikayeler": [
+      {
+        "id": "me-hikaye-1",
+        "baslik": "İlk Kırığın Şarkısı",
+        "karakterler": [
+          "vaelen",
+          "seris"
+        ],
+        "metin": "Gece çöktüğünde gökyüzündeki çatlaklar kapanmaz; aksine koyulaşan karanlığın içinde kehribar çizgiler daha parlak görünürdü.\\n\\nVaelen parmağını havaya kaldırdı. Ucu hafifçe parıldayan işaret parmağıyla havaya kavisli bir glif çizdi. Simge birkaç saniye boyunca mavi bir ışık yayarak havada asılı kaldı. Seris kılıcının kabzasına dokunarak izledi: \\x27Glifi çok hızlı kapatıyorsun çocuk. Kırık seni dinlemeden önce havanın sakinleşmesini bekle.\\x27\\n\\nVaelen gülümsedi: \\x27Hava hiçbir zaman sakin değil ki muhafız. Gökyüzü nefes alıyor; sadece biz duymuyoruz.\\x27"
+      },
+      {
+        "id": "me-hikaye-2",
+        "baslik": "Havada Kalan Glif",
+        "karakterler": [
+          "kael",
+          "vaelen"
+        ],
+        "metin": "Kael\\x27in kütüphanesinde hiç kâğıt yoktu. Masalar, duvarlar ve tavanlar rezonans kristalleriyle döşenmişti. Bir kere çizilen ışık glifi, kristallerin hafızasında aylarca titreşirdi.\\n\\n\\x27Bir sözcük uçup gitmez,\\x27 demişti Kael o gün. \\x27Eterya\\x27da söylediğin her şey göğe kazınır. Bu yüzden öfkeliyken havaya elini sürme.\\x27"
+      },
+      {
+        "id": "me-hikaye-3",
+        "baslik": "Cam Çölün Çağrısı",
+        "karakterler": [
+          "yuna",
+          "vaelen"
+        ],
+        "metin": "Cam Çölü\\x27nün kumları bildiğimiz taş tozu değildi; gökyüzünden damlayan eterin kristalleşmiş zerreleriydi. Yuna kayığını bir kırığın hizasına getirip yelkenini açtı. Yerçekimi yatay bir hatta çekmeye başladığında kayık kumların üzerinden sessizce süzülmeye başladı."
+      }
+    ],
+    "mektuplar": [
+      {
+        "id": "me-mektup-1",
+        "kimden": "Kael",
+        "kime": "Vaelen",
+        "not": "Kırığa adım atmadan önceki gece bırakılan kristal tablet.",
+        "metin": "Eğer bu tableti okuyorsan, ben gökyüzünün öbür tarafına geçmişim demektir. Korkma; gök yarılmadı, sadece uyandı. Sana bıraktığım rezonans taşını göğsünde taşı. Kırık Muhafızları kapıları mühürlemeye kalkarsa onlara söyle: Işık hapsedilemez."
+      },
+      {
+        "id": "me-mektup-2",
+        "kimden": "Seris",
+        "kime": "Muhafız Konseyi",
+        "not": "Kristal Kule raporu.",
+        "metin": "Vaelen\\x27in yeteneği düşündüğümüzden daha tehlikeli. Çizdiği glifler kırıkların frekansıyla doğrudan rezonansa giriyor. Onu durdurmak yerine kılavuzluk etmemiz şart; aksi halde Cam Çölü\\x27ndeki tüm çatlaklar aynı anda rezonans yapacak."
+      }
+    ],
+    "sozluk": [
+      {
+        "terim": "Eter",
+        "tanim": "Gökyüzü kırıklarından dökülen, yerçekimini ve maddeyi büken saf ışık enerjisi."
+      },
+      {
+        "terim": "Işık Glifi",
+        "tanim": "Eterya halkının havada parmak uçlarıyla çizerek iletişim kurduğu ışıklı semboller alfabesi."
+      },
+      {
+        "terim": "Rezonans Kristali",
+        "tanim": "Eter damlalarının toprakta katılaşmasıyla oluşan, ses ve düşünce dalgalarını saklayan taşlar."
+      },
+      {
+        "terim": "Çapraz Yerçekimi",
+        "tanim": "Yerçekiminin gezegen tabanı yerine gökyüzündeki kırıklara doğru yön değiştirmesi doğa olayı."
+      },
+      {
+        "terim": "Kırık Muhafızı",
+        "tanim": "Gökyüzü yarıklarını koruyan ve dengesiz kırıkları rezonans kılıçlarıyla sabitleyen elit birlik."
+      }
+    ],
+    "sorular": [
+      {
+        "soru": "Gökyüzü kırılmadan önce Eterya nasıl bir dünyaydı?",
+        "not": "Kadim efsanelerde insanların sesle konuştuğu bir altın çağdan bahsedilir ama hiçbir rezonans taşı o döneme ait ses saklamamıştır."
+      },
+      {
+        "soru": "Kael\\x27in geçtiği kırığın ötesinde ne var?",
+        "not": "Gözcüler kırığın arkasında başka dünyaların ışıklarının süzüldüğünü iddia eder."
+      }
+    ],
+    "roman": {
+      "baslik": "Kırıkların Gölgesinde",
+      "ozet": "Vaelen ve Seris\\x27in gökyüzü çatlaklarının kaynağına doğru çıktıkları tehlikeli yolculuk.",
+      "bolumler": [
+        {
+          "id": "bolum-1",
+          "baslik": "Çatlayan Gökyüzü",
+          "metin": "Gökyüzünün ilk kez ne zaman çatladığını kimse tam olarak hatırlamıyordu. Yaşlılar, göğün bir ayna gibi kırıldığını ve o günden sonra güneşin yerini eter ışığına bıraktığını anlatırdı. Vaelen içinse o gökyüzü hep oradaydı; mavi ve amber çizgileriyle nefes alan devasa bir kubbe.\\n\\nSabahın ilk ışıkları kırıklardan döküldüğünde, odasındaki eşyalar hafifçe havalandı. Çapraz yerçekiminin sabah dalgasıydı bu. Parmaklarını kemerine astığı rezonans taşına dokundurdu; taş hafifçe ısınmıştı."
+        },
+        {
+          "id": "bolum-2",
+          "baslik": "İlk Rezonans",
+          "metin": "Fısıltı Mağarası\\x27nın ağzında durduklarında içeriden gelen titreşim Seris\\x27in zırhındaki kılıcı titretiyordu. \\x27Buradan sonrası haritasız,\\x27 dedi Seris. \\x27Eterya\\x27da haritalar yerinde durmaz, biliyorsun.\\x27\\n\\nVaelen havaya büyük bir üçgen glif çizdi. Simge parıldayarak mağaranın derinliklerine doğru süzüldü; kayalara çarpmadan yolu bir fener gibi aydınlattı. \\x27Artık haritamız var,\\x27 dedi fısıltıyla."
+        }
+      ]
     }
   }
 }
