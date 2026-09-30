@@ -14,3 +14,5 @@
 .tf51-indirilen{display:grid;gap:8px;margin:14px 0;padding:12px;border:1px solid var(--buz);border-radius:var(--r-kart);background:var(--beyaz)}.tf51-indirilen-satir{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.tf51-indirilen-satir a{flex:1 1 160px;color:var(--deniz)}
 html[data-ayar-tema=gece] .tf51-evren-arac,html[data-ayar-tema=gece] .tf51-indirilen{background:var(--kar) }
 @media(min-width:640px){.tf51-evren-arac{grid-template-columns:1fr 180px;align-items:center}.tf51-evren-arac .oyun-etiket{grid-column:1/-1}}
+
+.tf51-ust-eylemler{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0 16px}.tf51-ust-eylemler .mm-eylem{min-height:58px;border:1px solid var(--deniz);background:var(--beyaz);color:var(--deniz);border-radius:var(--r-kart);font-size:16px}.tf51-ust-baslik{grid-column:1/-1;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--deniz);font-weight:700}.tf51-ust-eylemler .mm-eylem span{display:inline-block;margin-right:7px}@media(max-width:380px){.tf51-ust-eylemler{grid-template-columns:1fr}}
