@@ -1,8 +1,13 @@
 {
-  "kod": 503,
-  "surum": "5.0.3",
-  "boyut": 6755347,
-  "tarih": "2026-09-30T22:24:08+03:00",
-  "not": "Tentiforverse 5.0.3: köklü çevrimdışı ve yavaş internet dayanıklılığı, güvenli Service Worker kurulumu, sınırlı ağ istekleri ve APK metadata önbelleği.",
-  "sha256": "3c894a4a5eb6f456a1d26c7927bbc29a6f07bdd0e38b944b892c79cbb4766d1f"
+  "kod": 510,
+  "surum": "5.1.0",
+  "boyut": 6761175,
+  "tarih": "2026-09-30T22:46:30+03:00",
+  "not": "Tentiforverse 5.1: Evrenler merkezi, plan kullanımı, çevrimdışı evren yönetimi, oluşturma sihirbazı ve cihaz eşitleme iyileştirmeleri.",
+  "sha256": "8b4d096bbe4e2523a44e8afd0e2b414cb535fc5759f44b9fcc58c1e846bac551",
+  "version": "5.1.0",
+  "size": 6761175,
+  "sizeBytes": 6761175,
+  "updatedAt": "2026-09-30T19:46:30Z",
+  "notes": "Tentiforverse 5.1: Evrenler merkezi, plan kullanımı, çevrimdışı evren yönetimi, oluşturma sihirbazı ve cihaz eşitleme iyileştirmeleri."
 }
