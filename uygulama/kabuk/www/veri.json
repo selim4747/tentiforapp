@@ -1,6 +1,6 @@
 {
-  "surum": "4.7.3",
-  "guncelleme": "2026-09-29",
+  "surum": "4.7.4",
+  "guncelleme": "2026-09-30",
   "delilik": {
     "baslik": "Delilik",
     "altbaslik": "Roman ve oyun",
@@ -7233,6 +7233,15 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "4.7.4",
+      "tarih": "2026-09-30",
+      "maddeler": [
+        "APK dağıtımı production çıktısına alındı.",
+        "Android uygulaması çevrimdışı yerel paketten açılır; yeni sürüm ağ gelince arka planda açılır.",
+        "APK, App Links ve sürüm metadata eşitlendi."
+      ]
+    },
     {
       "surum": "4.6.1",
       "tarih": "2026-09-30",

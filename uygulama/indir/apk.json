@@ -1,7 +1,7 @@
 {
   "kod": 121,
-  "surum": "4.3.0",
+  "surum": "4.7.4",
   "boyut": 3300978,
-  "tarih": "2026-09-29T15:21:38.434Z",
-  "not": ""
+  "tarih": "2026-09-30T20:04:00+03:00",
+  "not": "4.7.4 yerel paket; çevrimdışında açılır, ağ gelince güncel siteye sessizce geçer."
 }

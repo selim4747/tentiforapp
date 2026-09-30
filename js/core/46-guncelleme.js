@@ -1,5 +1,11 @@
 const GUNCELLEME_ARALIK = 9e5, GUNCELLEME_ARKA_PLAN = 12e4;
 let guncellemeYeni = null, guncellemeSonBakis = 0, guncellemeGizlendi = 0;
+const APK_GUNCELLEME_ADRESI = "https://tentiforapp.pages.dev";
+
+function apkYerelKabukMu() {
+  if (typeof kabukMu !== "function" || !kabukMu()) return false;
+  return location.protocol === "capacitor:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+}
 
 function sayfaPaketi() {
   const e = document.querySelector('meta[name="tentifor-paket"]');
@@ -8,18 +14,41 @@ function sayfaPaketi() {
 
 function yerelSurum() {
   return (typeof veri !== "undefined" && veri && veri.surum) ||
-         (document.querySelector('meta[name="tentifor-surum"]') || {}).content || "4.6.1";
+         (document.querySelector('meta[name="tentifor-surum"]') || {}).content || "4.7.4";
+}
+
+async function guncellemeFetch(url) {
+  const denetleyici = typeof AbortController === "function" ? new AbortController() : null;
+  const zaman = setTimeout(function () { denetleyici && denetleyici.abort(); }, 2500);
+  try {
+    return await fetch(url, { cache: "no-store", signal: denetleyici && denetleyici.signal });
+  } finally { clearTimeout(zaman); }
 }
 
 async function yayindakiPaket() {
   try {
-    const e = await fetch("surum.json?t=" + Date.now(), { cache: "no-store" });
+    const kok = apkYerelKabukMu() ? APK_GUNCELLEME_ADRESI : "";
+    const e = await guncellemeFetch(kok + "/surum.json?t=" + Date.now());
     if (!e.ok) return null;
     const t = await e.json();
     return t && typeof t.paket === "string" ? t : null;
   } catch {
     return null;
   }
+}
+
+async function apkArkaPlanGuncelle(n) {
+  if (!apkYerelKabukMu() || !n || !n.paket || n.paket === sayfaPaketi()) return false;
+  /* Yerel APK paketi çevrimdışında açılır; ağ geri gelince güncel siteye sessizce geçer. */
+  try {
+    const e = await guncellemeFetch(APK_GUNCELLEME_ADRESI + "/surum.json?t=" + Date.now());
+    if (!e.ok) return false;
+    const t = await e.json();
+    if (!t || !t.paket || t.paket === sayfaPaketi()) return false;
+    sessionStorage.setItem("tentiforapp_apk_guncellendi", t.surum || "");
+    location.replace(APK_GUNCELLEME_ADRESI + "/?tf-apk-guncelleme=" + encodeURIComponent(t.paket));
+    return true;
+  } catch { return false; }
 }
 
 function guncellemeBekletir() {
@@ -65,43 +94,24 @@ function guncellemeBildirimiGonder(baslik, metin) {
     const localNotif = kabukEklenti("LocalNotifications");
     if (localNotif) {
       try {
-        localNotif.schedule({
-          notifications: [{
-            id: 991122,
-            title: baslik,
-            body: metin,
-            extra: { adres: "#/sen" }
-          }]
-        });
+        localNotif.schedule({ notifications: [{ id: 991122, title: baslik, body: metin, extra: { adres: "#/sen" } }] });
         return;
       } catch {}
     }
   }
   if ("Notification" in window && Notification.permission === "granted") {
-    try {
-      new Notification(baslik, {
-        body: metin,
-        icon: "ikon/ikon-192.png"
-      });
-    } catch {}
+    try { new Notification(baslik, { body: metin, icon: "ikon/ikon-192.png" }); } catch {}
   }
 }
 
 function guncellemeCubugu() {
   if (!guncellemeYeni || document.querySelector("#guncellemeCubugu")) return;
   if (guncellemeGorulen(guncellemeYeni.paket)) return;
-
   const suankiSurum = yerelSurum();
   const uzakSurum = guncellemeYeni.surum || suankiSurum;
   const surumFarki = uzakSurum && suankiSurum && uzakSurum !== suankiSurum;
-
-  const mesaj = surumFarki
-    ? "Yeni sürüm yayında (v" + uzakSurum + ")"
-    : "Yeni içerik eklendi";
-  const aciklama = surumFarki
-    ? "Yeni özellikler için yenile."
-    : "Yönetici yeni evren veya içerik ekledi; görmek için yenile.";
-
+  const mesaj = surumFarki ? "Yeni sürüm yayında (v" + uzakSurum + ")" : "Yeni içerik eklendi";
+  const aciklama = surumFarki ? "Yeni özellikler için yenile." : "Yönetici yeni evren veya içerik ekledi; görmek için yenile.";
   const e = document.createElement("div");
   e.id = "guncellemeCubugu";
   e.className = "guncelleme-cubugu";
@@ -110,7 +120,6 @@ function guncellemeCubugu() {
                 '<button class="dugme" data-guncelle>Yenile</button>' +
                 '<button class="pencere-kapat" data-guncelle-kapat aria-label="Sonra">✕</button>';
   document.body.appendChild(e);
-
   guncellemeBildirimiGonder(mesaj, aciklama);
 }
 
@@ -119,54 +128,33 @@ async function guncellemeBak(e) {
   if (!navigator.onLine || (Date.now() - guncellemeSonBakis < 3e4 && !e)) return;
   guncellemeSonBakis = Date.now();
   let n = null;
-  try {
-    n = await yayindakiPaket();
-  } catch {
-    return;
-  }
+  try { n = await yayindakiPaket(); } catch { return; }
   if (!n) return;
   if (t && n.paket === t && n.surum === yerelSurum()) return;
+  if (await apkArkaPlanGuncelle(n)) return;
   if (guncellemeGorulen(n.paket)) return;
-
   guncellemeYeni = n;
   guncellemeCubugu();
 }
 
 document.addEventListener("visibilitychange", function () {
-  if (document.visibilityState === "hidden") {
-    guncellemeGizlendi = Date.now();
-    return;
-  }
+  if (document.visibilityState === "hidden") { guncellemeGizlendi = Date.now(); return; }
   const e = guncellemeGizlendi && Date.now() - guncellemeGizlendi > 12e4;
   guncellemeGizlendi = 0;
   guncellemeBak(e);
 });
-
-window.addEventListener("pageshow", function (e) {
-  e.persisted && guncellemeBak(!0);
-});
-
+window.addEventListener("pageshow", function (e) { e.persisted && guncellemeBak(!0); });
 document.addEventListener("click", function (e) {
   const t = e.target.closest && e.target.closest("[data-guncelle], [data-guncelle-kapat]");
   if (!t) return;
-  if (t.hasAttribute("data-guncelle")) {
-    guncellemeUygula();
-    return;
-  }
-  if (t.hasAttribute("data-guncelle-kapat")) {
-    if (guncellemeYeni && guncellemeYeni.paket) {
-      guncellemeGorulduIsaretle(guncellemeYeni.paket);
-    }
-    const n = document.querySelector("#guncellemeCubugu");
-    n && n.remove();
-  }
+  if (t.hasAttribute("data-guncelle")) { guncellemeUygula(); return; }
+  if (guncellemeYeni && guncellemeYeni.paket) guncellemeGorulduIsaretle(guncellemeYeni.paket);
+  const n = document.querySelector("#guncellemeCubugu"); n && n.remove();
 });
 
 let guncellemeDokunuldu = !1;
 ["pointerdown", "keydown", "scroll"].forEach(function (e) {
-  window.addEventListener(e, function () {
-    guncellemeDokunuldu = !0;
-  }, { once: !0, passive: !0 });
+  window.addEventListener(e, function () { guncellemeDokunuldu = !0; }, { once: !0, passive: !0 });
 });
 
 async function guncellemeAcilisBak() {
@@ -174,28 +162,28 @@ async function guncellemeAcilisBak() {
   if (!e || !navigator.onLine) return guncellemeBak(!1);
   guncellemeSonBakis = Date.now();
   let t = null;
-  try {
-    t = await yayindakiPaket();
-  } catch {
-    return;
-  }
+  try { t = await yayindakiPaket(); } catch { return; }
   if (!t || t.paket === e || guncellemeGorulen(t.paket)) return;
+  if (await apkArkaPlanGuncelle(t)) return;
   guncellemeYeni = t;
   guncellemeCubugu();
 }
 
 window.addEventListener("load", function () {
   setTimeout(guncellemeAcilisBak, 1500);
-  setInterval(function () {
-    document.visibilityState === "visible" && guncellemeBak(!1);
-  }, 9e5);
+  setInterval(function () { document.visibilityState === "visible" && guncellemeBak(!1); }, 9e5);
   try {
     const e = sessionStorage.getItem("tentiforapp_guncellendi");
     if (e) {
       sessionStorage.removeItem("tentiforapp_guncellendi");
-      setTimeout(function () {
-        typeof eckaBildir === "function" && eckaBildir("Site güncellendi" + (e !== "1" ? " · " + e : ""));
-      }, 1500);
+      setTimeout(function () { typeof eckaBildir === "function" && eckaBildir("Site güncellendi" + (e !== "1" ? " · " + e : "")); }, 1500);
+    }
+  } catch {}
+  try {
+    const e = sessionStorage.getItem("tentiforapp_apk_guncellendi");
+    if (e) {
+      sessionStorage.removeItem("tentiforapp_apk_guncellendi");
+      setTimeout(function () { typeof eckaBildir === "function" && eckaBildir("Güncel sürüm arka planda açıldı" + (e ? " · " + e : "")); }, 1500);
     }
   } catch {}
 });

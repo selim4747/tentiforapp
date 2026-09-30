@@ -137,6 +137,14 @@ const distDosyalarVeDizinler = [
   'evrenler'
 ];
 
+// APK dağıtımı ve Android App Links de production çıktısına aittir.
+for (const oge of ['uygulama', '.well-known']) {
+  const kaynak = path.join(ROOT_DIR, oge);
+  const hedef = path.join(distDir, oge);
+  if (fs.existsSync(kaynak)) fs.cpSync(kaynak, hedef, { recursive: true });
+}
+console.log('✓ APK, APK metadatası ve Android App Links dist içine kopyalandı');
+
 for (const oge of distDosyalarVeDizinler) {
   const kaynak = path.join(ROOT_DIR, oge);
   const hedef = path.join(distDir, oge);

@@ -23,6 +23,7 @@ const MIME_TYPES = {
   '.woff2': 'font/woff2',
   '.woff': 'font/woff',
   '.ttf': 'font/ttf',
+  '.apk': 'application/vnd.android.package-archive',
   '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8'
 };
@@ -68,9 +69,12 @@ const server = http.createServer((req, res) => {
 
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    if (ext === '.apk') {
+      res.setHeader('Content-Disposition', 'attachment; filename="tentiforapp.apk"');
+    }
 
     // Caching headers
-    if (ext === '.html' || pathname === '/sw.js' || pathname.endsWith('.json')) {
+    if (ext === '.apk' || ext === '.html' || pathname === '/sw.js' || pathname.endsWith('.json')) {
       res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
     } else {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
