@@ -101,6 +101,7 @@ function guncellemeCubugu() {
                 '<button class="pencere-kapat" data-guncelle-kapat aria-label="Sonra">✕</button>';
   document.body.appendChild(e);
   guncellemeBildirimiGonder(mesaj, aciklama);
+  if (navigator.onLine && !guncellemeDokunuldu && !guncellemeBekletir()) setTimeout(function () { guncellemeYeni && guncellemeUygula(); }, 1800);
 }
 
 async function guncellemeBak(e) {
@@ -123,6 +124,7 @@ document.addEventListener("visibilitychange", function () {
   guncellemeBak(e);
 });
 window.addEventListener("pageshow", function (e) { e.persisted && guncellemeBak(!0); });
+window.addEventListener("online", function () { setTimeout(function () { guncellemeBak(!0); }, 900); });
 document.addEventListener("click", function (e) {
   const t = e.target.closest && e.target.closest("[data-guncelle], [data-guncelle-kapat]");
   if (!t) return;

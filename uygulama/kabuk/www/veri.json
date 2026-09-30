@@ -1,5 +1,5 @@
 {
-  "surum": "5.0.0",
+  "surum": "5.0.1",
   "guncelleme": "2026-09-30",
   "delilik": {
     "baslik": "Delilik",
@@ -7233,6 +7233,15 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "5.0.1",
+      "tarih": "2026-09-30",
+      "maddeler": [
+        "APK bildirimleri tarayıcı Web Push yerine Capacitor yerel izin akışıyla çalışır.",
+        "Kişiye özel bildirimler Supabase uygulama kuyruğuna kaydedilir; internet gelince APK otomatik eşitler.",
+        "Çevrimdışı açılış korunur; bağlantı geri geldiğinde yeni sürüm otomatik uygulanır."
+      ]
+    },
     {
       "surum": "5.0.0",
       "tarih": "2026-09-30",
