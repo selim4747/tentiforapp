@@ -22,10 +22,10 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
   const githubToken = Deno.env.get("GITHUB_TOKEN");
-  const githubOwner = Deno.env.get("GITHUB_OWNER");
-  const githubRepo = Deno.env.get("GITHUB_REPO");
+  const githubOwner = Deno.env.get("GITHUB_OWNER") || "selim4747";
+  const githubRepo = Deno.env.get("GITHUB_REPO") || "tentiforapp";
   const githubBranch = Deno.env.get("GITHUB_BRANCH") || "main";
-  if (!supabaseUrl || !supabaseAnonKey || !githubToken || !githubOwner || !githubRepo) {
+  if (!supabaseUrl || !supabaseAnonKey || !githubToken) {
     return json({ hata: "Sunucu ayarları eksik" }, 503);
   }
 
