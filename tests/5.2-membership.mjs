@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const s = fs.readFileSync('js/engine/91-v473-uyelik.js', 'utf8');
+assert(s.includes('takim: 2'));
+assert(s.includes('takim: Infinity'));
+assert(s.includes("'d30-'"));
+assert(s.includes('30 * 24 * 60 * 60 * 1000'));
+assert(s.includes('sahibi dahil en fazla 2 kişi'));
+assert(s.includes('Sınırsız kişiyle ortak çalışma'));
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const data = JSON.parse(fs.readFileSync('veri.json', 'utf8'));
+assert.equal(pkg.version, '5.2.0');
+assert.equal(data.surum, '5.2.0');
+console.log('5.2 membership policy assertions: PASS');

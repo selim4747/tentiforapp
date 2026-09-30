@@ -1,12 +1,12 @@
-/* 4.7.3 — EvrenGezer / EvrenYazar üyelik politikası */
+/* 5.2.0 — EvrenGezer / EvrenYazar üyelik politikası */
 (function () {
   'use strict';
-  var SURUM = '4.7.3';
+  var SURUM = '5.2.0';
   var AYAR = 'tf4_uyelik_kullanimi';
   var PLAN = {
-    ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 0, hikaye: 0, gezegen: 0 },
-    evrengezer: { ad: 'EvrenGezer', evren: 5, gezgin: 12, hikaye: 42, gezegen: 5 },
-    evrenyazar: { ad: 'EvrenYazar', evren: Infinity, gezgin: Infinity, hikaye: Infinity, gezegen: Infinity }
+    ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 0, hikaye: 0, gezegen: 0, takim: 0 },
+    evrengezer: { ad: 'EvrenGezer', evren: 5, gezgin: 12, hikaye: 42, gezegen: 5, takim: 2 },
+    evrenyazar: { ad: 'EvrenYazar', evren: Infinity, gezgin: Infinity, hikaye: Infinity, gezegen: Infinity, takim: Infinity }
   };
   function plan() {
     var t = typeof TF4 !== 'undefined' && TF4.uyelik && TF4.uyelik.tip;
@@ -20,10 +20,14 @@
   function bildir(s) { typeof window.eckaBildir === 'function' && window.eckaBildir(s); }
   function oku() { try { return JSON.parse(localStorage.getItem(AYAR) || '{}') || {}; } catch (_) { return {}; } }
   function yaz(v) { try { localStorage.setItem(AYAR, JSON.stringify(v)); } catch (_) {} }
-  function ay() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
-  function kullanim() { var v = oku(); v[ay()] = v[ay()] || { evren: 0, gezgin: 0, hikaye: 0 }; return v; }
-  function say(kind) { var v = kullanim(); return Number(v[ay()][kind] || 0); }
-  function arttir(kind) { var v = kullanim(); v[ay()][kind] = say(kind) + 1; yaz(v); }
+  function donguBaslangic() { var tf = typeof TF4 !== 'undefined' && TF4.uyelik || {}; var aday = tf.baslangic || tf.baslangic_tarihi || tf.baslangicTarihi || tf.created_at; var planAdi = plan(); var eskiPlan = ''; try { eskiPlan = localStorage.getItem(AYAR + '_plan') || ''; } catch (_) {} if (eskiPlan && eskiPlan !== planAdi) aday = null; var d = aday ? new Date(aday) : null; if (!d || isNaN(d.getTime())) { try { var kayit = localStorage.getItem(AYAR + '_baslangic'); if (kayit) d = new Date(kayit); } catch (_) {} } if (!d || isNaN(d.getTime()) || (eskiPlan && eskiPlan !== planAdi)) { d = new Date(); try { localStorage.setItem(AYAR + '_baslangic', d.toISOString()); localStorage.setItem(AYAR + '_plan', planAdi); } catch (_) {} } try { localStorage.setItem(AYAR + '_plan', planAdi); } catch (_) {} return d; }
+  function dongu() { var gecen = Math.max(0, Date.now() - donguBaslangic().getTime()); return 'd30-' + Math.floor(gecen / (30 * 24 * 60 * 60 * 1000)); }
+  function kullanim() { var v = oku(); v[dongu()] = v[dongu()] || { evren: 0, gezgin: 0, hikaye: 0 }; return v; }
+  function say(kind) { var v = kullanim(); return Number(v[dongu()][kind] || 0); }
+  function arttir(kind) { var v = kullanim(); v[dongu()][kind] = say(kind) + 1; yaz(v); }
+  function takimLimit() { return PLAN[plan()].takim; }
+  function takimKisiSayisi(eser) { var ortak = eser && Array.isArray(eser.ortaklar) ? eser.ortaklar : []; return 1 + ortak.filter(function (x) { return x && (x.kullanici_adi || x.kullaniciAdi || x.id); }).length; }
+  function takimKotaAcik(eser, eklenecek) { var limit = takimLimit(), adet = Number(eklenecek) || 1; return limit === Infinity || (limit > 0 && takimKisiSayisi(eser) + adet <= limit); }
   function limit(kind) { return PLAN[plan()][kind]; }
   function kota(kind) { return limit(kind) !== Infinity && say(kind) >= limit(kind); }
   function kotaUyari(kind) {
@@ -63,7 +67,7 @@
   function planKartHtml() {
     var p = plan(), aktif = p !== 'ucretsiz';
     return '<div class="kutu-y pro-kart" data-uyelik-kart><b>' + (aktif ? planEtiketi() + ' üyesisin ✓' : 'Üyelik planları') + '</b>' +
-      '<p class="oyun-not">' + (p === 'evrenyazar' ? 'Sınırsız evren, Evrengezer ve fan hikâyesi; tüm arayüz ve kod editörleri açık.' : p === 'evrengezer' ? 'Ayda 5 evren, 12 Evrengezer, 42 fan hikâyesi; evren başına 5 gezegen. Arayüz/görünüm/kod editörleri kapalı.' : '1 evren taslağı; kanon evrenleri gezme ve okuma ücretsiz.') + '</p>' +
+      '<p class="oyun-not">' + (p === 'evrenyazar' ? 'Sınırsız evren, Evrengezer, fan hikâyesi ve takım üyesi; tüm arayüz ve kod editörleri açık.' : p === 'evrengezer' ? '30 günde bir 5 evren, 12 Evrengezer, 42 fan hikâyesi; co-op evren başına toplam 2 kişi ve evren başına 5 gezegen. Arayüz/görünüm/kod editörleri kapalı.' : '1 evren taslağı; kanon evrenleri gezme ve okuma ücretsiz.') + '</p>' +
       '<div class="oyun-sira"><button type="button" class="dugme" data-uyelik-ac>Planları gör</button></div></div>';
   }
   function planPencere() {
@@ -74,13 +78,13 @@
       '<h3>Planlar</h3><p class="pencere-alt">Aktif planın: <b>' + planEtiketi() + '</b>. Aşağıda her planın tam sınırlarını ve açık özelliklerini görebilirsin.</p>' +
       '<div class="pro-katmanlar plan-karsilastirma">' +
       '<div class="pro-katman ' + (p === 'ucretsiz' ? 'plan-secili' : '') + '"><b>Ücretsiz</b>' + rozet('ucretsiz') +
-        '<ul><li>1 evren taslağı</li><li>Kanon evrenleri gezme ve okuma</li><li>Temel arşiv, oyun ve hikâye deneyimi</li><li>Evren düzenleyicisi ve gelişmiş editörler kapalı</li></ul></div>' +
+        '<ul><li>1 evren taslağı</li><li>Kanon evrenleri gezme ve okuma</li><li>Temel arşiv, oyun ve hikâye deneyimi</li><li>Takım çalışması ve co-op kapalı</li><li>Evren düzenleyicisi ve gelişmiş editörler kapalı</li></ul></div>' +
       '<div class="pro-katman ' + (p === 'evrengezer' ? 'plan-secili' : '') + '"><b>EvrenGezer</b>' + rozet('evrengezer') +
         '<p><strong>Ayda 5 evren · 12 Evrengezer · 42 fan hikâyesi</strong></p>' +
-        '<ul><li>Her evrende en fazla 5 gezegen</li><li>Yalnızca 1 baloncuk evren</li><li>Çoklu ve iç içe evren kullanılamaz</li><li>Arayüz, görünüm ve kod editörleri kapalı</li><li>Gezme, okuma ve kendi evrenlerini temel düzeyde oluşturma</li></ul>' +
+        '<ul><li>Co-op evren: sahibi dahil en fazla 2 kişi</li><li>Takım çalışması açık; ikinci kişiyle ortak geliştirme</li><li>Her evrende en fazla 5 gezegen</li><li>Yalnızca 1 baloncuk evren</li><li>Çoklu ve iç içe evren kullanılamaz</li><li>Arayüz, görünüm ve kod editörleri kapalı</li><li>Gezme, okuma ve kendi evrenlerini temel düzeyde oluşturma</li></ul>' +
         '<button type="button" class="dugme dugme-sade" data-uyelik-ode="evrengezer">EvrenGezer’e geç</button></div>' +
       '<div class="pro-katman pro-one ' + (p === 'evrenyazar' ? 'plan-secili' : '') + '"><b>EvrenYazar · 249 TL / ay</b>' + rozet('evrenyazar') +
-        '<ul><li>Evren, Evrengezer ve fan hikâyesi sınırı yok</li><li>Gezegen, baloncuk, çoklu ve iç içe evren sınırı yok</li><li>Arayüz, görünüm ve kod editörleri açık</li><li>Tam evren özelleştirme ve gelişmiş üretim araçları</li></ul>' +
+        '<ul><li>Evren, Evrengezer, fan hikâyesi ve takım üyesi sınırı yok</li><li>Sınırsız kişiyle ortak çalışma ve co-op evren</li><li>Gezegen, baloncuk, çoklu ve iç içe evren sınırı yok</li><li>Arayüz, görünüm ve kod editörleri açık</li><li>Tam evren özelleştirme ve gelişmiş üretim araçları</li></ul>' +
         '<button type="button" class="dugme" data-uyelik-ode="evrenyazar">EvrenYazar’a geç</button></div>' +
       '</div><p class="oyun-not">Yönetici, kullanıcı adını kullanarak EvrenGezer veya EvrenYazar planını ücretsiz hediye edebilir.</p><p class="pencere-durum" id="uyelikDurum" role="status"></p></div>';
   }
@@ -116,7 +120,7 @@
   if (typeof oldCiz === 'function') window.anaEvrenlerCiz = function () { oldCiz.apply(this, arguments); var a = document.querySelector('#anaEvrenler .ana-kur'); if (a && gezerPlan()) a.querySelector('.ana-evren-not') && (a.querySelector('.ana-evren-not').textContent = 'EvrenGezer: bu ay ' + say('evren') + ' / 5 evren hakkı kullanıldı.'); };
   fanYeniSar();
   if (typeof window.evrenTabanAcik === 'function') window.evrenTabanAcik = evrenKotaAcik;
-  window.tf4Plan = plan; window.tf4PlanAdi = planEtiketi; window.tf4PlanLimit = limit; window.tf4EvrenGezerMi = gezerPlan; window.tf4EvrenYazarMi = ustPlan; window.tf4EvrenKotaAcik = evrenKotaAcik; window.tf4GezegenKotaAcik = gezegenKotaAcik; window.tf4EvrenSinirsiz = evrenSinirsiz; window.tf4UyelikPolitikasi = { SURUM: SURUM, PLAN: PLAN, kota: kota, kullanim: kullanim };
+  window.tf4Plan = plan; window.tf4PlanAdi = planEtiketi; window.tf4PlanLimit = limit; window.tf4TakimLimit = takimLimit; window.tf4TakimKisiSayisi = takimKisiSayisi; window.tf4TakimKotaAcik = takimKotaAcik; window.tf4UyelikDongu = dongu; window.tf4UyelikDonguBaslangic = donguBaslangic; window.tf4EvrenGezerMi = gezerPlan; window.tf4EvrenYazarMi = ustPlan; window.tf4EvrenKotaAcik = evrenKotaAcik; window.tf4GezegenKotaAcik = gezegenKotaAcik; window.tf4EvrenSinirsiz = evrenSinirsiz; window.tf4UyelikPolitikasi = { SURUM: SURUM, PLAN: PLAN, kota: kota, kullanim: kullanim };
   var observer = new MutationObserver(function () { fanYeniSar(); hediyeAraciniEkle(); });
   if (document.documentElement) observer.observe(document.documentElement, { childList: true, subtree: true });
 })();

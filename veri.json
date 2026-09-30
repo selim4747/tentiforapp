@@ -1,5 +1,5 @@
 {
-  "surum": "5.1.0",
+  "surum": "5.2.0",
   "guncelleme": "2026-09-30",
   "delilik": {
     "baslik": "Delilik",
@@ -7233,6 +7233,15 @@
     }
   ],
   "degisiklik": [
+    {
+      "surum": "5.2.0",
+      "tarih": "2026-09-30",
+      "maddeler": [
+        "EvrenGezer planına sahibi dahil 2 kişilik co-op takım çalışması eklendi.",
+        "EvrenYazar planında ortak çalışma kişi sınırı kaldırıldı.",
+        "EvrenGezer kotaları takvim ayı yerine plan başlangıcından itibaren kayan 30 günlük döngüyle yenilenir."
+      ]
+    },
     {
       "surum": "5.0.3",
       "tarih": "2026-09-30",

@@ -1,7 +1,7 @@
 /* Tentiforverse 5.1 — unified universe, plan, offline and account dashboard */
 (function () {
   'use strict';
-  var MONTH = new Date().toISOString().slice(0, 7);
+  var MONTH = typeof window.tf4UyelikDongu === 'function' ? window.tf4UyelikDongu() : new Date().toISOString().slice(0, 7);
   var PLAN = {
     ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 0, hikaye: 0 },
     evrengezer: { ad: 'EvrenGezer', evren: 5, gezgin: 12, hikaye: 42 },
