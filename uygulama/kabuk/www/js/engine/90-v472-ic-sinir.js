@@ -179,7 +179,6 @@
     sayaciSar();
     kartNotu();
     try {
-      if (typeof veri !== 'undefined' && veri && veri.surum) veri.surum = SURUM;
     } catch (e) {}
   }
 
