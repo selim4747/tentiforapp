@@ -14,4 +14,9 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const data = JSON.parse(fs.readFileSync('veri.json', 'utf8'));
 assert.equal(pkg.version, '5.2.0');
 assert.equal(data.surum, '5.2.0');
+
+const evren = fs.readFileSync('js/engine/54-evren-dosyalari.js', 'utf8');
+assert(evren.includes('"evren/"+String(n).replace'));
+assert(evren.includes('(?:evren|evrenler)'));
+assert(fs.existsSync('evren/README.md'));
 console.log('5.2 membership policy assertions: PASS');
