@@ -1,13 +1,13 @@
 {
   "kod": 510,
   "surum": "5.1.0",
-  "boyut": 6761409,
-  "tarih": "2026-09-30T22:57:00+03:00",
-  "not": "Tentiforverse 5.1: eski evren kartları kaldırıldı; Evrenler, Planlar ve Bildirim merkezi menüye sabitlendi.",
-  "sha256": "f190ea33e3b311efdf59868f54b31107283be4fa720830ec72c886357aaca451",
+  "boyut": 6761728,
+  "tarih": "2026-09-30T23:34:30+03:00",
+  "not": "Tentiforverse 5.1: Evrenler ve Planlar üst hızlı erişim alanına taşındı; eski evren kartları kaldırıldı.",
+  "sha256": "5efe5d9106cf9c8fd0ea166903792c2e5d8a1cc5eb715eb7cb704cd008f5f786",
   "version": "5.1.0",
-  "size": 6761409,
-  "sizeBytes": 6761409,
-  "updatedAt": "2026-09-30T19:57:00Z",
-  "notes": "Tentiforverse 5.1: eski evren kartları kaldırıldı; Evrenler, Planlar ve Bildirim merkezi menüye sabitlendi."
+  "size": 6761728,
+  "sizeBytes": 6761728,
+  "updatedAt": "2026-09-30T20:34:30Z",
+  "notes": "Tentiforverse 5.1: Evrenler ve Planlar üst hızlı erişim alanına taşındı; eski evren kartları kaldırıldı."
 }
