@@ -1,7 +1,8 @@
 {
-  "kod": 501,
-  "surum": "5.0.1",
-  "boyut": 6754043,
-  "tarih": "2026-09-30T22:08:36+03:00",
-  "not": "Tentiforverse 5.0.1: APK yerel bildirim izni, çevrimdışı bildirim kuyruğu ve internet gelince otomatik güncelleme."
+  "kod": 502,
+  "surum": "5.0.2",
+  "boyut": 6754396,
+  "tarih": "2026-09-30T22:15:05+03:00",
+  "not": "Tentiforverse 5.0.2: Web Push payload uyumu, güvenilir çevrimdışı bildirim kuyruğu, native bildirim tıklama yönlendirmesi ve hedefli bildirim durum düzeltmesi.",
+  "sha256": "c6dba715d1aaa6d559c6ca71f04602cdfc319e037c17cb49fb3a3244fe4f2da6"
 }
