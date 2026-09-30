@@ -21,5 +21,10 @@
       "splashFullScreen": false,
       "splashImmersive": false
     }
+  },
+  "server": {
+    "url": "https://tentiforapp.pages.dev",
+    "cleartext": false,
+    "errorPath": "hata.html"
   }
 }

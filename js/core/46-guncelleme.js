@@ -1,11 +1,5 @@
 const GUNCELLEME_ARALIK = 9e5, GUNCELLEME_ARKA_PLAN = 12e4;
 let guncellemeYeni = null, guncellemeSonBakis = 0, guncellemeGizlendi = 0;
-const APK_GUNCELLEME_ADRESI = "https://tentiforapp.pages.dev";
-
-function apkYerelKabukMu() {
-  if (typeof kabukMu !== "function" || !kabukMu()) return false;
-  return location.protocol === "capacitor:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-}
 
 function sayfaPaketi() {
   const e = document.querySelector('meta[name="tentifor-paket"]');
@@ -27,8 +21,7 @@ async function guncellemeFetch(url) {
 
 async function yayindakiPaket() {
   try {
-    const kok = apkYerelKabukMu() ? APK_GUNCELLEME_ADRESI : "";
-    const e = await guncellemeFetch(kok + "/surum.json?t=" + Date.now());
+    const e = await guncellemeFetch("surum.json?t=" + Date.now());
     if (!e.ok) return null;
     const t = await e.json();
     return t && typeof t.paket === "string" ? t : null;
@@ -37,19 +30,6 @@ async function yayindakiPaket() {
   }
 }
 
-async function apkArkaPlanGuncelle(n) {
-  if (!apkYerelKabukMu() || !n || !n.paket || n.paket === sayfaPaketi()) return false;
-  /* Yerel APK paketi çevrimdışında açılır; ağ geri gelince güncel siteye sessizce geçer. */
-  try {
-    const e = await guncellemeFetch(APK_GUNCELLEME_ADRESI + "/surum.json?t=" + Date.now());
-    if (!e.ok) return false;
-    const t = await e.json();
-    if (!t || !t.paket || t.paket === sayfaPaketi()) return false;
-    sessionStorage.setItem("tentiforapp_apk_guncellendi", t.surum || "");
-    location.replace(APK_GUNCELLEME_ADRESI + "/?tf-apk-guncelleme=" + encodeURIComponent(t.paket));
-    return true;
-  } catch { return false; }
-}
 
 function guncellemeBekletir() {
   const e = document.activeElement;
@@ -131,7 +111,6 @@ async function guncellemeBak(e) {
   try { n = await yayindakiPaket(); } catch { return; }
   if (!n) return;
   if (t && n.paket === t && n.surum === yerelSurum()) return;
-  if (await apkArkaPlanGuncelle(n)) return;
   if (guncellemeGorulen(n.paket)) return;
   guncellemeYeni = n;
   guncellemeCubugu();
@@ -164,7 +143,6 @@ async function guncellemeAcilisBak() {
   let t = null;
   try { t = await yayindakiPaket(); } catch { return; }
   if (!t || t.paket === e || guncellemeGorulen(t.paket)) return;
-  if (await apkArkaPlanGuncelle(t)) return;
   guncellemeYeni = t;
   guncellemeCubugu();
 }
@@ -177,13 +155,6 @@ window.addEventListener("load", function () {
     if (e) {
       sessionStorage.removeItem("tentiforapp_guncellendi");
       setTimeout(function () { typeof eckaBildir === "function" && eckaBildir("Site güncellendi" + (e !== "1" ? " · " + e : "")); }, 1500);
-    }
-  } catch {}
-  try {
-    const e = sessionStorage.getItem("tentiforapp_apk_guncellendi");
-    if (e) {
-      sessionStorage.removeItem("tentiforapp_apk_guncellendi");
-      setTimeout(function () { typeof eckaBildir === "function" && eckaBildir("Güncel sürüm arka planda açıldı" + (e ? " · " + e : "")); }, 1500);
     }
   } catch {}
 });
