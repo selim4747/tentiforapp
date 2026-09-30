@@ -44,7 +44,8 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const baslik = String(body.baslik || '').trim().slice(0, 80);
     const metin = String(body.metin || '').trim().slice(0, 200);
-    const adres = String(body.adres || '/').trim().slice(0, 280) || '/';
+    const adres = String(body.adres || '#/sen').trim().slice(0, 280) || '#/sen';
+    const uygulamaAdresi = adres.includes('#/') ? adres.slice(adres.indexOf('#/')) : '#/sen';
     const hedefKullanici = String(body.hedefKullanici || '').trim().toLowerCase().slice(0, 20);
     if (!baslik) return cevap({ durum: 'hata', mesaj: 'Başlık boş olamaz' }, 400);
 
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
       const { error: uygulamaHatasi } = await adminClient.from('kullanici_bildirimleri').insert({
         kullanici: hedefId,
         metin: `${baslik}: ${metin}`.slice(0, 400),
-        baglanti: adres,
+        baglanti: uygulamaAdresi,
       });
       if (uygulamaHatasi) return cevap({ durum: 'hata', mesaj: 'Uygulama bildirimi kaydedilemedi' }, 500);
       uygulama = 1;
