@@ -4,3 +4,13 @@
 .plan-karsilastirma .pro-katman { position: relative; }
 .plan-aktif { display: inline-block; margin-left: .5rem; padding: .15rem .45rem; border-radius: 999px; font-size: .72em; color: var(--vurgu, #fff); background: var(--vurgu-zemin, #6b4eff); vertical-align: middle; }
 .plan-secili { outline: 2px solid color-mix(in srgb, var(--vurgu, #6b4eff) 60%, transparent); outline-offset: 2px; }
+
+
+/* Tentiforverse 5.1 dashboard */
+.tf51-evren-arac{display:grid;gap:8px;margin:0 0 14px;padding:12px;border:1px solid var(--buz);border-radius:var(--r-kart);background:var(--beyaz)}
+.tf51-evren-arac input,.tf51-evren-arac select{width:100%;box-sizing:border-box}
+.tf51-panel{margin:12px 0;border-left:4px solid var(--deniz)}
+.tf51-kota{display:grid;gap:5px;margin:10px 0}.tf51-kota>div:first-child{display:flex;justify-content:space-between;gap:10px}.tf51-kota-cubuk,.tf51-kota-sinirsiz{height:7px;overflow:hidden;border-radius:999px;background:var(--buz)}.tf51-kota-cubuk i{display:block;height:100%;border-radius:inherit;background:var(--deniz)}.tf51-kota-sinirsiz{text-align:center;line-height:7px;color:var(--deniz);font-size:12px}
+.tf51-indirilen{display:grid;gap:8px;margin:14px 0;padding:12px;border:1px solid var(--buz);border-radius:var(--r-kart);background:var(--beyaz)}.tf51-indirilen-satir{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.tf51-indirilen-satir a{flex:1 1 160px;color:var(--deniz)}
+html[data-ayar-tema=gece] .tf51-evren-arac,html[data-ayar-tema=gece] .tf51-indirilen{background:var(--kar) }
+@media(min-width:640px){.tf51-evren-arac{grid-template-columns:1fr 180px;align-items:center}.tf51-evren-arac .oyun-etiket{grid-column:1/-1}}
