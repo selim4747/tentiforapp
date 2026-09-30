@@ -61,6 +61,24 @@ if (fs.existsSync(swPath)) {
   console.log(`✓ sw.js önbellek anahtarı güncellendi (tentiforapp-${karma})`);
 }
 
+// 4.1 index.html meta etiketlerini güncelle (Sonsuz güncelle döngüsünü bitirir)
+const indexPath = path.join(ROOT_DIR, 'index.html');
+if (fs.existsSync(indexPath)) {
+  let indexIcerik = fs.readFileSync(indexPath, 'utf-8');
+  indexIcerik = indexIcerik.replace(
+    /<meta name="tentifor-paket" content="[^"]*">/,
+    `<meta name="tentifor-paket" content="${karma}">`
+  );
+  if (indexIcerik.includes('name="tentifor-surum"')) {
+    indexIcerik = indexIcerik.replace(
+      /<meta name="tentifor-surum" content="[^"]*">/,
+      `<meta name="tentifor-surum" content="${veri.surum || '4.6.1'}">`
+    );
+  }
+  fs.writeFileSync(indexPath, indexIcerik, 'utf-8');
+  console.log(`✓ index.html meta paketi güncellendi (${karma})`);
+}
+
 // 5. Capacitor kabuk için www dizinini senkronize et
 const wwwDir = path.join(ROOT_DIR, 'uygulama', 'kabuk', 'www');
 if (fs.existsSync(path.dirname(wwwDir))) {
@@ -77,7 +95,9 @@ if (fs.existsSync(path.dirname(wwwDir))) {
     'css',
     'js',
     'ikon',
-    'yazitipi'
+    'yazitipi',
+    'evrenler',
+    'veri-degisiklik.json'
   ];
 
   for (const oge of dosyalarVeDizinler) {

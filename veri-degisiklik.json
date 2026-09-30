@@ -1,5 +1,15 @@
 [
   {
+    "surum": "4.6.1",
+    "tarih": "2026-09-30",
+    "maddeler": [
+      "Model Vitrin Evreni (Eterya: Yıldız Kırıkları): Evren Kurucu'nun tüm özelliklerini (harita, kurallar, kişiler, zaman çizgisi, yapımlar, glif alfabesi ve okuma rehberi) insanlara sergilemek amacıyla test evreni olarak yayına alındı.",
+      "Akıllı Güncelleme ve İçerik Bildirimleri: Sonsuz güncelleme döngüsü giderildi; artık yalnızca gerçek sürüm farkında 'Yeni sürüm yayında', yönetici yeni evren/içerik eklediğinde ise 'Yeni içerik eklendi' uyarısı verilir ve kapatılınca tekrarlanmaz.",
+      "Uygulama İçi Bildirim Ayarları: Sen sayfasına yeni güncelleme ve içerik bildirimleri açma/kapatma ayarı eklendi.",
+      "Mobil Moderasyon Erişimi: Mobil uygulama ve telefon tarayıcılarında tek tıkla moderasyon paneline erişim bağlantısı Sen sayfasına eklendi."
+    ]
+  },
+  {
     "surum": "4.6.0",
     "tarih": "2026-09-30",
     "maddeler": [
