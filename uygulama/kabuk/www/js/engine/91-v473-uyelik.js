@@ -103,7 +103,6 @@
   fanYeniSar();
   if (typeof window.evrenTabanAcik === 'function') window.evrenTabanAcik = evrenKotaAcik;
   window.tf4Plan = plan; window.tf4PlanAdi = planEtiketi; window.tf4PlanLimit = limit; window.tf4EvrenGezerMi = gezerPlan; window.tf4EvrenYazarMi = ustPlan; window.tf4EvrenKotaAcik = evrenKotaAcik; window.tf4GezegenKotaAcik = gezegenKotaAcik; window.tf4EvrenSinirsiz = evrenSinirsiz; window.tf4UyelikPolitikasi = { SURUM: SURUM, PLAN: PLAN, kota: kota, kullanim: kullanim };
-  if (typeof window.veri !== 'undefined' && window.veri) window.veri.surum = SURUM;
   var observer = new MutationObserver(function () { fanYeniSar(); hediyeAraciniEkle(); });
   if (document.documentElement) observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
