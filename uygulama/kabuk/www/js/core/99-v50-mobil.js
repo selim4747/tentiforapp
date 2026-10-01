@@ -16,8 +16,7 @@
     if (document.getElementById("v50Stil")) return;
     const s = document.createElement("style"); s.id = "v50Stil";
     s.textContent = `
-      #v50Ac{position:fixed;right:16px;bottom:78px;z-index:40;border:1px solid #d6a43a;background:#102a43;color:#fff;border-radius:999px;padding:11px 15px;box-shadow:0 5px 18px #0003;font-weight:700}
-      #v50Panel{position:fixed;inset:0;z-index:1000;background:rgba(10,25,40,.72);display:grid;place-items:center;padding:16px}
+      #v50Panel{position:fixed;inset:0;z-index:1000;background:rgba(10,25,40,.72);display:grid;place-items:center;padding:16px;touch-action:auto}
       #v50Panel[hidden]{display:none}.v50-kutu{width:min(720px,100%);max-height:92vh;overflow:auto;background:var(--zemin,#fff);color:var(--yazi,#152536);border-radius:18px;padding:20px;box-shadow:0 20px 60px #0005}.v50-ust{display:flex;justify-content:space-between;align-items:center;gap:12px}.v50-ust h2{margin:0}.v50-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0}.v50-grid button,.v50-eylem{min-height:44px}.v50-liste{display:grid;gap:8px;margin-top:10px}.v50-kart{border:1px solid #cad5df;border-radius:10px;padding:10px}.v50-kart a{font-weight:700}.v50-kart small{display:block;opacity:.7}.v50-not{width:100%;min-height:90px;box-sizing:border-box}.v50-durum{display:block;min-height:22px}.v50-durum.iyi{color:#18794e}.v50-durum.kotu{color:#b42318}.v50-menu{border-top:1px solid #ffffff22;margin-top:8px;padding-top:8px}.v50-ayrac{opacity:.65;font-size:.8em;padding:8px 0}
       html.v50-okuma body{background:#faf7ef}html.v50-okuma #icerik,html.v50-okuma main{max-width:760px!important;margin-left:auto!important;margin-right:auto!important}html.v50-okuma .v50-okuma-kontrol{position:fixed;top:12px;right:12px;z-index:60}
     `; document.head.appendChild(s);
@@ -27,6 +26,7 @@
     if (p) { p.hidden = false; render(); return; }
     p = document.createElement("div"); p.id = "v50Panel"; p.hidden = false; p.setAttribute("role", "dialog"); p.setAttribute("aria-modal", "true");
     p.innerHTML = '<div class="v50-kutu"><div class="v50-ust"><h2>Tentiforverse Kütüphanem</h2><button class="pencere-kapat" data-v50-kapat aria-label="Kapat">✕</button></div><div id="v50Icerik"></div></div>';
+    p.addEventListener("click", (e) => { if (e.target === p) p.remove(); });
     document.body.appendChild(p); render();
   }
   function render() {
@@ -54,11 +54,11 @@
   function importBackup() { document.getElementById("v50ImportFile")?.click(); }
   async function importFile(file) { try { const d = JSON.parse(await file.text()); if (!d || !Array.isArray(d.notlar) || !Array.isArray(d.favoriler)) throw new Error("geçersiz"); write(KEYS.notes, d.notlar.slice(-100)); write(KEYS.favs, d.favoriler.slice(-100)); write(KEYS.lists, Array.isArray(d.okuma_listesi) ? d.okuma_listesi.slice(-100) : []); if (d.devam) write(KEYS.resume, d.devam); render(); status("Yedek içe aktarıldı.", true, "v50BackupDurum"); } catch { status("Yedek dosyası okunamadı.", false, "v50BackupDurum"); } }
   function menuButton() { if (!isMobile() || document.querySelector("[data-v50-ac]")) return; const menu = document.querySelector(".mm-eylemler"); if (menu) { const b = document.createElement("button"); b.className = "mm-eylem v50-menu"; b.dataset.v50Ac = "1"; b.innerHTML = '<span aria-hidden="true">▣</span> Kütüphanem · notlar ve çevrimdışı'; menu.appendChild(b); } }
-  function button() { if (!isMobile() || document.getElementById("v50Ac")) return; const b = document.createElement("button"); b.id = "v50Ac"; b.dataset.v50Ac = "1"; b.textContent = "▣ Kütüphanem"; document.body.appendChild(b); }
   document.addEventListener("change", (e) => { if (e.target?.id === "v50ImportFile" && e.target.files?.[0]) importFile(e.target.files[0]); });
   document.addEventListener("click", (e) => { const t = e.target.closest?.("[data-v50-ac], [data-v50-kapat], [data-v50-fav], [data-v50-list], [data-v50-share], [data-v50-offline], [data-v50-read], [data-v50-speak], [data-v50-resume], [data-v50-not-kaydet], [data-v50-export], [data-v50-import]"); if (!t) return; if (t.hasAttribute("data-v50-ac")) { e.preventDefault(); panel(); return; } if (t.hasAttribute("data-v50-kapat")) { const p = document.getElementById("v50Panel"); if (p && t.closest("#v50Panel")) { if (t.tagName === "A") { p.remove(); return; } p.remove(); } return; } if (t.hasAttribute("data-v50-fav")) favToggle(); else if (t.hasAttribute("data-v50-list")) listToggle(); else if (t.hasAttribute("data-v50-share")) share(); else if (t.hasAttribute("data-v50-offline")) offlinePack(); else if (t.hasAttribute("data-v50-read")) readingMode(); else if (t.hasAttribute("data-v50-speak")) speak(); else if (t.hasAttribute("data-v50-resume")) { const r = read(KEYS.resume, null); if (r?.url) { document.getElementById("v50Panel")?.remove(); location.hash = r.url.replace(/^.*#/, "#"); } } else if (t.hasAttribute("data-v50-not-kaydet")) noteSave(); else if (t.hasAttribute("data-v50-export")) exportBackup(); else if (t.hasAttribute("data-v50-import")) importBackup(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") document.getElementById("v50Panel")?.remove(); });
   window.addEventListener("hashchange", () => { write(KEYS.resume, current()); setTimeout(menuButton, 100); });
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") write(KEYS.resume, current()); });
-  document.addEventListener("DOMContentLoaded", () => { style(); setTimeout(button, 500); setTimeout(menuButton, 800); write(KEYS.resume, current()); });
+  document.addEventListener("DOMContentLoaded", () => { style(); setTimeout(menuButton, 800); write(KEYS.resume, current()); });
   window.TentiforV50 = { open: panel, offlinePack, current, readingMode, speak, exportBackup };
 })();
