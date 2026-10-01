@@ -10,6 +10,7 @@
     "build": "node scripts/paketle.mjs",
     "paketle": "node scripts/paketle.mjs",
     "test": "node scripts/test.mjs",
+    "test:live": "node tests/canli-ortam-simulasyonu.mjs",
     "lint": "node scripts/lint.mjs"
   },
   "keywords": [
