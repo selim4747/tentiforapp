@@ -12,6 +12,10 @@ Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker. Tentiforverse ev
 - **PWA & Çevrimdışı Desteği**: Service Worker ile tam çevrimdışı çalışma.
 - **Mobil APK & Android Desteği**: Capacitor ile paketlenebilir kabuk mimarisi.
 
+## 6.0 APK yol haritası
+
+6.0 için Android entegrasyonu, dosya açma/paylaşma hedefi, ana ekran widget’ı ve kısayollar, gelişmiş bildirim aksiyonları, biyometrik gizli içerik kilidi, arka plan sesli okuma, QR/NFC paylaşımı, cihaz yedekleme ve sensör tabanlı deneyler planlanmaktadır. Ayrıntılı kapsam için [6.0 APK yol haritasına](ROADMAP-6.0-APK.md) bakın.
+
 ## Çalıştırma
 ```bash
 npm install
