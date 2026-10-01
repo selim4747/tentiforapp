@@ -9,7 +9,8 @@ const tests = [
   'tests/kullanici-simulasyonu.mjs',
   'tests/release-hygiene.mjs',
   'tests/offline-queue.mjs',
-  'tests/cakisma.mjs'
+  'tests/cakisma.mjs',
+  'tests/ortak-evren.mjs'
 ];
 
 const server = spawn(process.execPath, ['server.js'], { stdio: ['ignore', 'pipe', 'pipe'] });

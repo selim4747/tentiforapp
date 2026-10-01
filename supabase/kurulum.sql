@@ -2519,12 +2519,31 @@ language sql stable security definer set search_path = '' as $$
   select exists (select 1 from public.ortak_evren_uyeleri where evren = p_evren and kullanici = auth.uid());
 $$;
 
+-- Ortak yazarlık yalnızca ücretli planla açılır. Bu kontrol istemcideki
+-- düğme kontrolünün tekrarıdır; asıl yetki her zaman RPC içinde doğrulanır.
+create or replace function public.ortak_evren_planli_mi(p_kullanici uuid default auth.uid())
+returns boolean
+language sql stable security definer set search_path = '' as $$
+  select public.pro_mu(p_kullanici);
+$$;
+
+create or replace function public.ortak_evren_yazar_mi(p_kullanici uuid)
+returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.abonelikler a
+    where a.id = p_kullanici and a.tip = 'evrenyazar'
+      and (a.bitis is null or a.bitis > now())
+  ) or coalesce(public.pro_kod_bitis(p_kullanici) > now(), false);
+$$;
+
 -- kurucu evrenini ortak yazarlığa açar (ya da kendi kaydını günceller)
 create or replace function public.ortak_evren_ac(p_id text, p_veri jsonb) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare uid uuid := auth.uid(); r public.ortak_evrenler;
 begin
   if uid is null then return jsonb_build_object('durum', 'giris'); end if;
+  if not public.ortak_evren_planli_mi(uid) then return jsonb_build_object('durum', 'plan'); end if;
   if p_id !~ '^[\w-]{1,60}$' or jsonb_typeof(p_veri) <> 'object' or pg_column_size(p_veri) > 3000000 then return jsonb_build_object('durum', 'gecersiz'); end if;
   select * into r from public.ortak_evrenler where id = p_id;
   if found and r.sahip <> uid then return jsonb_build_object('durum', 'baskasinin'); end if;
@@ -2545,6 +2564,7 @@ $$;
 create or replace function public.ortak_evren_davet(p_id text, p_ozet text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 begin
+  if not public.ortak_evren_planli_mi() then return jsonb_build_object('durum', 'plan'); end if;
   if not exists (select 1 from public.ortak_evrenler where id = p_id and sahip = auth.uid()) then return jsonb_build_object('durum', 'yetki'); end if;
   if p_ozet !~ '^[0-9a-f]{64}$' then return jsonb_build_object('durum', 'gecersiz'); end if;
   if (select count(*) from public.ortak_evren_davetleri where evren = p_id and kullanan is null) >= 20 then return jsonb_build_object('durum', 'sinir'); end if;
@@ -2556,7 +2576,7 @@ $$;
 -- davet koduyla katıl: kod tek kullanımlık
 create or replace function public.ortak_evren_katil(p_kod text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
-declare uid uuid := auth.uid(); d public.ortak_evren_davetleri; e public.ortak_evrenler;
+declare uid uuid := auth.uid(); d public.ortak_evren_davetleri; e public.ortak_evrenler; mevcut int; limit_kisi int;
 begin
   if uid is null then return jsonb_build_object('durum', 'giris'); end if;
   if (select count(*) from public.tek_kod_denemeleri where kullanici = uid and zaman > now() - interval '1 hour') >= 30 then
@@ -2568,9 +2588,15 @@ begin
     return jsonb_build_object('durum', 'yok');
   end if;
   if d.kullanan is not null and d.kullanan <> uid then return jsonb_build_object('durum', 'dolu'); end if;
+  select * into e from public.ortak_evrenler where id = d.evren;
+  if not public.ortak_evren_planli_mi(e.sahip) then return jsonb_build_object('durum', 'kapali'); end if;
+  mevcut := (select count(*) from public.ortak_evren_uyeleri where evren = e.id);
+  limit_kisi := case when public.ortak_evren_yazar_mi(e.sahip) then 2147483647 else 2 end;
+  if mevcut >= limit_kisi and not exists (select 1 from public.ortak_evren_uyeleri where evren = e.id and kullanici = uid) then
+    return jsonb_build_object('durum', 'takim_siniri');
+  end if;
   update public.ortak_evren_davetleri set kullanan = uid where ozet = d.ozet;
   insert into public.ortak_evren_uyeleri (evren, kullanici) values (d.evren, uid) on conflict do nothing;
-  select * into e from public.ortak_evrenler where id = d.evren;
   return jsonb_build_object('durum', 'tamam', 'id', e.id, 'veri', e.veri, 'guncelleme', e.guncelleme);
 end;
 $$;
@@ -2634,7 +2660,8 @@ $$;
 
 revoke execute on function public.ortak_evren_ac(text, jsonb), public.ortak_evren_davet(text, text), public.ortak_evren_katil(text),
   public.ortak_evren_getir(text), public.ortak_evren_yaz(text, jsonb, timestamptz), public.ortak_evrenlerim(),
-  public.ortak_evren_uyeler(text), public.ortak_evren_cikar(text, uuid), public.ortak_uye_mi(text) from public, anon;
+  public.ortak_evren_uyeler(text), public.ortak_evren_cikar(text, uuid), public.ortak_uye_mi(text),
+  public.ortak_evren_planli_mi(uuid), public.ortak_evren_yazar_mi(uuid) from public, anon, authenticated;
 grant execute on function public.ortak_evren_ac(text, jsonb), public.ortak_evren_davet(text, text), public.ortak_evren_katil(text),
   public.ortak_evren_getir(text), public.ortak_evren_yaz(text, jsonb, timestamptz), public.ortak_evrenlerim(),
   public.ortak_evren_uyeler(text), public.ortak_evren_cikar(text, uuid) to authenticated;
