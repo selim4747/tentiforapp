@@ -9,23 +9,10 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 
 console.log('🚀 TentiforApp paketleme başlatılıyor...');
 
-// 1. Sürüm ve veri kontrolü. package.json tek canonical sürüm kaynağıdır.
+// 1. Veri kontrolü
 const veriPath = path.join(ROOT_DIR, 'veri.json');
-const packagePath = path.join(ROOT_DIR, 'package.json');
 if (!fs.existsSync(veriPath)) {
   console.error('❌ veri.json bulunamadı!');
-  process.exit(1);
-}
-let packageMeta;
-try {
-  packageMeta = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
-} catch (e) {
-  console.error('❌ package.json JSON ayrıştırma hatası:', e);
-  process.exit(1);
-}
-const canonicalVersion = String(packageMeta.version || '');
-if (!/^\d+\.\d+\.\d+$/.test(canonicalVersion)) {
-  console.error('❌ package.json geçerli bir semver sürümü taşımıyor.');
   process.exit(1);
 }
 
@@ -38,43 +25,21 @@ try {
   console.error('❌ veri.json JSON ayrıştırma hatası:', e);
   process.exit(1);
 }
-if (veri.surum !== canonicalVersion) {
-  console.error(`❌ Sürüm uyuşmazlığı: package.json=${canonicalVersion}, veri.json=${veri.surum || '(boş)'}`);
-  process.exit(1);
-}
 
-// 2. Paket karması hesapla. Tarih kullanılmaz; aynı girdiler aynı cache adını üretir.
-const hashGirdileri = [
-  'index.html', 'manifest.webmanifest', 'package.json', 'veri.json',
-  'veri-degisiklik.json', 'css', 'js', 'ikon', 'yazitipi', 'evrenler'
-];
-function hashGirdisi(relative) {
-  const full = path.join(ROOT_DIR, relative);
-  if (!fs.existsSync(full)) return;
-  const stat = fs.statSync(full);
-  if (stat.isDirectory()) {
-    for (const child of fs.readdirSync(full).sort()) hashGirdisi(path.join(relative, child));
-    return;
-  }
-  let content = fs.readFileSync(full);
-  if (relative === 'index.html') {
-    content = Buffer.from(content.toString('utf8').replace(/<meta name="tentifor-paket" content="[^"]*">/, '<meta name="tentifor-paket" content="<paket>">'));
-  }
-  paketHash.update(relative).update('\0').update(content).update('\0');
-}
-const paketHash = crypto.createHash('md5');
-hashGirdileri.forEach(hashGirdisi);
-const karma = paketHash.digest('hex').substring(0, 12);
+// 2. Paket karması hesapla
+const karma = crypto.createHash('md5')
+  .update(veriIcerik)
+  .update(Date.now().toString())
+  .digest('hex')
+  .substring(0, 12);
 
 console.log(`✓ Yeni paket karması: ${karma}`);
 
 // 3. surum.json güncelle
-let eskiSurum = null;
-try { eskiSurum = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'surum.json'), 'utf8')); } catch {}
 const surumVeri = {
   paket: karma,
   surum: veri.surum || '4.5.0',
-  kuruldu: eskiSurum && eskiSurum.paket === karma && eskiSurum.kuruldu ? eskiSurum.kuruldu : new Date().toISOString()
+  kuruldu: new Date().toISOString()
 };
 
 fs.writeFileSync(
@@ -114,9 +79,44 @@ if (fs.existsSync(indexPath)) {
   console.log(`✓ index.html meta paketi güncellendi (${karma})`);
 }
 
-// 5. Cloudflare Pages uyumluluğu için dist dizinini senkronize et
+// 5. Capacitor kabuk için www dizinini senkronize et
+const wwwDir = path.join(ROOT_DIR, 'uygulama', 'kabuk', 'www');
+if (fs.existsSync(path.dirname(wwwDir))) {
+  fs.mkdirSync(wwwDir, { recursive: true });
+  
+  const dosyalarVeDizinler = [
+    'index.html',
+    'veri.json',
+    'surum.json',
+    'manifest.webmanifest',
+    'sw.js',
+    'robots.txt',
+    'paylasim.png',
+    'css',
+    'js',
+    'ikon',
+    'yazitipi',
+    'evrenler',
+    'veri-degisiklik.json'
+  ];
+
+  for (const oge of dosyalarVeDizinler) {
+    const kaynak = path.join(ROOT_DIR, oge);
+    const hedef = path.join(wwwDir, oge);
+    if (fs.existsSync(kaynak)) {
+      const stats = fs.statSync(kaynak);
+      if (stats.isDirectory()) {
+        fs.cpSync(kaynak, hedef, { recursive: true });
+      } else {
+        fs.copyFileSync(kaynak, hedef);
+      }
+    }
+  }
+  console.log('✓ uygulama/kabuk/www yerel APK varlıkları güncellendi');
+}
+
+// 6. Cloudflare Pages uyumluluğu için dist dizinini senkronize et
 const distDir = path.join(ROOT_DIR, 'dist');
-fs.rmSync(distDir, { recursive: true, force: true });
 fs.mkdirSync(distDir, { recursive: true });
 
 const distDosyalarVeDizinler = [

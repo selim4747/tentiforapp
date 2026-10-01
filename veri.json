@@ -1,6 +1,6 @@
 {
-  "surum": "6.1.3",
-  "guncelleme": "2026-10-01",
+  "surum": "4.6.1",
+  "guncelleme": "2026-09-29",
   "delilik": {
     "baslik": "Delilik",
     "altbaslik": "Roman ve oyun",
@@ -7233,63 +7233,6 @@
     }
   ],
   "degisiklik": [
-    {
-      "surum": "5.2.0",
-      "tarih": "2026-09-30",
-      "maddeler": [
-        "EvrenGezer planına sahibi dahil 2 kişilik co-op takım çalışması eklendi.",
-        "EvrenYazar planında ortak çalışma kişi sınırı kaldırıldı.",
-        "EvrenGezer kotaları takvim ayı yerine plan başlangıcından itibaren kayan 30 günlük döngüyle yenilenir."
-      ]
-    },
-    {
-      "surum": "5.0.3",
-      "tarih": "2026-09-30",
-      "maddeler": [
-        "Service Worker kurulumu tek bir yavaş dosya yüzünden yarıda kalmıyor.",
-        "Önbelleksiz ilk açılışta bağlantı sonsuza kadar beklemiyor; sınırlı sürede kontrollü çevrimdışı yanıt veriyor.",
-        "Yavaş bağlantı istekleri AbortController ile sonlandırılıyor.",
-        "APK sürüm metadata’sı çevrimdışı yerel kopyadan okunuyor.",
-        "Bildirim RPC’si yavaş bağlantıda arayüzü kilitlememesi için zaman aşımına sahip."
-      ]
-    },
-    {
-      "surum": "5.0.2",
-      "tarih": "2026-09-30",
-      "maddeler": [
-        "Web Push bildirim alanları servis çalışanıyla uyumlu hale getirildi.",
-        "APK çevrimdışı bildirim kuyruğu başarısız planlamada bildirimi kaybetmiyor.",
-        "Native bildirim tıklaması ilgili uygulama sayfasını açıyor.",
-        "Yönetici hedefli bildirim sonucu web cihazı ve uygulama kuyruğunu ayrı gösteriyor."
-      ]
-    },
-    {
-      "surum": "5.0.1",
-      "tarih": "2026-09-30",
-      "maddeler": [
-        "APK bildirimleri tarayıcı Web Push yerine Capacitor yerel izin akışıyla çalışır.",
-        "Kişiye özel bildirimler Supabase uygulama kuyruğuna kaydedilir; internet gelince APK otomatik eşitler.",
-        "Çevrimdışı açılış korunur; bağlantı geri geldiğinde yeni sürüm otomatik uygulanır."
-      ]
-    },
-    {
-      "surum": "5.0.0",
-      "tarih": "2026-09-30",
-      "maddeler": [
-        "Mobil Kütüphanem: cihaz içi notlar, favoriler ve kaldığın yere dönme.",
-        "Çevrimdışı paket hazırlama, mobil paylaşım ve APK’ye özel kişisel kütüphane.",
-        "Tentiforverse APK’si GitHub Actions üzerinden yeniden derlenebilir hale getirildi."
-      ]
-    },
-    {
-      "surum": "4.7.4",
-      "tarih": "2026-09-30",
-      "maddeler": [
-        "APK dağıtımı production çıktısına alındı.",
-        "Android uygulaması çevrimdışı yerel paketten açılır; yeni sürüm ağ gelince arka planda açılır.",
-        "APK, App Links ve sürüm metadata eşitlendi."
-      ]
-    },
     {
       "surum": "4.6.1",
       "tarih": "2026-09-30",
