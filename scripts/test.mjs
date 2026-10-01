@@ -18,7 +18,8 @@ const tests = [
   'tests/offline-queue.mjs',
   'tests/cakisma.mjs',
   'tests/ortak-evren.mjs',
-  'tests/android-native.mjs'
+  'tests/android-native.mjs',
+  'tests/6.1-universe-center.mjs'
 ];
 
 const server = spawn(process.execPath, ['server.js'], { stdio: ['ignore', 'pipe', 'pipe'] });
