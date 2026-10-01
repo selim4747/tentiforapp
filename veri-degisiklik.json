@@ -1,5 +1,13 @@
 [
   {
+    "surum": "5.3.2",
+    "tarih": "2026-10-01",
+    "maddeler": [
+      "Profil vitrini artık Tömye dışındaki kanon evrenlerin kişilerini de gösterir; evrenin en az %35’i okunmuşsa veya o evrene ait kutu rozeti kazanılmışsa seçilebilir.",
+      "Sevilen satır seçenekleri, dış evrenlerdeki karakter/evren eşleşmelerinde aynı okuma ve rozet kuralını uygular; profil gösterimi dış evren adını da belirtir."
+    ]
+  },
+  {
     "surum": "4.6.1",
     "tarih": "2026-09-30",
     "maddeler": [

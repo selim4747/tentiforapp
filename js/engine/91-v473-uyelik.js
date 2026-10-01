@@ -1,7 +1,7 @@
-/* 5.3.1 — EvrenGezer / EvrenYazar üyelik politikası */
+/* 5.3.2 — EvrenGezer / EvrenYazar üyelik politikası */
 (function () {
   'use strict';
-  var SURUM = '5.3.1';
+  var SURUM = '5.3.2';
   var AYAR = 'tf4_uyelik_kullanimi';
   var PLAN = {
     ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 0, hikaye: 0, gezegen: 0, takim: 0 },

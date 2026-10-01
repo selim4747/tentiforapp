@@ -1,6 +1,6 @@
 {
   "name": "tentiforapp-kabuk",
-  "version": "5.3.1",
+  "version": "5.3.2",
   "private": true,
   "dependencies": {
     "@capacitor/android": "^6.0.0",
