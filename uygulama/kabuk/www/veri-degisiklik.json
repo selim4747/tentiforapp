@@ -1,22 +1,33 @@
 [
   {
-    "surum": "5.4.2",
+    "surum": "5.4.4",
     "tarih": "2026-10-01",
+    "baslik": "Evren mağazası açılış düzeltmesi",
     "maddeler": [
-      "İçindekiler paneli altı anlaşılır rafa ayrıldı; mobilde katlanabilir hâle getirildi.",
-      "Evren bağlamı korunarak Oku, Oyna ve Mağaza akışları aktif evrene göre çalışır.",
-      "Liderlik ve yarışlar sayfasındaki async sorgu hatası düzeltildi."
+      "Evren sayfalarının alt menüsünde aktif evrene ait Mağaza düğmesi artık kilitli kanon evrenlerinde ve pretty URL’lerde de görünür.",
+      "Mağaza penceresi aktif evrenin para anahtarıyla açılır; kullanıcı mağazaya bastığında JavaScript çökmesi yaşanmaz.",
+      "5.x.x ve 4.x.x değişiklik günlükleri yinelenen sürüm kayıtları birleştirilerek sadeleştirildi."
+    ]
+  },
+  {
+    "surum": "5.4.3",
+    "maddeler": [
+      "Evren sayfasındaki alt menüye aktif evrene özgü Mağaza düğmesi eklendi.",
+      "Kilitli kanon evrenlerinde de mağaza penceresi aktif evren bağlamıyla açılır."
     ]
   },
   {
     "surum": "5.4.2",
     "tarih": "2026-10-01",
-    "baslik": "5.4.0 hata düzeltmeleri",
     "maddeler": [
+      "İçindekiler paneli altı anlaşılır rafa ayrıldı; mobilde katlanabilir hâle getirildi.",
+      "Evren bağlamı korunarak Oku, Oyna ve Mağaza akışları aktif evrene göre çalışır.",
+      "Liderlik ve yarışlar sayfasındaki async sorgu hatası düzeltildi.",
       "Okur özeti içindeki Kaldığın okuma yolu için devam düğmesi, JSON olarak saklanan aktif yolu doğru okuyup sıradaki bölüme götürür.",
       "Rozet koleksiyonu yalnızca gösterilebilir ve koleksiyona dahil karakterleri listeler; gizli veya kartı kapalı kayıtlar sızmaz.",
       "Bildirim, hediye teslim geçmişi, profil/rozet ve mağaza akışları için regresyon kontrolleri genişletildi."
-    ]
+    ],
+    "baslik": "5.4.0 hata düzeltmeleri"
   },
   {
     "surum": "5.4.0",
