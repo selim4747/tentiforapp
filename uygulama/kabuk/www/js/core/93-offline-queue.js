@@ -1,4 +1,4 @@
-/* 5.3.2 — düşük trafikli istemci offline queue */
+/* 5.3.3 — düşük trafikli istemci offline queue */
 (function () {
   'use strict';
   var ANAHTAR = 'tf4_offline_queue_v1';

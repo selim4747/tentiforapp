@@ -1,5 +1,14 @@
 [
   {
+    "surum": "5.3.3",
+    "tarih": "2026-10-01",
+    "maddeler": [
+      "Profil vitrini koşulu netleştirildi: dış evren karakterleri yalnızca evrenin en az %35’i okunmuşsa veya doğrudan karakter rozeti kazanılmışsa seçilebilir; evren rozeti artık tek başına yeterli değildir.",
+      "Okuma rozeti akışı için bağlı kutu tamamlanması, gümüş rozet ve fan hikâyesiyle altın rozet senaryoları otomatik test kapsamına alındı.",
+      "Profilde artık uygunluk dışı kalmış eski sevilen satır seçimleri gösterilmez."
+    ]
+  },
+  {
     "surum": "5.3.2",
     "tarih": "2026-10-01",
     "maddeler": [
