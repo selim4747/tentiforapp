@@ -30,4 +30,4 @@ assert.match(css, /\.v54-bildirim-kutu/);
 assert.match(css, /\.v54-rozet-grid/);
 assert.match(css, /\.v54-ozet-grid/);
 execFileSync(process.execPath, ['--check', `${root}js/core/54-v54-olgunlastirma.js`], { stdio: 'pipe' });
-console.log('5.4.1 regression: notification, gift, badge, profile, collection visibility and reading-resume paths passed.');
+console.log('5.4.2 regression: notification, gift, badge, profile, collection visibility and reading-resume paths passed.');
