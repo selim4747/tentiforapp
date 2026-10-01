@@ -70,15 +70,6 @@ function guncellemeBildirimiGonder(baslik, metin) {
     const izin = localStorage.getItem("tentiforapp_ayar_guncelleme_bildirim");
     if (izin === "0") return;
   } catch {}
-  if (typeof kabukEklenti === "function" && typeof kabukMu === "function" && kabukMu()) {
-    const localNotif = kabukEklenti("LocalNotifications");
-    if (localNotif) {
-      try {
-        localNotif.schedule({ notifications: [{ id: 991122, title: baslik, body: metin, extra: { adres: "#/sen" } }] });
-        return;
-      } catch {}
-    }
-  }
   if ("Notification" in window && Notification.permission === "granted") {
     if (navigator.serviceWorker && navigator.serviceWorker.ready) {
       navigator.serviceWorker.ready
