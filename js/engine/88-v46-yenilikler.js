@@ -97,21 +97,11 @@
             if (izinMetin) izinMetin.textContent = 'Durum: ' + perm;
           }
           if (Notification.permission === "granted") {
-            if (!navigator.serviceWorker || !navigator.serviceWorker.ready) {
-              if (typeof window.eckaBildir === 'function') window.eckaBildir('Bildirim servisi hazır değil. Sayfayı yenileyip tekrar dene.');
-              return;
-            }
-            try {
-              const kayit = await navigator.serviceWorker.ready;
-              await kayit.showNotification("TentiforApp v4.7.2", {
-                body: "Bildirim sistemi çalışıyor.",
-                icon: "ikon/ikon-192.png",
-                tag: "tentiforapp-test-bildirim"
-              });
-              if (typeof window.eckaBildir === 'function') window.eckaBildir('Test bildirimi gönderildi!');
-            } catch (e) {
-              if (typeof window.eckaBildir === 'function') window.eckaBildir('Bildirim gönderilemedi: ' + (e && e.message || e));
-            }
+            new Notification("TentiforApp v4.7.2", {
+              body: "Bildirim sistemi çalışıyor.",
+              icon: "ikon/ikon-192.png"
+            });
+            if (typeof window.eckaBildir === 'function') window.eckaBildir('Test bildirimi gönderildi!');
           } else if (typeof window.eckaBildir === 'function') {
             window.eckaBildir('Tarayıcı bildirim izni verilmedi.');
           }

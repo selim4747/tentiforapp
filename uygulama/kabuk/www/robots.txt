@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://tentiforapp.pages.dev/sitemap.xml
