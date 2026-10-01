@@ -9,11 +9,16 @@ const pkg = readJson('package.json');
 const data = readJson('veri.json');
 const manifest = readJson('manifest.webmanifest');
 const shellPkg = readJson('uygulama/kabuk/package.json');
+const changelog = readJson('veri-degisiklik.json');
+const androidBuild = fs.readFileSync(path.join(root, 'uygulama/kabuk/android/app/build.gradle'), 'utf8');
 
 assert.match(pkg.version, /^\d+\.\d+\.\d+$/);
 assert.equal(data.surum, pkg.version, 'veri.json package.json ile aynı sürümü taşımalı');
 assert.equal(manifest.version, pkg.version, 'manifest package.json ile aynı sürümü taşımalı');
 assert.equal(shellPkg.version, pkg.version, 'APK kabuğu package.json ile aynı sürümü taşımalı');
+assert.equal(changelog[0].surum, pkg.version, 'değişiklik günlüğünün ilk sürümü package.json ile aynı olmalı');
+assert.match(androidBuild, /versionCode appVersionCode/);
+assert.match(androidBuild, /versionName appVersion/);
 assert.match(manifest.name, new RegExp(` ${pkg.version.replaceAll('.', '\\.')}`));
 assert.match(fs.readFileSync(path.join(root, 'README.md'), 'utf8').split('\n')[0], new RegExp(`v${pkg.version.replaceAll('.', '\\.')}`));
 assert.match(fs.readFileSync(path.join(root, 'js/engine/91-v473-uyelik.js'), 'utf8'), new RegExp(`SURUM = '${pkg.version.replaceAll('.', '\\.')}'`));

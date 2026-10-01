@@ -1,5 +1,11 @@
 apply plugin: 'com.android.application'
 
+def rootPackage = new groovy.json.JsonSlurper().parse(file('../../../../package.json'))
+def appVersion = rootPackage.version.toString()
+def versionParts = appVersion.tokenize('.').collect { it.toInteger() }
+if (versionParts.size() != 3) throw new GradleException("Invalid app version: ${appVersion}")
+def appVersionCode = versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2]
+
 android {
     namespace "dev.pages.tentiforapp"
     compileSdk rootProject.ext.compileSdkVersion
@@ -7,8 +13,8 @@ android {
         applicationId "dev.pages.tentiforapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode appVersionCode
+        versionName appVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
