@@ -88,7 +88,7 @@
     var d = e.target.closest && e.target.closest('[data-v54-bildirim-donem]'); if (d) { V54.donem = d.value; bildirimleriCiz54(); return; }
     if (e.target.closest && e.target.closest('[data-v54-bildirim-okundu]')) { bildirimOku54(); return; }
     if (e.target.closest && e.target.closest('[data-v54-bildirim-link]')) { var n = e.target.closest('[data-v54-bildirim-link]').getAttribute('data-bildirim-no'); var row = (typeof TF4_BILDIRIM !== 'undefined' && TF4_BILDIRIM.liste || []).find(function (x) { return String(x.no) === String(n); }); if (row) row.okundu = true; setTimeout(bildirimleriCiz54, 80); return; }
-    if (e.target.closest && e.target.closest('[data-v54-okumaya-devam]')) { var y = typeof yolAktif === 'function' ? yolAktif() : null; if (y && y.sonraki && typeof yolAdimaGit === 'function') yolAdimaGit(y.sonraki); return; }
+    if (e.target.closest && e.target.closest('[data-v54-okumaya-devam]')) { var y = typeof yolAktif === 'function' ? yolAktif() : null, progress = y && typeof yolIlerleme === 'function' ? yolIlerleme(y) : null, next = progress && progress.sonraki; if (next && typeof yolAdimaGit === 'function') yolAdimaGit(next); return; }
   });
   document.addEventListener('tf-veri-hazir', function () { setTimeout(yenile, 250); });
   document.addEventListener('tf-hesap-hazir', function () { setTimeout(yenile, 250); });
