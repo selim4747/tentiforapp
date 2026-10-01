@@ -33,14 +33,14 @@ jobs:
 
       - name: Web paketini oluştur
         run: |
-          npm install --no-audit --no-fund
+          npm ci --no-audit --no-fund
           npm run build
 
-      - name: Capacitor kabuğunu kur
+      - name: Capacitor kabuğunu kur ve Android varlıklarını eşitle
         working-directory: uygulama/kabuk
         run: |
-          npm install --no-audit --no-fund
-          npx cap add android
+          npm ci --no-audit --no-fund
+          if [ ! -d android ]; then npx cap add android; fi
           npx cap sync android
 
       - name: Debug APK derle
