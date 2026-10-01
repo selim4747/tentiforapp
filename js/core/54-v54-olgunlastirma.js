@@ -1,7 +1,7 @@
 /* TentiforApp 5.4 — profil, bildirim, rozet, okuma ve hediye deneyimi */
 (function () {
   'use strict';
-  var V54 = { surum: '5.4.1', timer: 0, filtre: 'hepsi', donem: 'hepsi' };
+  var V54 = { surum: '5.4.2', timer: 0, filtre: 'hepsi', donem: 'hepsi' };
   var esc = window.kacir || function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   function bildirimKategorisi(n) {
     if (n && /^(profil|rozet|okuma|hediye|evren|duyuru)$/.test(String(n.kategori || ''))) return String(n.kategori);

@@ -1,6 +1,15 @@
 [
   {
-    "surum": "5.4.1",
+    "surum": "5.4.2",
+    "tarih": "2026-10-01",
+    "maddeler": [
+      "İçindekiler paneli altı anlaşılır rafa ayrıldı; mobilde katlanabilir hâle getirildi.",
+      "Evren bağlamı korunarak Oku, Oyna ve Mağaza akışları aktif evrene göre çalışır.",
+      "Liderlik ve yarışlar sayfasındaki async sorgu hatası düzeltildi."
+    ]
+  },
+  {
+    "surum": "5.4.2",
     "tarih": "2026-10-01",
     "baslik": "5.4.0 hata düzeltmeleri",
     "maddeler": [
