@@ -4,7 +4,7 @@
   var SURUM = '4.7.2';
 
   function ustPlanMu() {
-    return typeof tf4ProMu === 'function' && tf4ProMu();
+    return (typeof tf4EvrenYazarMi === 'function' && tf4EvrenYazarMi()) || (typeof tf4EvrenGezerMi === 'function' && tf4EvrenGezerMi());
   }
 
   function icKatmanMi(eser) {
@@ -50,10 +50,10 @@
     var fiyat = typeof TF4_PRO_FIYAT !== 'undefined' ? TF4_PRO_FIYAT : '99 TL / ay';
     return (
       '<div class="ice-kutu ice-kilit">' +
-        '<span class="ice-pro">Yaratıcı Pro · v' + SURUM + '</span>' +
+        '<span class="ice-pro">EvrenYazar · v' + SURUM + '</span>' +
         '<h3>' + baslik + '</h3>' +
         '<p class="oyun-not">' + metin + '</p>' +
-        '<p class="oyun-not">Ücretsiz planda yok. Yalnızca en üst planda (Yaratıcı Pro) ve yalnızca en üst evrende açılır. İç evren ve baloncuk evren evren sınırına dahildir.</p>' +
+        '<p class="oyun-not">Ücretsiz planda yok. Yalnızca en üst planda (EvrenYazar) ve yalnızca en üst evrende açılır. İç evren ve baloncuk evren evren sınırına dahildir.</p>' +
         '<div class="oyun-sira">' +
           '<button type="button" class="dugme" data-pro-ac="' + baslik + ' en üst plan ister.">Pro’ya geç · ' +
             String(fiyat).replace(/&/g, '&amp;').replace(/</g, '&lt;') +
@@ -71,7 +71,7 @@
   }
 
   function baloncukKur() {
-    if (!ustPlanMu()) {
+    if (!ustPlanMu() && !(typeof tf4EvrenGezerMi === 'function' && tf4EvrenGezerMi())) {
       if (typeof proPencereAc === 'function') proPencereAc('Baloncuk evren yalnızca en üst planda.');
       return;
     }
@@ -85,6 +85,7 @@
       return;
     }
     if (typeof fanYeni !== 'function') return;
+    if (baloncuklar(eser).length >= 1) { if (typeof eckaBildir === 'function') eckaBildir('Bu planda her üst evrende yalnızca 1 baloncuk evren olabilir.'); return; }
     var n = fanYeni('evren');
     var id = n && n.id;
     if (!id) return;
@@ -118,7 +119,7 @@
     }).join('');
     return (
       '<div class="ice-kutu">' +
-        '<span class="ice-pro">Yaratıcı Pro · v' + SURUM + ' · evren sınırına dahil</span>' +
+        '<span class="ice-pro">EvrenYazar · v' + SURUM + ' · evren sınırına dahil</span>' +
         '<h3>Baloncuk evrenler</h3>' +
         '<p class="oyun-not">Üst evrenin içinde duran evren-içi evrenler. Her baloncuk evren hakkı harcar. Yalnızca en üst planda ve en üst evrende kurulur.</p>' +
         (benim ? '<div class="oyun-sira"><button type="button" class="dugme" data-baloncuk-kur>+ Baloncuk evren kur</button></div>' : '') +
@@ -178,7 +179,6 @@
     sayaciSar();
     kartNotu();
     try {
-      if (typeof veri !== 'undefined' && veri && veri.surum) veri.surum = SURUM;
     } catch (e) {}
   }
 

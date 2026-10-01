@@ -1,11 +1,15 @@
 /* TentiforApp servis çalışanı — sayfa ve veri önce ağdan (yavaşsa son kopya), sürümlü dosyalar önbellekten.
    Yeni bir sürüm yayınlanınca sayfalar kendiliğinden yenilenir; eski kopya yalnızca çevrimdışı ya da yavaş ağda kullanılır. */
-const ONBELLEK = "tentiforapp-16a1031c3ce8";
+const ONBELLEK = "tentiforapp-a64f592dd141";
 /* Hesap kütüphanesi burada yok: yalnızca hesabı kullanan indirir (ilk kullanımda önbelleğe girer). */
-const ILK = ["./", "index.html", "css/style.css?v=300bde5f91", "veri.json", "veri-degisiklik.json?v=a1aad374ff", "js/paket-1.js?v=3d381d29b0", "js/paket-2.js?v=8c1fddc7db", "js/paket-3.js?v=00429b607e", "js/paket-4.js?v=d6c566e7fa", "manifest.webmanifest", "ikon/ikon-192.png", "yazitipi/karla-normal-400-latin.woff2", "js/core/24-arsiv-mantigi.js?v=3b01d5d917", "js/arsiv/34b-model-evreni.js", "js/engine/88-v46-yenilikler.js?v=b1134c748a", "evrenler/fornek-eterya.json"];
+const ILK = ["./", "index.html", "css/style.css?v=0206fcbbbd91", "veri.json", "veri-degisiklik.json?v=a1aad374ff", "js/paket-1.js?v=3d381d29b0", "js/paket-2.js?v=8c1fddc7db", "js/paket-3.js?v=00429b607e", "js/paket-4.js?v=d6c566e7fa", "manifest.webmanifest", "ikon/ikon-192.png", "yazitipi/karla-normal-400-latin.woff2", "js/core/24-arsiv-mantigi.js?v=3b01d5d917", "js/arsiv/34b-model-evreni.js", "js/engine/88-v46-yenilikler.js?v=b1134c748a", "js/core/99-v50-mobil.js?v=500", "evrenler/fornek-eterya.json"];
 
 self.addEventListener("install", function (e) {
-  e.waitUntil(caches.open(ONBELLEK).then(function (c) { return c.addAll(ILK); }).then(function () { return self.skipWaiting(); }));
+  /* Tek bir yavaş/eksik dosya kurulumun tamamını bozmasın. Çekilebilen dosyalar
+     hemen önbelleğe girer; eksikler ilk ağ dönüşünde fetch stratejisiyle alınır. */
+  e.waitUntil(caches.open(ONBELLEK).then(function (c) {
+    return Promise.all(ILK.map(function (u) { return c.add(u).catch(function () { return null; }); }));
+  }).then(function () { return self.skipWaiting(); }));
 });
 
 self.addEventListener("activate", function (e) {
@@ -21,7 +25,7 @@ self.addEventListener("push", function (e) {
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { metin: e.data ? e.data.text() : "" }; }
   /* sessiz saatte de gösterilir (tarayıcı ister) ama sessiz ve titreşimsiz */
   e.waitUntil(ayarOku().then(function (a) {
-    return self.registration.showNotification(String(d.baslik || "TentiforApp").slice(0, 80), {
+    return self.registration.showNotification(String(d.baslik || "Tentiforverse").slice(0, 80), {
       body: String(d.metin || "").slice(0, 200), icon: "ikon/ikon-192.png", badge: "ikon/ikon-192.png",
       tag: "tentifor-bildirim", data: { adres: d.adres || "/" }, silent: sessizMi(a)
     });
@@ -66,7 +70,7 @@ async function gunlukKontrol() {
   const bugun = new Date().toISOString().slice(0, 10);
   if (a.kelime && a.oynanan !== bugun && a.hatirlatilan !== bugun) {
     a.hatirlatilan = bugun;
-    await self.registration.showNotification("Günün kelimesi hazır", {
+    await self.registration.showNotification("Tentiforverse · Günün kelimesi hazır", {
       body: "Bugünün Tentiforverse kelimesini bul: 6 hak.", icon: "ikon/ikon-192.png", badge: "ikon/ikon-192.png",
       tag: "tf-kelime", data: { adres: "/yarislar/" } });
   }
@@ -121,7 +125,18 @@ self.addEventListener("fetch", function (e) {
    - Geri kalanı: önce ağ, yoksa son kopya. */
 const AG_BEKLEME = 3500;
 const AG_BEKLEME_YAVAS = 800;   /* az önce bir sayfa ağı bekleyip kopyaya düştüyse: ağ yavaş, veri için yine bekletme */
+const AG_ISTEK_ZAMAN_ASIMI = 8000;
 let yavasAgZamani = 0;
+
+function guvenliFetch(istek, ayarlar) {
+  /* Tarayıcı fetch'i bağlantı kurulmadan sonsuza kadar bekleyebilir. Service
+     worker bu durumda ne cache cevabını ne de offline 503 cevabını döndürebilir. */
+  const c = typeof AbortController === "function" ? new AbortController() : null;
+  const o = Object.assign({}, ayarlar || {});
+  if (c) o.signal = c.signal;
+  const zaman = setTimeout(function () { if (c) c.abort(); }, AG_ISTEK_ZAMAN_ASIMI);
+  return fetch(istek, o).finally(function () { clearTimeout(zaman); });
+}
 
 function onbellegeKoy(istek, yanit, sorguyla) {
   /* yönlendirilmiş yanıt önbellekten sayfa olarak verilemez (tarayıcı reddeder) */
@@ -150,13 +165,13 @@ self.addEventListener("fetch", function (e) {
   const surumlu = /^\/(?:js\/|css\/|veri-[a-z]+\.json$)/.test(u.pathname) && u.searchParams.has("v");
   if (surumlu || /^\/(?:ikon|yazitipi)\//.test(u.pathname)) {
     e.respondWith(caches.match(istek).then(function (k) {
-      return k || fetch(istek).then(function (y) { onbellegeKoy(istek, y, true); return y; }).catch(function () { return yedekKopya(istek); });
+      return k || guvenliFetch(istek).then(function (y) { onbellegeKoy(istek, y, true); return y; }).catch(function () { return yedekKopya(istek); });
     }));
     return;
   }
 
   const bekletme = istek.mode === "navigate" || /\/veri\.json$/.test(u.pathname);
-  const ag = fetch(istek).then(function (y) { onbellegeKoy(istek, y, false); return y; });
+  const ag = guvenliFetch(istek).then(function (y) { onbellegeKoy(istek, y, false); return y; });
   if (!bekletme) {
     e.respondWith(ag.catch(function () { return yedekKopya(istek); }));
     return;
@@ -175,7 +190,14 @@ function agiBekle(istek, ag) {
     let bitti = false;
     const yavas = Date.now() - yavasAgZamani < 30000;
     const sure = setTimeout(function () {
-      yedekKopya(istek).then(function (k) { if (k && !bitti) { bitti = true; yavasAgZamani = Date.now(); coz(k); } });
+      yedekKopya(istek).then(function (k) {
+        if (bitti) { return; }
+        bitti = true;
+        yavasAgZamani = Date.now();
+        coz(k || new Response("Bağlantı yavaş. Sayfa çevrimdışı açılmayı denedi; yeniden dene.", {
+          status: 504, headers: { "Content-Type": "text/plain; charset=utf-8" }
+        }));
+      });
     }, yavas ? AG_BEKLEME_YAVAS : AG_BEKLEME);
     ag.then(function (y) { if (!bitti) { bitti = true; clearTimeout(sure); yavasAgZamani = 0; coz(y); } })
       .catch(function () {

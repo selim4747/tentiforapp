@@ -5,7 +5,7 @@
   var ICE_STIL_ID = 'v47IcEvrenStil';
 
   function icePro() {
-    return typeof tf4ProMu === 'function' && tf4ProMu();
+    return typeof tf4EvrenYazarMi === 'function' && tf4EvrenYazarMi();
   }
 
   function iceKacir(s) {
@@ -74,7 +74,7 @@
   function iceYaz(degistir) {
     if (typeof EVS === 'undefined' || !EVS || EVS.kaynak !== 'benim') return;
     if (!icePro()) {
-      iceBildir('İç evren Yaratıcı Pro özelliği.');
+      iceBildir('İç evren EvrenYazar özelliği.');
       if (typeof proPencereAc === 'function') proPencereAc('İç evren kurmak Pro ister. Yuva hakkı harcanmaz.');
       return;
     }
@@ -134,12 +134,12 @@
     var fiyat = typeof TF4_PRO_FIYAT !== 'undefined' ? TF4_PRO_FIYAT : '99 TL / ay';
     return (
       '<div class="ice-kutu ice-kilit">' +
-        '<span class="ice-pro">Yaratıcı Pro · v' + SURUM + '</span>' +
+        '<span class="ice-pro">EvrenYazar · v' + SURUM + '</span>' +
         '<h3>İç evren</h3>' +
         '<p class="oyun-not">Karakterlerin dış evrende uyuyup iç evrende uyanık olduğu iç içe evren. Aynı bedeni paylaşırlar: rüyada bedene bırakılan iz, uyanınca da durur. İki evrenin fizik kuralları ayrıdır. İç evren ayrı evren hakkı harcamaz.</p>' +
         '<p class="oyun-not">Ücretsiz planda iç evren yok. Pro’da evren sınırın olsa bile iç evren o sınırın içinde, tek yuva olarak durur.</p>' +
         '<div class="oyun-sira">' +
-          '<button type="button" class="dugme" data-pro-ac="İç evren kurmak Yaratıcı Pro ister.">Pro’ya geç · ' + iceKacir(fiyat) + '</button>' +
+          '<button type="button" class="dugme" data-pro-ac="İç evren kurmak EvrenYazar ister.">Pro’ya geç · ' + iceKacir(fiyat) + '</button>' +
         '</div>' +
       '</div>'
     );
@@ -248,7 +248,7 @@
     }).join('');
     return (
       '<div class="ice-kutu">' +
-        '<span class="ice-pro">Yaratıcı Pro · v' + SURUM + ' · tek evren hakkı</span>' +
+        '<span class="ice-pro">EvrenYazar · v' + SURUM + ' · tek evren hakkı</span>' +
         '<h3>İç evren</h3>' +
         '<p class="oyun-not">Bu katman evreninin içinde durur. Ayrı evren sayılmaz; Pro evren sınırın olsa bile burası yuva harcamaz. Ücretsiz planda yoktur.</p>' +
         '<label for="iceAd">İç evrenin adı</label>' +
@@ -329,7 +329,6 @@
 
   function iceSurumYaz() {
     try {
-      if (typeof veri !== 'undefined' && veri && veri.surum) veri.surum = SURUM;
     } catch (e) {}
   }
 

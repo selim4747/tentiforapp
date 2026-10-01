@@ -1,6 +1,6 @@
 {
   "name": "tentiforapp",
-  "version": "4.7.1",
+  "version": "6.1.3",
   "description": "TentiforApp — Tentiforverse Arşivi",
   "type": "module",
   "main": "server.js",
@@ -9,12 +9,21 @@
     "start": "node server.js",
     "build": "node scripts/paketle.mjs",
     "paketle": "node scripts/paketle.mjs",
-    "lint": "node -e 'console.log(\"Lint passed\")'"
+    "test": "node scripts/test.mjs",
+    "test:live": "node tests/canli-ortam-simulasyonu.mjs",
+    "test:release": "node tests/release-hygiene.mjs",
+    "lint": "node scripts/lint.mjs"
   },
-  "keywords": ["tentifor", "tentiforverse", "tomye", "pwa"],
+  "keywords": [
+    "tentifor",
+    "tentiforverse",
+    "tomye",
+    "pwa"
+  ],
   "author": "Tentifor",
   "license": "MIT",
   "devDependencies": {
+    "eslint": "^9.39.5",
     "jsdom": "^30.1.1"
   }
 }
