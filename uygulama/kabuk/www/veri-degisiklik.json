@@ -1,4 +1,5 @@
 [
+  {"surum":"5.4.0","tarih":"2026-10-01","baslik":"Evren mağazası hızlı erişimi","maddeler":["Oku ve Oyna düğmelerinin yanına, yalnızca açık evrenlerde görünen Mağaza düğmesi eklendi.","Mağaza, bulunduğun evrenin para bakiyesini ve o evrene bağlanan mevcut satın alma akışını açar."]},
   {
     "surum": "5.3.4",
     "tarih": "2026-10-01",

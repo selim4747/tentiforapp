@@ -10,6 +10,7 @@ const tests = [
   'tests/5.3.3-profile-badges.mjs',
   'tests/5.3.4-layout-notifications.mjs',
   'tests/5.3.4-gifting.mjs',
+  'tests/5.4.0-store.mjs',
   'tests/offline-yavas.mjs',
   'tests/kullanici-simulasyonu.mjs',
   'tests/release-hygiene.mjs',

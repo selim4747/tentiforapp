@@ -89,5 +89,5 @@ assert.deepEqual(runBadge({ linkedRead: true, story: true }).unlocked, ['rozetk:
 
 assert.match(profileSource, /vitrinKisiRozetiVar/);
 assert.match(profileSource, /vitrinAlintiListesi\(\)\.some/);
-assert.match(fs.readFileSync('veri.json', 'utf8'), /"surum": "5\.3\./);
+assert.match(fs.readFileSync('veri.json', 'utf8'), /"surum": "5\.\d+\./);
 console.log('5.3.3 profil + okuma rozeti: uygunluk, doğrudan karakter rozeti, bağlı kutu ve altın rozet senaryoları geçti.');

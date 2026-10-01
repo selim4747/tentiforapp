@@ -12,6 +12,6 @@ assert.match(source, /vitrinKanonKisileri\(\)/);
 assert.match(source, /id:"kanon:"\+n\+":"/);
 assert.match(source, /d=u\.karakter\?vitrinKarakterListesi\(\)/);
 assert.match(source, /t\.evren\|\|t\.evrenId\|\|t\.kanonEvreni/);
-assert.match(data.surum, /^5\.3\./);
+assert.match(data.surum, /^5\.\d+\./);
 assert.ok(changes.some((entry) => entry.maddeler.some((x) => x.includes('%35'))));
 console.log('5.3.2 vitrin: dış evren ilerleme/rozet filtresi ve profil çözümleme kontrolleri geçti.');
