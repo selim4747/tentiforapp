@@ -1,0 +1,132 @@
+{
+  "bicim": "tentifor-eser",
+  "surum": 1,
+  "tur": "evren",
+  "id": "fornek-eterya",
+  "ad": "Eterya: Yıldız Kırıkları",
+  "yazar": "Model Vitrini",
+  "olusturma": "2026-09-30T10:00:00.000Z",
+  "guncelleme": "2026-09-30T10:00:00.000Z",
+  "eklenme": "2026-09-30",
+  "test": true,
+  "ozet": "Gökyüzünün cam gibi çatladığı ve kırıklardan saf eter ışığının süzüldüğü bir dünya. İnsanlar sözcükleri sesle değil, havaya çizdikleri ışık glifleriyle söyler; yerçekimi gezegenin merkezine değil, en yakın eter kırığına doğrudur.\n\nBu bir model test ve vitrin evrenidir: TentiforApp Evren Kurucu'nun tüm yeteneklerini (harita, kurallar, kişiler, zaman çizgisi, yapımlar, glif alfabesi ve okuma rehberi) insanlara sergilemek amacıyla hazırlanmıştır.",
+  "kurallar": [
+    {
+      "ad": "Eter Kırıkları",
+      "tur": "gökyüzü",
+      "aciklama": "Gökyüzündeki çatlaklardan mavi ve kehribar ışık hüzmeleri dökülür. Kırığın altına giren nesneler hafifler, zihinler birbirinin düşünce dalgasını duymaya başlar."
+    },
+    {
+      "ad": "Çapraz Yerçekimi",
+      "tur": "fizik",
+      "aciklama": "Dağlar göğe doğru değil, en parlak eter kırığına doğru eğik durur. Şehirler dev uçan kayaların ters yüzeylerine kurulur."
+    },
+    {
+      "ad": "Işık Glifleri",
+      "tur": "dil",
+      "aciklama": "Ses telleri havadaki eteri titreştiremez. Canlılar parmak uçlarındaki fosforlu bezelerle havada asılı kalan ışık simgeleri çizer."
+    },
+    {
+      "ad": "Rezonans Kristalleri",
+      "tur": "madde",
+      "aciklama": "Yere çarpan eter damlaları katılaşarak kristale dönüşür. Bu kristaller fısıldanan sözleri hafızasında bin yıl saklayabilir."
+    }
+  ],
+  "harita": {
+    "renk": "#091a2e",
+    "yerler": [
+      {
+        "id": "yer-kristal-kule",
+        "ad": "Kristal Kule",
+        "tur": "Şehir",
+        "not": "İlk kırığın tam altına inşa edilen, ışık glifleriyle yönetilen başkent.",
+        "x": 38.5,
+        "y": 42.0
+      },
+      {
+        "id": "yer-kirik-vadi",
+        "ad": "Kırık Vadi",
+        "tur": "Bölge",
+        "not": "Yerçekiminin sıfırlandığı, kayaların havada süzüldüğü kadim çatlak.",
+        "x": 58.0,
+        "y": 65.5
+      },
+      {
+        "id": "yer-eter-limani",
+        "ad": "Eter Limanı",
+        "tur": "Kaynak",
+        "not": "Işık akıntılarında yüzen gökyüzü gemilerinin yanaştığı tersane.",
+        "x": 22.0,
+        "y": 68.0
+      },
+      {
+        "id": "yer-fisilti-magarasi",
+        "ad": "Fısıltı Mağarası",
+        "tur": "Uzak",
+        "not": "Kristallerin geçmiş çağların konuşmalarını yankıladığı yasak tapınak.",
+        "x": 75.0,
+        "y": 30.0
+      }
+    ]
+  },
+  "kisiler": [
+    {
+      "ad": "Vaelen",
+      "unvan": "Eter Çırağı",
+      "ozet": "Kırıkların fısıltısını duyan ve glifleri havaya dokumadan önce zihninde gören genç gezgin.",
+      "detay": "Kristal Kule'nin en alt katında doğdu. Yerçekiminin sürekli yön değiştirmesine çocukken alıştı. Ustası Kael'in kaybolmasından sonra Fısıltı Mağarası'na doğru tek başına yola çıktı."
+    },
+    {
+      "ad": "Seris",
+      "unvan": "Kırık Muhafızı",
+      "ozet": "Gökyüzü çatlaklarının daha fazla genişlemesini önlemek için rezonans kılıçlarıyla nöbet tutan savaşçı.",
+      "detay": "Gözleri eter ışığına doğrudan bakmaktan maviye dönmüştür. Vaelen'i korumakla görevlidir ancak onun gökyüzünü kapatmak yerine daha da açmak istediğinden şüphelenir."
+    },
+    {
+      "ad": "Kael",
+      "unvan": "Kayıp Glif Ustası",
+      "ozet": "Eterya'nın ilk yazılı sözlüğünü havaya kazıyan, gökyüzünün ötesine geçtiği söylenen bilge.",
+      "detay": "On yıl önce en derin kırığa adım attı. Geride yalnızca parıldayan bir günlük ve Vaelen'e bıraktığı rezonans taşını bıraktı."
+    }
+  ],
+  "baglar": [
+    { "a": "Vaelen", "b": "Seris", "etiket": "yol arkadaşı & koruyucu" },
+    { "a": "Vaelen", "b": "Kael", "etiket": "ustası" },
+    { "a": "Seris", "b": "Kael", "etiket": "eski yoldaş" }
+  ],
+  "tarih": [
+    { "zaman": "0. Yıl", "cag": "Kırılma Çağı", "olay": "Gökyüzünün çatlaması ve yeryüzüne ilk eter ışığının dökülmesi." },
+    { "zaman": "44. Yıl", "cag": "Sessizlik Çağı", "olay": "Sesin kaybolması ve Kael tarafından ilk ışık gliflerinin icat edilmesi." },
+    { "zaman": "120. Yıl", "cag": "Yükseliş Çağı", "olay": "Kristal Kule'nin inşası ve uçan gemilerin ilk seferi." }
+  ],
+  "yapimlar": [
+    { "ad": "Eterya Kronikleri", "tur": "Roman", "durum": "Yazımda", "not": "Vaelen'in gökyüzü kırığını arayışı." },
+    { "ad": "Kırık Glifler", "tur": "Oyun", "durum": "Planda", "not": "Havada glif çizerek kapıları açma bulmaca oyunu." }
+  ],
+  "yazi": {
+    "tur": "alfabe",
+    "baslik": true,
+    "isaretler": {
+      "a": "M20 80 L50 20 L80 80 M35 55 L65 55",
+      "e": "M20 20 L20 80 L80 80 M20 50 L65 50 M20 20 L75 20",
+      "i": "M50 20 L50 80 M35 20 L65 20 M35 80 L65 80",
+      "o": "M50 20 A30 30 0 1 0 50 80 A30 30 0 1 0 50 20",
+      "u": "M25 20 L25 65 A25 25 0 0 0 75 65 L75 20"
+    }
+  },
+  "okuma_rehberi": [
+    { "baslik": "Kırılmanın Doğuşu", "dosya": "bolum:ozet" },
+    { "baslik": "Doğa Kanunları ve Glifler", "dosya": "bolum:kurallar" },
+    { "baslik": "Vaelen'in Yolculuğu", "dosya": "" }
+  ],
+  "para": {
+    "ad": "kristal",
+    "simge": "✧",
+    "kur": 0.2
+  },
+  "stil": {
+    "ana": "#0284c7",
+    "zemin": "#081325",
+    "font": "sans"
+  }
+}

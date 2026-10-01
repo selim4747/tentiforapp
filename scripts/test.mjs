@@ -12,13 +12,14 @@ const tests = [
   'tests/5.3.4-gifting.mjs',
   'tests/5.4.0-store.mjs',
   'tests/5.4-complete.mjs',
+  'tests/offline-yavas.mjs',
   'tests/kullanici-simulasyonu.mjs',
   'tests/release-hygiene.mjs',
   'tests/offline-queue.mjs',
   'tests/cakisma.mjs',
   'tests/ortak-evren.mjs',
-  'tests/6.1-universe-center.mjs',
-  'tests/deep-post-5.3-regressions.mjs'
+  'tests/android-native.mjs',
+  'tests/6.1-universe-center.mjs'
 ];
 
 const server = spawn(process.execPath, ['server.js'], { stdio: ['ignore', 'pipe', 'pipe'] });

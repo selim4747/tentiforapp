@@ -114,7 +114,47 @@ if (fs.existsSync(indexPath)) {
   console.log(`✓ index.html meta paketi güncellendi (${karma})`);
 }
 
-// 5. Cloudflare Pages uyumluluğu için dist dizinini senkronize et
+// 5. Capacitor kabuk için www dizinini senkronize et
+const wwwDir = path.join(ROOT_DIR, 'uygulama', 'kabuk', 'www');
+if (fs.existsSync(path.dirname(wwwDir))) {
+  const hataSayfasi = path.join(wwwDir, 'hata.html');
+  const hataIcerigi = fs.existsSync(hataSayfasi) ? fs.readFileSync(hataSayfasi) : null;
+  fs.rmSync(wwwDir, { recursive: true, force: true });
+  fs.mkdirSync(wwwDir, { recursive: true });
+  
+  const dosyalarVeDizinler = [
+    'index.html',
+    'veri.json',
+    'surum.json',
+    'manifest.webmanifest',
+    'sw.js',
+    'robots.txt',
+    'paylasim.png',
+    'css',
+    'js',
+    'ikon',
+    'yazitipi',
+    'evrenler',
+    'veri-degisiklik.json'
+  ];
+
+  for (const oge of dosyalarVeDizinler) {
+    const kaynak = path.join(ROOT_DIR, oge);
+    const hedef = path.join(wwwDir, oge);
+    if (fs.existsSync(kaynak)) {
+      const stats = fs.statSync(kaynak);
+      if (stats.isDirectory()) {
+        fs.cpSync(kaynak, hedef, { recursive: true });
+      } else {
+        fs.copyFileSync(kaynak, hedef);
+      }
+    }
+  }
+  if (hataIcerigi) fs.writeFileSync(hataSayfasi, hataIcerigi);
+  console.log('✓ uygulama/kabuk/www yerel APK varlıkları güncellendi');
+}
+
+// 6. Cloudflare Pages uyumluluğu için dist dizinini senkronize et
 const distDir = path.join(ROOT_DIR, 'dist');
 fs.rmSync(distDir, { recursive: true, force: true });
 fs.mkdirSync(distDir, { recursive: true });
@@ -136,6 +176,14 @@ const distDosyalarVeDizinler = [
   'yazitipi',
   'evrenler'
 ];
+
+// APK dağıtımı ve Android App Links de production çıktısına aittir.
+for (const oge of ['uygulama', '.well-known']) {
+  const kaynak = path.join(ROOT_DIR, oge);
+  const hedef = path.join(distDir, oge);
+  if (fs.existsSync(kaynak)) fs.cpSync(kaynak, hedef, { recursive: true });
+}
+console.log('✓ APK, APK metadatası ve Android App Links dist içine kopyalandı');
 
 for (const oge of distDosyalarVeDizinler) {
   const kaynak = path.join(ROOT_DIR, oge);
