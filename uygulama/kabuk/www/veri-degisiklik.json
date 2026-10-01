@@ -1,5 +1,23 @@
 [
-  {"surum":"5.4.0","tarih":"2026-10-01","baslik":"Evren mağazası hızlı erişimi","maddeler":["Oku ve Oyna düğmelerinin yanına, yalnızca açık evrenlerde görünen Mağaza düğmesi eklendi.","Mağaza, bulunduğun evrenin para bakiyesini ve o evrene bağlanan mevcut satın alma akışını açar."]},
+  {
+    "surum": "5.4.1",
+    "tarih": "2026-10-01",
+    "baslik": "5.4.0 hata düzeltmeleri",
+    "maddeler": [
+      "Okur özeti içindeki Kaldığın okuma yolu için devam düğmesi, JSON olarak saklanan aktif yolu doğru okuyup sıradaki bölüme götürür.",
+      "Rozet koleksiyonu yalnızca gösterilebilir ve koleksiyona dahil karakterleri listeler; gizli veya kartı kapalı kayıtlar sızmaz.",
+      "Bildirim, hediye teslim geçmişi, profil/rozet ve mağaza akışları için regresyon kontrolleri genişletildi."
+    ]
+  },
+  {
+    "surum": "5.4.0",
+    "tarih": "2026-10-01",
+    "baslik": "Evren mağazası hızlı erişimi",
+    "maddeler": [
+      "Oku ve Oyna düğmelerinin yanına, yalnızca açık evrenlerde görünen Mağaza düğmesi eklendi.",
+      "Mağaza, bulunduğun evrenin para bakiyesini ve o evrene bağlanan mevcut satın alma akışını açar."
+    ]
+  },
   {
     "surum": "5.3.4",
     "tarih": "2026-10-01",
