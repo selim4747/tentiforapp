@@ -99,6 +99,7 @@ function meVeriYukle(sonra) {
       window.veri.modelEvreni = j;
     }
   }).catch(function () {
+    /* dosya yoksa mevcut boş durum çizilir */
   }).then(function () {
     meYukleniyor = false;
     if (sonra) sonra();
@@ -146,6 +147,7 @@ function meKisilerHtml() {
   const v = meVeri();
   if (!v || !v.kisiler) return "";
   const baglar = v.baglar || [];
+
   const baglarHtml = baglar.length ? '<details class="kutu-y ia-bolum me-ag" open>' +
     '<summary class="oyun-etiket">Kişiler Arası İlişki Ağı</summary>' +
     '<ul class="mod-yayin" style="margin-top:8px;">' +
@@ -155,12 +157,14 @@ function meKisilerHtml() {
         return '<li><b>' + meKacir(kA.ad) + '</b> ⇄ <b>' + meKacir(kB.ad) + '</b>: <span class="oyun-not">' + meKacir(b.etiket) + '</span></li>';
       }).join("") +
     '</ul></details>' : '';
+
   return baglarHtml + '<div class="ce-kisiler">' + v.kisiler.map(function (k) {
     const kBag = baglar.filter(function (b) { return b.a === k.id || b.b === k.id; }).map(function (b) {
       const digerId = b.a === k.id ? b.b : b.a;
       const diger = meKisi(v, digerId);
       return '<li><b>' + meKacir(diger.ad) + '</b> — ' + meKacir(b.etiket) + '</li>';
     }).join("");
+
     return '<details class="ce-kisi" id="me-' + meKacir(k.id) + '">' +
       '<summary>' +
         '<span class="ce-kisi-ad">' + meKacir(k.ad) + '</span>' +
@@ -181,6 +185,7 @@ function meHikayelerHtml() {
       const k = meKisi(v, kid);
       return '<span class="olay-kisi">' + meKacir(k.ad) + '</span>';
     }).join("");
+
     return '<details class="olay-kart ce-hikaye" id="me-hikaye-' + meKacir(h.id) + '">' +
       '<summary>' +
         '<h3 class="olay-baslik">' + meKacir(h.baslik) + '</h3>' +
@@ -196,31 +201,44 @@ function meRomanHtml() {
   const roman = v && v.roman;
   const bolumler = (roman && roman.bolumler) || [];
   if (!bolumler.length) return '<p class="oyun-not">Bu evrenin henüz romanı yok.</p>';
+
   let i = bolumler.findIndex(function (b) { return b.id === meRomanSecili; });
   if (i === -1) i = 0;
   const aktifBolum = bolumler[i];
   meRomanSecili = aktifBolum.id;
+
   return '<div class="evr-oku ce-roman">' +
     '<h3 class="evr-baslik">' + meKacir(roman.baslik || "Roman") + '</h3>' +
     (roman.ozet ? '<p class="oyun-not">' + meKacir(roman.ozet) + '</p>' : '') +
     '<details class="evr-icindekiler">' +
       '<summary>İçindekiler · ' + bolumler.length + ' bölüm</summary>' +
-      '<ol>' + bolumler.map(function (b, idx) {
-        return '<li><button class="ic-bag" data-me-roman="' + meKacir(b.id) + '">' + (idx + 1) + '. ' + meKacir(b.baslik) + '</button></li>';
-      }).join("") + '</ol></details>' +
+      '<ol>' +
+        bolumler.map(function (b, idx) {
+          return '<li><button class="ic-bag" data-me-roman="' + meKacir(b.id) + '">' + (idx + 1) + '. ' + meKacir(b.baslik) + '</button></li>';
+        }).join("") +
+      '</ol>' +
+    '</details>' +
     '<h4 class="evr-bolum-baslik">' + (i + 1) + '. ' + meKacir(aktifBolum.baslik) + '</h4>' +
     '<div class="okuma-metin fan-metin ce-roman-metin">' + (typeof paragraf === "function" ? paragraf(meMetin(aktifBolum.metin)) : meKacir(aktifBolum.metin)) + '</div>' +
     '<div class="oyun-sira evr-gez">' +
       (i > 0 ? '<button class="dugme dugme-sade" data-me-roman="' + meKacir(bolumler[i - 1].id) + '">← Önceki bölüm</button>' : '') +
       (i + 1 < bolumler.length ? '<button class="dugme" data-me-roman="' + meKacir(bolumler[i + 1].id) + '">Sonraki bölüm →</button>' : '') +
-    '</div></div>';
+    '</div>' +
+  '</div>';
 }
 
 function meBelgelerHtml() {
   const v = meVeri();
   if (!v) return "";
   const mektuplar = v.mektuplar || [];
-  const glifler = [["A", "Üçgen Glif"],["E", "Merdiven Glif"],["I", "Dikey Çubuk"],["O", "Dairesel Glif"],["U", "Çanak Glif"]];
+  const glifler = [
+    ["A", "Üçgen Glif"],
+    ["E", "Merdiven Glif"],
+    ["I", "Dikey Çubuk"],
+    ["O", "Dairesel Glif"],
+    ["U", "Çanak Glif"]
+  ];
+
   return '<div class="mektup-liste">' +
     mektuplar.map(function (m) {
       return '<div class="mektup" id="me-' + meKacir(m.id) + '">' +
@@ -237,7 +255,8 @@ function meBelgelerHtml() {
       glifler.map(function (g) {
         return '<div class="me-glif" style="padding:6px 12px; border:1px solid var(--sig, var(--renk-kenar, #33475C)); border-radius:6px; font-weight:600; font-size:13px;">' + meKacir(g[0] + ": " + g[1]) + '</div>';
       }).join("") +
-    '</div></div>';
+    '</div>' +
+  '</div>';
 }
 
 function meSozlukHtml() {
@@ -247,8 +266,12 @@ function meSozlukHtml() {
     v.sozluk.slice().sort(function (a, b) {
       return String(a.terim || "").localeCompare(String(b.terim || ""), "tr");
     }).map(function (s) {
-      return '<div class="sozluk-madde"><dt>' + meKacir(s.terim) + '</dt><dd>' + meKacir(s.tanim) + '</dd></div>';
-    }).join("") + '</dl>';
+      return '<div class="sozluk-madde">' +
+        '<dt>' + meKacir(s.terim) + '</dt>' +
+        '<dd>' + meKacir(s.tanim) + '</dd>' +
+      '</div>';
+    }).join("") +
+  '</dl>';
 }
 
 function meSorularHtml() {
@@ -257,10 +280,15 @@ function meSorularHtml() {
   return '<p class="oyun-not">Eterya evreninde henüz sırrı çözülmemiş açık sorular:</p>' +
     '<div class="madde-liste">' +
       v.sorular.map(function (s) {
-        return '<div class="madde"><button class="madde-bas" aria-expanded="false">' +
-          '<span class="madde-baslik">' + meKacir(s.soru) + '</span><span class="madde-ok">›</span></button>' +
-          '<div class="madde-govde"><p>' + meKacir(s.not || "") + '</p></div></div>';
-      }).join("") + '</div>';
+        return '<div class="madde">' +
+          '<button class="madde-bas" aria-expanded="false">' +
+            '<span class="madde-baslik">' + meKacir(s.soru) + '</span>' +
+            '<span class="madde-ok">›</span>' +
+          '</button>' +
+          '<div class="madde-govde"><p>' + meKacir(s.not || "") + '</p></div>' +
+        '</div>';
+      }).join("") +
+    '</div>';
 }
 
 function modelEvrenCiz() {
@@ -276,39 +304,66 @@ function modelEvrenCiz() {
     });
     return;
   }
+
   const sekmeRenderer = {
     genel: function () {
       return '<p class="oyun-giris">' + meKacir(v.ozet || "").replace(/\n/g, "</p><p class=\"oyun-giris\">") + '</p>' +
         '<div class="ce-sayilar">' +
-          [[(v.kurallar || []).length, "temel kural"],[(v.kisiler || []).length, "karakter"],[(v.yerler || []).length, "bölge"],[(v.hikayeler || []).length, "hikâye"],[(v.sozluk || []).length, "terim"]].map(function (s) {
+          [
+            [(v.kurallar || []).length, "temel kural"],
+            [(v.kisiler || []).length, "karakter"],
+            [(v.yerler || []).length, "bölge"],
+            [(v.hikayeler || []).length, "hikâye"],
+            [(v.sozluk || []).length, "terim"]
+          ].map(function (s) {
             return '<div class="ce-sayi"><b>' + s[0] + '</b><span>' + s[1] + '</span></div>';
           }).join("") +
         '</div>' +
-        '<div class="ce-kurallar"><span class="oyun-etiket">Temel Doğa Yasaları</span><ol>' +
-          (v.kurallar || []).map(function (k) {
-            return '<li><b>' + meKacir(k.ad) + ':</b> ' + meKacir(k.aciklama) + '</li>';
-          }).join("") + '</ol></div>' + meDunyaHtml();
+        '<div class="ce-kurallar">' +
+          '<span class="oyun-etiket">Temel Doğa Yasaları</span>' +
+          '<ol>' +
+            (v.kurallar || []).map(function (k) {
+              return '<li><b>' + meKacir(k.ad) + ':</b> ' + meKacir(k.aciklama) + '</li>';
+            }).join("") +
+          '</ol>' +
+        '</div>' +
+        meDunyaHtml();
     },
-    kurallar: meKuralListesi, dunya: meDunyaHtml, kisiler: meKisilerHtml, hikayeler: meHikayelerHtml,
-    roman: meRomanHtml, belgeler: meBelgelerHtml, sozluk: meSozlukHtml, sorular: meSorularHtml
+    kurallar: meKuralListesi,
+    dunya: meDunyaHtml,
+    kisiler: meKisilerHtml,
+    hikayeler: meHikayelerHtml,
+    roman: meRomanHtml,
+    belgeler: meBelgelerHtml,
+    sozluk: meSozlukHtml,
+    sorular: meSorularHtml
   }[meSekme];
+
   const govdeHtml = sekmeRenderer ? sekmeRenderer() : '<p class="oyun-not">İçerik bulunamadı.</p>';
+
   alan.innerHTML =
     '<div class="filtre ce-sekmeler">' +
       ME_SEKMELER.map(function (s) {
         return '<button class="filtre-btn' + (meSekme === s[0] ? ' secili' : '') + '" data-me-sekme="' + s[0] + '">' + meKacir(s[1]) + '</button>';
       }).join("") +
-    '</div><div class="me-govde">' + govdeHtml + '</div>' +
+    '</div>' +
+    '<div class="me-govde">' + govdeHtml + '</div>' +
     '<div class="kutu-y me-test-uyari" style="margin-top:24px; border-left:4px solid var(--deniz, var(--renk-vurgu, #7FB2DC)); padding:14px 18px; border-radius:4px;">' +
       '<span class="oyun-etiket" style="color:var(--deniz, var(--renk-vurgu, #7FB2DC)); font-weight:700;">Kanon Dışı · Yapay Zekâ Test Evreni · v4.6.1</span>' +
       '<p style="margin:6px 0 0 0; font-size:13.5px; line-height:1.55; color:var(--murekkep, var(--renk-metin, inherit));">' +
         'Tıpkı Claude tarafından yapılan evren gibi bu evren de yapay zekâ tarafından oluşturulmuş bir test evrenidir (v4.6.1). ' +
-        'Tentiforverse kanonuna dahil değildir; Evren Kurucu’nun tüm yeteneklerini (kurallar, yerler/harita, karakterler, ilişki ağı, hikâyeler, mektuplar, sözlük, açık sorular ve glif alfabesi) insanlara canlı sergilemek amacıyla test olarak hazırlanmıştır.</p></div>';
+        'Tentiforverse kanonuna dahil değildir; Evren Kurucu’nun tüm yeteneklerini (kurallar, yerler/harita, karakterler, ilişki ağı, hikâyeler, mektuplar, sözlük, açık sorular ve glif alfabesi) insanlara canlı sergilemek amacıyla test olarak hazırlanmıştır.' +
+      '</p>' +
+    '</div>';
 }
 
 document.addEventListener("click", function (e) {
   const sekmeBtn = e.target.closest("[data-me-sekme]");
-  if (sekmeBtn) { meSekme = sekmeBtn.dataset.meSekme; modelEvrenCiz(); return; }
+  if (sekmeBtn) {
+    meSekme = sekmeBtn.dataset.meSekme;
+    modelEvrenCiz();
+    return;
+  }
   const romanBtn = e.target.closest("[data-me-roman]");
   if (romanBtn) {
     meRomanSecili = romanBtn.dataset.meRoman;
