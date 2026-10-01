@@ -9,10 +9,23 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 
 console.log('🚀 TentiforApp paketleme başlatılıyor...');
 
-// 1. Veri kontrolü
+// 1. Sürüm ve veri kontrolü. package.json tek canonical sürüm kaynağıdır.
 const veriPath = path.join(ROOT_DIR, 'veri.json');
+const packagePath = path.join(ROOT_DIR, 'package.json');
 if (!fs.existsSync(veriPath)) {
   console.error('❌ veri.json bulunamadı!');
+  process.exit(1);
+}
+let packageMeta;
+try {
+  packageMeta = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
+} catch (e) {
+  console.error('❌ package.json JSON ayrıştırma hatası:', e);
+  process.exit(1);
+}
+const canonicalVersion = String(packageMeta.version || '');
+if (!/^\d+\.\d+\.\d+$/.test(canonicalVersion)) {
+  console.error('❌ package.json geçerli bir semver sürümü taşımıyor.');
   process.exit(1);
 }
 
@@ -23,6 +36,10 @@ try {
   console.log(`✓ veri.json doğrulandı (Sürüm: ${veri.surum || '4.5.0'})`);
 } catch (e) {
   console.error('❌ veri.json JSON ayrıştırma hatası:', e);
+  process.exit(1);
+}
+if (veri.surum !== canonicalVersion) {
+  console.error(`❌ Sürüm uyuşmazlığı: package.json=${canonicalVersion}, veri.json=${veri.surum || '(boş)'}`);
   process.exit(1);
 }
 

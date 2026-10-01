@@ -1,6 +1,6 @@
 {
   "name": "tentiforapp",
-  "version": "5.2.1",
+  "version": "5.3.0",
   "description": "TentiforApp — Tentiforverse Arşivi",
   "type": "module",
   "main": "server.js",
@@ -11,6 +11,7 @@
     "paketle": "node scripts/paketle.mjs",
     "test": "node scripts/test.mjs",
     "test:live": "node tests/canli-ortam-simulasyonu.mjs",
+    "test:release": "node tests/release-hygiene.mjs",
     "lint": "node scripts/lint.mjs"
   },
   "keywords": [
@@ -22,6 +23,7 @@
   "author": "Tentifor",
   "license": "MIT",
   "devDependencies": {
+    "eslint": "^9.39.5",
     "jsdom": "^30.1.1"
   }
 }

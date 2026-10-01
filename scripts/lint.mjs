@@ -12,7 +12,7 @@ function collect(relative) {
   if (!fs.existsSync(full)) return;
   const stat = fs.statSync(full);
   if (stat.isFile()) {
-    if (/\.(?:js|mjs)$/.test(full)) files.push(full);
+    if (/\.(?:js|mjs)$/.test(full) && !/^js\/paket-\d+\.js$/.test(relative)) files.push(full);
     return;
   }
   for (const entry of fs.readdirSync(full, { withFileTypes: true })) {
@@ -25,4 +25,5 @@ function collect(relative) {
 roots.forEach(collect);
 files.sort();
 for (const file of files) execFileSync(process.execPath, ['--check', file], { stdio: 'inherit' });
-console.log(`Lint passed: ${files.length} JavaScript dosyası syntax kontrolünden geçti.`);
+execFileSync(process.execPath, [path.join(root, 'node_modules/eslint/bin/eslint.js'), ...files], { stdio: 'inherit' });
+console.log(`Lint passed: ${files.length} JavaScript dosyası syntax ve ESLint kontrolünden geçti.`);

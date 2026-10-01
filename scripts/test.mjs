@@ -6,7 +6,10 @@ const tests = [
   'tests/5.1-dashboard.mjs',
   'tests/5.2-membership.mjs',
   'tests/offline-yavas.mjs',
-  'tests/kullanici-simulasyonu.mjs'
+  'tests/kullanici-simulasyonu.mjs',
+  'tests/release-hygiene.mjs',
+  'tests/offline-queue.mjs',
+  'tests/cakisma.mjs'
 ];
 
 const server = spawn(process.execPath, ['server.js'], { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -39,7 +42,7 @@ function run(file) {
 try {
   await serverReady();
   for (const test of tests) await run(test);
-  console.log('\nTüm 5.2.1 testleri başarılı.');
+  console.log('\nTüm uygulama regression testleri başarılı.');
 } finally {
   server.kill('SIGTERM');
 }

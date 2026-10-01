@@ -12,8 +12,7 @@ assert(!s.includes('evren_uyeleri'));
 assert(!s.includes('evren_davetleri'));
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const data = JSON.parse(fs.readFileSync('veri.json', 'utf8'));
-assert.equal(pkg.version, '5.2.1');
-assert.equal(data.surum, '5.2.1');
+assert.equal(data.surum, pkg.version);
 
 const evren = fs.readFileSync('js/engine/54-evren-dosyalari.js', 'utf8');
 assert(evren.includes('"evren/"+String(n).replace'));

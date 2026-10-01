@@ -29,16 +29,28 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-  // CORS & Security headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS, POST');
+  // CORS & Security headers: statik sunucu yalnızca aynı-origin GET/HEAD sağlar.
+  const origin = String(req.headers.origin || '');
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  res.setHeader('Content-Security-Policy-Report-Only', "default-src 'self' https://static.cloudflareinsights.com; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'");
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
+    return;
+  }
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.writeHead(405, { Allow: 'GET, HEAD, OPTIONS', 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Method Not Allowed');
     return;
   }
 
