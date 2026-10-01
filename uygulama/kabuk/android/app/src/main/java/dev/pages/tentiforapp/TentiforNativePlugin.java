@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -40,7 +41,12 @@ public class TentiforNativePlugin extends Plugin {
 
     @PluginMethod
     public void authenticate(PluginCall call) {
-        Activity activity = getActivity();
+        Activity baseActivity = getActivity();
+        if (!(baseActivity instanceof FragmentActivity)) {
+            call.reject("Bu Android etkinliği biyometriyi desteklemiyor.");
+            return;
+        }
+        FragmentActivity activity = (FragmentActivity) baseActivity;
         if (activity == null) {
             call.reject("Uygulama etkinliği hazır değil.");
             return;
