@@ -57,7 +57,7 @@ jobs:
           arch: x86
           profile: pixel_2
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
-          disable-animations: true
+          disable-animations: false
           working-directory: uygulama/kabuk/android
           script: ./gradlew --no-daemon --stacktrace connectedDebugAndroidTest
 
