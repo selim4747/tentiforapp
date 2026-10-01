@@ -5,6 +5,7 @@ const tests = [
   'tests/calistir.mjs',
   'tests/5.1-dashboard.mjs',
   'tests/5.2-membership.mjs',
+  'tests/5.3-regressions.mjs',
   'tests/offline-yavas.mjs',
   'tests/kullanici-simulasyonu.mjs',
   'tests/release-hygiene.mjs',

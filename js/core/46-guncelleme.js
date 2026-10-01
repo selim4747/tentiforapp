@@ -8,7 +8,7 @@ function sayfaPaketi() {
 
 function yerelSurum() {
   return (typeof veri !== "undefined" && veri && veri.surum) ||
-         (document.querySelector('meta[name="tentifor-surum"]') || {}).content || "5.3.0";
+         (document.querySelector('meta[name="tentifor-surum"]') || {}).content || "5.3.1";
 }
 
 async function guncellemeFetch(url) {
@@ -80,7 +80,11 @@ function guncellemeBildirimiGonder(baslik, metin) {
     }
   }
   if ("Notification" in window && Notification.permission === "granted") {
-    try { new Notification(baslik, { body: metin, icon: "ikon/ikon-192.png" }); } catch {}
+    if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+      navigator.serviceWorker.ready
+        .then(function (kayit) { return kayit.showNotification(baslik, { body: metin, icon: "ikon/ikon-192.png", tag: "tentiforapp-guncelleme" }); })
+        .catch(function () {});
+    }
   }
 }
 
