@@ -8,6 +8,8 @@ const tests = [
   'tests/5.3-regressions.mjs',
   'tests/5.3.2-vitrin.mjs',
   'tests/5.3.3-profile-badges.mjs',
+  'tests/5.3.4-layout-notifications.mjs',
+  'tests/5.3.4-gifting.mjs',
   'tests/offline-yavas.mjs',
   'tests/kullanici-simulasyonu.mjs',
   'tests/release-hygiene.mjs',

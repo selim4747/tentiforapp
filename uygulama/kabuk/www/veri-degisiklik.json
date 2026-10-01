@@ -1,5 +1,15 @@
 [
   {
+    "surum": "5.3.4",
+    "tarih": "2026-10-01",
+    "maddeler": [
+      "Sen sayfasına gerçek bildirim merkezi eklendi: kullanıcıya özel bildirimler listeleniyor, bağlantılar açılıyor ve tüm bildirimler okundu işaretlenebiliyor.",
+      "Bildirim merkezi mobil menüden doğrudan açılabilir hâle getirildi; boş ve giriş yapılmamış durumları anlaşılır mesajlarla gösteriliyor.",
+      "Sayfa başlıklarındaki bölüm listeleri katlanabilir içindekiler olarak düzenlendi; mobilde uzun yatay karmaşa azaltıldı.",
+      "Bildirim merkezi, gezinme düzeni ve 5.3.4 sürüm senkronizasyonu için regresyon kontrolleri eklendi."
+    ]
+  },
+  {
     "surum": "5.3.3",
     "tarih": "2026-10-01",
     "maddeler": [
