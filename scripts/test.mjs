@@ -17,7 +17,8 @@ const tests = [
   'tests/release-hygiene.mjs',
   'tests/offline-queue.mjs',
   'tests/cakisma.mjs',
-  'tests/ortak-evren.mjs'
+  'tests/ortak-evren.mjs',
+  'tests/android-native.mjs'
 ];
 
 const server = spawn(process.execPath, ['server.js'], { stdio: ['ignore', 'pipe', 'pipe'] });
