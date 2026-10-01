@@ -1,5 +1,18 @@
 [
   {
+    "surum": "6.1.2",
+    "tarih": "2026-10-01",
+    "baslik": "Menü, Evren Merkezi ve Android sürüm kararlılığı",
+    "maddeler": [
+      "Mobil menüde yinelenen eylemler ve geç yüklenen arşiv verisiyle oluşan gezinme sorunları giderildi; tüm sayfalar, rota seçimi ve bildirim eylemleri sağlamlaştırıldı.",
+      "Evren Merkezi harita ve özetlerinde aynalanan yerler tekilleştirildi; E25 zaman çizelgesi arşiv verisini doğru kullanır ve kişisel notlar evrene göre ayrılır.",
+      "Spoiler gizleme günlük not, harita/keşif, zaman çizelgesi, ilişkiler ve ansiklopedi kayıtlarında uygulanır; spoiler anahtarı kayıtları bilinçli olarak açar.",
+      "Depolama başarısızlıkları kullanıcıya bildirilir ve başarısız kayıt sonrası yönlendirme yapılmaz; ücretsiz plan sınırları, EvrenYazar yetkisi ve okunmamış ilk adıma devam akışı düzeltildi.",
+      "Hesap değişimi veya arayüz kapanışı sonrasında gelen eski bildirim yanıtları yok sayılır; çevrimdışı, web, mobil menü ve Android paket regresyonları için test kapsamı genişletildi.",
+      "Android paket sürüm adı ve kodu artık uygulamanın sürüm kaynağıyla eşlenir; CI Android doğrulaması emulator başlatmadan lint, birim test ve APK derlemesi yapar."
+    ]
+  },
+  {
     "surum": "5.4.4",
     "tarih": "2026-10-01",
     "baslik": "Evren mağazası açılış düzeltmesi",

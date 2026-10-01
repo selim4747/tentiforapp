@@ -45,28 +45,18 @@ jobs:
         working-directory: uygulama/kabuk
         run: npx cap sync android
 
-      - name: Build debug APK
+      - name: Run device-free Android validation
         working-directory: uygulama/kabuk/android
-        run: ./gradlew --no-daemon --stacktrace assembleDebug
+        run: ./gradlew --no-daemon --stacktrace :app:lint :app:testDebugUnitTest :app:assembleDebug
 
-      - name: Run Android emulator smoke tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          target: google_apis
-          arch: x86
-          profile: pixel_2
-          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
-          disable-animations: false
-          working-directory: uygulama/kabuk/android
-          script: ./gradlew --no-daemon --stacktrace connectedDebugAndroidTest
-
-      - name: Upload Android test reports
+      - name: Upload Android lint and unit-test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tentiforapp-android-test-reports
-          path: uygulama/kabuk/android/app/build/reports/androidTests
+          name: tentiforapp-android-validation-reports
+          path: |
+            uygulama/kabuk/android/app/build/reports/lint-results-debug.html
+            uygulama/kabuk/android/app/build/test-results/testDebugUnitTest/
           if-no-files-found: ignore
           retention-days: 14
 

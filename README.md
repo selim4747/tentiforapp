@@ -1,4 +1,4 @@
-# TentiforApp — Tentiforverse Arşivi (v6.1.1)
+# TentiforApp — Tentiforverse Arşivi (v6.1.2)
 
 Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker. Tentiforverse evren arşivi: karakterler, kozmoloji, isim sistemi, takvim ve oyunlar.
 
