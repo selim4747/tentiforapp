@@ -1,10 +1,10 @@
 /* 6.2.4 — EvrenGezer / EvrenYazar üyelik politikası */
 (function () {
   'use strict';
-  var SURUM = '6.2.4';
+  var SURUM = '6.2.5';
   var AYAR = 'tf4_uyelik_kullanimi';
   var PLAN = {
-    ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 3, hikaye: 10, gezegen: 0, takim: 0 },
+    ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 3, hikaye: 10, gezegen: 1, takim: 0 },
     evrengezer: { ad: 'EvrenGezer', evren: 5, gezgin: 12, hikaye: 42, gezegen: 5, takim: 2 },
     evrenyazar: { ad: 'EvrenYazar', evren: Infinity, gezgin: Infinity, hikaye: Infinity, gezegen: Infinity, takim: Infinity }
   };
@@ -68,7 +68,7 @@
   function planKartHtml() {
     var p = plan(), aktif = p !== 'ucretsiz';
     return '<div class="kutu-y pro-kart" data-uyelik-kart><b>' + (aktif ? planEtiketi() + ' üyesisin ✓' : 'Üyelik planları') + '</b>' +
-      '<p class="oyun-not">' + (p === 'evrenyazar' ? 'Sınırsız evren, Evrengezer, fan hikâyesi ve yerel takım paketi üyesi; tüm arayüz ve kod editörleri açık.' : p === 'evrengezer' ? '30 günde bir 5 evren, 12 Evrengezer, 42 fan hikâyesi; yerel co-op paketinde sahibi dahil en fazla 2 kişi ve evren başına 5 gezegen. Arayüz/görünüm/kod editörleri kapalı.' : '30 günde 1 evren, 3 EvrenGezer ve 10 fan hikâyesi; kanon evrenleri gezme ve okuma ücretsiz.') + '</p>' +
+      '<p class="oyun-not">' + (p === 'evrenyazar' ? 'Sınırsız evren, Evrengezer, fan hikâyesi ve yerel takım paketi üyesi; tüm arayüz ve kod editörleri açık.' : p === 'evrengezer' ? '30 günde bir 5 evren, 12 Evrengezer, 42 fan hikâyesi; yerel co-op paketinde sahibi dahil en fazla 2 kişi ve evren başına 5 gezegen. Arayüz/görünüm/kod editörleri kapalı.' : '30 günde 1 evren, 3 EvrenGezer, 10 fan hikâyesi ve evren başına 1 ek gezegen; evrenle gelen başlangıç gezegeni bu limite dahil değildir. Kanon evrenleri gezme ve okuma ücretsiz.') + '</p>' +
       '<div class="oyun-sira"><button type="button" class="dugme" data-uyelik-ac>Planları gör</button></div></div>';
   }
   function planPencere() {
@@ -79,7 +79,7 @@
       '<h3>Planlar</h3><p class="pencere-alt">Aktif planın: <b>' + planEtiketi() + '</b>. Aşağıda her planın tam sınırlarını ve açık özelliklerini görebilirsin.</p>' +
       '<div class="pro-katmanlar plan-karsilastirma">' +
       '<div class="pro-katman ' + (p === 'ucretsiz' ? 'plan-secili' : '') + '"><b>Ücretsiz</b>' + rozet('ucretsiz') +
-        '<ul><li>1 evren taslağı</li><li>Kanon evrenleri gezme ve okuma</li><li>Temel arşiv, oyun ve hikâye deneyimi</li><li>Ortak evren başlatma ve davet sistemi kapalı</li><li>Evren düzenleyicisi ve gelişmiş editörler kapalı</li></ul></div>' +
+        '<ul><li>1 evren taslağı</li><li>Evren başına 1 ek gezegen (evrenle gelen başlangıç gezegeni sayılmaz)</li><li>Kanon evrenleri gezme ve okuma</li><li>Temel arşiv, oyun ve hikâye deneyimi</li><li>Ortak evren başlatma ve davet sistemi kapalı</li><li>Evren düzenleyicisi ve gelişmiş editörler kapalı</li></ul></div>' +
       '<div class="pro-katman ' + (p === 'evrengezer' ? 'plan-secili' : '') + '"><b>EvrenGezer</b>' + rozet('evrengezer') +
         '<p><strong>Ayda 5 evren · 12 Evrengezer · 42 fan hikâyesi</strong></p>' +
         '<ul><li>Co-op evren: sahibi dahil en fazla 2 kişi</li><li>GitHub private evreninde ortak çalışma; sahip dahil en fazla 2 kişi</li><li>Her evrende en fazla 5 gezegen</li><li>Yalnızca 1 baloncuk evren</li><li>Çoklu ve iç içe evren kullanılamaz</li><li>Arayüz, görünüm ve kod editörleri kapalı</li><li>Gezme, okuma ve kendi evrenlerini temel düzeyde oluşturma</li></ul>' +

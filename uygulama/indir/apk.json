@@ -1,13 +1,13 @@
 {
-  "kod": 617,
-  "surum": "6.2.4",
-  "boyut": 7025267,
-  "tarih": "2026-10-02T13:37:20+03:00",
-  "not": "TentiforApp 6.2.4: ücretsiz planda aylık 1 evren, 3 EvrenGezer ve 10 fan hikâyesi sınırı; sayaçlar her 30 günde yenilenir.",
-  "sha256": "175a8e25024275a5f331f8390cc07ed0ed28b7fdc1f4219982c1142b34875a70",
-  "version": "6.2.4",
-  "size": 7025177,
-  "sizeBytes": 7025177,
-  "updatedAt": "2026-10-02T10:37:20Z",
-  "notes": "TentiforApp 6.2.4: ücretsiz planda aylık 1 evren, 3 EvrenGezer ve 10 fan hikâyesi sınırı; sayaçlar her 30 günde yenilenir."
+  "kod": 618,
+  "surum": "6.2.5",
+  "boyut": 7025348,
+  "tarih": "2026-10-02T13:42:50+03:00",
+  "not": "TentiforApp 6.2.5: ücretsiz planda aylık 1 evren, 3 EvrenGezer, 10 fan hikâyesi ve evren başına 1 ek gezegen; evrenle gelen başlangıç gezegeni limite dahil değildir.",
+  "sha256": "3532888feb2ff64764a0c34b86712e1a24d634682866a618859a33007fe27a4d",
+  "version": "6.2.5",
+  "size": 7025348,
+  "sizeBytes": 7025348,
+  "updatedAt": "2026-10-02T10:42:50Z",
+  "notes": "TentiforApp 6.2.5: ücretsiz planda aylık 1 evren, 3 EvrenGezer, 10 fan hikâyesi ve evren başına 1 ek gezegen; evrenle gelen başlangıç gezegeni limite dahil değildir."
 }

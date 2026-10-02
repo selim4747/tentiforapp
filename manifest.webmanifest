@@ -1,8 +1,8 @@
 {
-  "name": "Tentiforverse 6.2.4 — Kişisel Kütüphane",
+  "name": "Tentiforverse 6.2.5 — Kişisel Kütüphane",
   "short_name": "Tentiforverse",
-  "version": "6.2.4",
-  "description": "Tentiforverse 6.2.4: çevrimdışı kütüphane, bildirim kuyruğu ve otomatik güncelleme.",
+  "version": "6.2.5",
+  "description": "Tentiforverse 6.2.5: çevrimdışı kütüphane, bildirim kuyruğu ve otomatik güncelleme.",
   "lang": "tr",
   "start_url": "./",
   "scope": "./",
