@@ -3474,6 +3474,9 @@ begin
   if hedef is null then return jsonb_build_object('durum', 'yok'); end if;
   select a.tip, a.bitis into eski_tip, eski_bitis
     from public.abonelikler a where a.id = hedef;
+  if eski_tip = 'evrenyazar' and tip = 'evrengezer' then
+    return jsonb_build_object('durum', 'dusurme_yok', 'tip', eski_tip);
+  end if;
   etkin_tip := case
     when eski_tip = 'evrenyazar' or tip = 'evrenyazar' then 'evrenyazar'
     else tip
