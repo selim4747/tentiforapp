@@ -60,8 +60,7 @@ function hashGirdisi(relative) {
   if (relative === 'index.html') {
     content = Buffer.from(content.toString('utf8')
       .replace(/<meta name="tentifor-paket" content="[^"]*">/, '<meta name="tentifor-paket" content="<paket>">')
-      .replace(/(js\/paket-2\.js\?v=)[^"']+/g, '$1<paket>')
-      .replace(/(js\/engine\/92-v51-dashboard\.js\?v=)[^"']+/g, '$1<paket>'));
+      .replace(/((?:js|css)\/(?!style\.css\?v=|engine\/101-v61-universe\.js\?v=)[^"'\s?]+\?v=)[^"'&\s]+/g, '$1<paket>'));
   }
   paketHash.update(relative).update('\0').update(content).update('\0');
 }
@@ -95,14 +94,7 @@ if (fs.existsSync(swPath)) {
     /const ONBELLEK = ["'][^"']+["'];/,
     `const ONBELLEK = "tentiforapp-${karma}";`
   );
-  swIcerik = swIcerik.replace(
-    /js\/paket-2\.js\?v=[^"']+/g,
-    `js/paket-2.js?v=${karma}`
-  );
-  swIcerik = swIcerik.replace(
-    /js\/engine\/92-v51-dashboard\.js\?v=[^"']+/g,
-    `js/engine/92-v51-dashboard.js?v=${karma}`
-  );
+  swIcerik = swIcerik.replace(/((?:js|css)\/(?!style\.css\?v=|engine\/101-v61-universe\.js\?v=)[^"'\s?]+\?v=)[^"'&\s]+/g, `$1${karma}`);
   fs.writeFileSync(swPath, swIcerik, 'utf-8');
   console.log(`✓ sw.js önbellek anahtarı güncellendi (tentiforapp-${karma})`);
 }
@@ -121,14 +113,9 @@ if (fs.existsSync(indexPath)) {
       `<meta name="tentifor-surum" content="${veri.surum || '4.6.1'}">`
     );
   }
-  indexIcerik = indexIcerik.replace(
-    /js\/paket-2\.js\?v=[^"']+/g,
-    `js/paket-2.js?v=${karma}`
-  );
-  indexIcerik = indexIcerik.replace(
-    /js\/engine\/92-v51-dashboard\.js\?v=[^"']+/g,
-    `js/engine/92-v51-dashboard.js?v=${karma}`
-  );
+  indexIcerik = indexIcerik.replace(/((?:js|css)\/(?!style\.css\?v=|engine\/101-v61-universe\.js\?v=)[^"'\s?]+\?v=)[^"'&\s]+/g, `$1${karma}`);
+  indexIcerik = indexIcerik.replace(/js\/engine\/101-v61-universe\.js\?v=[^"']+/g, 'js/engine/101-v61-universe.js?v=612');
+  indexIcerik = indexIcerik.replace(/css\/style\.css\?v=[^"']+/g, 'css/style.css?v=be2f302c44ec');
   fs.writeFileSync(indexPath, indexIcerik, 'utf-8');
   console.log(`✓ index.html meta paketi güncellendi (${karma})`);
 }

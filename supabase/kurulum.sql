@@ -2419,11 +2419,6 @@ revoke execute on function public.tek_kod_kullan(text), public.tek_kodlarim(), p
 grant execute on function public.tek_kod_kullan(text), public.tek_kodlarim(), public.tek_kod_olustur(jsonb), public.tek_kod_listesi(),
   public.tek_kod_bag_sil(text), public.tek_kod_iptal(text, boolean) to authenticated;
 
--- ---------- 2.4: kurulum sürümü ve evren uygulamalarının puan tabloları ----------
--- Site, bu dosyanın Supabase'de çalıştırılmış sürümünü sorar; eskiyse panelde "kurulum.sql'i çalıştır" uyarısı çıkar.
-create or replace function public.kurulum_surumu() returns text
-language sql immutable set search_path = '' as $$ select '4.0'::text $$;
-grant execute on function public.kurulum_surumu() to anon, authenticated;
 
 -- Evren uygulamalarının (kurucunun kodla yazdığı oyunlar) en iyi puanları: her kişinin her oyundaki en iyisi.
 -- Puanı oyunun kendisi bildirir (tarayıcıda çalışır): hile önlenemez, yalnızca eğlence tablosudur; XP vermez.
@@ -2876,34 +2871,6 @@ $$;
 revoke all on function public.abonelik_durumum() from public, anon;
 grant execute on function public.abonelik_durumum() to authenticated;
 
--- Yönetici hediye işlemi: kullanıcı adıyla EvrenGezer veya EvrenYazar verir.
-create or replace function public.abonelik_hediye(p_kullanici_adi text, p_tip text, p_gun int)
-returns jsonb language plpgsql security definer set search_path = '' as $$
-declare
-  hedef uuid;
-  gun int := greatest(1, least(3650, coalesce(p_gun, 30)));
-  tip text := lower(coalesce(p_tip, 'evrengezer'));
-  yeni_bitis timestamptz;
-begin
-  if auth.uid() is null or not public.tam_yonetici_mi() then
-    return jsonb_build_object('durum', 'yetki');
-  end if;
-  if tip not in ('evrengezer', 'evrenyazar') then
-    tip := 'evrengezer';
-  end if;
-  select id into hedef from public.profiller
-    where lower(kullanici_adi) = lower(btrim(p_kullanici_adi)) limit 1;
-  if hedef is null then return jsonb_build_object('durum', 'yok'); end if;
-  yeni_bitis := now() + make_interval(days => gun);
-  insert into public.abonelikler (id, tip, bitis, guncelleme)
-    values (hedef, tip, yeni_bitis, now())
-  on conflict (id) do update set tip = excluded.tip, bitis = excluded.bitis, guncelleme = now();
-  return jsonb_build_object('durum', 'tamam', 'tip', tip, 'gun', gun, 'bitis', yeni_bitis);
-end;
-$$;
-revoke all on function public.abonelik_hediye(text, text, int) from public, anon;
-grant execute on function public.abonelik_hediye(text, text, int) to authenticated;
-
 -- Eski yönetici paneli çağrısı için uyumluluk: eski Pro, sınırsız EvrenYazar'a eşlenir.
 create or replace function public.pro_ver(p_kullanici_adi text, p_gun int) returns timestamptz
 language plpgsql security definer set search_path = '' as $$
@@ -3220,6 +3187,9 @@ end;
 $$;
 revoke execute on function public.kullaniciya_bildir(uuid, text, text) from public, anon, authenticated;
 
+-- Tüm tablolar ve fonksiyonlar oluşturulduktan sonra API şemasını bir kez yenile.
+notify pgrst, 'reload schema';
+
 create or replace function public.yonetici_kisisel_bildirim(p_kullanici_adi text, p_baslik text, p_metin text, p_baglanti text default '#/sen') returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare hedef uuid; baslik text := left(btrim(coalesce(p_baslik, '')), 80); metin text := left(btrim(coalesce(p_metin, '')), 300); adres text := case when coalesce(p_baglanti, '') like '#/%' then p_baglanti else '#/sen' end;
@@ -3445,12 +3415,9 @@ revoke execute on function public.mod_sikayet_kapat(text, text, text) from publi
 grant execute on function public.mod_sikayet_kapat(text, text, text) to anon, authenticated;
 
 create or replace function public.kurulum_surumu() returns text
-language sql immutable set search_path = '' as $$ select '6.2.5'::text $$;
--- Tüm tablolar ve fonksiyonlar oluşturulduktan sonra API şemasını bir kez yenile.
-notify pgrst, 'reload schema';
-
+language sql immutable set search_path = '' as $$ select '6.2.6'::text $$;
 -- ---------- 5.4 migration: hediye geçmişi, alıcı bildirimi ve plan politikası ----------
--- 6.2.5: ücretsiz plan 1 evren, 3 EvrenGezer, 10 fan hikâyesi, 1 ek gezegen.
+-- 6.2.6: ücretsiz plan 1 evren, 3 EvrenGezer, 10 fan hikâyesi, 1 ek gezegen.
 alter table public.kullanici_bildirimleri add column if not exists kategori text not null default 'profil';
 create index if not exists kullanici_bildirimleri_kategori on public.kullanici_bildirimleri (kullanici, kategori, zaman desc);
 create table if not exists public.hediye_gecmisi (
