@@ -1,10 +1,10 @@
-/* 6.2.3 — EvrenGezer / EvrenYazar üyelik politikası */
+/* 6.2.4 — EvrenGezer / EvrenYazar üyelik politikası */
 (function () {
   'use strict';
-  var SURUM = '6.2.3';
+  var SURUM = '6.2.4';
   var AYAR = 'tf4_uyelik_kullanimi';
   var PLAN = {
-    ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 0, hikaye: 0, gezegen: 0, takim: 0 },
+    ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 3, hikaye: 10, gezegen: 0, takim: 0 },
     evrengezer: { ad: 'EvrenGezer', evren: 5, gezgin: 12, hikaye: 42, gezegen: 5, takim: 2 },
     evrenyazar: { ad: 'EvrenYazar', evren: Infinity, gezgin: Infinity, hikaye: Infinity, gezegen: Infinity, takim: Infinity }
   };
@@ -15,7 +15,7 @@
   }
   function ustPlan() { return plan() === 'evrenyazar'; }
   function gezerPlan() { return plan() === 'evrengezer'; }
-  function sinirliPlan() { return gezerPlan(); }
+  function sinirliPlan() { return plan() !== 'evrenyazar'; }
   function kacir(s) { return typeof window.kacir === 'function' ? window.kacir(s) : String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function bildir(s) { typeof window.eckaBildir === 'function' && window.eckaBildir(s); }
   function oku() { try { return JSON.parse(localStorage.getItem(AYAR) || '{}') || {}; } catch (_) { return {}; } }
@@ -61,14 +61,14 @@
     return window.fanEserlerim().filter(function (e) { return e && e.tur === 'evren' && !e.e99 && !e.icEvrenMi && e.ustEvrenId == null; }).length;
   }
   function evrenSinirsiz() { return ustPlan() || (typeof window.tf4TestSinirsiz === 'function' && window.tf4TestSinirsiz()) || (typeof window.svkYonetici === 'function' && window.svkYonetici()); }
-  function evrenKotaAcik() { return evrenSinirsiz() || (gezerPlan() ? say('evren') < limit('evren') : evrenSayisi() < 1); }
-  function gezegenKotaAcik(eser) { return !gezerPlan() || !eser || (eser.gezegenler || []).length < limit('gezegen'); }
+  function evrenKotaAcik() { return evrenSinirsiz() || say('evren') < limit('evren'); }
+  function gezegenKotaAcik(eser) { return ustPlan() || !eser || (eser.gezegenler || []).length < limit('gezegen'); }
   function planEtiketi() { return plan() === 'ucretsiz' ? 'Ücretsiz' : PLAN[plan()].ad; }
   function ortakKullanimNotu() { return 'Ortak evrenler Supabase kimlik ve davet kontrolüyle, içerik ise GitHub private deposuyla korunur.'; }
   function planKartHtml() {
     var p = plan(), aktif = p !== 'ucretsiz';
     return '<div class="kutu-y pro-kart" data-uyelik-kart><b>' + (aktif ? planEtiketi() + ' üyesisin ✓' : 'Üyelik planları') + '</b>' +
-      '<p class="oyun-not">' + (p === 'evrenyazar' ? 'Sınırsız evren, Evrengezer, fan hikâyesi ve yerel takım paketi üyesi; tüm arayüz ve kod editörleri açık.' : p === 'evrengezer' ? '30 günde bir 5 evren, 12 Evrengezer, 42 fan hikâyesi; yerel co-op paketinde sahibi dahil en fazla 2 kişi ve evren başına 5 gezegen. Arayüz/görünüm/kod editörleri kapalı.' : '1 evren taslağı; kanon evrenleri gezme ve okuma ücretsiz.') + '</p>' +
+      '<p class="oyun-not">' + (p === 'evrenyazar' ? 'Sınırsız evren, Evrengezer, fan hikâyesi ve yerel takım paketi üyesi; tüm arayüz ve kod editörleri açık.' : p === 'evrengezer' ? '30 günde bir 5 evren, 12 Evrengezer, 42 fan hikâyesi; yerel co-op paketinde sahibi dahil en fazla 2 kişi ve evren başına 5 gezegen. Arayüz/görünüm/kod editörleri kapalı.' : '30 günde 1 evren, 3 EvrenGezer ve 10 fan hikâyesi; kanon evrenleri gezme ve okuma ücretsiz.') + '</p>' +
       '<div class="oyun-sira"><button type="button" class="dugme" data-uyelik-ac>Planları gör</button></div></div>';
   }
   function planPencere() {

@@ -1,4 +1,4 @@
-/* TentiforApp 6.2.3 platform layer: safe web/PWA/native hardening. */
+/* TentiforApp 6.2.4 platform layer: safe web/PWA/native hardening. */
 (function () {
   'use strict';
   var KEY = 'tentiforapp_6_2';
@@ -27,17 +27,17 @@
     save(); toast(found >= 0 ? 'Favorilerden çıkarıldı.' : 'Favorilere eklendi.', true); window.dispatchEvent(new CustomEvent('tf62-favorites')); return found < 0;
   }
   function exportBackup() {
-    var payload = { format: 'tentiforapp-6.2.3-backup', version: '6.2.3', createdAt: new Date().toISOString(), data: {} };
+    var payload = { format: 'tentiforapp-6.2.4-backup', version: '6.2.4', createdAt: new Date().toISOString(), data: {} };
     var skip = /^supabase\.|tf4_uyelik$|tentiforapp_6_2$/;
     try { Object.keys(localStorage).forEach(function (key) { if (!skip.test(key)) payload.data[key] = localStorage.getItem(key); }); } catch (_) {}
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tentiforapp-yedek-6.2.3.json'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000); toast('Yedek dosyası indirildi.', true);
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tentiforapp-yedek-6.2.4.json'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000); toast('Yedek dosyası indirildi.', true);
   }
   function importBackup(file) {
     return new Promise(function (resolve, reject) {
       if (!file || file.size > 16 * 1024 * 1024) return reject(new Error('Yedek dosyası 16 MB sınırını aşamaz.'));
       var reader = new FileReader(); reader.onload = function () { try {
-        var payload = JSON.parse(reader.result); if (!payload || !/^tentiforapp-6\.2\.[123]-backup$/.test(String(payload.format || '')) || !payload.data) throw new Error('Geçersiz TentiforApp yedeği.');
+        var payload = JSON.parse(reader.result); if (!payload || !/^tentiforapp-6\.2\.[1234]-backup$/.test(String(payload.format || '')) || !payload.data) throw new Error('Geçersiz TentiforApp yedeği.');
         var count = 0; Object.keys(payload.data).forEach(function (key) { if (/^supabase\.|tf4_uyelik$|tentiforapp_6_2$/.test(key)) return; if (typeof payload.data[key] === 'string') { localStorage.setItem(key, payload.data[key]); count++; } });
         read(); toast(count + ' kayıt geri yüklendi. Sayfa yenileniyor.', true); resolve(count); setTimeout(function () { location.reload(); }, 500);
       } catch (e) { reject(e); } }; reader.onerror = function () { reject(new Error('Yedek okunamadı.')); }; reader.readAsText(file);

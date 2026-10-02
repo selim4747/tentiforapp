@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var PLAN = {
-    ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 0, hikaye: 0 },
+    ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 3, hikaye: 10 },
     evrengezer: { ad: 'EvrenGezer', evren: 5, gezgin: 12, hikaye: 42 },
     evrenyazar: { ad: 'EvrenYazar', evren: Infinity, gezgin: Infinity, hikaye: Infinity }
   };
@@ -19,16 +19,16 @@
     var p = activePlan();
     var evrenler = own.filter(function (x) { return x && x.tur === 'evren' && !x.e99 && !x.icEvrenMi && x.ustEvrenId == null; }).length;
     var hikayeler = own.filter(function (x) { return x && x.tur === 'hikaye'; }).length;
-    /* Ücretsiz planda evren/hikâye sınırı mevcut toplam içerik sayısıdır;
-       ücretli planlarda ise 30 günlük sayaç sıfırsa gerçekten 0 gösterilmelidir. */
+    /* Tüm sınırlı planlarda kullanım 30 günlük sayaçtan gösterilir; döngü
+       değişince sayaç otomatik olarak yeni kovaya geçer. */
     return {
-      evren: p === 'ucretsiz' ? evrenler : Number(v.evren) || 0,
+      evren: Number(v.evren) || 0,
       gezgin: Number(v.gezgin) || 0,
-      hikaye: p === 'ucretsiz' ? hikayeler : Number(v.hikaye) || 0
+      hikaye: Number(v.hikaye) || 0
     };
   }
   function bar(label, value, limit) { var unlimited = limit === Infinity; var pct = unlimited ? 0 : Math.min(100, Math.round(value / Math.max(1, limit) * 100)); return '<div class="tf51-kota"><div><span>' + esc(label) + '</span><b>' + value + ' / ' + (unlimited ? 'sınırsız' : limit) + '</b></div>' + (unlimited ? '<div class="tf51-kota-sinirsiz">∞</div>' : '<div class="tf51-kota-cubuk"><i style="width:' + pct + '%"></i></div>') + '</div>'; }
-  function usageHtml() { var p = PLAN[activePlan()], u = usage(), aylik = activePlan() !== 'ucretsiz'; return '<div id="tf51-usage" class="kutu-y tf51-panel"><div class="oyun-etiket">' + (aylik ? 'Bu ayki kullanımın' : 'Kullanımın') + '</div><p class="oyun-not"><b>' + esc(planLabel()) + '</b> planı · ' + (aylik ? '30 günlük sayaçlar hesabınla eşitlenir; bağlantı yoksa bu cihazdaki son değer gösterilir.' : 'Ücretsiz planda evren ve fan hikâyesi sınırı mevcut içerik sayına göre hesaplanır.') + '</p>' + bar('Oluşturulan evren', u.evren, p.evren) + bar('Evrengezer', u.gezgin, p.gezgin) + bar('Fan hikâyesi', u.hikaye, p.hikaye) + (aylik ? '<p class="oyun-not">Sayaçlar 30 günlük döngü sonunda yenilenir. Plan sınırlarını kaldırmak için EvrenYazar’a geçebilirsin.</p>' : '<p class="oyun-not">Evren ve fan hikâyesi sınırlarını kaldırmak için EvrenYazar’a geçebilirsin.</p>') + '</div>'; }
+  function usageHtml() { var p = PLAN[activePlan()], u = usage(), aylik = activePlan() !== 'evrenyazar'; return '<div id="tf51-usage" class="kutu-y tf51-panel"><div class="oyun-etiket">' + (aylik ? 'Bu ayki kullanımın' : 'Kullanımın') + '</div><p class="oyun-not"><b>' + esc(planLabel()) + '</b> planı · ' + (aylik ? '30 günlük sayaçlar hesabınla eşitlenir; bağlantı yoksa bu cihazdaki son değer gösterilir.' : 'EvrenYazar planında oluşturma sınırı yoktur.') + '</p>' + bar('Oluşturulan evren', u.evren, p.evren) + bar('Evrengezer', u.gezgin, p.gezgin) + bar('Fan hikâyesi', u.hikaye, p.hikaye) + (aylik ? '<p class="oyun-not">Sayaçlar 30 günlük döngü sonunda yenilenir. EvrenYazar ile sınırlar kalkar.</p>' : '') + '</div>'; }
   function enhancePlans() { var box = document.querySelector('#uyelikDurum'); if (!box || document.querySelector('#tf51-usage')) return; box.insertAdjacentHTML('beforebegin', usageHtml()); }
   function enhanceAccount() { var area = document.querySelector('#hesapAlan'); if (!area || area.querySelector('#tf51-sync')) return; var sync = area.querySelector('.hesap-esit'); if (!sync) return; var online = navigator.onLine !== false; var box = document.createElement('div'); box.id = 'tf51-sync'; box.className = 'kutu-y tf51-panel'; box.innerHTML = '<div class="oyun-etiket">5.1 cihaz ve eşitleme durumu</div><p class="oyun-not">Bu cihaz: <b>' + (online ? 'çevrimiçi' : 'çevrimdışı') + '</b> · Yerel ilerlemen kaybolmaz; bağlantı gelince mevcut eşitleme sistemiyle birleştirilir.</p><div class="oyun-sira"><button class="dugme dugme-sade" data-tf51-yedek>Yerel yedek oluştur</button></div><p class="pencere-durum" id="tf51-yedek-durum" role="status"></p>'; sync.parentNode.insertBefore(box, sync); }
   function makeBackup() { var text = typeof window.yedekUret === 'function' ? window.yedekUret() : ''; var status = document.querySelector('#tf51-yedek-durum'); if (!text) { status && (status.textContent = 'Yedekleme modülü hazır değil.'); return; } if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { status && (status.textContent = 'Yedek kodu panoya kopyalandı.'); }, function () { window.prompt('Yedek kodunu kopyala:', text); }); else window.prompt('Yedek kodunu kopyala:', text); }

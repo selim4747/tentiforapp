@@ -1,13 +1,13 @@
 {
-  "kod": 526,
-  "surum": "6.2.3",
+  "kod": 617,
+  "surum": "6.2.4",
   "boyut": 7025267,
-  "tarih": "2026-10-02T13:14:00+03:00",
-  "not": "TentiforApp 6.2.3: kanon ve fan-made karakter araması, karakter-only sonuçlar, fan karakter bilgi penceresi ve güvenli yedek uyumluluğu.",
-  "sha256": "8ace749ffd6db38fc38a68b44e3d922abb7b8307a9898d2546a470c74e878f0d",
-  "version": "6.2.3",
-  "size": 7025267,
-  "sizeBytes": 7025267,
-  "updatedAt": "2026-10-02T10:14:00Z",
-  "notes": "TentiforApp 6.2.3: kanon ve fan-made karakter araması, karakter-only sonuçlar, fan karakter bilgi penceresi ve güvenli yedek uyumluluğu."
+  "tarih": "2026-10-02T13:37:20+03:00",
+  "not": "TentiforApp 6.2.4: ücretsiz planda aylık 1 evren, 3 EvrenGezer ve 10 fan hikâyesi sınırı; sayaçlar her 30 günde yenilenir.",
+  "sha256": "175a8e25024275a5f331f8390cc07ed0ed28b7fdc1f4219982c1142b34875a70",
+  "version": "6.2.4",
+  "size": 7025177,
+  "sizeBytes": 7025177,
+  "updatedAt": "2026-10-02T10:37:20Z",
+  "notes": "TentiforApp 6.2.4: ücretsiz planda aylık 1 evren, 3 EvrenGezer ve 10 fan hikâyesi sınırı; sayaçlar her 30 günde yenilenir."
 }
