@@ -57,3 +57,13 @@ html[data-ayar-tema=gece] .tf51-evren-arac,html[data-ayar-tema=gece] .tf51-indir
   .alt-menu.alt-menu-evren{grid-template-columns:repeat(6,minmax(0,1fr));}
   .alt-menu.alt-menu-evren .alt-oge{font-size:9.5px;letter-spacing:.02em;}
 }
+
+/* Modal/evren seçici açıkken alttaki gezinme çubuğu üst katmanla çakışmamalı. */
+@media (max-width:760px){
+  html:has(.es-katman) .alt-menu,
+  html:has(.perde:not([hidden])) .alt-menu,
+  html:has(.mobil-menu-katman) .alt-menu{
+    visibility:hidden;
+    pointer-events:none;
+  }
+}
