@@ -27,7 +27,10 @@ for (const [name, code] of [['source', source], ['bundle', bundle]]) {
 }
 
 assert.match(css, /\.mobil-menu-katman\{z-index:120!important;isolation:isolate;\}/);
-assert.match(css, /\.alt-menu\.menu-ustu\{visibility:hidden!important;pointer-events:none!important;z-index:1!important;\}/);
+assert.match(css, /Menü erişilebilirliği:/, 'overlay erişilebilirlik koruması');
+assert.match(css, /html:has\(\.mobil-menu-katman\) \.alt-menu[\s\S]*pointer-events:auto!important/, 'mobil menü düğmesi dokunulabilir');
+assert.doesNotMatch(source, /Menü tıklaması bir üst Evren seçici katmanında kaybolmasın/, 'eski capture kilidi kaldırıldı');
+assert.match(source, /evrenSeciciKapat\(\).*mobilMenuAc\(\)/, 'evren seçici açıkken Menü tek dokunuşta açılır');
 assert.match(index, new RegExp(menuBundleUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 assert.match(sw, new RegExp(menuBundleUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 for (const [file, content] of copies) {
