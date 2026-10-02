@@ -8,7 +8,7 @@
 -- yanlışlıkla eski sürümle ezmemesi gerekir.
 --
 -- Güncel planlar:
---   ücretsiz   : 1 evren, 0 Evrengezer, 0 fan hikâyesi, 0 gezegen
+--   ücretsiz   : 1 evren, 3 EvrenGezer, 10 fan hikâyesi, 1 ek gezegen (başlangıç gezegeni sayılmaz)
 --   evrengezer : aylık 5 evren, 12 Evrengezer, 42 fan hikâyesi, evren başına 5 gezegen
 --   evrenyazar : sınırsız
 --

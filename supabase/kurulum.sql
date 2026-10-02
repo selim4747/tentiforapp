@@ -2849,7 +2849,7 @@ declare
 begin
   if uid is null then
     return jsonb_build_object('pro', false, 'tip', 'ucretsiz', 'bitis', null,
-      'limitler', jsonb_build_object('evren', 1, 'gezgin', 0, 'hikaye', 0, 'gezegen', 0));
+      'limitler', jsonb_build_object('evren', 1, 'gezgin', 3, 'hikaye', 10, 'gezegen', 1));
   end if;
   select * into r from public.abonelikler where id = uid;
   kod_bitis := public.pro_kod_bitis(uid);
@@ -2868,7 +2868,7 @@ begin
     'limitler', case
       when aktif_tip = 'evrenyazar' then jsonb_build_object('evren', null, 'gezgin', null, 'hikaye', null, 'gezegen', null)
       when aktif_tip = 'evrengezer' then jsonb_build_object('evren', 5, 'gezgin', 12, 'hikaye', 42, 'gezegen', 5)
-      else jsonb_build_object('evren', 1, 'gezgin', 0, 'hikaye', 0, 'gezegen', 0)
+      else jsonb_build_object('evren', 1, 'gezgin', 3, 'hikaye', 10, 'gezegen', 1)
     end
   );
 end;
@@ -3445,11 +3445,12 @@ revoke execute on function public.mod_sikayet_kapat(text, text, text) from publi
 grant execute on function public.mod_sikayet_kapat(text, text, text) to anon, authenticated;
 
 create or replace function public.kurulum_surumu() returns text
-language sql immutable set search_path = '' as $$ select '4.2'::text $$;
+language sql immutable set search_path = '' as $$ select '6.2.5'::text $$;
 -- Tüm tablolar ve fonksiyonlar oluşturulduktan sonra API şemasını bir kez yenile.
 notify pgrst, 'reload schema';
 
 -- ---------- 5.4 migration: hediye geçmişi, alıcı bildirimi ve plan politikası ----------
+-- 6.2.5: ücretsiz plan 1 evren, 3 EvrenGezer, 10 fan hikâyesi, 1 ek gezegen.
 alter table public.kullanici_bildirimleri add column if not exists kategori text not null default 'profil';
 create index if not exists kullanici_bildirimleri_kategori on public.kullanici_bildirimleri (kullanici, kategori, zaman desc);
 create table if not exists public.hediye_gecmisi (
