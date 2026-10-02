@@ -2066,10 +2066,15 @@ begin
 end $$;
 
 create or replace function public.bildirim_abonelik_sil(p_endpoint text) returns jsonb
-language sql security definer set search_path = '' as $$
-  with s as (delete from public.bildirim_abonelikleri where endpoint = p_endpoint returning 1)
-  select jsonb_build_object('durum', 'tamam', 'silinen', (select count(*) from s));
-$$;
+language plpgsql security definer set search_path = '' as $$
+declare silinen integer := 0;
+begin
+  if auth.uid() is null then return jsonb_build_object('durum', 'giris'); end if;
+  delete from public.bildirim_abonelikleri
+   where endpoint = p_endpoint and kullanici = auth.uid();
+  get diagnostics silinen = row_count;
+  return jsonb_build_object('durum', 'tamam', 'silinen', silinen);
+end $$;
 
 create or replace function public.bildirim_sayisi() returns int
 language plpgsql stable security definer set search_path = '' as $$
@@ -2080,7 +2085,7 @@ end $$;
 
 revoke all on public.bildirim_abonelikleri from anon, authenticated;
 revoke execute on function public.bildirim_abone_ol(text, text, text), public.bildirim_abonelik_sil(text), public.bildirim_sayisi() from public;
-grant execute on function public.bildirim_abone_ol(text, text, text), public.bildirim_abonelik_sil(text) to anon, authenticated;
+grant execute on function public.bildirim_abone_ol(text, text, text), public.bildirim_abonelik_sil(text) to authenticated;
 grant execute on function public.bildirim_sayisi() to authenticated;
 
 -- ---------- E99 ----------

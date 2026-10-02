@@ -43,6 +43,8 @@ for (const fn of ['kurulum_surumu', 'abonelik_hediye', 'kullaniciya_bildir', 'bi
   assert.equal(count, 1, `kurulum.sql içinde ${fn} tek kez tanımlı olmalı`);
 }
 assert.match(swText, /yedekKopya\(istek, true\)/, 'sürümlü asset eski query kopyasına düşmemeli');
+assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /where endpoint = p_endpoint and kullanici = auth\.uid\(\)/, 'push unsubscribe must be owner-scoped');
+assert.match(fs.readFileSync(path.join(root, 'js/topluluk/41-bildirim.js'), 'utf8'), /bildirimYerelMi\(\).*bildirimYerelAcikMi/, 'APK notifications must not depend on VAPID');
 assert.match(fs.readFileSync(path.join(root, 'js/core/46-guncelleme.js'), 'utf8'), /getRegistration\("\/"\)/, 'güncelleme worker kaydını kökten almalı');
 for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js']) {
   const escaped = asset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
