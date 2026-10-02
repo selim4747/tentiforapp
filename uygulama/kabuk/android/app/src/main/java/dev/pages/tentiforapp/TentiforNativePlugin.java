@@ -47,42 +47,40 @@ public class TentiforNativePlugin extends Plugin {
             return;
         }
         FragmentActivity activity = (FragmentActivity) baseActivity;
-        if (activity == null) {
-            call.reject("Uygulama etkinliği hazır değil.");
-            return;
-        }
-        String title = call.getString("title", "Gizli Tentifor içeriği");
-        String subtitle = call.getString("subtitle", "Devam etmek için cihaz kilidini doğrula.");
-        Executor executor = ContextCompat.getMainExecutor(activity);
-        BiometricPrompt prompt = new BiometricPrompt(activity, executor,
-                new BiometricPrompt.AuthenticationCallback() {
-                    @Override
-                    public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
-                        call.resolve();
-                    }
-
-                    @Override
-                    public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
-                        if (errorCode == BiometricPrompt.ERROR_USER_CANCELED || errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
-                            call.reject("Doğrulama iptal edildi.");
-                        } else {
-                            call.reject(String.valueOf(errString));
+        activity.runOnUiThread(() -> {
+            String title = call.getString("title", "Gizli Tentifor içeriği");
+            String subtitle = call.getString("subtitle", "Devam etmek için cihaz kilidini doğrula.");
+            Executor executor = ContextCompat.getMainExecutor(activity);
+            BiometricPrompt prompt = new BiometricPrompt(activity, executor,
+                    new BiometricPrompt.AuthenticationCallback() {
+                        @Override
+                        public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+                            call.resolve();
                         }
-                    }
 
-                    @Override
-                    public void onAuthenticationFailed() {
-                        // Android kendi yeniden deneme arayüzünü gösterir.
-                    }
-                });
-        BiometricPrompt.PromptInfo info = new BiometricPrompt.PromptInfo.Builder()
-                .setTitle(title)
-                .setSubtitle(subtitle)
-                .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG
-                        | BiometricManager.Authenticators.BIOMETRIC_WEAK
-                        | BiometricManager.Authenticators.DEVICE_CREDENTIAL)
-                .build();
-        prompt.authenticate(info);
+                        @Override
+                        public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                            if (errorCode == BiometricPrompt.ERROR_USER_CANCELED || errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                                call.reject("Doğrulama iptal edildi.");
+                            } else {
+                                call.reject(String.valueOf(errString));
+                            }
+                        }
+
+                        @Override
+                        public void onAuthenticationFailed() {
+                            // Android kendi yeniden deneme arayüzünü gösterir.
+                        }
+                    });
+            BiometricPrompt.PromptInfo info = new BiometricPrompt.PromptInfo.Builder()
+                    .setTitle(title)
+                    .setSubtitle(subtitle)
+                    .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG
+                            | BiometricManager.Authenticators.BIOMETRIC_WEAK
+                            | BiometricManager.Authenticators.DEVICE_CREDENTIAL)
+                    .build();
+            prompt.authenticate(info);
+        });
     }
 
     @PluginMethod
