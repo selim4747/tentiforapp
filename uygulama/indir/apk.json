@@ -1,13 +1,13 @@
 {
-  "kod": 522,
-  "surum": "6.1.2",
-  "boyut": 7018887,
+  "kod": 523,
+  "surum": "6.2.0",
+  "boyut": 7023860,
   "tarih": "2026-10-02T00:00:00+03:00",
   "not": "Tentiforverse 5.2: EvrenGezer 2 kişilik yerel co-op paketi, EvrenYazar sınırsız yerel takım paketi ve kayan 30 günlük plan kotaları. Ortak kullanım sunucuya bağlanmaz.",
-  "sha256": "dd3cceefc47338ad7c6d37890c2ff35c64437cb3e1562a60ff157359f031504d",
-  "version": "6.1.2",
-  "size": 7018887,
-  "sizeBytes": 7018887,
+  "sha256": "d89ea1fa156873132795cf522a10c7f71ab7a0b297060801a93ea9b9f0f78591",
+  "version": "6.2.0",
+  "size": 7023860,
+  "sizeBytes": 7023860,
   "updatedAt": "2026-10-02T08:00:00Z",
   "notes": "Tentiforverse 5.2: EvrenGezer 2 kişilik yerel co-op paketi, EvrenYazar sınırsız yerel takım paketi ve kayan 30 günlük plan kotaları. Ortak kullanım sunucuya bağlanmaz."
 }
