@@ -67,3 +67,9 @@ html[data-ayar-tema=gece] .tf51-evren-arac,html[data-ayar-tema=gece] .tf51-indir
     pointer-events:none;
   }
 }
+
+/* Menü katmanı sertleştirme: overlay, alt gezinmenin üzerinde ve ayrı hit-test bağlamında çalışır. */
+@media (max-width:760px){
+  .mobil-menu-katman{z-index:120!important;isolation:isolate;}
+  .alt-menu.menu-ustu{visibility:hidden!important;pointer-events:none!important;z-index:1!important;}
+}
