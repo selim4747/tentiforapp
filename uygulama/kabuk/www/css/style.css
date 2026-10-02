@@ -73,3 +73,6 @@ html[data-ayar-tema=gece] .tf51-evren-arac,html[data-ayar-tema=gece] .tf51-indir
   .mobil-menu-katman{z-index:120!important;isolation:isolate;}
   .alt-menu.menu-ustu{visibility:hidden!important;pointer-events:none!important;z-index:1!important;}
 }
+
+/* Deney: mobil alt Menü tamamen kapalı; üst Tüm sayfalar menüsü korunur. */
+@media (max-width:760px){:root{--alt-h:0px}.alt-menu,.mobil-menu-katman{display:none!important}body{padding-bottom:0!important}}
