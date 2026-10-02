@@ -1,13 +1,13 @@
 {
-  "kod": 525,
-  "surum": "6.2.2",
-  "boyut": 7024669,
-  "tarih": "2026-10-02T00:00:00+03:00",
-  "not": "Tentiforverse 5.2: EvrenGezer 2 kişilik yerel co-op paketi, EvrenYazar sınırsız yerel takım paketi ve kayan 30 günlük plan kotaları. Ortak kullanım sunucuya bağlanmaz.",
-  "sha256": "ddd8cccc07bebd9c26d8fb4c86b58782fd43ce70ac401a773c66bc070040d4b9",
-  "version": "6.2.2",
-  "size": 7024669,
-  "sizeBytes": 7024669,
-  "updatedAt": "2026-10-02T08:00:00Z",
-  "notes": "Tentiforverse 5.2: EvrenGezer 2 kişilik yerel co-op paketi, EvrenYazar sınırsız yerel takım paketi ve kayan 30 günlük plan kotaları. Ortak kullanım sunucuya bağlanmaz."
+  "kod": 526,
+  "surum": "6.2.3",
+  "boyut": 7025267,
+  "tarih": "2026-10-02T13:14:00+03:00",
+  "not": "TentiforApp 6.2.3: kanon ve fan-made karakter araması, karakter-only sonuçlar, fan karakter bilgi penceresi ve güvenli yedek uyumluluğu.",
+  "sha256": "8ace749ffd6db38fc38a68b44e3d922abb7b8307a9898d2546a470c74e878f0d",
+  "version": "6.2.3",
+  "size": 7025267,
+  "sizeBytes": 7025267,
+  "updatedAt": "2026-10-02T10:14:00Z",
+  "notes": "TentiforApp 6.2.3: kanon ve fan-made karakter araması, karakter-only sonuçlar, fan karakter bilgi penceresi ve güvenli yedek uyumluluğu."
 }

@@ -9,8 +9,8 @@ const css = fs.readFileSync(path.join(root, 'css/style.css'), 'utf8');
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const data = JSON.parse(fs.readFileSync(path.join(root, 'veri.json'), 'utf8'));
 
-assert.equal(pkg.version, '6.2.2');
-assert.equal(data.surum, '6.2.2');
+assert.equal(pkg.version, '6.2.3');
+assert.equal(data.surum, '6.2.3');
 assert.match(index, /js\/engine\/101-v61-universe\.js\?v=612/);
 for (const token of ['Evren Merkezi', 'Zaman çizelgesi', 'İlişkiler', 'Ansiklopedi', 'Notlar', 'Beni şaşırt', 'Spoilerli kayıtları göster', 'tf61-wizard-form']) {
   assert.ok(source.includes(token), `6.1 modülünde eksik sözleşme: ${token}`);

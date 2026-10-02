@@ -54,7 +54,7 @@
     return { evren: Object.keys(ev).filter(function (k) { return ev[k].okunan > 0; }).length, rozet: badges, okunan: read };
   }
   function rozetKoleksiyonuCiz() {
-    var host = document.querySelector('#koleksiyonAlan'); if (!host || typeof veri === 'undefined') return;
+    var host = document.querySelector('#koleksiyonAlan'); if (!host || typeof veri === 'undefined' || !veri) return;
     var chars = (veri.karakterler || []).filter(function (c) { return c && c.kart !== false && (!c.gizli || typeof okuErisim !== 'function' || okuErisim(null, c.gizli)); }), unlocked = 0;
     var cards = chars.map(function (c) { var gumus = typeof kilitAcik === 'function' && kilitAcik('rozet_' + c.id), altin = typeof kilitAcik === 'function' && kilitAcik('rozet_altin_' + c.id), state = altin ? 'altın' : gumus ? 'gümüş' : 'kilitli'; if (gumus || altin) unlocked++; return '<article class="v54-rozet-kart ' + (state === 'kilitli' ? 'kilitli' : '') + '">' + (typeof karakterPortreHtml === 'function' ? karakterPortreHtml(c, 'kart') : '') + '<div><b>' + esc(c.ad) + '</b><span>' + state + ' rozet</span><small>' + (altin ? 'Karakteri tamamla ve fan hikâyesi yazıldı.' : gumus ? 'Karaktere ait içeriklerin tamamı okundu.' : 'Karaktere ait kayıtları oku; rozet burada görünecek.') + '</small></div></article>'; }).join('');
     var old = host.querySelector('[data-v54-rozet-panel]'); if (old) old.remove();

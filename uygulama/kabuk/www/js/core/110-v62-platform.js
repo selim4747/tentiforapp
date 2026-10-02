@@ -1,4 +1,4 @@
-/* TentiforApp 6.2 platform layer: safe web/PWA/native hardening. */
+/* TentiforApp 6.2.3 platform layer: safe web/PWA/native hardening. */
 (function () {
   'use strict';
   var KEY = 'tentiforapp_6_2';
@@ -27,17 +27,17 @@
     save(); toast(found >= 0 ? 'Favorilerden çıkarıldı.' : 'Favorilere eklendi.', true); window.dispatchEvent(new CustomEvent('tf62-favorites')); return found < 0;
   }
   function exportBackup() {
-    var payload = { format: 'tentiforapp-6.2.1-backup', version: '6.2.1', createdAt: new Date().toISOString(), data: {} };
+    var payload = { format: 'tentiforapp-6.2.3-backup', version: '6.2.3', createdAt: new Date().toISOString(), data: {} };
     var skip = /^supabase\.|tf4_uyelik$|tentiforapp_6_2$/;
     try { Object.keys(localStorage).forEach(function (key) { if (!skip.test(key)) payload.data[key] = localStorage.getItem(key); }); } catch (_) {}
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tentiforapp-yedek-6.2.1.json'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000); toast('Yedek dosyası indirildi.', true);
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tentiforapp-yedek-6.2.3.json'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000); toast('Yedek dosyası indirildi.', true);
   }
   function importBackup(file) {
     return new Promise(function (resolve, reject) {
       if (!file || file.size > 16 * 1024 * 1024) return reject(new Error('Yedek dosyası 16 MB sınırını aşamaz.'));
       var reader = new FileReader(); reader.onload = function () { try {
-        var payload = JSON.parse(reader.result); if (!payload || payload.format !== 'tentiforapp-6.2.1-backup' || !payload.data) throw new Error('Geçersiz TentiforApp yedeği.');
+        var payload = JSON.parse(reader.result); if (!payload || !/^tentiforapp-6\.2\.[123]-backup$/.test(String(payload.format || '')) || !payload.data) throw new Error('Geçersiz TentiforApp yedeği.');
         var count = 0; Object.keys(payload.data).forEach(function (key) { if (/^supabase\.|tf4_uyelik$|tentiforapp_6_2$/.test(key)) return; if (typeof payload.data[key] === 'string') { localStorage.setItem(key, payload.data[key]); count++; } });
         read(); toast(count + ' kayıt geri yüklendi. Sayfa yenileniyor.', true); resolve(count); setTimeout(function () { location.reload(); }, 500);
       } catch (e) { reject(e); } }; reader.onerror = function () { reject(new Error('Yedek okunamadı.')); }; reader.readAsText(file);
@@ -52,11 +52,23 @@
     var canonical = typeof window.aramaDizini === 'function' ? window.aramaDizini() : [];
     var normal = typeof window.trNormal === 'function' ? window.trNormal : function (v) { return String(v || '').toLocaleLowerCase('tr-TR'); };
     var words = normal(query).split(/\s+/).filter(Boolean);
-    return canonical.map(function (item) {
+    var chars = canonical.filter(function (item) { return item.tur === 'Karakter' || item.tur === 'Fan karakter'; });
+    var charMatches = chars.filter(function (item) { var name = normal(item.ad || ''); return words.every(function (word) { return name.indexOf(word) >= 0; }); });
+    var source = charMatches.length ? charMatches : canonical;
+    return source.map(function (item) {
+      var name = normal(item.ad || '');
       var hay = normal([item.ad, item.alt, item.metin].join(' '));
-      var score = words.reduce(function (sum, word) { return sum + (normal(item.ad || '').indexOf(word) >= 0 ? 40 : hay.indexOf(word) >= 0 ? 8 : 0); }, 0);
+      var score = words.reduce(function (sum, word) { return sum + (name.indexOf(word) >= 0 ? (name === word ? 100 : 40) : (charMatches.length ? 0 : hay.indexOf(word) >= 0 ? 8 : 0)); }, 0);
       return { type: item.tur, title: item.ad || 'Adsız kayıt', text: [item.alt, item.metin].filter(Boolean).join(' · ').slice(0, 220), route: item.git || '', score: score };
     }).filter(function (item) { return item.score > 0 && item.route; }).sort(function (a, b) { return b.score - a.score; }).slice(0, 40);
+  }
+  function showFanCharacter(id) {
+    var person = ((typeof veri !== 'undefined' && veri && veri.fanEserleri && veri.fanEserleri.kisiler) || []).find(function (item) { return item.id === id; });
+    if (!person) return;
+    var existing = document.querySelector('#tf62FanCharacter');
+    if (!existing) { existing = document.createElement('div'); existing.id = 'tf62FanCharacter'; existing.className = 'tf62-overlay'; document.body.appendChild(existing); }
+    existing.innerHTML = '<div class=\"tf62-dialog\" role=\"dialog\" aria-modal=\"true\"><button type=\"button\" class=\"pencere-kapat\" data-tf62-close aria-label=\"Kapat\">✕</button><span class=\"oyun-etiket\">Fan karakter</span><h3>' + esc(person.ad) + '</h3><p class=\"oyun-not\">' + esc(person.unvan || '') + (person.yazar ? ' · ' + esc(person.yazar) : '') + '</p><p>' + esc(person.ozet || '') + '</p></div>';
+    existing.hidden = false;
   }
   function showSecretInfo() {
     var existing = document.querySelector('#tf62SecretInfo');
@@ -82,7 +94,7 @@
     if (event.target.closest && event.target.closest('[data-tf62-secret-info]')) showSecretInfo();
     if (event.target.closest && event.target.closest('[data-tf62-confirm-secret]')) { var info = event.target.closest('.tf62-overlay'); if (info) info.hidden = true; if (window.Tentifor6_2) window.Tentifor6_2.unlock().catch(function (e) { toast(e.message || 'Cihaz doğrulaması başarısız.', false); }); }
     if (event.target.matches && event.target.matches('[data-tf62-import]')) return;
-    var result = event.target.closest && event.target.closest('[data-tf62-route]'); if (result) { var route = result.dataset.tf62Route; if (route) location.hash = route; var o = document.querySelector('#tf62Search'); if (o) o.hidden = true; }
+    var result = event.target.closest && event.target.closest('[data-tf62-route]'); if (result) { var route = result.dataset.tf62Route; if (route && route.indexOf('#/fan/kisi/') === 0) showFanCharacter(route.slice('#/fan/kisi/'.length)); else if (route) location.hash = route; var o = document.querySelector('#tf62Search'); if (o) o.hidden = true; }
     if (event.target.closest && event.target.closest('[data-tf62-close]')) { var overlay = event.target.closest('.tf62-overlay'); if (overlay) overlay.hidden = true; }
     var fav = event.target.closest && event.target.closest('[data-tf62-favorite]'); if (fav) toggleFavorite(fav.dataset.tf62Favorite, fav.dataset.tf62Title);
   });
