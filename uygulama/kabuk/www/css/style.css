@@ -87,3 +87,8 @@ html[data-ayar-tema=gece] .tf51-evren-arac,html[data-ayar-tema=gece] .tf51-indir
     display:grid!important;
   }
 }
+
+/* Alt gezinme çubuğu menü katmanının üstünde kaldığı için menünün son satırı çubuğun altında kalmasın. */
+@media (max-width:760px){
+  .mobil-menu{padding-bottom:calc(18px + var(--alt-h) + env(safe-area-inset-bottom,0px));}
+}

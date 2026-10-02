@@ -35,4 +35,11 @@ for (const file of ['index.html', 'veri.json', 'surum.json', 'manifest.webmanife
   compare(file, path.join('dist', file));
 }
 assert.equal(fs.readFileSync(path.join(root, 'sw.js'), 'utf8').match(/const ONBELLEK = "tentiforapp-([^"]+)"/)[1], second.paket);
+const indexText = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const swText = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js']) {
+  const escaped = asset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  assert.match(indexText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} index cache sürümü güncel olmalı`);
+  assert.match(swText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} service worker cache sürümü güncel olmalı`);
+}
 console.log('Release hygiene: PASS (version sync, deterministic hash, APK/dist sync)');
