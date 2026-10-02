@@ -51,3 +51,9 @@ html[data-ayar-tema=gece] .tf51-evren-arac,html[data-ayar-tema=gece] .tf51-indir
     -webkit-tap-highlight-color:transparent;
   }
 }
+
+/* Evren ekranında Mağaza ile birlikte altı öğe vardır; ikinci satıra taşmasını engelle. */
+@media (max-width:760px){
+  .alt-menu.alt-menu-evren{grid-template-columns:repeat(6,minmax(0,1fr));}
+  .alt-menu.alt-menu-evren .alt-oge{font-size:9.5px;letter-spacing:.02em;}
+}
