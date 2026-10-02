@@ -20,6 +20,19 @@ public class MainActivity extends BridgeActivity {
         handleRouteIntent(intent);
     }
 
+    @Override
+    public void onBackPressed() {
+        if (getBridge() == null || getBridge().getWebView() == null) {
+            super.onBackPressed();
+            return;
+        }
+        getBridge().getWebView().evaluateJavascript(
+                "(function(){window.__tf62BackHandled=false;window.dispatchEvent(new Event('tentifor-back-button'));return window.__tf62BackHandled?'1':'0';})()",
+                value -> {
+                    if (!"\"1\"".equals(value)) MainActivity.super.onBackPressed();
+                });
+    }
+
     private void handleRouteIntent(Intent intent) {
         if (intent == null) return;
         String route = intent.getStringExtra("tentifor_route");

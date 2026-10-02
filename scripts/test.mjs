@@ -20,7 +20,8 @@ const tests = [
   'tests/ortak-evren.mjs',
   'tests/android-native.mjs',
   'tests/6.1-universe-center.mjs',
-  'tests/mobile-menu-regression.mjs'
+  'tests/mobile-menu-regression.mjs',
+  'tests/6.2-platform.mjs'
 ];
 
 const server = spawn(process.execPath, ['server.js'], { stdio: ['ignore', 'pipe', 'pipe'] });

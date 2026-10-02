@@ -17,6 +17,6 @@ for (const marker of [
   'data-tf51-offline',
 ]) assert(module.includes(marker), `missing 5.1 feature: ${marker}`);
 
-assert.match(index, /js\/engine\/92-v51-dashboard\.js\?v=\d+/);
+assert.match(index, /js\/engine\/92-v51-dashboard\.js\?v=[a-f0-9]+/);
 assert.equal(data.surum, pkg.version);
 console.log('5.1 dashboard feature assertions: PASS');

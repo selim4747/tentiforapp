@@ -16,6 +16,8 @@ assert.match(manifest, /android\.intent\.action\.SEND/);
 assert.match(manifest, /TentiforWidgetProvider/);
 assert.match(activity, /registerPlugin\(TentiforNativePlugin\.class\)/);
 assert.match(activity, /ACTION_SEND/);
+assert.match(activity, /onBackPressed\(\)/);
+assert.match(activity, /tentifor-back-button/);
 assert.match(plugin, /@CapacitorPlugin\(name = "TentiforNative"\)/);
 assert.match(plugin, /BiometricPrompt/);
 assert.match(plugin, /FLAG_KEEP_SCREEN_ON/);
