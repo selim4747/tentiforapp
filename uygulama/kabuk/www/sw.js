@@ -1,8 +1,8 @@
 /* TentiforApp servis çalışanı — sayfa ve veri önce ağdan (yavaşsa son kopya), sürümlü dosyalar önbellekten.
    Yeni bir sürüm yayınlanınca sayfalar kendiliğinden yenilenir; eski kopya yalnızca çevrimdışı ya da yavaş ağda kullanılır. */
-const ONBELLEK = "tentiforapp-6ae010709281";
+const ONBELLEK = "tentiforapp-1bc1eabcdc9d";
 /* Hesap kütüphanesi burada yok: yalnızca hesabı kullanan indirir (ilk kullanımda önbelleğe girer). */
-const ILK = ["./", "index.html", "css/style.css?v=cc93b781040e", "veri.json", "veri-degisiklik.json?v=a1aad374ff", "js/paket-1.js?v=6ae010709281", "js/paket-2.js?v=6ae010709281", "js/paket-3.js?v=6ae010709281", "js/paket-4.js?v=6ae010709281", "manifest.webmanifest", "ikon/ikon-192.png", "yazitipi/karla-normal-400-latin.woff2", "js/core/24-arsiv-mantigi.js?v=6ae010709281", "js/arsiv/34b-model-evreni.js", "js/engine/88-v46-yenilikler.js?v=6ae010709281", "js/engine/92-v51-dashboard.js?v=6ae010709281", "js/core/99-v50-mobil.js?v=6ae010709281", "evrenler/fornek-eterya.json"];
+const ILK = ["./", "index.html", "css/style.css?v=cc93b781040e", "veri.json", "veri-degisiklik.json?v=a1aad374ff", "js/paket-1.js?v=1bc1eabcdc9d", "js/paket-2.js?v=1bc1eabcdc9d", "js/paket-3.js?v=1bc1eabcdc9d", "js/paket-4.js?v=1bc1eabcdc9d", "manifest.webmanifest", "ikon/ikon-192.png", "yazitipi/karla-normal-400-latin.woff2", "js/core/24-arsiv-mantigi.js?v=1bc1eabcdc9d", "js/arsiv/34b-model-evreni.js", "js/engine/88-v46-yenilikler.js?v=1bc1eabcdc9d", "js/engine/92-v51-dashboard.js?v=1bc1eabcdc9d", "js/core/99-v50-mobil.js?v=1bc1eabcdc9d", "evrenler/fornek-eterya.json"];
 
 self.addEventListener("message", function (e) {
   if (e.data && e.data.action === "skipWaiting") {
@@ -153,8 +153,8 @@ function onbellegeKoy(istek, yanit, sorguyla) {
   caches.open(ONBELLEK).then(function (c) { return c.put(anahtar.href, kopya); }).catch(function () { /* dolu */ });
 }
 
-function yedekKopya(istek) {
-  return caches.match(istek, { ignoreSearch: true }).then(function (k) {
+function yedekKopya(istek, tamEslesme) {
+  return caches.match(istek, tamEslesme ? {} : { ignoreSearch: true }).then(function (k) {
     if (k) { return k; }
     if (istek.mode === "navigate") { return caches.match("./").then(function (a) { return a || caches.match("index.html"); }); }
     return undefined;
@@ -171,7 +171,7 @@ self.addEventListener("fetch", function (e) {
   const surumlu = /^\/(?:js\/|css\/|veri-[a-z]+\.json$)/.test(u.pathname) && u.searchParams.has("v");
   if (surumlu || /^\/(?:ikon|yazitipi)\//.test(u.pathname)) {
     e.respondWith(caches.match(istek).then(function (k) {
-      return k || guvenliFetch(istek).then(function (y) { onbellegeKoy(istek, y, true); return y; }).catch(function () { return yedekKopya(istek); });
+      return k || guvenliFetch(istek).then(function (y) { onbellegeKoy(istek, y, true); return y; }).catch(function () { return yedekKopya(istek, true); });
     }));
     return;
   }

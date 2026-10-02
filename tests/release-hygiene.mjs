@@ -37,6 +37,13 @@ for (const file of ['index.html', 'veri.json', 'surum.json', 'manifest.webmanife
 assert.equal(fs.readFileSync(path.join(root, 'sw.js'), 'utf8').match(/const ONBELLEK = "tentiforapp-([^"]+)"/)[1], second.paket);
 const indexText = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const swText = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+const setupSql = fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8');
+for (const fn of ['kurulum_surumu', 'abonelik_hediye', 'kullaniciya_bildir', 'bildirimlerim']) {
+  const count = (setupSql.match(new RegExp(`create or replace function public\\.${fn}\\b`, 'g')) || []).length;
+  assert.equal(count, 1, `kurulum.sql içinde ${fn} tek kez tanımlı olmalı`);
+}
+assert.match(swText, /yedekKopya\(istek, true\)/, 'sürümlü asset eski query kopyasına düşmemeli');
+assert.match(fs.readFileSync(path.join(root, 'js/core/46-guncelleme.js'), 'utf8'), /getRegistration\("\/"\)/, 'güncelleme worker kaydını kökten almalı');
 for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js']) {
   const escaped = asset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   assert.match(indexText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} index cache sürümü güncel olmalı`);

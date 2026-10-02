@@ -138,7 +138,9 @@ async function main() {
 
   console.log('\n🎉 === KULLANICI SİMÜLASYONU VE DERİN TEST TAMAMLANDI ===');
   dom.window.close();
-  if (process.exitCode === 1) return;
+  // JSDOM kaynakları bazı sürümlerde event loop'u açık bırakabiliyor;
+  // koşucuya sonucu deterministik biçimde bildir.
+  process.exit(process.exitCode === 1 ? 1 : 0);
 }
 
 main().catch(err => {

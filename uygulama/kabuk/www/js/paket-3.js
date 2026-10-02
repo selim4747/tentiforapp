@@ -52,16 +52,26 @@ function guncellemeGorulduIsaretle(paket) {
   } catch {}
 }
 
-function guncellemeUygula() {
+async function guncellemeUygula() {
   if (guncellemeYeni && guncellemeYeni.paket) {
     guncellemeGorulduIsaretle(guncellemeYeni.paket);
     try {
       sessionStorage.setItem("tentiforapp_guncellendi", guncellemeYeni.surum || yerelSurum());
     } catch {}
   }
-  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+  if (navigator.serviceWorker) {
     try {
-      navigator.serviceWorker.controller.postMessage({ action: "skipWaiting" });
+      const kayit = await navigator.serviceWorker.getRegistration("/");
+      if (kayit) {
+        await kayit.update();
+        if (kayit.waiting) {
+          const degisim = new Promise(function (coz) {
+            navigator.serviceWorker.addEventListener("controllerchange", coz, { once: true });
+          });
+          kayit.waiting.postMessage({ action: "skipWaiting" });
+          await Promise.race([degisim, new Promise(function (coz) { setTimeout(coz, 2500); })]);
+        }
+      }
     } catch {}
   }
   location.reload();

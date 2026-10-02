@@ -8,7 +8,7 @@ const platform = read('js/core/110-v62-platform.js');
 const index = read('index.html');
 const css = read('css/style.css');
 const plugin = read('uygulama/kabuk/android/app/src/main/java/dev/pages/tentiforapp/TentiforNativePlugin.java');
-assert.equal(pkg.version, '6.2.6');
+assert.equal(pkg.version, '6.2.7');
 assert.match(index, /js\/core\/110-v62-platform\.js\?v=[0-9a-f]+/);
 const membership = read('js/engine/91-v473-uyelik.js');
 const dashboard = read('js/engine/92-v51-dashboard.js');
@@ -19,7 +19,7 @@ assert.match(membership, /function sinirliPlan\(\) \{ return plan\(\) !== 'evren
 assert.match(membership, /say\('evren'\) < limit\('evren'\)/);
 assert.match(dashboard, /ucretsiz: \{ ad: 'Ücretsiz', evren: 1, gezgin: 3, hikaye: 10/);
 
-for (const token of ['exportBackup', 'importBackup', 'searchIndex', 'aramaDizini', 'Fan karakter', 'showFanCharacter', 'charMatches', '6.2.4-backup', 'tf62-confirm-secret', 'Tentifor6_2', 'data-tf62-action', 'LOCK_IDLE_MS', 'tf62-lock']) assert.ok(platform.includes(token), `6.2.6 modülünde eksik sözleşme: ${token}`);
+for (const token of ['exportBackup', 'importBackup', 'searchIndex', 'aramaDizini', 'Fan karakter', 'showFanCharacter', 'charMatches', '6.2.4-backup', 'tf62-confirm-secret', 'Tentifor6_2', 'data-tf62-action', 'LOCK_IDLE_MS', 'tf62-lock']) assert.ok(platform.includes(token), `6.2.7 modülünde eksik sözleşme: ${token}`);
 assert.ok(platform.includes('6\\.2\\.[1234]'), '6.2.x yedek uyumluluğu korunmalı');
 assert.match(read('js/arsiv/08-kesif.js'), /tur:"Fan karakter"/);
 assert.match(read('js/core/54-v54-olgunlastirma.js'), /typeof veri === 'undefined' \|\| !veri/);

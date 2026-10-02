@@ -3171,24 +3171,31 @@ create table if not exists public.kullanici_bildirimleri (
   zaman timestamptz not null default now()
 );
 create index if not exists kullanici_bildirimleri_kisi on public.kullanici_bildirimleri (kullanici, zaman desc);
+alter table public.kullanici_bildirimleri add column if not exists kategori text not null default 'profil';
+create index if not exists kullanici_bildirimleri_kategori on public.kullanici_bildirimleri (kullanici, kategori, zaman desc);
 alter table public.kullanici_bildirimleri enable row level security;
 drop policy if exists "bildirim_kendi" on public.kullanici_bildirimleri;
 create policy "bildirim_kendi" on public.kullanici_bildirimleri for select to authenticated using (kullanici = auth.uid());
 
 create or replace function public.kullaniciya_bildir(p_kullanici uuid, p_metin text, p_baglanti text) returns void
 language plpgsql security definer set search_path = '' as $$
+declare k text;
 begin
   if p_kullanici is null then return; end if;
-  insert into public.kullanici_bildirimleri (kullanici, metin, baglanti) values (p_kullanici, left(p_metin, 400), p_baglanti);
-  -- kişi başına en çok 50 bildirim tutulur
+  k := case
+    when lower(coalesce(p_metin,'')) ~ 'hediye|üyelik|abonelik|evrengezer|evrenyazar' then 'hediye'
+    when lower(coalesce(p_metin,'')) ~ 'rozet|madalya|kazandın|kilit' then 'rozet'
+    when lower(coalesce(p_metin,'')) ~ 'okuma|bölüm|roman|ilerleme' then 'okuma'
+    when lower(coalesce(p_metin,'')) ~ 'evren|davet|konuk' then 'evren'
+    when lower(coalesce(p_metin,'')) ~ 'duyuru|bakım' then 'duyuru'
+    else 'profil' end;
+  insert into public.kullanici_bildirimleri (kullanici, metin, baglanti, kategori)
+    values (p_kullanici, left(p_metin, 400), p_baglanti, k);
   delete from public.kullanici_bildirimleri where kullanici = p_kullanici and no not in
     (select no from public.kullanici_bildirimleri where kullanici = p_kullanici order by zaman desc limit 50);
 end;
 $$;
 revoke execute on function public.kullaniciya_bildir(uuid, text, text) from public, anon, authenticated;
-
--- Tüm tablolar ve fonksiyonlar oluşturulduktan sonra API şemasını bir kez yenile.
-notify pgrst, 'reload schema';
 
 create or replace function public.yonetici_kisisel_bildirim(p_kullanici_adi text, p_baslik text, p_metin text, p_baglanti text default '#/sen') returns jsonb
 language plpgsql security definer set search_path = '' as $$
@@ -3205,13 +3212,7 @@ $$;
 revoke execute on function public.yonetici_kisisel_bildirim(text, text, text, text) from public, anon;
 grant execute on function public.yonetici_kisisel_bildirim(text, text, text, text) to authenticated;
 
-create or replace function public.bildirimlerim() returns jsonb
-language sql stable security definer set search_path = '' as $$
-  select coalesce(jsonb_agg(jsonb_build_object('no', no, 'metin', metin, 'baglanti', baglanti, 'okundu', okundu, 'zaman', zaman) order by zaman desc), '[]'::jsonb)
-    from (select * from public.kullanici_bildirimleri where kullanici = auth.uid() order by zaman desc limit 30) b;
-$$;
-revoke execute on function public.bildirimlerim() from public, anon;
-grant execute on function public.bildirimlerim() to authenticated;
+
 
 create or replace function public.bildirimleri_okundu() returns void
 language sql security definer set search_path = '' as $$
@@ -3415,9 +3416,9 @@ revoke execute on function public.mod_sikayet_kapat(text, text, text) from publi
 grant execute on function public.mod_sikayet_kapat(text, text, text) to anon, authenticated;
 
 create or replace function public.kurulum_surumu() returns text
-language sql immutable set search_path = '' as $$ select '6.2.6'::text $$;
+language sql immutable set search_path = '' as $$ select '6.2.7'::text $$;
 -- ---------- 5.4 migration: hediye geçmişi, alıcı bildirimi ve plan politikası ----------
--- 6.2.6: ücretsiz plan 1 evren, 3 EvrenGezer, 10 fan hikâyesi, 1 ek gezegen.
+-- 6.2.7: ücretsiz plan 1 evren, 3 EvrenGezer, 10 fan hikâyesi, 1 ek gezegen.
 alter table public.kullanici_bildirimleri add column if not exists kategori text not null default 'profil';
 create index if not exists kullanici_bildirimleri_kategori on public.kullanici_bildirimleri (kullanici, kategori, zaman desc);
 create table if not exists public.hediye_gecmisi (
@@ -3507,21 +3508,5 @@ $$;
 revoke all on function public.abonelik_hediye(text, text, int) from public, anon;
 grant execute on function public.abonelik_hediye(text, text, int) to authenticated;
 
-create or replace function public.kullaniciya_bildir(p_kullanici uuid, p_metin text, p_baglanti text) returns void
-language plpgsql security definer set search_path = '' as $$
-declare k text;
-begin
-  if p_kullanici is null then return; end if;
-  k := case
-    when lower(coalesce(p_metin,'')) ~ 'hediye|üyelik|abonelik|evrengezer|evrenyazar' then 'hediye'
-    when lower(coalesce(p_metin,'')) ~ 'rozet|madalya|kazandın|kilit' then 'rozet'
-    when lower(coalesce(p_metin,'')) ~ 'okuma|bölüm|roman|ilerleme' then 'okuma'
-    when lower(coalesce(p_metin,'')) ~ 'evren|davet|konuk' then 'evren'
-    when lower(coalesce(p_metin,'')) ~ 'duyuru|bakım' then 'duyuru'
-    else 'profil' end;
-  insert into public.kullanici_bildirimleri (kullanici, metin, baglanti, kategori) values (p_kullanici, left(p_metin, 400), p_baglanti, k);
-  delete from public.kullanici_bildirimleri where kullanici = p_kullanici and no not in
-    (select no from public.kullanici_bildirimleri where kullanici = p_kullanici order by zaman desc limit 50);
-end;
-$$;
-revoke execute on function public.kullaniciya_bildir(uuid, text, text) from public, anon, authenticated;
+-- Tüm tablolar ve fonksiyonlar oluşturulduktan sonra API şemasını bir kez yenile.
+notify pgrst, 'reload schema';
