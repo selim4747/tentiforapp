@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import webpush from 'npm:web-push';
+import { SignJWT, importPKCS8 } from 'npm:jose@5';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,51 @@ const cors = {
 
 function cevap(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: cors });
+}
+
+async function fcmAccessToken(email: string, privateKey: string) {
+  const key = await importPKCS8(privateKey.replace(/\\n/g, '\n'), 'RS256');
+  const assertion = await new SignJWT({ scope: 'https://www.googleapis.com/auth/firebase.messaging' })
+    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+    .setIssuer(email)
+    .setAudience('https://oauth2.googleapis.com/token')
+    .setIssuedAt()
+    .setExpirationTime('1h')
+    .sign(key);
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion,
+    }),
+  });
+  const json = await response.json();
+  if (!response.ok || !json.access_token) throw new Error('FCM OAuth token alınamadı');
+  return String(json.access_token);
+}
+
+async function fcmGonder(projectId: string, accessToken: string, token: string, baslik: string, metin: string, adres: string) {
+  const response = await fetch(`https://fcm.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/messages:send`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: {
+        token,
+        notification: { title: baslik, body: metin },
+        data: { adres, tur: 'kisisel' },
+        android: {
+          priority: 'HIGH',
+          notification: { channel_id: 'tentiforapp', sound: 'default', visibility: 'PUBLIC' },
+        },
+      },
+    }),
+  });
+  const body = await response.text();
+  if (!response.ok) {
+    const stale = response.status === 404 || /UNREGISTERED|registration-token-not-registered|INVALID_ARGUMENT/i.test(body);
+    throw Object.assign(new Error(body || `FCM ${response.status}`), { stale });
+  }
 }
 
 Deno.serve(async (req) => {
@@ -23,21 +69,18 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     const vapidPublic = Deno.env.get('VAPID_PUBLIC_KEY') || '';
     const vapidPrivate = Deno.env.get('VAPID_PRIVATE_KEY') || '';
+    const firebaseProject = Deno.env.get('FIREBASE_PROJECT_ID') || '';
+    const firebaseEmail = Deno.env.get('FIREBASE_CLIENT_EMAIL') || '';
+    const firebasePrivateKey = Deno.env.get('FIREBASE_PRIVATE_KEY') || '';
+    const fcmHazir = !!(firebaseProject && firebaseEmail && firebasePrivateKey);
 
-    if (!token || !supabaseUrl || !anonKey || !serviceKey) {
-      return cevap({ durum: 'hata', mesaj: 'Sunucu yapılandırması eksik' }, 500);
-    }
+    if (!token || !supabaseUrl || !anonKey || !serviceKey) return cevap({ durum: 'hata', mesaj: 'Sunucu yapılandırması eksik' }, 500);
 
-    const authClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
+    const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
     const { data: kullanici, error: kullaniciHatasi } = await authClient.auth.getUser(token);
     if (kullaniciHatasi || !kullanici.user) return cevap({ durum: 'hata', mesaj: 'giriş gerekli' }, 401);
 
-    const adminClient = createClient(supabaseUrl, serviceKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
+    const adminClient = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data: adminMi, error: adminHatasi } = await authClient.rpc('tam_yonetici_mi');
     if (adminHatasi || adminMi !== true) return cevap({ durum: 'yetki' }, 403);
 
@@ -51,57 +94,46 @@ Deno.serve(async (req) => {
 
     let hedefId: string | null = null;
     if (hedefKullanici) {
-      const { data: profil, error: profilHatasi } = await adminClient
-        .from('profiller').select('id').eq('kullanici_adi', hedefKullanici).maybeSingle();
+      const { data: profil, error: profilHatasi } = await adminClient.from('profiller').select('id').eq('kullanici_adi', hedefKullanici).maybeSingle();
       if (profilHatasi) return cevap({ durum: 'hata', mesaj: 'Kullanıcı aranamadı' }, 500);
       if (!profil) return cevap({ durum: 'hedef_yok', mesaj: '@' + hedefKullanici + ' bulunamadı' }, 404);
       hedefId = profil.id;
     }
 
     let uygulama = 0;
-    // APK/WebView ortamında Web Push API bulunmayabilir. Hedefli gönderimde
-    // aynı mesajı uygulama içi bildirim kutusuna da bırak; APK bunu hesabı
-    // açınca Supabase'den çeker ve yerel bildirim olarak gösterebilir.
     if (hedefId) {
-      const { error: uygulamaHatasi } = await adminClient.from('kullanici_bildirimleri').insert({
-        kullanici: hedefId,
-        metin: `${baslik}: ${metin}`.slice(0, 400),
-        baglanti: uygulamaAdresi,
-      });
+      const { error: uygulamaHatasi } = await adminClient.from('kullanici_bildirimleri').insert({ kullanici: hedefId, metin: `${baslik}: ${metin}`.slice(0, 400), baglanti: uygulamaAdresi });
       if (uygulamaHatasi) return cevap({ durum: 'hata', mesaj: 'Uygulama bildirimi kaydedilemedi' }, 500);
       uygulama = 1;
     }
-    if (!vapidPublic || !vapidPrivate) {
-      return hedefId
-        ? cevap({ durum: 'tamam', gonderilen: 0, uygulama, silinen: 0, hata: 0, hedef: hedefKullanici })
-        : cevap({ durum: 'hata', mesaj: 'VAPID anahtarları eksik' }, 500);
-    }
-    const query = adminClient.from('bildirim_abonelikleri').select('endpoint,p256dh,auth,kullanici');
-    const { data: abonelikler, error: abonelikHatasi } = hedefId
-      ? await query.eq('kullanici', hedefId)
-      : await query;
-    if (abonelikHatasi) return cevap({ durum: 'hata', mesaj: 'Abonelikler okunamadı' }, 500);
 
-    webpush.setVapidDetails('mailto:admin@tentiforapp.pages.dev', vapidPublic, vapidPrivate);
-    const payload = JSON.stringify({ baslik, metin, adres: uygulamaAdresi });
-    let gonderilen = 0;
-    let silinen = 0;
-    let hata = 0;
-    for (const abonelik of abonelikler || []) {
-      try {
-        await webpush.sendNotification({ endpoint: abonelik.endpoint, keys: { p256dh: abonelik.p256dh, auth: abonelik.auth } }, payload);
-        gonderilen++;
-      } catch (error) {
-        hata++;
-        const durum = Number((error as { statusCode?: number })?.statusCode || 0);
-        if (durum === 404 || durum === 410) {
-          await adminClient.from('bildirim_abonelikleri').delete().eq('endpoint', abonelik.endpoint);
-          silinen++;
-        }
+    let gonderilen = 0, fcmGonderilen = 0, silinen = 0, fcmSilinen = 0, hata = 0;
+    if (vapidPublic && vapidPrivate) {
+      const query = adminClient.from('bildirim_abonelikleri').select('endpoint,p256dh,auth,kullanici');
+      const { data: abonelikler, error: abonelikHatasi } = hedefId ? await query.eq('kullanici', hedefId) : await query;
+      if (abonelikHatasi) return cevap({ durum: 'hata', mesaj: 'Web abonelikleri okunamadı' }, 500);
+      webpush.setVapidDetails('mailto:admin@tentiforapp.pages.dev', vapidPublic, vapidPrivate);
+      const payload = JSON.stringify({ baslik, metin, adres: uygulamaAdresi });
+      for (const abonelik of abonelikler || []) {
+        try { await webpush.sendNotification({ endpoint: abonelik.endpoint, keys: { p256dh: abonelik.p256dh, auth: abonelik.auth } }, payload); gonderilen++; }
+        catch (error) { hata++; const durum = Number((error as { statusCode?: number })?.statusCode || 0); if (durum === 404 || durum === 410) { await adminClient.from('bildirim_abonelikleri').delete().eq('endpoint', abonelik.endpoint); silinen++; } }
       }
     }
 
-    return cevap({ durum: 'tamam', gonderilen, uygulama, silinen, hata, hedef: hedefKullanici || 'herkes' });
+    if (fcmHazir) {
+      const fcmToken = await fcmAccessToken(firebaseEmail, firebasePrivateKey);
+      const query = adminClient.from('bildirim_cihazlari').select('token,kullanici').eq('aktif', true);
+      const { data: cihazlar, error: cihazHatasi } = hedefId ? await query.eq('kullanici', hedefId) : await query;
+      if (cihazHatasi) return cevap({ durum: 'hata', mesaj: 'Android cihazları okunamadı' }, 500);
+      for (const cihaz of cihazlar || []) {
+        try { await fcmGonder(firebaseProject, fcmToken, cihaz.token, baslik, metin, uygulamaAdresi); fcmGonderilen++; }
+        catch (error) { hata++; if ((error as { stale?: boolean })?.stale) { await adminClient.from('bildirim_cihazlari').delete().eq('token', cihaz.token); fcmSilinen++; } }
+      }
+    }
+
+    const herhangiBirKanal = !!(vapidPublic && vapidPrivate) || fcmHazir;
+    if (!herhangiBirKanal && !uygulama) return cevap({ durum: 'hata', mesaj: 'Web Push veya FCM yapılandırması eksik' }, 500);
+    return cevap({ durum: 'tamam', gonderilen, fcmGonderilen, uygulama, silinen, fcmSilinen, hata, hedef: hedefKullanici || 'herkes', fcmYapilandirilmamis: !fcmHazir });
   } catch (error) {
     return cevap({ durum: 'hata', mesaj: error instanceof Error ? error.message : String(error) }, 400);
   }
