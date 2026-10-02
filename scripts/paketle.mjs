@@ -58,7 +58,9 @@ function hashGirdisi(relative) {
   }
   let content = fs.readFileSync(full);
   if (relative === 'index.html') {
-    content = Buffer.from(content.toString('utf8').replace(/<meta name="tentifor-paket" content="[^"]*">/, '<meta name="tentifor-paket" content="<paket>">'));
+    content = Buffer.from(content.toString('utf8')
+      .replace(/<meta name="tentifor-paket" content="[^"]*">/, '<meta name="tentifor-paket" content="<paket>">')
+      .replace(/(js\/paket-2\.js\?v=)[^"']+/g, '$1<paket>'));
   }
   paketHash.update(relative).update('\0').update(content).update('\0');
 }
@@ -92,6 +94,10 @@ if (fs.existsSync(swPath)) {
     /const ONBELLEK = ["'][^"']+["'];/,
     `const ONBELLEK = "tentiforapp-${karma}";`
   );
+  swIcerik = swIcerik.replace(
+    /js\/paket-2\.js\?v=[^"']+/g,
+    `js/paket-2.js?v=${karma}`
+  );
   fs.writeFileSync(swPath, swIcerik, 'utf-8');
   console.log(`✓ sw.js önbellek anahtarı güncellendi (tentiforapp-${karma})`);
 }
@@ -110,6 +116,10 @@ if (fs.existsSync(indexPath)) {
       `<meta name="tentifor-surum" content="${veri.surum || '4.6.1'}">`
     );
   }
+  indexIcerik = indexIcerik.replace(
+    /js\/paket-2\.js\?v=[^"']+/g,
+    `js/paket-2.js?v=${karma}`
+  );
   fs.writeFileSync(indexPath, indexIcerik, 'utf-8');
   console.log(`✓ index.html meta paketi güncellendi (${karma})`);
 }
