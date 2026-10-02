@@ -27,29 +27,41 @@
     save(); toast(found >= 0 ? 'Favorilerden çıkarıldı.' : 'Favorilere eklendi.', true); window.dispatchEvent(new CustomEvent('tf62-favorites')); return found < 0;
   }
   function exportBackup() {
-    var payload = { format: 'tentiforapp-6.2-backup', version: '6.2.0', createdAt: new Date().toISOString(), data: {} };
+    var payload = { format: 'tentiforapp-6.2.1-backup', version: '6.2.1', createdAt: new Date().toISOString(), data: {} };
     var skip = /^supabase\.|tf4_uyelik$|tentiforapp_6_2$/;
     try { Object.keys(localStorage).forEach(function (key) { if (!skip.test(key)) payload.data[key] = localStorage.getItem(key); }); } catch (_) {}
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tentiforapp-yedek-6.2.json'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000); toast('Yedek dosyası indirildi.', true);
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tentiforapp-yedek-6.2.1.json'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000); toast('Yedek dosyası indirildi.', true);
   }
   function importBackup(file) {
     return new Promise(function (resolve, reject) {
       if (!file || file.size > 16 * 1024 * 1024) return reject(new Error('Yedek dosyası 16 MB sınırını aşamaz.'));
       var reader = new FileReader(); reader.onload = function () { try {
-        var payload = JSON.parse(reader.result); if (!payload || payload.format !== 'tentiforapp-6.2-backup' || !payload.data) throw new Error('Geçersiz TentiforApp yedeği.');
+        var payload = JSON.parse(reader.result); if (!payload || payload.format !== 'tentiforapp-6.2.1-backup' || !payload.data) throw new Error('Geçersiz TentiforApp yedeği.');
         var count = 0; Object.keys(payload.data).forEach(function (key) { if (/^supabase\.|tf4_uyelik$|tentiforapp_6_2$/.test(key)) return; if (typeof payload.data[key] === 'string') { localStorage.setItem(key, payload.data[key]); count++; } });
         read(); toast(count + ' kayıt geri yüklendi. Sayfa yenileniyor.', true); resolve(count); setTimeout(function () { location.reload(); }, 500);
       } catch (e) { reject(e); } }; reader.onerror = function () { reject(new Error('Yedek okunamadı.')); }; reader.readAsText(file);
     });
   }
   function searchIndex(query) {
-    query = String(query || '').trim().toLocaleLowerCase('tr-TR'); if (query.length < 2) return [];
-    var out = [], data = window.veri || {};
-    [['karakterler', 'Karakter'], ['haritalar', 'Evren'], ['hikayeler', 'Hikâye'], ['mektuplar', 'Mektup'], ['gunlukler', 'Günlük'], ['kayitlar', 'Kayıt']].forEach(function (pair) {
-      (Array.isArray(data[pair[0]]) ? data[pair[0]] : []).forEach(function (item) { var text = JSON.stringify(item).toLocaleLowerCase('tr-TR'); if (text.indexOf(query) >= 0) out.push({ type: pair[1], id: item.id || item.slug || item.no, title: item.ad || item.baslik || item.kim || ('Kayıt ' + (item.no || '')), text: String(item.ozet || item.not || item.metin || '').slice(0, 180), route: item.id ? '#/ev/' + item.id : '' }); });
-    });
-    return out.slice(0, 40);
+    query = String(query || '').trim();
+    if (query.length < 2) return [];
+    /* Use the canonical permission-aware index. The old code read
+       window.veri (the app declares veri as a top-level const) and guessed
+       keys/routes, so valid terms such as “Feil” returned no result. */
+    var canonical = typeof window.aramaDizini === 'function' ? window.aramaDizini() : [];
+    var normal = typeof window.trNormal === 'function' ? window.trNormal : function (v) { return String(v || '').toLocaleLowerCase('tr-TR'); };
+    var words = normal(query).split(/\s+/).filter(Boolean);
+    return canonical.map(function (item) {
+      var hay = normal([item.ad, item.alt, item.metin].join(' '));
+      var score = words.reduce(function (sum, word) { return sum + (normal(item.ad || '').indexOf(word) >= 0 ? 40 : hay.indexOf(word) >= 0 ? 8 : 0); }, 0);
+      return { type: item.tur, title: item.ad || 'Adsız kayıt', text: [item.alt, item.metin].filter(Boolean).join(' · ').slice(0, 220), route: item.git || '', score: score };
+    }).filter(function (item) { return item.score > 0 && item.route; }).sort(function (a, b) { return b.score - a.score; }).slice(0, 40);
+  }
+  function showSecretInfo() {
+    var existing = document.querySelector('#tf62SecretInfo');
+    if (!existing) { existing = document.createElement('div'); existing.id = 'tf62SecretInfo'; existing.className = 'tf62-overlay'; existing.innerHTML = '<div class="tf62-dialog" role="dialog" aria-modal="true" aria-labelledby="tf62SecretTitle"><button type="button" class="pencere-kapat" data-tf62-close aria-label="Kapat">✕</button><h3 id="tf62SecretTitle">Gizli içerik açma ne yapar?</h3><p>Bu işlem, APK’de cihaz biyometrisiyle <b>gizli içerik oturumu</b> açar. Oturum 5 dakika hareketsizlikten sonra kapanır.</p><p>Bu düğme tek başına evren katmanlarını, şifreleri veya oyun kilitlerini çözmez. Onlar kendi koşulları tamamlanınca açılır. Buradaki doğrulama, cihazı elinde tutmayan kişinin açık bırakılmış gizli içeriğe erişmesini engeller.</p><p class="oyun-not">Web/PWA’da biyometri olmadığı için gerçek cihaz doğrulaması yapılamaz; bu özellik APK içindir.</p><button type="button" class="dugme" data-tf62-confirm-secret>Devam et</button></div>'; document.body.appendChild(existing); }
+    existing.hidden = false;
   }
   function openSearch() {
     var overlay = document.querySelector('#tf62Search'); if (!overlay) { overlay = document.createElement('div'); overlay.id = 'tf62Search'; overlay.className = 'tf62-overlay'; overlay.innerHTML = '<div class="tf62-dialog" role="dialog" aria-modal="true" aria-labelledby="tf62SearchTitle"><button type="button" class="pencere-kapat" data-tf62-close aria-label="Kapat">✕</button><h3 id="tf62SearchTitle">Her yerde ara</h3><input id="tf62SearchInput" class="arama-giris" type="search" placeholder="Karakter, evren, günlük…" autocomplete="off"><div id="tf62SearchResults" role="listbox"></div></div>'; document.body.appendChild(overlay); }
@@ -67,6 +79,8 @@
   ['touchstart', 'click', 'keydown'].forEach(function (type) { document.addEventListener(type, touch, { passive: true }); });
   document.addEventListener('click', function (event) {
     var action = event.target.closest && event.target.closest('[data-tf62-action]'); if (action) { var name = action.dataset.tf62Action; if (name === 'search') openSearch(); if (name === 'backup') exportBackup(); if (name === 'lock') { lock(); toast('Gizli içerik kilitlendi.', true); } }
+    if (event.target.closest && event.target.closest('[data-tf62-secret-info]')) showSecretInfo();
+    if (event.target.closest && event.target.closest('[data-tf62-confirm-secret]')) { var info = event.target.closest('.tf62-overlay'); if (info) info.hidden = true; if (window.Tentifor6_2) window.Tentifor6_2.unlock().catch(function (e) { toast(e.message || 'Cihaz doğrulaması başarısız.', false); }); }
     if (event.target.matches && event.target.matches('[data-tf62-import]')) return;
     var result = event.target.closest && event.target.closest('[data-tf62-route]'); if (result) { var route = result.dataset.tf62Route; if (route) location.hash = route; var o = document.querySelector('#tf62Search'); if (o) o.hidden = true; }
     if (event.target.closest && event.target.closest('[data-tf62-close]')) { var overlay = event.target.closest('.tf62-overlay'); if (overlay) overlay.hidden = true; }

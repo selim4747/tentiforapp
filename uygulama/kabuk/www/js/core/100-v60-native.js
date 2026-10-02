@@ -47,7 +47,7 @@
     if (!menu || menu.querySelector('[data-tf60-action]')) return;
     var box = document.createElement('div');
     box.className = 'tf60-native-tools';
-    box.innerHTML = '<button class="mm-eylem" type="button" data-tf60-action="biometric">▣ Gizli içeriği aç</button>' +
+    box.innerHTML = '<button class="mm-eylem" type="button" data-tf60-action="biometric" data-tf62-secret-info>▣ Gizli içeriği aç (cihaz doğrulaması)</button>' +
       '<button class="mm-eylem" type="button" data-tf60-action="screen">▤ Ekranı açık tut</button>';
     menu.appendChild(box);
   }
@@ -56,7 +56,8 @@
     var action = event.target.closest && event.target.closest('[data-tf60-action]');
     if (!action) return;
     if (action.dataset.tf60Action === 'biometric') {
-      TentiforNative6.authenticate().then(function () { notify('Biyometrik doğrulama başarılı.'); }).catch(function (error) {
+      if (action.hasAttribute('data-tf62-secret-info')) return;
+      TentiforNative6.authenticate().then(function () { if (window.Tentifor6_2) window.Tentifor6_2.unlock(); notify('Gizli içerik oturumu açıldı. Kilitli katmanlar yine kendi koşullarıyla açılır.'); }).catch(function (error) {
         notify(error && error.message ? error.message : 'Doğrulama başarısız.');
       });
     }
