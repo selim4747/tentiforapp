@@ -1,5 +1,5 @@
 {
-  "surum": "6.2.7",
+  "surum": "6.2.8",
   "guncelleme": "2026-10-01",
   "delilik": {
     "baslik": "Delilik",
@@ -8787,7 +8787,7 @@
   "__parcalar": {
     "degisiklik": {
       "dosya": "veri-degisiklik.json?v=a1aad374ff",
-      "toplam": 61
+      "toplam": 68
     }
   },
   "modelEvreni": {

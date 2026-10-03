@@ -52,3 +52,8 @@ for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js']) {
   assert.match(swText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} service worker cache sürümü güncel olmalı`);
 }
 console.log('Release hygiene: PASS (version sync, deterministic hash, APK/dist sync)');
+
+const veriMeta = JSON.parse(fs.readFileSync('veri.json','utf8'));
+const degisiklik = JSON.parse(fs.readFileSync('veri-degisiklik.json','utf8'));
+if (veriMeta.__parcalar?.degisiklik?.toplam !== degisiklik.length) throw new Error('veri parça metadata sayısı güncel değil');
+console.log('Partition metadata: PASS');
