@@ -1,13 +1,13 @@
 {
   "kod": 618,
   "surum": "6.2.7",
-  "boyut": 7025348,
-  "tarih": "2026-10-02T13:42:50+03:00",
+  "boyut": 7762524,
+  "tarih": "2026-10-03T10:20:03+03:00",
   "not": "TentiforApp 6.2.7: ücretsiz planda aylık 1 evren, 3 EvrenGezer, 10 fan hikâyesi ve evren başına 1 ek gezegen; evrenle gelen başlangıç gezegeni limite dahil değildir.",
-  "sha256": "3532888feb2ff64764a0c34b86712e1a24d634682866a618859a33007fe27a4d",
+  "sha256": "e042c35ee7b1b6d26eccdfda07a4affdd9dd486719fec623b0db158ec73f9424",
   "version": "6.2.7",
-  "size": 7025348,
-  "sizeBytes": 7025348,
-  "updatedAt": "2026-10-02T10:42:50Z",
-  "notes": "TentiforApp 6.2.7: ücretsiz planda aylık 1 evren, 3 EvrenGezer, 10 fan hikâyesi ve evren başına 1 ek gezegen; evrenle gelen başlangıç gezegeni limite dahil değildir."
+  "size": 7762524,
+  "sizeBytes": 7762524,
+  "updatedAt": "2026-10-03T07:20:03Z",
+  "notes": "TentiforApp 6.2.7 FCM Android bildirimli debug APK."
 }
