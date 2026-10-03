@@ -34,6 +34,19 @@ create policy "kendi profilini ekler" on public.profiller
 create policy "kendi profilini günceller" on public.profiller
   for update using (auth.uid() = id) with check (auth.uid() = id);
 
+create or replace function public.profiller_sunucu_alanlarini_koru() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() = old.id and not public.tam_yonetici_mi() then
+    new.ozet := old.ozet;
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists profiller_sunucu_alanlari on public.profiller;
+create trigger profiller_sunucu_alanlari before update on public.profiller
+for each row execute function public.profiller_sunucu_alanlarini_koru();
+
 -- ============ İLERLEME (yalnızca sahibi) ============
 -- Eçka, çözülen kodlar, madalyalar, defter... Başka kimse okuyamaz.
 create table if not exists public.ilerlemeler (
@@ -771,7 +784,7 @@ begin
       if t.tur = 'nokta' then puan := puan + kismi;
       elsif t.tur = 'sira' then puan := puan + kismi * 10;
       end if;
-      sonuclar := sonuclar || jsonb_build_object('dogru', ok, 'cevap', b.cevap, 'kismi', kismi);
+      sonuclar := sonuclar || jsonb_build_object('dogru', ok, 'kismi', kismi);
     end loop;
 
     if o.yaris = 'isim_avi' then puan := seri;                                        -- seri kırılana kadar
@@ -2108,7 +2121,7 @@ create table if not exists public.olay_sayaclari (
 alter table public.olay_sayaclari enable row level security;
 
 create or replace function public.olay_say(p_ad text) returns void
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = '' as $$
 begin
   if p_ad is null or p_ad !~ '^[a-z0-9_:]{1,40}$' then return; end if;
   if not exists (select 1 from public.olay_sayaclari where gun = current_date and ad = p_ad)
@@ -2119,7 +2132,7 @@ end $$;
 
 create or replace function public.olay_sayilari(p_gun integer)
 returns table (gun date, ad text, sayi integer)
-language plpgsql security definer stable set search_path = public as $$
+language plpgsql security definer stable set search_path = '' as $$
 begin
   if not public.tam_yonetici_mi() then raise exception 'yetki yok'; end if;
   return query select o.gun, o.ad, o.sayi from public.olay_sayaclari o
@@ -2962,8 +2975,10 @@ create table if not exists public.moderator_oturumlari (
 );
 alter table public.moderator_oturumlari enable row level security;
 create table if not exists public.moderator_denemeler (
-  zaman timestamptz not null default now()
+  zaman timestamptz not null default now(),
+  kod_ozet text not null default ''
 );
+alter table public.moderator_denemeler add column if not exists kod_ozet text not null default '';
 alter table public.moderator_denemeler enable row level security;
 
 create or replace function public.mod_ozet(p_metin text, p_tuz text) returns text
@@ -2976,11 +2991,11 @@ language plpgsql security definer set search_path = '' as $$
 declare oz text := public.mod_ozet(upper(p_kod), '#mod'); t text;
 begin
   -- kaba kuvvete karşı: son 10 dakikada 30'dan çok hatalı deneme varsa bekle
-  if (select count(*) from public.moderator_denemeler where zaman > now() - interval '10 minutes') >= 30 then
+  if (select count(*) from public.moderator_denemeler where zaman > now() - interval '10 minutes' and (kod_ozet = oz or kod_ozet = '') ) >= 10 then
     raise exception 'çok deneme; biraz bekle';
   end if;
   if not exists (select 1 from public.moderator_kodlari where ozet = oz and aktif) then
-    insert into public.moderator_denemeler default values;
+    insert into public.moderator_denemeler (kod_ozet) values (oz);
     delete from public.moderator_denemeler where zaman < now() - interval '1 day';
     raise exception 'kod geçersiz';
   end if;
@@ -3076,12 +3091,26 @@ begin
   end if;
 end $$;
 
+alter table public.moderator_kodlari add column if not exists duzey text not null default 'fan';
+-- Moderatör seviyesi server-side doğrulanır; fan kodu kanon statüsünü değiştiremez.
+create or replace function public.moderator_kanon_dogrula(p_token text, p_kanon boolean) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.moderator_oturumlari o
+    join public.moderator_kodlari k on k.ozet = o.kod_ozet
+    where o.token_ozet = public.mod_ozet(p_token, '#tok')
+      and o.bitis > now() and k.aktif
+      and (not coalesce(p_kanon, false) or k.duzey = 'kanon')
+  );
+$$;
+revoke execute on function public.moderator_kanon_dogrula(text, boolean) from public;
+grant execute on function public.moderator_kanon_dogrula(text, boolean) to anon, authenticated;
 -- 4.0.2: onaylanan evren kanon ya da fan-made olarak yayımlanır (moderatör ya da yönetici değiştirebilir)
 alter table public.yayindaki_evrenler add column if not exists kanon boolean not null default false;
 create or replace function public.yayin_kanon(p_token text, p_slug text, p_kanon boolean) returns boolean
 language plpgsql security definer set search_path = '' as $$
 begin
-  if not (public.moderator_dogrula(p_token) or public.tam_yonetici_mi()) then raise exception 'yetki yok'; end if;
+  if not (public.tam_yonetici_mi() or public.moderator_kanon_dogrula(p_token, coalesce(p_kanon, false))) then raise exception 'yetki yok'; end if;
   update public.yayindaki_evrenler set kanon = coalesce(p_kanon, false) where slug = p_slug;
   return found;
 end;

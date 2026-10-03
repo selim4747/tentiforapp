@@ -3,7 +3,7 @@ import webpush from 'npm:web-push';
 import { SignJWT, importPKCS8 } from 'npm:jose@5';
 
 const cors = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://tentiforapp.pages.dev',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Content-Type': 'application/json; charset=utf-8',
 };

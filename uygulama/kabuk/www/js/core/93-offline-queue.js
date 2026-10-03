@@ -46,9 +46,10 @@
       return Object.assign(sonuc, { kalan: kalan.length });
     } finally { durum.calisiyor = false; }
   }
-  window.tf4OfflineQueue = { ekle: ekle, bekleyen: bekleyen, temizle: temizle, gonder: gonder, beklemeSuresi: beklemeSuresi };
+  function ayarla(transport) { if (transport != null && typeof transport !== 'function') throw new TypeError('transport function gerekli'); window.tf4OfflineTransport = transport || null; return !!window.tf4OfflineTransport; }
+  window.tf4OfflineQueue = { ekle: ekle, bekleyen: bekleyen, temizle: temizle, gonder: gonder, ayarla: ayarla, beklemeSuresi: beklemeSuresi };
   window.addEventListener('online', function () {
     var transport = window.tf4OfflineTransport;
-    if (typeof transport === 'function') setTimeout(function () { gonder(transport); }, 1200);
+    if (typeof transport === 'function') setTimeout(function () { gonder(transport); }, 1200); else if (oku().length) window.dispatchEvent(new CustomEvent('tf4-offline-transport-yok', { detail: { kalan: oku().length } }));
   });
 }());
