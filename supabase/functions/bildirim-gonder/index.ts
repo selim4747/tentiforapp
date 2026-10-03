@@ -87,9 +87,9 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-    const vapidPublic = Deno.env.get('VAPID_PUBLIC_KEY') || '';
-    const vapidPrivate = Deno.env.get('VAPID_PRIVATE_KEY') || '';
-    const firebaseProject = Deno.env.get('FIREBASE_PROJECT_ID') || '';
+    const vapidPublic = secretMetni(Deno.env.get('VAPID_PUBLIC_KEY') || '');
+    const vapidPrivate = secretMetni(Deno.env.get('VAPID_PRIVATE_KEY') || '');
+    const firebaseProject = secretMetni(Deno.env.get('FIREBASE_PROJECT_ID') || '');
     const firebaseEmail = secretMetni(Deno.env.get('FIREBASE_CLIENT_EMAIL') || '');
     const firebasePrivateKey = Deno.env.get('FIREBASE_PRIVATE_KEY') || '';
     const fcmHazir = !!(firebaseProject && firebaseEmail && firebasePrivateKey);
@@ -128,15 +128,22 @@ Deno.serve(async (req) => {
     }
 
     let gonderilen = 0, fcmGonderilen = 0, silinen = 0, fcmSilinen = 0, hata = 0;
+    let webPushKuruldu = false;
+    let webPushYapilandirmaHatasi = '';
     if (vapidPublic && vapidPrivate) {
       const query = adminClient.from('bildirim_abonelikleri').select('endpoint,p256dh,auth,kullanici');
       const { data: abonelikler, error: abonelikHatasi } = hedefId ? await query.eq('kullanici', hedefId) : await query;
       if (abonelikHatasi) return cevap({ durum: 'hata', mesaj: 'Web abonelikleri okunamadı' }, 500);
-      webpush.setVapidDetails('mailto:admin@tentiforapp.pages.dev', vapidPublic, vapidPrivate);
-      const payload = JSON.stringify({ baslik, metin, adres: uygulamaAdresi });
-      for (const abonelik of abonelikler || []) {
-        try { await webpush.sendNotification({ endpoint: abonelik.endpoint, keys: { p256dh: abonelik.p256dh, auth: abonelik.auth } }, payload); gonderilen++; }
-        catch (error) { hata++; const durum = Number((error as { statusCode?: number })?.statusCode || 0); if (durum === 404 || durum === 410) { await adminClient.from('bildirim_abonelikleri').delete().eq('endpoint', abonelik.endpoint); silinen++; } }
+      try {
+        webpush.setVapidDetails('mailto:admin@tentiforapp.pages.dev', vapidPublic, vapidPrivate);
+        webPushKuruldu = true;
+        const payload = JSON.stringify({ baslik, metin, adres: uygulamaAdresi });
+        for (const abonelik of abonelikler || []) {
+          try { await webpush.sendNotification({ endpoint: abonelik.endpoint, keys: { p256dh: abonelik.p256dh, auth: abonelik.auth } }, payload); gonderilen++; }
+          catch (error) { hata++; const durum = Number((error as { statusCode?: number })?.statusCode || 0); if (durum === 404 || durum === 410) { await adminClient.from('bildirim_abonelikleri').delete().eq('endpoint', abonelik.endpoint); silinen++; } }
+        }
+      } catch (error) {
+        webPushYapilandirmaHatasi = error instanceof Error ? error.message : String(error);
       }
     }
 
@@ -151,9 +158,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    const herhangiBirKanal = !!(vapidPublic && vapidPrivate) || fcmHazir;
+    const herhangiBirKanal = webPushKuruldu || fcmHazir;
     if (!herhangiBirKanal && !uygulama) return cevap({ durum: 'hata', mesaj: 'Web Push veya FCM yapılandırması eksik' }, 500);
-    return cevap({ durum: 'tamam', gonderilen, fcmGonderilen, uygulama, silinen, fcmSilinen, hata, hedef: hedefKullanici || 'herkes', fcmYapilandirilmamis: !fcmHazir });
+    return cevap({ durum: 'tamam', gonderilen, fcmGonderilen, uygulama, silinen, fcmSilinen, hata, hedef: hedefKullanici || 'herkes', fcmYapilandirilmamis: !fcmHazir, webPushYapilandirmaHatasi: webPushYapilandirmaHatasi || null });
   } catch (error) {
     return cevap({ durum: 'hata', mesaj: error instanceof Error ? error.message : String(error) }, 400);
   }
