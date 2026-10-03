@@ -47,16 +47,23 @@ public class ExampleInstrumentedTest {
     }
 
     @Test
-    public void releaseVersionAndNotificationChannelArePresent() throws Exception {
+    public void releaseVersionIs627() throws Exception {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         PackageManager packageManager = appContext.getPackageManager();
-        assertEquals("6.2.7", packageManager.getPackageInfo(appContext.getPackageName(), 0).versionName);
+        assertEquals("APK sürümü 6.2.7 olmalı", "6.2.7", packageManager.getPackageInfo(appContext.getPackageName(), 0).versionName);
+    }
+
+    @Test
+    public void nativeNotificationChannelIsPresent() throws Exception {
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        PackageManager packageManager = appContext.getPackageManager();
 
         Intent launchIntent = packageManager.getLaunchIntentForPackage(appContext.getPackageName());
         assertNotNull("APK launch intent bulunamadı", launchIntent);
         launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         Activity activity = InstrumentationRegistry.getInstrumentation().startActivitySync(launchIntent);
         assertNotNull(activity);
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager manager = (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);

@@ -12,8 +12,8 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle state) {
         registerPlugin(TentiforNativePlugin.class);
-        super.onCreate(state);
         createNotificationChannel();
+        super.onCreate(state);
         handleRouteIntent(getIntent());
     }
 
