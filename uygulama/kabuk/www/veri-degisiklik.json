@@ -1,5 +1,17 @@
 [
   {
+    "surum": "6.3.5",
+    "tarih": "2026-10-03",
+    "baslik": "Arşivci analitiği ve gizlilik merkezi",
+    "maddeler": [
+      "Hesap ekranına public evren, takipçi, takip ve son 30 günlük keşif özeti eklendi.",
+      "Public profil bağlantısını tek tıkla kopyalama eklendi.",
+      "Profil alanları, kişisel raflar, okuma yolları ve sunucu taslaklarını içeren güvenli JSON veri dışa aktarma RPC'si eklendi.",
+      "Dışa aktarma yalnızca oturum sahibinin verisini döndürür; işlem veri silmez ve özel içerik başkasına açılmaz.",
+      "6.3.5 migration'ı kurulum.sql'e işlendi; PWA, APK, dist ve değişiklik günlüğü metadata senkronlandı."
+    ]
+  },
+  {
     "surum": "6.3.4",
     "tarih": "2026-10-03",
     "baslik": "Kişiselleştirilmiş keşif ve öne çıkan arşivciler",
