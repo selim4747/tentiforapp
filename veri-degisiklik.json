@@ -1,5 +1,17 @@
 [
   {
+    "surum": "6.3.6",
+    "tarih": "2026-10-03",
+    "baslik": "Haftalık keşif görevleri ve okuma serisi",
+    "maddeler": [
+      "Arka arkaya farklı günlerde okumayı ölçen sunucu doğrulamalı okuma serisi eklendi.",
+      "Hesap ekranına okuma serisi, raf büyütme ve okuma yolu görevleri eklendi.",
+      "Haftalık görev ilerlemeleri sunucu tarafındaki raf, okuma yolu ve istatistik verilerinden hesaplanıyor.",
+      "Aynı gün tekrar girişler seri/istatistik sayaçlarını çoğaltmıyor.",
+      "6.3.6 migration'ı kurulum.sql'e işlendi; PWA, APK, dist ve değişiklik günlüğü metadata senkronlandı."
+    ]
+  },
+  {
     "surum": "6.3.5",
     "tarih": "2026-10-03",
     "baslik": "Arşivci analitiği ve gizlilik merkezi",

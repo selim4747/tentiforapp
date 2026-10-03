@@ -9,7 +9,7 @@
       try{
         await hesapGerekli();
         if(typeof hesapIstemci==="undefined"||!hesapIstemci||!hesapKullanici)return!1;
-        const r=await hesapIstemci.rpc("bildirim_cihaz_kaydet",{p_token:t,p_platform:"android",p_surum:"6.3.5"});
+        const r=await hesapIstemci.rpc("bildirim_cihaz_kaydet",{p_token:t,p_platform:"android",p_surum:"6.3.6"});
         return!r.error&&r.data&&r.data.durum==="tamam";
       }catch{return!1}
       finally{FCM.kayitPromise=null}

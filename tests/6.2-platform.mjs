@@ -8,7 +8,7 @@ const platform = read('js/core/110-v62-platform.js');
 const index = read('index.html');
 const css = read('css/style.css');
 const plugin = read('uygulama/kabuk/android/app/src/main/java/dev/pages/tentiforapp/TentiforNativePlugin.java');
-assert.equal(pkg.version, '6.3.5');
+assert.equal(pkg.version, '6.3.6');
 assert.match(index, /js\/core\/110-v62-platform\.js\?v=[0-9a-f]+/);
 const membership = read('js/engine/91-v473-uyelik.js');
 const dashboard = read('js/engine/92-v51-dashboard.js');
