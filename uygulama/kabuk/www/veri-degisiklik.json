@@ -1,5 +1,18 @@
 [
   {
+    "surum": "6.3.0",
+    "tarih": "2026-10-03",
+    "baslik": "Keşfet, arşivci profilleri ve kişisel raflar",
+    "maddeler": [
+      "Evrensel keşif araması eklendi: kullanıcılar ve yayınlanmış fan evrenleri tek arama kutusundan bulunabiliyor.",
+      "Public arşivci profilleri yayınlanmış evrenleri, takipçi/takip sayılarını ve takip et akışını gösteriyor.",
+      "Kullanıcı arama görünürlüğü, profil içerik görünürlüğü ve takip listesi görünürlüğü için SQL gizlilik alanları eklendi.",
+      "Takipten çıkarma ve kullanıcı engelleme için güvenli Supabase RPC sözleşmeleri eklendi.",
+      "Kişisel rafların temel veri modeli ve idempotent raf kayıt RPC’si eklendi; sonraki 6.3.x arayüzlerinin temelini oluşturuyor.",
+      "6.3.0 keşif migration’ı, public içerik sınırları, arama indeksleri ve regresyon kontrolleri güncellendi."
+    ]
+  },
+  {
     "surum": "6.2.12",
     "tarih": "2026-10-03",
     "baslik": "Üyelik önbelleği, audit ve kalite temizliği",
