@@ -8,7 +8,7 @@
     });
   }
   async function client() {
-    if (window.hesapIstemci && window.hesapIstemci.rpc) return window.hesapIstemci;
+    if (typeof hesapIstemci !== 'undefined' && hesapIstemci && hesapIstemci.rpc) return hesapIstemci;
     if (typeof window.tf4Istemci === 'function') {
       try { return await window.tf4Istemci(); } catch (_) { return null; }
     }

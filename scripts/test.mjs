@@ -22,6 +22,7 @@ const tests = [
   'tests/6.1-universe-center.mjs',
   'tests/mobile-menu-regression.mjs',
   'tests/6.3-discovery.mjs',
+  'tests/6.3.1-archive-tools.mjs',
   'tests/6.2-platform.mjs'
 ];
 

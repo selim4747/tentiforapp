@@ -1,5 +1,17 @@
 [
   {
+    "surum": "6.3.1",
+    "tarih": "2026-10-03",
+    "baslik": "Kişisel arşiv araçları ve okuma yolları",
+    "maddeler": [
+      "Kişisel raflar artık hesap ekranından listelenebiliyor, yeni içerik/adres eklenebiliyor ve kaydedilen öğeler silinebiliyor.",
+      "Okuma yolları oluşturma, public/private seçimi, adım ekleme ve paylaşılabilir okuma yolu detay penceresi eklendi.",
+      "Evren ilişkileri için sahip kontrollü grafik bağlantısı tabanı ve bağlantı ekleme/listeleme arayüzü eklendi.",
+      "Raf, okuma yolu, adım ve grafik RPC'leri sahiplik, boyut, adet ve adres doğrulamalarıyla sınırlandırıldı.",
+      "6.3.1 migration'ı kurulum.sql'e işlendi; sürüm, APK/PWA/dist ve changelog metadata senkronlandı."
+    ]
+  },
+  {
     "surum": "6.3.0",
     "tarih": "2026-10-03",
     "baslik": "Keşfet, arşivci profilleri ve kişisel raflar",
