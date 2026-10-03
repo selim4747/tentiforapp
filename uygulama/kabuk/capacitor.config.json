@@ -9,6 +9,9 @@
     "adjustMarginsForEdgeToEdge": "auto"
   },
   "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
     "LocalNotifications": {
       "iconColor": "#F4B942",
       "sound": "default"

@@ -1,6 +1,9 @@
 package dev.pages.tentiforapp;
 
 import android.content.Intent;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.os.Build;
 import android.os.Bundle;
 
 import com.getcapacitor.BridgeActivity;
@@ -10,7 +13,21 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle state) {
         registerPlugin(TentiforNativePlugin.class);
         super.onCreate(state);
+        createNotificationChannel();
         handleRouteIntent(getIntent());
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        NotificationChannel channel = new NotificationChannel(
+                "tentiforapp",
+                "TentiforApp bildirimleri",
+                NotificationManager.IMPORTANCE_HIGH
+        );
+        channel.setDescription("TentiforApp kişisel bildirimleri");
+        channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+        NotificationManager manager = getSystemService(NotificationManager.class);
+        if (manager != null) manager.createNotificationChannel(channel);
     }
 
     @Override
