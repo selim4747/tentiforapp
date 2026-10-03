@@ -1,8 +1,8 @@
 /* TentiforApp servis çalışanı — sayfa ve veri önce ağdan (yavaşsa son kopya), sürümlü dosyalar önbellekten.
    Yeni bir sürüm yayınlanınca sayfalar kendiliğinden yenilenir; eski kopya yalnızca çevrimdışı ya da yavaş ağda kullanılır. */
-const ONBELLEK = "tentiforapp-597dbf7b520c";
+const ONBELLEK = "tentiforapp-52f73cc9f764";
 /* Hesap kütüphanesi burada yok: yalnızca hesabı kullanan indirir (ilk kullanımda önbelleğe girer). */
-const ILK = ["./", "index.html", "css/style.css?v=cc93b781040e", "veri.json", "veri-degisiklik.json?v=a1aad374ff", "js/paket-1.js?v=597dbf7b520c", "js/paket-2.js?v=597dbf7b520c", "js/paket-3.js?v=597dbf7b520c", "js/paket-4.js?v=597dbf7b520c", "manifest.webmanifest", "ikon/ikon-192.png", "yazitipi/karla-normal-400-latin.woff2", "js/core/24-arsiv-mantigi.js?v=597dbf7b520c", "js/arsiv/34b-model-evreni.js", "js/engine/88-v46-yenilikler.js?v=597dbf7b520c", "js/engine/92-v51-dashboard.js?v=597dbf7b520c", "js/core/99-v50-mobil.js?v=597dbf7b520c", "evrenler/fornek-eterya.json"];
+const ILK = ["./", "index.html", "css/style.css?v=cc93b781040e", "veri.json", "veri-degisiklik.json?v=a1aad374ff", "js/paket-1.js?v=52f73cc9f764", "js/paket-2.js?v=52f73cc9f764", "js/paket-3.js?v=52f73cc9f764", "js/paket-4.js?v=52f73cc9f764", "manifest.webmanifest", "ikon/ikon-192.png", "yazitipi/karla-normal-400-latin.woff2", "js/core/24-arsiv-mantigi.js?v=52f73cc9f764", "js/arsiv/34b-model-evreni.js", "js/engine/88-v46-yenilikler.js?v=52f73cc9f764", "js/engine/92-v51-dashboard.js?v=52f73cc9f764", "js/core/99-v50-mobil.js?v=52f73cc9f764", "evrenler/fornek-eterya.json"];
 
 self.addEventListener("message", function (e) {
   if (e.data && e.data.action === "skipWaiting") {

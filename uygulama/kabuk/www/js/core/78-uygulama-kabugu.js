@@ -1,14 +1,20 @@
-
 (function(){
-  const FCM={kanal:"tentiforapp",anahtar:"tentiforapp_fcm_token",basladi:false};
+  const FCM={kanal:"tentiforapp",anahtar:"tentiforapp_fcm_token",basladi:!1,kayitToken:"",kayitPromise:null};
   async function tokenKaydet(t){
+    t=String(t||"").trim();
     if(!t||typeof hesapGerekli!=="function")return!1;
-    try{
-      await hesapGerekli();
-      if(typeof hesapIstemci==="undefined"||!hesapIstemci||!hesapKullanici)return!1;
-      const r=await hesapIstemci.rpc("bildirim_cihaz_kaydet",{p_token:t,p_platform:"android",p_surum:"6.2.7"});
-      return!r.error&&r.data&&r.data.durum==="tamam";
-    }catch{return!1}
+    if(FCM.kayitPromise&&FCM.kayitToken===t)return FCM.kayitPromise;
+    FCM.kayitToken=t;
+    FCM.kayitPromise=(async function(){
+      try{
+        await hesapGerekli();
+        if(typeof hesapIstemci==="undefined"||!hesapIstemci||!hesapKullanici)return!1;
+        const r=await hesapIstemci.rpc("bildirim_cihaz_kaydet",{p_token:t,p_platform:"android",p_surum:"6.2.7"});
+        return!r.error&&r.data&&r.data.durum==="tamam";
+      }catch{return!1}
+      finally{FCM.kayitPromise=null}
+    })();
+    return FCM.kayitPromise;
   }
   async function baslat(){
     if(!kabukMu()||FCM.basladi)return!1;
@@ -37,6 +43,7 @@
       const q=await p.requestPermissions();
       if(!q||q.receive!=="granted")return!1;
       await p.register();
+      try{const t=localStorage.getItem(FCM.anahtar);t&&await tokenKaydet(t)}catch{}
       return!0;
     }catch{return!1}
   }
