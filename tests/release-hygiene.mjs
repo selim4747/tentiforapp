@@ -16,6 +16,14 @@ assert.equal(manifest.version, pkg.version, 'manifest package.json ile aynı sü
 assert.equal(shellPkg.version, pkg.version, 'APK kabuğu package.json ile aynı sürümü taşımalı');
 assert.match(manifest.name, new RegExp(` ${pkg.version.replaceAll('.', '\\.')}`));
 assert.match(fs.readFileSync(path.join(root, 'README.md'), 'utf8').split('\n')[0], new RegExp(`v${pkg.version.replaceAll('.', '\\.')}`));
+assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_629_security.sql')), '6.2.9 security migration eksik');
+assert.match(fs.readFileSync(path.join(root, 'js/core/odeme.js'), 'utf8'), /TF4_PAYTR_HUKUK_GATED=true/);
+assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /public_profiller/);
+assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_6210_offline_operations.sql')), '6.2.10 offline migration eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/core/95-offline-transport.js')), 'offline transport modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_6212_audit_quality.sql')), '6.2.12 audit migration eksik');
+assert.match(fs.readFileSync(path.join(root, 'dist/tomye/index.html'), 'utf8'), /Tömye — TentiforApp/);
+
 assert.match(fs.readFileSync(path.join(root, 'js/engine/91-v473-uyelik.js'), 'utf8'), new RegExp(`SURUM = '${pkg.version.replaceAll('.', '\\.')}'`));
 
 const runBuild = () => execFileSync(process.execPath, ['scripts/paketle.mjs'], { cwd: root, encoding: 'utf8' });

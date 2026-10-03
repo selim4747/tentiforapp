@@ -2,8 +2,10 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://tentiforapp.pages.dev/</loc></url>
   <url><loc>https://tentiforapp.pages.dev/tomye/</loc></url>
-  <url><loc>https://tentiforapp.pages.dev/okuma/</loc></url>
-  <url><loc>https://tentiforapp.pages.dev/oyunlar/</loc></url>
   <url><loc>https://tentiforapp.pages.dev/fan/</loc></url>
+  <url><loc>https://tentiforapp.pages.dev/oyunlar/</loc></url>
   <url><loc>https://tentiforapp.pages.dev/atolye/</loc></url>
+  <url><loc>https://tentiforapp.pages.dev/okuma/</loc></url>
+  <url><loc>https://tentiforapp.pages.dev/evren/e25/</loc></url>
+  <url><loc>https://tentiforapp.pages.dev/evren/e99/</loc></url>
 </urlset>

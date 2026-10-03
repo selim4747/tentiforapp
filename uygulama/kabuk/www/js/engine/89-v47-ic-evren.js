@@ -329,7 +329,8 @@
 
   function iceSurumYaz() {
     try {
-    } catch (e) {}
+      void 0;
+    } catch (e) { void e; }
   }
 
   document.addEventListener('click', function (ev) {

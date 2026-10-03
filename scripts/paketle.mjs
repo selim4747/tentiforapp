@@ -205,6 +205,25 @@ for (const oge of distDosyalarVeDizinler) {
     }
   }
 }
+// Public route shells: crawler-visible title/description/canonical without changing SPA behavior.
+const seoRoutes = {
+  'tomye': ['Tömye — TentiforApp', 'Tömye evreni ve Tentiforverse arşiv içerikleri'],
+  'fan': ['Fan evrenleri — TentiforApp', 'TentiforApp fan evrenleri ve hikâyeleri'],
+  'oyunlar': ['Oyunlar — TentiforApp', 'TentiforApp oyunları ve yarışları'],
+  'atolye': ['Atölye — TentiforApp', 'TentiforApp evren ve hikâye atölyesi'],
+  'okuma': ['Okuma — TentiforApp', 'TentiforApp okuma alanı']
+};
+const seoIndex = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
+for (const [route, [title, description]] of Object.entries(seoRoutes)) {
+  let page = seoIndex.replace('<head>', '<head>\n<base href="/">')
+    .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
+    .replace(/(<meta name="description" content=")[^"]*(")/, `$1${description}$2`)
+    .replace(/(<link rel="canonical" href=")[^"]*(")/, `$1https://tentiforapp.pages.dev/${route}/$2`)
+    .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1https://tentiforapp.pages.dev/${route}/$2`);
+  const dir = path.join(distDir, route); fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'index.html'), page, 'utf8');
+}
+console.log('✓ public SEO route shell’leri üretildi');
 console.log('✓ dist üretim dizini senkronize edildi (Cloudflare Pages uyumlu)');
 
 console.log('✨ Paketleme başarıyla tamamlandı.');

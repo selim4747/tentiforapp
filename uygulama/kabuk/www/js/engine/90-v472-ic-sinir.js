@@ -179,7 +179,8 @@
     sayaciSar();
     kartNotu();
     try {
-    } catch (e) {}
+      void 0;
+    } catch (e) { void e; }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', baslat);

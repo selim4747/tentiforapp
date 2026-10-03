@@ -1,4 +1,4 @@
-# TentiforApp — Tentiforverse Arşivi (v6.2.8)
+# TentiforApp — Tentiforverse Arşivi (v6.2.12)
 
 Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker. Tentiforverse evren arşivi: karakterler, kozmoloji, isim sistemi, takvim ve oyunlar.
 
@@ -14,7 +14,7 @@ Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker. Tentiforverse ev
 
 ## 6.0 APK yol haritası
 
-6.0 için Android entegrasyonu, dosya açma/paylaşma hedefi, ana ekran widget’ı ve kısayollar, gelişmiş bildirim aksiyonları, biyometrik gizli içerik kilidi, arka plan sesli okuma, QR/NFC paylaşımı, cihaz yedekleme ve sensör tabanlı deneyler planlanmaktadır. Ayrıntılı kapsam için [6.0 APK yol haritasına](ROADMAP-6.0-APK.md (plan notu)) bakın.
+6.0 için Android entegrasyonu, dosya açma/paylaşma hedefi, ana ekran widget’ı ve kısayollar, gelişmiş bildirim aksiyonları, biyometrik gizli içerik kilidi, arka plan sesli okuma, QR/NFC paylaşımı, cihaz yedekleme ve sensör tabanlı deneyler planlanmaktadır. Ayrıntılı kapsam için [6.0 APK yol haritasına](ROADMAP-6.0-APK.md) bakın.
 
 ## Çalıştırma
 ```bash

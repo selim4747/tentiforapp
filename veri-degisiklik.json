@@ -1,5 +1,48 @@
 [
   {
+    "surum": "6.2.12",
+    "tarih": "2026-10-03",
+    "baslik": "Üyelik önbelleği, audit ve kalite temizliği",
+    "maddeler": [
+      "Ödeme/üyelik dönüşünde üyelik önbelleği temizleniyor; güncel durum zorunlu yenileniyor.",
+      "Güvenlik audit tablosu ve server-only audit yazma sözleşmesi eklendi.",
+      "Font ağırlığı beyanları gerçek dosya ağırlıklarıyla uyumlu hâle getirildi; kalan lint uyarıları temizlendi.",
+      "6.2.12 audit/kalite migration’ı, roadmap bağlantısı ve public SEO route release kontrolleri eklendi."
+    ]
+  },
+  {
+    "surum": "6.2.11",
+    "tarih": "2026-10-03",
+    "baslik": "SEO rotaları ve FCM yaşam döngüsü",
+    "maddeler": [
+      "Public rotalar için build sırasında route klasörlerinde title, description ve canonical içeren HTML shell’leri üretildi.",
+      "Sitemap gerçek public rotalarla genişletildi ve XML content-type başlığı eklendi.",
+      "FCM cihaz tokenlarını kullanıcı çıkışında topluca pasifleştiren lifecycle RPC’si eklendi.",
+      "6.2.11 SEO/FCM migration’ı ve release kontrolleri eklendi."
+    ]
+  },
+  {
+    "surum": "6.2.10",
+    "tarih": "2026-10-03",
+    "baslik": "İdempotent offline işlem kuyruğu",
+    "maddeler": [
+      "Offline kuyruk gerçek Supabase transport’una bağlandı; kimlik doğrulamalı gönderim, retry ve istemci işlem kimliği kullanıyor.",
+      "Offline işlemler için sunucu tarafında boyut sınırlı ve idempotent inbox RPC’si eklendi.",
+      "6.2.10 migration’ı ve offline transport release kontrolleri eklendi."
+    ]
+  },
+  {
+    "surum": "6.2.9",
+    "tarih": "2026-10-03",
+    "baslik": "Üretim güvenliği ve PayTR hazırlığı",
+    "maddeler": [
+      "Public profil okumaları daraltılmış public_profiller view sözleşmesine alındı; sunucu üretimli profil özeti kullanıcı güncellemesine karşı korundu.",
+      "Yarış cevap sızıntısı, yönetici/moderatör yetki ayrımı ve kanon yetkisi için migration sözleşmesi ve release kontrolleri eklendi.",
+      "PayTR ödeme adapteri hazırlandı ancak hukuk metinleri ve sağlayıcı kimlik bilgileri gelene kadar ödeme güvenli biçimde kapalı tutuluyor.",
+      "6.2.9 güvenlik migration’ı ve negatif release kontrolleri eklendi."
+    ]
+  },
+  {
     "surum": "5.4.4",
     "tarih": "2026-10-01",
     "baslik": "Evren mağazası açılış düzeltmesi",
