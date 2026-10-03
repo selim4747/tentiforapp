@@ -9848,5 +9848,11 @@
         }
       ]
     }
+  },
+  "__parcalar": {
+    "degisiklik": {
+      "dosya": "veri-degisiklik.json?v=a1aad374ff",
+      "toplam": 80
+    }
   }
 }
