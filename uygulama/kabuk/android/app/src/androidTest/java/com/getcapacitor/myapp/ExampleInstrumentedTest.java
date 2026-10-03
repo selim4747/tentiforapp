@@ -5,9 +5,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -41,6 +43,26 @@ public class ExampleInstrumentedTest {
         assertNotNull(activity);
         assertEquals("dev.pages.tentiforapp.MainActivity", activity.getClass().getName());
         assertFalse(activity.isFinishing());
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(activity::finish);
+    }
+
+    @Test
+    public void releaseVersionAndNotificationChannelArePresent() throws Exception {
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        PackageManager packageManager = appContext.getPackageManager();
+        assertEquals("6.2.7", packageManager.getPackageInfo(appContext.getPackageName(), 0).versionName);
+
+        Intent launchIntent = packageManager.getLaunchIntentForPackage(appContext.getPackageName());
+        assertNotNull("APK launch intent bulunamadı", launchIntent);
+        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        Activity activity = InstrumentationRegistry.getInstrumentation().startActivitySync(launchIntent);
+        assertNotNull(activity);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager manager = (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
+            assertNotNull(manager);
+            assertNotNull("FCM bildirim kanalı oluşturulmadı", manager.getNotificationChannel("tentiforapp"));
+        }
         InstrumentationRegistry.getInstrumentation().runOnMainSync(activity::finish);
     }
 }
