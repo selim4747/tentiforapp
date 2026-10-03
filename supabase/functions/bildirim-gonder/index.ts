@@ -12,8 +12,28 @@ function cevap(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: cors });
 }
 
+function secretMetni(raw: string) {
+  let value = String(raw || '').trim();
+  if (value.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(value);
+      value = String(parsed.private_key || parsed.privateKey || value);
+    } catch {}
+  }
+  if (value.startsWith('"') && value.endsWith('"')) {
+    try { value = JSON.parse(value); } catch { value = value.slice(1, -1); }
+  }
+  return value.replace(/\\r?\\n/g, '\n').replace(/\r/g, '').trim();
+}
+
 async function fcmAccessToken(email: string, privateKey: string) {
-  const key = await importPKCS8(privateKey.replace(/\\n/g, '\n'), 'RS256');
+  const normalized = secretMetni(privateKey);
+  const begin = normalized.indexOf('-----BEGIN PRIVATE KEY-----');
+  const end = normalized.indexOf('-----END PRIVATE KEY-----');
+  const pem = begin >= 0 && end >= begin
+    ? normalized.slice(begin, end + '-----END PRIVATE KEY-----'.length) + '\n'
+    : normalized;
+  const key = await importPKCS8(pem, 'RS256');
   const assertion = await new SignJWT({ scope: 'https://www.googleapis.com/auth/firebase.messaging' })
     .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
     .setIssuer(email)
@@ -70,7 +90,7 @@ Deno.serve(async (req) => {
     const vapidPublic = Deno.env.get('VAPID_PUBLIC_KEY') || '';
     const vapidPrivate = Deno.env.get('VAPID_PRIVATE_KEY') || '';
     const firebaseProject = Deno.env.get('FIREBASE_PROJECT_ID') || '';
-    const firebaseEmail = Deno.env.get('FIREBASE_CLIENT_EMAIL') || '';
+    const firebaseEmail = secretMetni(Deno.env.get('FIREBASE_CLIENT_EMAIL') || '');
     const firebasePrivateKey = Deno.env.get('FIREBASE_PRIVATE_KEY') || '';
     const fcmHazir = !!(firebaseProject && firebaseEmail && firebasePrivateKey);
 
