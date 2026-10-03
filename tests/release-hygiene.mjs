@@ -26,19 +26,19 @@ assert.match(fs.readFileSync(path.join(root, 'dist/tomye/index.html'), 'utf8'), 
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql')), '6.3 discovery migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_631_archive_tools.sql')), '6.3.1 archive tools migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_632_social_feed.sql')), '6.3.2 social feed migration eksik');
-assert.ok(fs.existsSync(path.join(root, 'js/engine/122-v632-topluluk.js')), '6.3.2 topluluk modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/takip-akisi-topluluk.js')), '6.3.2 topluluk modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_633_builder.sql')), '6.3.3 builder migration eksik');
-assert.ok(fs.existsSync(path.join(root, 'js/engine/123-v633-kurucu.js')), '6.3.3 kurucu modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/evren-kurucu-calisma-alani.js')), '6.3.3 kurucu modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_634_discovery_feed.sql')), '6.3.4 discovery migration eksik');
-assert.ok(fs.existsSync(path.join(root, 'js/engine/124-v634-kesif.js')), '6.3.4 keşif modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/kesif-kisisellestirme.js')), '6.3.4 keşif modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_635_quality_privacy.sql')), '6.3.5 privacy migration eksik');
-assert.ok(fs.existsSync(path.join(root, 'js/engine/125-v635-kalite.js')), '6.3.5 kalite modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/arsivci-analitik-gizlilik.js')), '6.3.5 kalite modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_636_gamification.sql')), '6.3.6 gamification migration eksik');
-assert.ok(fs.existsSync(path.join(root, 'js/engine/126-v636-gorevler.js')), '6.3.6 görev modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/okuma-serisi-gorevler.js')), '6.3.6 görev modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_637_moderation.sql')), '6.3.7 moderation migration eksik');
-assert.ok(fs.existsSync(path.join(root, 'js/engine/127-v637-moderasyon.js')), '6.3.7 moderasyon modülü eksik');
-assert.ok(fs.existsSync(path.join(root, 'js/engine/121-v631-arsiv.js')), '6.3.1 arşiv modülü eksik');
-assert.ok(fs.existsSync(path.join(root, 'js/engine/120-v63-kesif.js')), '6.3 keşif modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/moderasyon-karantina.js')), '6.3.7 moderasyon modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/kisisel-arsiv-araclari.js')), '6.3.1 arşiv modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/kesif-kullanici-profili.js')), '6.3 keşif modülü eksik');
 assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql'), 'utf8'), /public_kullanici_profili/);
 
 assert.match(fs.readFileSync(path.join(root, 'js/engine/91-v473-uyelik.js'), 'utf8'), new RegExp(`SURUM = '${pkg.version.replaceAll('.', '\\.')}'`));

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const migration = fs.readFileSync('supabase/migrations/20261003_630_discovery.sql', 'utf8');
-const module = fs.readFileSync('js/engine/120-v63-kesif.js', 'utf8');
+const module = fs.readFileSync('js/engine/kesif-kullanici-profili.js', 'utf8');
 const index = fs.readFileSync('index.html', 'utf8');
 assert.match(migration, /create or replace function public\.kullanici_ara/);
 assert.match(migration, /create or replace function public\.kesif_ara/);
@@ -12,5 +12,5 @@ assert.match(migration, /profil_arama_gorunur boolean not null default true/);
 assert.match(module, /c\.rpc\('kesif_ara'/);
 assert.match(module, /c\.rpc\('public_kullanici_profili'/);
 assert.match(module, /c\.rpc\('takip_et'/);
-assert.match(index, /js\/engine\/120-v63-kesif\.js\?v=/);
+assert.match(index, /js\/engine\/kesif-kullanici-profili\.js\?v=/);
 console.log('6.3 discovery contracts: PASS (search, public profile, follow, privacy and shelf SQL)');
