@@ -1,5 +1,18 @@
 [
   {
+    "surum": "6.3.4",
+    "tarih": "2026-10-03",
+    "baslik": "Kişiselleştirilmiş keşif ve öne çıkan arşivciler",
+    "maddeler": [
+      "Keşfet bölümüne önerilen, en yeni ve popüler sıralama seçenekleri eklendi.",
+      "Evren/arşivci filtreleri ve takip edilen arşivcileri öne çıkaran kişiselleştirme sinyali eklendi.",
+      "Son 30 gündeki evren sayaçlarıyla popülerlik skoru hesaplanıyor; sonuç sayısı sunucu tarafında sınırlandırılıyor.",
+      "Öne çıkan arşivci kartları public evren ve takipçi sayılarına göre listeleniyor.",
+      "Görünürlük, askıya alma, engel ve private içerik kontrolleri keşif RPC'lerine uygulandı.",
+      "6.3.4 migration'ı kurulum.sql'e işlendi; PWA, APK, dist ve değişiklik günlüğü metadata senkronlandı."
+    ]
+  },
+  {
     "surum": "6.3.3",
     "tarih": "2026-10-03",
     "baslik": "Kurucu taslak merkezi ve zaman çizelgesi",

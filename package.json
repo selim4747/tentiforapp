@@ -1,6 +1,6 @@
 {
   "name": "tentiforapp",
-  "version": "6.3.3",
+  "version": "6.3.4",
   "description": "TentiforApp — Tentiforverse Arşivi",
   "type": "module",
   "main": "server.js",
