@@ -1,7 +1,7 @@
 /* 6.2.4 — EvrenGezer / EvrenYazar üyelik politikası */
 (function () {
   'use strict';
-  var SURUM = '6.3.1';
+  var SURUM = '6.3.2';
   var AYAR = 'tf4_uyelik_kullanimi';
   var PLAN = {
     ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 3, hikaye: 10, gezegen: 1, takim: 0 },

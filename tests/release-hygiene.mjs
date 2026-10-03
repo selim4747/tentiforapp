@@ -25,6 +25,8 @@ assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_6212_audit
 assert.match(fs.readFileSync(path.join(root, 'dist/tomye/index.html'), 'utf8'), /Tömye — TentiforApp/);
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql')), '6.3 discovery migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_631_archive_tools.sql')), '6.3.1 archive tools migration eksik');
+assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_632_social_feed.sql')), '6.3.2 social feed migration eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/122-v632-topluluk.js')), '6.3.2 topluluk modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/121-v631-arsiv.js')), '6.3.1 arşiv modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/120-v63-kesif.js')), '6.3 keşif modülü eksik');
 assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql'), 'utf8'), /public_kullanici_profili/);

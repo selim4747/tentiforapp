@@ -1,5 +1,17 @@
 [
   {
+    "surum": "6.3.2",
+    "tarih": "2026-10-03",
+    "baslik": "Takip akışı ve topluluk güvenliği",
+    "maddeler": [
+      "Takip edilen arşivcilerin public evren, teori ve defter içeriklerini birleştiren kişisel akış eklendi.",
+      "Yeni takip olayları mevcut uygulama içi bildirim merkezine bağlandı.",
+      "Public profil etkinlik özeti eklendi; gizli, askıya alınmış ve engelli içerikler akıştan çıkarılıyor.",
+      "Evren, teori, defter ve profil için rate-limitli sosyal içerik bildirme RPC'si ve moderasyon kuyruğu eklendi.",
+      "6.3.2 migration'ı kurulum.sql'e işlendi; PWA, APK, dist ve değişiklik günlüğü metadata senkronlandı."
+    ]
+  },
+  {
     "surum": "6.3.1",
     "tarih": "2026-10-03",
     "baslik": "Kişisel arşiv araçları ve okuma yolları",
