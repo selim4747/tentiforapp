@@ -34,9 +34,13 @@ jobs:
       - name: Enable KVM for Android emulator
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-          test -r /dev/kvm
+          sudo udevadm control --reload-rules || true
+          sudo udevadm trigger --name-match=kvm || true
+          if [ -r /dev/kvm ]; then
+            echo "KVM hazır: /dev/kvm"
+          else
+            echo "KVM bu runner'da kullanılamıyor; emulator yazılımsal hızlandırmaya düşecek."
+          fi
 
       - name: Install web dependencies
         run: npm ci --no-audit --no-fund
