@@ -148,13 +148,15 @@ Deno.serve(async (req) => {
     }
 
     if (fcmHazir) {
-      const fcmToken = await fcmAccessToken(firebaseEmail, firebasePrivateKey);
       const query = adminClient.from('bildirim_cihazlari').select('token,kullanici').eq('aktif', true);
       const { data: cihazlar, error: cihazHatasi } = hedefId ? await query.eq('kullanici', hedefId) : await query;
       if (cihazHatasi) return cevap({ durum: 'hata', mesaj: 'Android cihazları okunamadı' }, 500);
-      for (const cihaz of cihazlar || []) {
-        try { await fcmGonder(firebaseProject, fcmToken, cihaz.token, baslik, metin, uygulamaAdresi); fcmGonderilen++; }
-        catch (error) { hata++; if ((error as { stale?: boolean })?.stale) { await adminClient.from('bildirim_cihazlari').delete().eq('token', cihaz.token); fcmSilinen++; } }
+      if ((cihazlar || []).length) {
+        const fcmToken = await fcmAccessToken(firebaseEmail, firebasePrivateKey);
+        for (const cihaz of cihazlar || []) {
+          try { await fcmGonder(firebaseProject, fcmToken, cihaz.token, baslik, metin, uygulamaAdresi); fcmGonderilen++; }
+          catch (error) { hata++; if ((error as { stale?: boolean })?.stale) { await adminClient.from('bildirim_cihazlari').delete().eq('token', cihaz.token); fcmSilinen++; } }
+        }
       }
     }
 
