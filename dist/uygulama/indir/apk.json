@@ -1,13 +1,13 @@
 {
   "kod": "c7dd9e676154",
-  "surum": "6.2.8",
+  "surum": "6.2.12",
   "boyut": 7763493,
   "tarih": "2026-10-03T10:20:03+03:00",
-  "not": "TentiforApp 6.2.8: ücretsiz planda aylık 1 evren, 3 EvrenGezer, 10 fan hikâyesi ve evren başına 1 ek gezegen; evrenle gelen başlangıç gezegeni limite dahil değildir.",
+  "not": "TentiforApp 6.2.12: ücretsiz planda aylık 1 evren, 3 EvrenGezer, 10 fan hikâyesi ve evren başına 1 ek gezegen; evrenle gelen başlangıç gezegeni limite dahil değildir.",
   "sha256": "c7dd9e67615478adad2bb68d35a7a7594d3a2a3f65daf5c596475dd22f39f838",
-  "version": "6.2.8",
+  "version": "6.2.12",
   "size": 7763493,
   "sizeBytes": 7763493,
   "updatedAt": "2026-10-03T07:20:03Z",
-  "notes": "TentiforApp 6.2.8 FCM Android bildirimli APK — uygulama kapalıyken bildirim kanalı düzeltildi."
+  "notes": "TentiforApp 6.2.12 FCM Android bildirimli APK — uygulama kapalıyken bildirim kanalı düzeltildi."
 }
