@@ -1,5 +1,17 @@
 [
   {
+    "surum": "6.3.3",
+    "tarih": "2026-10-03",
+    "baslik": "Kurucu taslak merkezi ve zaman çizelgesi",
+    "maddeler": [
+      "Evren verisini JSON olarak sürümlü taslak biçiminde sunucuda saklama ve önceki taslağı kopyalayarak yeni sürüm oluşturma eklendi.",
+      "Taslak, önizleme ve arşiv durumları ile 1 MB veri ve 1.000 sürüm saklama sınırları tanımlandı.",
+      "Kurucu çalışma alanına zaman çizelgesi noktası ekleme ve olay türü seçimi eklendi.",
+      "Taslak ve zaman çizelgesi RPC'leri kullanıcı sahipliği, JSON boyutu, adet ve alan doğrulamalarıyla korundu.",
+      "6.3.3 migration'ı kurulum.sql'e işlendi; PWA, APK, dist ve değişiklik günlüğü metadata senkronlandı."
+    ]
+  },
+  {
     "surum": "6.3.2",
     "tarih": "2026-10-03",
     "baslik": "Takip akışı ve topluluk güvenliği",

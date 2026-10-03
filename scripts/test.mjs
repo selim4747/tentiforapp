@@ -24,6 +24,7 @@ const tests = [
   'tests/6.3-discovery.mjs',
   'tests/6.3.1-archive-tools.mjs',
   'tests/6.3.2-social-feed.mjs',
+  'tests/6.3.3-builder.mjs',
   'tests/6.2-platform.mjs'
 ];
 
