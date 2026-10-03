@@ -1,5 +1,17 @@
 [
   {
+    "surum": "6.3.7",
+    "tarih": "2026-10-03",
+    "baslik": "Moderasyon yoğunluğu ve geri alınabilir karantina",
+    "maddeler": [
+      "Yönetici ekranına yeni bildirim, toplam bildirim ve aktif karantina sayaçları eklendi.",
+      "Bildirim türlerine göre yoğunluk dağılımı ve en çok raporlayan hesap özeti eklendi.",
+      "İçerikler silinmeden, bildirim numarasına bağlı geri alınabilir karantina kaydı eklendi.",
+      "Karantina ve davranış özetleri yalnızca icbildirim yetkisine sahip yöneticilere açıldı.",
+      "6.3.7 migration'ı kurulum.sql'e işlendi; PWA, APK, dist ve değişiklik günlüğü metadata senkronlandı."
+    ]
+  },
+  {
     "surum": "6.3.6",
     "tarih": "2026-10-03",
     "baslik": "Haftalık keşif görevleri ve okuma serisi",

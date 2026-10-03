@@ -35,6 +35,8 @@ assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_635_qualit
 assert.ok(fs.existsSync(path.join(root, 'js/engine/125-v635-kalite.js')), '6.3.5 kalite modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_636_gamification.sql')), '6.3.6 gamification migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/126-v636-gorevler.js')), '6.3.6 görev modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_637_moderation.sql')), '6.3.7 moderation migration eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/127-v637-moderasyon.js')), '6.3.7 moderasyon modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/121-v631-arsiv.js')), '6.3.1 arşiv modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/120-v63-kesif.js')), '6.3 keşif modülü eksik');
 assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql'), 'utf8'), /public_kullanici_profili/);
