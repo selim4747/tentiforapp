@@ -34,7 +34,7 @@
   function bildirimOku54() {
     if (typeof TF4_BILDIRIM === 'undefined') return;
     TF4_BILDIRIM.liste.forEach(function (n) { n.okundu = true; });
-    if (typeof hesapIstemci !== 'undefined' && hesapIstemci) hesapIstemci.rpc('bildirimleri_okundu').catch(function () {});
+    if (typeof hesapIstemci !== 'undefined' && hesapIstemci) Promise.resolve(hesapIstemci.rpc('bildirimleri_okundu')).catch(function () {});
     bildirimleriCiz54();
   }
   function hediyeGecmisi() { try { return JSON.parse(localStorage.getItem('tf54_hediye_gecmisi') || '[]'); } catch (_) { return []; } }

@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const notification = fs.readFileSync('js/topluluk/41-bildirim.js', 'utf8');
+const matureNotifications = fs.readFileSync('js/core/54-v54-olgunlastirma.js', 'utf8');
 const account = fs.readFileSync('js/core/28-hesap.js', 'utf8');
 const navigation = fs.readFileSync('js/arayuz/18-gezinme.js', 'utf8');
 assert.match(notification, /function bildirimMerkeziCiz\(\)/);
 assert.match(notification, /rpc\("bildirimlerim"\)/);
 assert.match(notification, /rpc\("bildirimleri_okundu"\)/);
+assert.match(matureNotifications, /Promise\.resolve\(hesapIstemci\.rpc\('bildirimleri_okundu'\)\)/);
 assert.match(account, /id="bildirimMerkezi"/);
 assert.match(account, /bildirimMerkeziCiz\(\)/);
 assert.match(navigation, /<details class="sayfa-icerik"/);
