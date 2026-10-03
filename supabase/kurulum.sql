@@ -3598,3 +3598,637 @@ alter table public.offline_islemler enable row level security;
 revoke all on public.offline_islemler from anon, authenticated;
 create or replace function public.offline_islem_kaydet(p_istemci_id text, p_tur text, p_veri jsonb) returns jsonb language plpgsql security definer set search_path = '' as $$ declare uid uuid := auth.uid(); begin if uid is null then return jsonb_build_object('durum','giris'); end if; if p_istemci_id is null or p_istemci_id !~ '^q_[a-z0-9_]{3,100}$' or p_tur is null or p_tur !~ '^[a-z0-9_-]{1,80}$' or p_veri is null then return jsonb_build_object('durum','veri'); end if; insert into public.offline_islemler(kullanici, istemci_id, tur, veri) values(uid,p_istemci_id,p_tur,p_veri) on conflict (kullanici, istemci_id) do nothing; return jsonb_build_object('durum','tamam','istemci_id',p_istemci_id); exception when check_violation then return jsonb_build_object('durum','boyut'); end; $$;
 revoke all on function public.offline_islem_kaydet(text,text,jsonb) from public, anon; grant execute on function public.offline_islem_kaydet(text,text,jsonb) to authenticated;
+
+
+-- TentiforApp 6.3.0 — keşif, arşivci profili, takip, gizlilik ve raflar
+alter table public.profiller add column if not exists profil_arama_gorunur boolean not null default true;
+alter table public.profiller add column if not exists profil_icerik_gorunur boolean not null default true;
+alter table public.profiller add column if not exists takip_listesi_gorunur boolean not null default true;
+
+-- View yalnızca public profil sözleşmesini taşır; özel ilerleme ve e-posta taşımaz.
+create or replace view public.public_profiller as
+select id, kullanici_adi, gorunen_ad, gorsel, tentifor_adi, hakkinda, vitrin,
+       olusturma, guncelleme, profil_arama_gorunur, profil_icerik_gorunur, takip_listesi_gorunur
+from public.profiller
+where coalesce(profil_arama_gorunur, true);
+grant select on public.public_profiller to anon, authenticated;
+
+create index if not exists profiller_kullanici_adi_prefix_idx
+  on public.profiller (lower(kullanici_adi));
+create index if not exists yayindaki_evrenler_yayin_tarihi_idx
+  on public.yayindaki_evrenler (yayin_tarihi desc);
+
+-- Kullanıcı araması: e-posta, id ve özel alanlar hiçbir zaman dönmez.
+create or replace function public.kullanici_ara(p_sorgu text, p_limit int default 20) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare q text := lower(btrim(coalesce(p_sorgu, ''))); n int := greatest(1, least(coalesce(p_limit, 20), 20));
+begin
+  if char_length(q) < 2 then return '[]'::jsonb; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object(
+    'tur','kullanici','kullanici_adi',p.kullanici_adi,'gorunen_ad',p.gorunen_ad,
+    'gorsel',p.gorsel,'tentifor_adi',p.tentifor_adi,
+    'takip_ediliyor',exists(select 1 from public.takipler t where t.takip_eden = auth.uid() and t.takip_edilen = p.id)
+  ) order by case when lower(p.kullanici_adi)=q then 0 when lower(p.kullanici_adi) like q||'%' then 1 else 2 end, p.kullanici_adi)
+  from public.profiller p left join public.istatistikler s on s.id=p.id
+  where p.kullanici_adi is not null and coalesce(p.profil_arama_gorunur,true)
+    and not coalesce(s.gizli or s.askida or s.engelli,false)
+    and not exists (select 1 from public.kullanici_engelleri e where (e.engelleyen=auth.uid() and e.engellenen=p.id) or (e.engelleyen=p.id and e.engellenen=auth.uid()))
+    and (lower(p.kullanici_adi) like '%'||q||'%' or lower(coalesce(p.gorunen_ad,'')) like '%'||q||'%' or lower(coalesce(p.tentifor_adi,'')) like '%'||q||'%')
+  limit n), '[]'::jsonb);
+end;
+$$;
+revoke all on function public.kullanici_ara(text,int) from public;
+grant execute on function public.kullanici_ara(text,int) to anon, authenticated;
+
+-- Evrensel arama: kullanıcılar ve yayınlanmış fan evrenleri. Özel/taslak içerik yoktur.
+create or replace function public.kesif_ara(p_sorgu text, p_limit int default 30) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare q text := lower(btrim(coalesce(p_sorgu, ''))); n int := greatest(1, least(coalesce(p_limit, 30), 30)); sonuc jsonb;
+begin
+  if char_length(q) < 2 then return '[]'::jsonb; end if;
+  select coalesce(jsonb_agg(x order by x->>'tur', x->>'baslik'), '[]'::jsonb) into sonuc from (
+    (select jsonb_build_object('tur','kullanici','id',p.kullanici_adi,'baslik',coalesce(nullif(p.gorunen_ad,''),p.kullanici_adi),'alt','@'||p.kullanici_adi,'adres','#/u/'||p.kullanici_adi) x
+    from public.profiller p left join public.istatistikler s on s.id=p.id
+    where p.kullanici_adi is not null and coalesce(p.profil_arama_gorunur,true)
+      and not coalesce(s.gizli or s.askida or s.engelli,false)
+      and not exists (select 1 from public.kullanici_engelleri e where (e.engelleyen=auth.uid() and e.engellenen=p.id) or (e.engelleyen=p.id and e.engellenen=auth.uid()))
+      and (lower(p.kullanici_adi) like '%'||q||'%' or lower(coalesce(p.gorunen_ad,'')) like '%'||q||'%' or lower(coalesce(p.tentifor_adi,'')) like '%'||q||'%')
+    limit n)
+    union all
+    (select jsonb_build_object('tur','evren','id',y.slug,'baslik',y.baslik,'alt',left(y.ozet,160),'adres','#/ev/fan/'||y.slug) x
+    from public.yayindaki_evrenler y
+    left join public.basvurular b on b.id=y.basvuru
+    left join public.profiller p on p.id=b.gonderen
+    left join public.istatistikler s on s.id=p.id
+    where lower(y.baslik||' '||y.ozet) like '%'||q||'%'
+      and (p.id is null or (coalesce(p.profil_icerik_gorunur,true) and not coalesce(s.gizli or s.askida or s.engelli,false)))
+    limit n)
+  ) x;
+  return sonuc;
+end;
+$$;
+revoke all on function public.kesif_ara(text,int) from public;
+grant execute on function public.kesif_ara(text,int) to anon, authenticated;
+
+-- Public profil özeti ve yayınlanmış fan evrenleri tek güvenli RPC'den alınır.
+create or replace function public.public_kullanici_profili(p_kullanici_adi text) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare p public.profiller; s public.istatistikler; uid uuid := auth.uid();
+begin
+  select * into p from public.profiller where lower(kullanici_adi)=lower(btrim(p_kullanici_adi)) and coalesce(profil_arama_gorunur,true);
+  if p.id is null then return null; end if;
+  select * into s from public.istatistikler where id=p.id;
+  if coalesce(s.gizli or s.askida or s.engelli,false) then return null; end if;
+  if exists (select 1 from public.kullanici_engelleri e where (e.engelleyen=uid and e.engellenen=p.id) or (e.engelleyen=p.id and e.engellenen=uid)) then return null; end if;
+  return jsonb_build_object(
+    'profil', jsonb_build_object('kullanici_adi',p.kullanici_adi,'gorunen_ad',p.gorunen_ad,'gorsel',p.gorsel,'tentifor_adi',p.tentifor_adi,'hakkinda',p.hakkinda,'vitrin',p.vitrin,'olusturma',p.olusturma,'profil_icerik_gorunur',coalesce(p.profil_icerik_gorunur,true)),
+    'takip_ediliyor', exists(select 1 from public.takipler t where t.takip_eden=uid and t.takip_edilen=p.id),
+    'takipci', (select count(*) from public.takipler where takip_edilen=p.id),
+    'takip', (select count(*) from public.takipler where takip_eden=p.id),
+    'evrenler', case when coalesce(p.profil_icerik_gorunur,true) then coalesce((select jsonb_agg(jsonb_build_object('id',y.slug,'baslik',y.baslik,'ozet',y.ozet,'tarih',y.yayin_tarihi) order by y.yayin_tarihi desc) from public.yayindaki_evrenler y join public.basvurular b on b.id=y.basvuru where b.gonderen=p.id), '[]'::jsonb) else '[]'::jsonb end
+  );
+end;
+$$;
+revoke all on function public.public_kullanici_profili(text) from public;
+grant execute on function public.public_kullanici_profili(text) to anon, authenticated;
+
+-- Engelleme: arama/profil/takip RPC'leri için ortak kaynak.
+create table if not exists public.kullanici_engelleri (
+  engelleyen uuid not null references auth.users(id) on delete cascade,
+  engellenen uuid not null references auth.users(id) on delete cascade,
+  zaman timestamptz not null default now(),
+  primary key (engelleyen, engellenen),
+  check (engelleyen <> engellenen)
+);
+alter table public.kullanici_engelleri enable row level security;
+revoke all on public.kullanici_engelleri from anon, authenticated;
+create or replace function public.kullanici_engelle(p_kullanici_adi text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid:=auth.uid(); hedef uuid; mevcut boolean;
+begin
+  if uid is null then return false; end if;
+  select id into hedef from public.profiller where lower(kullanici_adi)=lower(btrim(p_kullanici_adi));
+  if hedef is null or hedef=uid then return false; end if;
+  select exists(select 1 from public.kullanici_engelleri where engelleyen=uid and engellenen=hedef) into mevcut;
+  if mevcut then delete from public.kullanici_engelleri where engelleyen=uid and engellenen=hedef; else insert into public.kullanici_engelleri values(uid,hedef); delete from public.takipler where takip_eden=uid and takip_edilen=hedef; end if;
+  return not mevcut;
+end;
+$$;
+revoke all on function public.kullanici_engelle(text) from public, anon;
+grant execute on function public.kullanici_engelle(text) to authenticated;
+-- Takip RPC'si engel ilişkilerini iki yönde de uygular.
+create or replace function public.takip_et(p_ad text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); hedef uuid; mevcut boolean;
+begin
+  if uid is null then return false; end if;
+  select id into hedef from public.profiller where kullanici_adi = lower(btrim(p_ad));
+  if hedef is null or hedef = uid or exists(select 1 from public.kullanici_engelleri e where (e.engelleyen=uid and e.engellenen=hedef) or (e.engelleyen=hedef and e.engellenen=uid)) then return false; end if;
+  select exists(select 1 from public.takipler where takip_eden=uid and takip_edilen=hedef) into mevcut;
+  if mevcut then delete from public.takipler where takip_eden=uid and takip_edilen=hedef; else if (select count(*) from public.takipler where takip_eden=uid) >= 500 then return false; end if; insert into public.takipler(takip_eden,takip_edilen) values(uid,hedef); end if;
+  return not mevcut;
+end;
+$$;
+revoke all on function public.takip_et(text) from public, anon;
+grant execute on function public.takip_et(text) to authenticated;
+
+
+-- Kişisel raf temeli: içerik adresi ve başlık kullanıcı hesabına bağlıdır.
+create table if not exists public.kisisel_raf (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  raf text not null check (raf ~ '^[a-z0-9_-]{1,40}$'),
+  adres text not null check (char_length(adres) between 2 and 240),
+  baslik text not null default '' check (char_length(baslik) <= 160),
+  eklenme timestamptz not null default now(),
+  primary key (kullanici, raf, adres)
+);
+alter table public.kisisel_raf enable row level security;
+revoke all on public.kisisel_raf from anon, authenticated;
+create or replace function public.raf_kaydet(p_raf text,p_adres text,p_baslik text default '') returns jsonb
+language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then return jsonb_build_object('durum','giris'); end if;
+  if p_raf !~ '^[a-z0-9_-]{1,40}$' or p_adres is null or char_length(p_adres) < 2 then return jsonb_build_object('durum','gecersiz'); end if;
+  insert into public.kisisel_raf(kullanici,raf,adres,baslik) values(auth.uid(),p_raf,left(p_adres,240),left(coalesce(p_baslik,''),160)) on conflict do nothing;
+  return jsonb_build_object('durum','tamam');
+end;
+$$;
+revoke all on function public.raf_kaydet(text,text,text) from public, anon;
+grant execute on function public.raf_kaydet(text,text,text) to authenticated;
+notify pgrst, 'reload schema';
+
+
+-- TentiforApp 6.3.1 — kişisel raflar, okuma yolları ve evren ilişkileri
+-- 6.3.0 kisisel_raf tablosunu listeleme/silme RPC'leriyle tamamlar.
+create or replace function public.raf_listele() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('raf',raf,'adres',adres,'baslik',baslik,'eklenme',eklenme) order by eklenme desc), '[]'::jsonb)
+  from public.kisisel_raf where kullanici=auth.uid();
+$$;
+revoke all on function public.raf_listele() from public, anon;
+grant execute on function public.raf_listele() to authenticated;
+create or replace function public.raf_sil(p_raf text,p_adres text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then return false; end if;
+  delete from public.kisisel_raf where kullanici=auth.uid() and raf=p_raf and adres=p_adres;
+  return found;
+end;
+$$;
+revoke all on function public.raf_sil(text,text) from public, anon;
+grant execute on function public.raf_sil(text,text) to authenticated;
+
+create table if not exists public.okuma_yollari (
+  id uuid primary key default gen_random_uuid(),
+  sahibi uuid not null references auth.users(id) on delete cascade,
+  baslik text not null check (char_length(btrim(baslik)) between 1 and 120),
+  aciklama text not null default '' check (char_length(aciklama) <= 600),
+  public_mu boolean not null default false,
+  olusturma timestamptz not null default now(),
+  guncelleme timestamptz not null default now()
+);
+create index if not exists okuma_yollari_public_idx on public.okuma_yollari(public_mu,guncelleme desc);
+alter table public.okuma_yollari enable row level security;
+revoke all on public.okuma_yollari from anon, authenticated;
+create table if not exists public.okuma_yolu_adimlari (
+  id bigserial primary key,
+  yol uuid not null references public.okuma_yollari(id) on delete cascade,
+  sira int not null check (sira between 1 and 200),
+  adres text not null check (char_length(adres) between 2 and 240 and adres ~ '^(#|/)'),
+  baslik text not null default '' check (char_length(baslik) <= 160),
+  tur text not null default 'icerik' check (tur in ('icerik','evren','hikaye','karakter','not')),
+  spoiler text not null default 'yok' check (spoiler in ('yok','az','var')),
+  unique(yol,sira)
+);
+create index if not exists okuma_yolu_adimlari_yol_idx on public.okuma_yolu_adimlari(yol,sira);
+alter table public.okuma_yolu_adimlari enable row level security;
+revoke all on public.okuma_yolu_adimlari from anon, authenticated;
+
+create or replace function public.okuma_yolu_olustur(p_baslik text,p_aciklama text default '',p_public boolean default false) returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare yeni uuid; uid uuid:=auth.uid();
+begin
+  if uid is null then raise exception 'giriş gerekli'; end if;
+  if char_length(btrim(coalesce(p_baslik,''))) not between 1 and 120 then raise exception 'başlık geçersiz'; end if;
+  if (select count(*) from public.okuma_yollari where sahibi=uid) >= 50 then raise exception 'en fazla 50 okuma yolu'; end if;
+  insert into public.okuma_yollari(sahibi,baslik,aciklama,public_mu) values(uid,left(btrim(p_baslik),120),left(coalesce(p_aciklama,''),600),coalesce(p_public,false)) returning id into yeni;
+  return yeni;
+end;
+$$;
+revoke all on function public.okuma_yolu_olustur(text,text,boolean) from public, anon;
+grant execute on function public.okuma_yolu_olustur(text,text,boolean) to authenticated;
+
+create or replace function public.okuma_yolu_adim_ekle(p_yol uuid,p_adres text,p_baslik text,p_tur text default 'icerik',p_spoiler text default 'yok') returns bigint
+language plpgsql security definer set search_path = '' as $$
+declare yeni bigint; sira int; uid uuid:=auth.uid();
+begin
+  if uid is null or not exists(select 1 from public.okuma_yollari where id=p_yol and sahibi=uid) then raise exception 'okuma yolu yetkisi yok'; end if;
+  if p_adres is null or p_adres !~ '^(#|/)' then raise exception 'adres geçersiz'; end if;
+  select coalesce(max(sira),0)+1 into sira from public.okuma_yolu_adimlari where yol=p_yol;
+  if sira > 200 then raise exception 'okuma yolu dolu'; end if;
+  insert into public.okuma_yolu_adimlari(yol,sira,adres,baslik,tur,spoiler) values(p_yol,sira,left(p_adres,240),left(coalesce(p_baslik,''),160),coalesce(p_tur,'icerik'),coalesce(p_spoiler,'yok')) returning id into yeni;
+  update public.okuma_yollari set guncelleme=now() where id=p_yol;
+  return yeni;
+end;
+$$;
+revoke all on function public.okuma_yolu_adim_ekle(uuid,text,text,text,text) from public, anon;
+grant execute on function public.okuma_yolu_adim_ekle(uuid,text,text,text,text) to authenticated;
+
+create or replace function public.okuma_yollari_listele(p_kullanici_adi text default null) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare hedef uuid; uid uuid:=auth.uid();
+begin
+  if p_kullanici_adi is null and uid is null then return '[]'::jsonb; end if;
+  if p_kullanici_adi is null then hedef:=uid; else select id into hedef from public.profiller where lower(kullanici_adi)=lower(btrim(p_kullanici_adi)) and coalesce(profil_arama_gorunur,true); end if;
+  if hedef is null then return '[]'::jsonb; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('id',y.id,'baslik',y.baslik,'aciklama',y.aciklama,'public',y.public_mu,'sahibi',p.kullanici_adi,'adim',coalesce((select count(*) from public.okuma_yolu_adimlari a where a.yol=y.id),0)) order by y.guncelleme desc) from public.okuma_yollari y join public.profiller p on p.id=y.sahibi where y.sahibi=hedef and (y.public_mu or hedef=uid)), '[]'::jsonb);
+end;
+$$;
+revoke all on function public.okuma_yollari_listele(text) from public;
+grant execute on function public.okuma_yollari_listele(text) to anon, authenticated;
+
+create or replace function public.okuma_yolu_detay(p_yol uuid) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare y public.okuma_yollari; p public.profiller; uid uuid:=auth.uid();
+begin
+  select * into y from public.okuma_yollari where id=p_yol;
+  if y.id is null or (not y.public_mu and y.sahibi<>uid) then return null; end if;
+  select * into p from public.profiller where id=y.sahibi;
+  return jsonb_build_object('id',y.id,'baslik',y.baslik,'aciklama',y.aciklama,'public',y.public_mu,'sahibi',p.kullanici_adi,'adim',coalesce((select jsonb_agg(jsonb_build_object('id',a.id,'sira',a.sira,'adres',a.adres,'baslik',a.baslik,'tur',a.tur,'spoiler',a.spoiler) order by a.sira) from public.okuma_yolu_adimlari a where a.yol=y.id),'[]'::jsonb));
+end;
+$$;
+revoke all on function public.okuma_yolu_detay(uuid) from public;
+grant execute on function public.okuma_yolu_detay(uuid) to anon, authenticated;
+
+-- Evren grafiği için sahip kontrollü, düşük hacimli bağlantı tabanı.
+create table if not exists public.evren_baglantilari (
+  id bigserial primary key,
+  sahibi uuid not null references auth.users(id) on delete cascade,
+  evren text not null check (char_length(evren) between 1 and 80),
+  kaynak text not null check (char_length(kaynak) between 1 and 120),
+  hedef text not null check (char_length(hedef) between 1 and 120),
+  iliski text not null default 'bağlı' check (char_length(iliski) between 1 and 60),
+  public_mu boolean not null default false,
+  olusturma timestamptz not null default now(),
+  unique(sahibi,evren,kaynak,hedef,iliski)
+);
+alter table public.evren_baglantilari enable row level security;
+revoke all on public.evren_baglantilari from anon, authenticated;
+create or replace function public.evren_baglantisi_ekle(p_evren text,p_kaynak text,p_hedef text,p_iliski text default 'bağlı',p_public boolean default false) returns bigint
+language plpgsql security definer set search_path = '' as $$
+declare yeni bigint; uid uuid:=auth.uid();
+begin
+  if uid is null then raise exception 'giriş gerekli'; end if;
+  if (select count(*) from public.evren_baglantilari where sahibi=uid) >= 1000 then raise exception 'grafik sınırı'; end if;
+  insert into public.evren_baglantilari(sahibi,evren,kaynak,hedef,iliski,public_mu) values(uid,left(p_evren,80),left(p_kaynak,120),left(p_hedef,120),left(coalesce(p_iliski,'bağlı'),60),coalesce(p_public,false)) on conflict (sahibi,evren,kaynak,hedef,iliski) do update set public_mu=excluded.public_mu returning id into yeni;
+  return yeni;
+end;
+$$;
+revoke all on function public.evren_baglantisi_ekle(text,text,text,text,boolean) from public, anon;
+grant execute on function public.evren_baglantisi_ekle(text,text,text,text,boolean) to authenticated;
+create or replace function public.evren_grafigi(p_evren text) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('kaynak',kaynak,'hedef',hedef,'iliski',iliski) order by kaynak,hedef), '[]'::jsonb)
+  from public.evren_baglantilari where evren=p_evren and (public_mu or sahibi=auth.uid());
+$$;
+revoke all on function public.evren_grafigi(text) from public;
+grant execute on function public.evren_grafigi(text) to anon, authenticated;
+notify pgrst, 'reload schema';
+
+
+-- TentiforApp 6.3.2 — takip akışı, sosyal bildirimler ve içerik raporları
+-- Takip RPC'si karşılıklı engeli korur ve yalnızca yeni takipte bildirim üretir.
+create or replace function public.takip_et(p_ad text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); hedef uuid; hedef_kadi text; mevcut boolean;
+begin
+  if uid is null then return false; end if;
+  select id, kullanici_adi into hedef, hedef_kadi from public.profiller where kullanici_adi = lower(btrim(p_ad));
+  if hedef is null or hedef = uid or exists(select 1 from public.kullanici_engelleri e where (e.engelleyen=uid and e.engellenen=hedef) or (e.engelleyen=hedef and e.engellenen=uid)) then return false; end if;
+  select exists(select 1 from public.takipler where takip_eden=uid and takip_edilen=hedef) into mevcut;
+  if mevcut then
+    delete from public.takipler where takip_eden=uid and takip_edilen=hedef;
+  else
+    if (select count(*) from public.takipler where takip_eden=uid) >= 500 then return false; end if;
+    insert into public.takipler(takip_eden,takip_edilen) values(uid,hedef);
+    perform public.kullaniciya_bildir(hedef, '@' || (select kullanici_adi from public.profiller where id=uid) || ' seni takip etmeye başladı.', '#/u/' || (select kullanici_adi from public.profiller where id=uid));
+  end if;
+  return not mevcut;
+end;
+$$;
+revoke all on function public.takip_et(text) from public, anon;
+grant execute on function public.takip_et(text) to authenticated;
+
+-- Takip edilen arşivcilerin yalnızca public içeriklerinden birleşik akış.
+create or replace function public.takip_akisi() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(q.x order by (q.x->>'zaman')::timestamptz desc), '[]'::jsonb) from (
+    select x from (
+    select jsonb_build_object('tur','evren','id',y.slug,'baslik',y.baslik,'metin',left(y.ozet,220),'kullanici_adi',p.kullanici_adi,'zaman',y.yayin_tarihi,'adres','#/ev/fan/'||y.slug) x
+    from public.takipler t join public.basvurular b on b.gonderen=t.takip_edilen join public.yayindaki_evrenler y on y.basvuru=b.id join public.profiller p on p.id=t.takip_edilen left join public.istatistikler s on s.id=p.id
+    where t.takip_eden=auth.uid() and coalesce(p.profil_icerik_gorunur,true) and not coalesce(s.gizli or s.askida or s.engelli,false)
+    union all
+    select jsonb_build_object('tur','teori','id',te.id,'baslik',te.konu,'metin',left(te.metin,220),'kullanici_adi',p.kullanici_adi,'zaman',te.zaman,'adres','#/bilinmeyenler') x
+    from public.takipler t join public.teoriler te on te.kullanici=t.takip_edilen join public.profiller p on p.id=t.takip_edilen left join public.istatistikler s on s.id=p.id
+    where t.takip_eden=auth.uid() and not te.gizli and coalesce(p.profil_icerik_gorunur,true) and not coalesce(s.gizli or s.askida or s.engelli,false)
+    union all
+    select jsonb_build_object('tur','defter','id',d.id,'baslik','Kütüphane Defteri','metin',left(d.metin,220),'kullanici_adi',p.kullanici_adi,'zaman',d.zaman,'adres','#/ortakDefter') x
+    from public.takipler t join public.defter_cumleleri d on d.kullanici=t.takip_edilen join public.profiller p on p.id=t.takip_edilen left join public.istatistikler s on s.id=p.id
+    where t.takip_eden=auth.uid() and not d.gizli and coalesce(p.profil_icerik_gorunur,true) and not coalesce(s.gizli or s.askida or s.engelli,false)
+  ) x order by (x->>'zaman')::timestamptz desc limit 80
+  ) q;
+$$;
+revoke all on function public.takip_akisi() from public, anon;
+grant execute on function public.takip_akisi() to authenticated;
+
+-- Public profil etkinliği: arama/profil görünürlüğü ve içerik görünürlüğü uygulanır.
+create or replace function public.public_profil_etkinlikleri(p_kullanici_adi text) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(q.x order by (q.x->>'zaman')::timestamptz desc), '[]'::jsonb) from (
+    select x from (
+    select jsonb_build_object('tur','evren','id',y.slug,'baslik',y.baslik,'metin',left(y.ozet,220),'zaman',y.yayin_tarihi,'adres','#/ev/fan/'||y.slug) x
+    from public.profiller p join public.basvurular b on b.gonderen=p.id join public.yayindaki_evrenler y on y.basvuru=b.id left join public.istatistikler s on s.id=p.id
+    where lower(p.kullanici_adi)=lower(btrim(p_kullanici_adi)) and coalesce(p.profil_arama_gorunur,true) and coalesce(p.profil_icerik_gorunur,true) and not coalesce(s.gizli or s.askida or s.engelli,false)
+    union all
+    select jsonb_build_object('tur','teori','id',te.id,'baslik',te.konu,'metin',left(te.metin,220),'zaman',te.zaman,'adres','#/bilinmeyenler') x
+    from public.profiller p join public.teoriler te on te.kullanici=p.id left join public.istatistikler s on s.id=p.id
+    where lower(p.kullanici_adi)=lower(btrim(p_kullanici_adi)) and coalesce(p.profil_arama_gorunur,true) and coalesce(p.profil_icerik_gorunur,true) and not te.gizli and not coalesce(s.gizli or s.askida or s.engelli,false)
+  ) x order by (x->>'zaman')::timestamptz desc limit 50
+  ) q;
+$$;
+revoke all on function public.public_profil_etkinlikleri(text) from public;
+grant execute on function public.public_profil_etkinlikleri(text) to anon, authenticated;
+
+-- Evren, teori, defter ve public profil raporları için ayrı moderasyon kuyruğu.
+create table if not exists public.sosyal_sikayetler (
+  id bigserial primary key,
+  bildiren uuid not null references auth.users(id) on delete cascade,
+  tur text not null check (tur in ('evren','teori','defter','profil')),
+  hedef text not null check (char_length(hedef) between 1 and 120),
+  neden text not null check (char_length(neden) between 3 and 400),
+  durum text not null default 'bekliyor' check (durum in ('bekliyor','incelendi','kapatildi')),
+  zaman timestamptz not null default now(),
+  unique (bildiren,tur,hedef)
+);
+create index if not exists sosyal_sikayetler_durum_zaman on public.sosyal_sikayetler(durum,zaman desc);
+alter table public.sosyal_sikayetler enable row level security;
+revoke all on public.sosyal_sikayetler from anon, authenticated;
+create or replace function public.sosyal_sikayet_et(p_tur text,p_hedef text,p_neden text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid:=auth.uid(); n int;
+begin
+  if uid is null then return jsonb_build_object('durum','giris'); end if;
+  if p_tur not in ('evren','teori','defter','profil') or char_length(btrim(coalesce(p_hedef,''))) < 1 or char_length(btrim(coalesce(p_neden,''))) < 3 then return jsonb_build_object('durum','gecersiz'); end if;
+  select count(*) into n from public.sosyal_sikayetler where bildiren=uid and zaman>now()-interval '1 day';
+  if n>=20 then return jsonb_build_object('durum','sinir'); end if;
+  insert into public.sosyal_sikayetler(bildiren,tur,hedef,neden) values(uid,p_tur,left(btrim(p_hedef),120),left(btrim(p_neden),400)) on conflict (bildiren,tur,hedef) do update set neden=excluded.neden,zaman=now(),durum='bekliyor';
+  return jsonb_build_object('durum','tamam');
+end;
+$$;
+revoke all on function public.sosyal_sikayet_et(text,text,text) from public, anon;
+grant execute on function public.sosyal_sikayet_et(text,text,text) to authenticated;
+create or replace function public.sosyal_sikayetler_yukle() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id',id,'tur',tur,'hedef',hedef,'neden',neden,'zaman',zaman,'durum',durum) order by zaman desc), '[]'::jsonb)
+  from (select id,tur,hedef,neden,zaman,durum from public.sosyal_sikayetler where public.yonetici_yetki('istatistik') and durum='bekliyor' order by zaman desc limit 200) q;
+$$;
+revoke all on function public.sosyal_sikayetler_yukle() from public, anon, authenticated;
+notify pgrst, 'reload schema';
+
+
+-- TentiforApp 6.3.3 — kurucu taslakları, sürüm geçmişi ve zaman çizelgesi
+create table if not exists public.evren_taslaklari (
+  id uuid primary key default gen_random_uuid(),
+  sahibi uuid not null references auth.users(id) on delete cascade,
+  evren_id text not null check (char_length(btrim(evren_id)) between 1 and 80),
+  baslik text not null check (char_length(btrim(baslik)) between 1 and 160),
+  surum int not null check (surum >= 1),
+  veri jsonb not null check (pg_column_size(veri) < 1000000),
+  durum text not null default 'taslak' check (durum in ('taslak','onizleme','arsiv')),
+  olusturma timestamptz not null default now(),
+  unique(sahibi,evren_id,surum)
+);
+create index if not exists evren_taslaklari_sahip_idx on public.evren_taslaklari(sahibi,evren_id,surum desc);
+alter table public.evren_taslaklari enable row level security;
+revoke all on public.evren_taslaklari from anon, authenticated;
+
+create or replace function public.evren_taslak_kaydet(p_evren_id text,p_baslik text,p_veri jsonb,p_durum text default 'taslak') returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid:=auth.uid(); yeni uuid; n int; temiz text:=btrim(coalesce(p_evren_id,'')); bas text:=btrim(coalesce(p_baslik,''));
+begin
+  if uid is null then return jsonb_build_object('durum','giris'); end if;
+  if temiz='' or char_length(bas) not between 1 and 160 or p_veri is null or pg_column_size(p_veri)>=1000000 then return jsonb_build_object('durum','gecersiz'); end if;
+  if p_durum not in ('taslak','onizleme','arsiv') then return jsonb_build_object('durum','gecersiz'); end if;
+  select coalesce(max(surum),0)+1 into n from public.evren_taslaklari where sahibi=uid and evren_id=temiz;
+  if n>1000 then delete from public.evren_taslaklari where sahibi=uid and evren_id=temiz and surum=(select min(surum) from public.evren_taslaklari where sahibi=uid and evren_id=temiz); end if;
+  insert into public.evren_taslaklari(sahibi,evren_id,baslik,surum,veri,durum) values(uid,left(temiz,80),left(bas,160),n,p_veri,p_durum) returning id into yeni;
+  return jsonb_build_object('durum','tamam','id',yeni,'surum',n);
+end;
+$$;
+revoke all on function public.evren_taslak_kaydet(text,text,jsonb,text) from public, anon;
+grant execute on function public.evren_taslak_kaydet(text,text,jsonb,text) to authenticated;
+create or replace function public.evren_taslaklarim() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id',q.id,'evren_id',q.evren_id,'baslik',q.baslik,'surum',q.surum,'durum',q.durum,'olusturma',q.olusturma) order by q.olusturma desc), '[]'::jsonb)
+  from (select distinct on (evren_id) id,evren_id,baslik,surum,durum,olusturma from public.evren_taslaklari where sahibi=auth.uid() order by evren_id,surum desc) q;
+$$;
+revoke all on function public.evren_taslaklarim() from public, anon;
+grant execute on function public.evren_taslaklarim() to authenticated;
+create or replace function public.evren_taslak_detay(p_id uuid) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select case when sahibi=auth.uid() then jsonb_build_object('id',id,'evren_id',evren_id,'baslik',baslik,'surum',surum,'durum',durum,'veri',veri,'olusturma',olusturma) else null end from public.evren_taslaklari where id=p_id;
+$$;
+revoke all on function public.evren_taslak_detay(uuid) from public, anon;
+grant execute on function public.evren_taslak_detay(uuid) to authenticated;
+
+create table if not exists public.evren_zaman_noktalari (
+  id bigserial primary key,
+  sahibi uuid not null references auth.users(id) on delete cascade,
+  evren_id text not null check (char_length(evren_id) between 1 and 80),
+  zaman text not null check (char_length(zaman) between 1 and 60),
+  baslik text not null check (char_length(baslik) between 1 and 160),
+  aciklama text not null default '' check (char_length(aciklama)<=600),
+  tur text not null default 'olay' check (tur in ('olay','donem','savas','dogum','olum','donum')),
+  olusturma timestamptz not null default now()
+);
+create index if not exists evren_zaman_noktalari_idx on public.evren_zaman_noktalari(sahibi,evren_id,olusturma desc);
+alter table public.evren_zaman_noktalari enable row level security;
+revoke all on public.evren_zaman_noktalari from anon, authenticated;
+create or replace function public.evren_zaman_noktasi_ekle(p_evren_id text,p_zaman text,p_baslik text,p_aciklama text default '',p_tur text default 'olay') returns bigint
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid:=auth.uid(); yeni bigint;
+begin
+  if uid is null then raise exception 'giriş gerekli'; end if;
+  if (select count(*) from public.evren_zaman_noktalari where sahibi=uid and evren_id=p_evren_id)>=500 then raise exception 'zaman çizelgesi dolu'; end if;
+  insert into public.evren_zaman_noktalari(sahibi,evren_id,zaman,baslik,aciklama,tur) values(uid,left(btrim(p_evren_id),80),left(btrim(p_zaman),60),left(btrim(p_baslik),160),left(coalesce(p_aciklama,''),600),coalesce(p_tur,'olay')) returning id into yeni;
+  return yeni;
+end;
+$$;
+revoke all on function public.evren_zaman_noktasi_ekle(text,text,text,text,text) from public, anon;
+grant execute on function public.evren_zaman_noktasi_ekle(text,text,text,text,text) to authenticated;
+create or replace function public.evren_zaman_cizelgesi(p_evren_id text) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id',id,'zaman',zaman,'baslik',baslik,'aciklama',aciklama,'tur',tur) order by olusturma desc), '[]'::jsonb) from public.evren_zaman_noktalari where evren_id=p_evren_id and (sahibi=auth.uid() or false);
+$$;
+revoke all on function public.evren_zaman_cizelgesi(text) from public, anon;
+grant execute on function public.evren_zaman_cizelgesi(text) to authenticated;
+notify pgrst, 'reload schema';
+
+
+-- TentiforApp 6.3.4 — kişiselleştirilmiş keşif, popülerlik ve öne çıkan arsivciler
+create or replace function public.kesif_akisi(p_tur text default 'hepsi',p_siralama text default 'yeni',p_limit int default 24) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  with takip as (select takip_edilen from public.takipler where takip_eden=auth.uid()),
+  evrenler as (
+    select 'evren'::text tur,y.slug id,y.baslik,left(y.ozet,220) metin,
+      p.kullanici_adi, y.yayin_tarihi zaman, '#/ev/fan/'||y.slug adres,
+      coalesce((select sum(sayi) from public.evren_sayaclari z where z.evren=y.slug and z.gun>(now() at time zone 'utc')::date-30),0)::bigint popular,
+      case when b.gonderen in (select takip_edilen from takip) then 1 else 0 end takip_boost
+    from public.yayindaki_evrenler y join public.basvurular b on b.id=y.basvuru left join public.profiller p on p.id=b.gonderen left join public.istatistikler st on st.id=b.gonderen
+    where (p_tur='hepsi' or p_tur='evren') and (p.id is null or (coalesce(p.profil_icerik_gorunur,true) and not coalesce(st.gizli or st.askida or st.engelli,false)))
+  ), arsivciler as (
+    select 'arsivci'::text tur,p.kullanici_adi id,coalesce(nullif(p.gorunen_ad,''),p.kullanici_adi) baslik,left(coalesce(p.hakkinda,''),220) metin,p.kullanici_adi, p.guncelleme zaman,'#/u/'||p.kullanici_adi adres,
+      ((select count(*) from public.yayindaki_evrenler y join public.basvurular b on b.id=y.basvuru where b.gonderen=p.id)*10+(select count(*) from public.takipler t where t.takip_edilen=p.id))::bigint popular,
+      case when p.id in (select takip_edilen from takip) then 1 else 0 end takip_boost
+    from public.profiller p left join public.istatistikler st on st.id=p.id
+    where (p_tur='hepsi' or p_tur='arsivci') and coalesce(p.profil_arama_gorunur,true) and not coalesce(st.gizli or st.askida or st.engelli,false)
+  ), birlesik as (select * from evrenler union all select * from arsivciler), sirali as (
+    select * from birlesik order by
+      case when p_siralama='populer' then popular end desc nulls last,
+      case when p_siralama='onerilen' then takip_boost end desc nulls last,
+      case when p_siralama='onerilen' then popular end desc nulls last,
+      case when p_siralama='yeni' then zaman end desc nulls last, zaman desc
+    limit greatest(1,least(coalesce(p_limit,24),50))
+  ) select coalesce(jsonb_agg(jsonb_build_object('tur',tur,'id',id,'baslik',baslik,'metin',metin,'kullanici_adi',kullanici_adi,'zaman',zaman,'adres',adres,'popular',popular) order by zaman desc),'[]'::jsonb) from sirali;
+$$;
+revoke all on function public.kesif_akisi(text,text,int) from public;
+grant execute on function public.kesif_akisi(text,text,int) to anon, authenticated;
+create or replace function public.kesif_one_cikanlar(p_limit int default 12) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('kullanici_adi',q.kullanici_adi,'gorunen_ad',q.gorunen_ad,'evren_sayisi',q.evren_sayisi,'takipci',q.takipci) order by q.evren_sayisi desc,q.takipci desc), '[]'::jsonb)
+  from (select p.kullanici_adi,p.gorunen_ad,(select count(*) from public.yayindaki_evrenler y join public.basvurular b on b.id=y.basvuru where b.gonderen=p.id)::int evren_sayisi,(select count(*) from public.takipler t where t.takip_edilen=p.id)::int takipci from public.profiller p left join public.istatistikler s on s.id=p.id where coalesce(p.profil_arama_gorunur,true) and coalesce(p.profil_icerik_gorunur,true) and not coalesce(s.gizli or s.askida or s.engelli,false) order by evren_sayisi desc,takipci desc limit greatest(1,least(coalesce(p_limit,12),30))) q;
+$$;
+revoke all on function public.kesif_one_cikanlar(int) from public;
+grant execute on function public.kesif_one_cikanlar(int) to anon, authenticated;
+notify pgrst, 'reload schema';
+
+
+-- TentiforApp 6.3.5 — arşivci analitiği ve veri dışa aktarma
+create or replace function public.arsivci_istatistikleri(p_kullanici_adi text default null) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare uid uuid:=auth.uid(); hedef uuid; kadi text;
+begin
+  if uid is null then return jsonb_build_object('durum','giris'); end if;
+  if p_kullanici_adi is null then hedef:=uid; else select id into hedef from public.profiller where lower(kullanici_adi)=lower(btrim(p_kullanici_adi)); end if;
+  if hedef is null or (hedef<>uid and not exists(select 1 from public.profiller where id=hedef and profil_arama_gorunur and profil_icerik_gorunur)) then return jsonb_build_object('durum','yok'); end if;
+  select kullanici_adi into kadi from public.profiller where id=hedef;
+  return jsonb_build_object('durum','tamam','kullanici_adi',kadi,'takipci',(select count(*) from public.takipler where takip_edilen=hedef),'takip',(select count(*) from public.takipler where takip_eden=hedef),'public_evren',(select count(*) from public.yayindaki_evrenler y join public.basvurular b on b.id=y.basvuru where b.gonderen=hedef),'ziyaret_30',(select coalesce(sum(sayi),0) from public.evren_sayaclari z join public.yayindaki_evrenler y on y.slug=z.evren join public.basvurular b on b.id=y.basvuru where b.gonderen=hedef and z.gun>(now() at time zone 'utc')::date-30),'raf',case when hedef=uid then (select count(*) from public.kisisel_raf where kullanici=uid) else 0 end,'taslak',(select count(*) from public.evren_taslaklari where sahibi=hedef));
+end;
+$$;
+revoke all on function public.arsivci_istatistikleri(text) from public;
+grant execute on function public.arsivci_istatistikleri(text) to authenticated;
+
+create or replace function public.veri_disa_aktar() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare uid uuid:=auth.uid();
+begin
+  if uid is null then return jsonb_build_object('durum','giris'); end if;
+  return jsonb_build_object('surum','6.3.5','olusturma',now(),'profil',(select jsonb_build_object('kullanici_adi',kullanici_adi,'gorunen_ad',gorunen_ad,'tentifor_adi',tentifor_adi,'hakkinda',hakkinda,'vitrin',vitrin,'profil_arama_gorunur',profil_arama_gorunur,'profil_icerik_gorunur',profil_icerik_gorunur) from public.profiller where id=uid),'raflar',coalesce((select jsonb_agg(to_jsonb(r) order by eklenme) from public.kisisel_raf r where kullanici=uid),'[]'::jsonb),'okuma_yollari',coalesce((select jsonb_agg(jsonb_build_object('id',y.id,'evren_id',y.evren_id,'baslik',y.baslik,'aciklama',y.aciklama,'public',y.public_mu,'adim',coalesce((select jsonb_agg(to_jsonb(a) order by a.sira) from public.okuma_yolu_adimlari a where a.yol=y.id),'[]'::jsonb)) from public.okuma_yollari y where sahibi=uid),'[]'::jsonb),'taslaklar',coalesce((select jsonb_agg(jsonb_build_object('id',t.id,'evren_id',t.evren_id,'baslik',t.baslik,'surum',t.surum,'durum',t.durum,'veri',t.veri) order by t.olusturma) from public.evren_taslaklari t where sahibi=uid),'[]'::jsonb));
+end;
+$$;
+revoke all on function public.veri_disa_aktar() from public, anon;
+grant execute on function public.veri_disa_aktar() to authenticated;
+notify pgrst, 'reload schema';
+
+
+-- TentiforApp 6.3.6 — okuma serisi ve haftalık keşif görevleri
+create table if not exists public.okuma_gunleri (
+  kullanici uuid not null references auth.users(id) on delete cascade,
+  gun date not null,
+  adres text not null default '',
+  ilk_giris timestamptz not null default now(),
+  primary key (kullanici, gun)
+);
+alter table public.okuma_gunleri enable row level security;
+revoke all on public.okuma_gunleri from public, anon, authenticated;
+
+create or replace function public.okuma_serisi_kaydet(p_adres text default '') returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare uid uuid:=auth.uid(); bugun date:=(now() at time zone 'utc')::date; onceki date; yeni boolean:=false; seri int:=0; toplam int:=0; etkilenen int:=0;
+begin
+  if uid is null then return jsonb_build_object('durum','giris'); end if;
+  p_adres:=left(regexp_replace(coalesce(p_adres,''),'[^a-zA-Z0-9_/:.?=-]','','g'),240);
+  insert into public.okuma_gunleri(kullanici,gun,adres) values(uid,bugun,p_adres) on conflict (kullanici,gun) do nothing;
+  get diagnostics etkilenen = row_count; yeni := etkilenen > 0;
+  select count(*)::int into toplam from public.okuma_gunleri where kullanici=uid;
+  select seri into seri from public.istatistikler where id=uid;
+  if yeni then
+    select exists(select 1 from public.okuma_gunleri where kullanici=uid and gun=bugun-1) into yeni;
+    seri:=case when yeni then greatest(1,coalesce(seri,0)+1) else 1 end;
+    insert into public.istatistikler(id,gun,seri,guncelleme) values(uid,1,seri,now()) on conflict(id) do update set gun=public.istatistikler.gun+1,seri=excluded.seri,guncelleme=now();
+  end if;
+  return jsonb_build_object('durum','tamam','seri',coalesce(seri,0),'gun',toplam);
+end;
+$$;
+revoke all on function public.okuma_serisi_kaydet(text) from public, anon;
+grant execute on function public.okuma_serisi_kaydet(text) to authenticated;
+
+create or replace function public.kesif_gorevlerim() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  with s as (select coalesce(seri,0) seri,coalesce(gun,0) gun from public.istatistikler where id=auth.uid()), hafta as (select date_trunc('week',now() at time zone 'utc')::date bas), r as (select count(*)::int n from public.kisisel_raf where kullanici=auth.uid() and eklenme >= (select bas from hafta)), y as (select count(*)::int n from public.okuma_yollari where sahibi=auth.uid() and olusturma >= (select bas from hafta))
+  select jsonb_build_object('durum',case when auth.uid() is null then 'giris' else 'tamam' end,'gorevler',case when auth.uid() is null then '[]'::jsonb else jsonb_build_array(jsonb_build_object('id','seri','ad','Okuma serisi','aciklama','Arka arkaya üç farklı gün uğra.','ilerleme',least(3,s.seri),'hedef',3,'xp',15),jsonb_build_object('id','raf','ad','Arşivini büyüt','aciklama','Bu hafta iki öğeyi kişisel rafına ekle.','ilerleme',least(2,r.n),'hedef',2,'xp',10),jsonb_build_object('id','yol','ad','Bir rota çiz','aciklama','Bu hafta bir okuma yolu oluştur.','ilerleme',least(1,y.n),'hedef',1,'xp',20)) end) from s,r,y;
+$$;
+revoke all on function public.kesif_gorevlerim() from public, anon;
+grant execute on function public.kesif_gorevlerim() to authenticated;
+notify pgrst, 'reload schema';
+
+
+-- TentiforApp 6.3.7 — moderasyon özeti, davranış sinyalleri ve geri alınabilir karantina
+create table if not exists public.icerik_karantina (
+  no bigserial primary key,
+  bildirim_no bigint not null references public.icerik_bildirimleri(no) on delete cascade,
+  tur text not null,
+  hedef text not null,
+  notu text not null default '' check (char_length(notu)<=500),
+  durum text not null default 'aktif' check (durum in ('aktif','kaldirildi')),
+  moderator uuid not null references auth.users(id),
+  olusturma timestamptz not null default now(),
+  kaldirma timestamptz,
+  unique (bildirim_no)
+);
+alter table public.icerik_karantina enable row level security;
+revoke all on public.icerik_karantina from public, anon, authenticated;
+
+create or replace function public.icerik_bildirim_ozeti() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.yonetici_yetki('icbildirim') then raise exception 'yetki yok'; end if;
+  return jsonb_build_object('toplam',(select count(*) from public.icerik_bildirimleri),'yeni',(select count(*) from public.icerik_bildirimleri where durum='yeni'),'incelendi',(select count(*) from public.icerik_bildirimleri where durum='incelendi'),'kaldirildi',(select count(*) from public.icerik_bildirimleri where durum='kaldirildi'),'karantina',(select count(*) from public.icerik_karantina where durum='aktif'),'turler',coalesce((select jsonb_agg(jsonb_build_object('tur',tur,'adet',adet) order by adet desc) from (select tur,count(*)::int adet from public.icerik_bildirimleri group by tur) q),'[]'::jsonb),'raporlayanlar',coalesce((select jsonb_agg(jsonb_build_object('kullanici_adi',p.kullanici_adi,'adet',q.adet) order by q.adet desc) from (select bildiren,count(*)::int adet from public.icerik_bildirimleri where bildiren is not null group by bildiren order by adet desc limit 10) q join public.profiller p on p.id=q.bildiren),'[]'::jsonb));
+end;
+$$;
+revoke all on function public.icerik_bildirim_ozeti() from public, anon, authenticated;
+grant execute on function public.icerik_bildirim_ozeti() to authenticated;
+
+create or replace function public.icerik_karantinaya_al(p_bildirim_no bigint,p_not text default '') returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare r public.icerik_bildirimleri%rowtype; uid uuid:=auth.uid();
+begin
+  if not public.yonetici_yetki('icbildirim') then raise exception 'yetki yok'; end if;
+  select * into r from public.icerik_bildirimleri where no=p_bildirim_no;
+  if r.no is null then return jsonb_build_object('durum','yok'); end if;
+  insert into public.icerik_karantina(bildirim_no,tur,hedef,notu,moderator) values(r.no,r.tur,r.hedef,left(coalesce(p_not,''),500),uid) on conflict(bildirim_no) do update set durum='aktif',notu=excluded.notu,moderator=excluded.moderator,kaldirma=null;
+  update public.icerik_bildirimleri set durum='kaldirildi' where no=p_bildirim_no;
+  return jsonb_build_object('durum','tamam');
+end;
+$$;
+create or replace function public.icerik_karantina_kaldir(p_bildirim_no bigint) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.yonetici_yetki('icbildirim') then raise exception 'yetki yok'; end if;
+  update public.icerik_karantina set durum='kaldirildi',kaldirma=now() where bildirim_no=p_bildirim_no and durum='aktif';
+  return jsonb_build_object('durum',case when found then 'tamam' else 'yok' end);
+end;
+$$;
+revoke all on function public.icerik_karantinaya_al(bigint,text),public.icerik_karantina_kaldir(bigint) from public, anon, authenticated;
+grant execute on function public.icerik_karantinaya_al(bigint,text),public.icerik_karantina_kaldir(bigint) to authenticated;
+notify pgrst, 'reload schema';

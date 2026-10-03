@@ -21,6 +21,14 @@ const tests = [
   'tests/android-native.mjs',
   'tests/6.1-universe-center.mjs',
   'tests/mobile-menu-regression.mjs',
+  'tests/6.3-discovery.mjs',
+  'tests/6.3.1-archive-tools.mjs',
+  'tests/6.3.2-social-feed.mjs',
+  'tests/6.3.3-builder.mjs',
+  'tests/6.3.4-discovery-feed.mjs',
+  'tests/6.3.5-quality-privacy.mjs',
+  'tests/6.3.6-gamification.mjs',
+  'tests/6.3.7-moderation.mjs',
   'tests/6.2-platform.mjs'
 ];
 
