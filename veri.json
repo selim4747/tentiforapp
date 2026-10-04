@@ -227,6 +227,20 @@
           "baslik": "Yükseliş ve Hayal Kırıklığı",
           "dogrulama": "e67b79fb1f275263acf536d1a9bf8c9874f7a7b7eea413ecc455b4b1bf69cfd4",
           "metin": "L25 yükselip Tanrı'yla konuştu. Ama karşısındakinin gerçek TANRI değil, bu evrendeki yansıması olduğunu ona söyleyen Tanrı olmadı — bunu Yaşam'dan öğrendi.\n\nBu ayrıntı L25'in hayal kırıklığının çekirdeğidir: cevabı buldu sandığı yerde, cevabın kendisinin de bir başkasının gölgesi olduğunu öğrenir.\n\nSonrasında yeni bir evren yarattı ve ara evrende mahsur kaldı — kendi öznel deneyiminde dört ay, dışarıda (asıl evrende) dört yıl geçti. Sıkıntıdan dışarıya mesajlar gönderdi; mesajlar tesadüfen Tömye Kütüphanesi'ne düştü ama Tarı onları hiçbir zaman görmedi. Afor onu kurtardı."
+        },
+        {
+          "katman": "kimlik",
+          "katmanAd": "Kimlik",
+          "baslik": "StarSaver",
+          "dogrulama": "36720be1f24ecb050fc306057bffe740ee96dc96f3ae7196d0d4d774935c767d",
+          "metin": "Kendisinin başarısızlıktan başka bir şey olmadığını düşünür ve kendine ısı geçirmeyen bir zırh üretip, hafızasını sıfırlar. Ardından uzak bir uyduya yerleşip Star Saver adıyla hayatını yaşamaya başlar. Artık farklı bir amacı vardır. Yıldızların hidrojenini çalan bir organizasyonu durdurmak. "
+        },
+        {
+          "katman": "tas",
+          "katmanAd": "Taş",
+          "baslik": "StarSaver Sonu",
+          "dogrulama": "e67b79fb1f275263acf536d1a9bf8c9874f7a7b7eea413ecc455b4b1bf69cfd4",
+          "metin": "Yaşam adlı biri onu bulup yavaş yavaş hafızasını geri yükler. Bu süreçte L projesinin ve kendisinin amacının bırakmaya değmeyeceğini ve çok önemli bir şey olduğunun farkına varır. Hafızası tamamen geri yüklenince laboratuvarına geri döner ve her zamankinden daha eforlu şekilde çalışmaya başlar"
         }
       ],
       "ozellikler": {
@@ -9847,12 +9861,6 @@
           "metin": "Fısıltı Mağarası\\x27nın ağzında durduklarında içeriden gelen titreşim Seris\\x27in zırhındaki kılıcı titretiyordu. \\x27Buradan sonrası haritasız,\\x27 dedi Seris. \\x27Eterya\\x27da haritalar yerinde durmaz, biliyorsun.\\x27\\n\\nVaelen havaya büyük bir üçgen glif çizdi. Simge parıldayarak mağaranın derinliklerine doğru süzüldü; kayalara çarpmadan yolu bir fener gibi aydınlattı. \\x27Artık haritamız var,\\x27 dedi fısıltıyla."
         }
       ]
-    }
-  },
-  "__parcalar": {
-    "degisiklik": {
-      "dosya": "veri-degisiklik.json?v=a1aad374ff",
-      "toplam": 80
     }
   }
 }
