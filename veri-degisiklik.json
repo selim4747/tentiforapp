@@ -1,5 +1,18 @@
 [
   {
+    "surum": "6.3.8",
+    "tarih": "2026-10-05",
+    "baslik": "Görsel evren haritası ve zaman çizelgesi editörleri",
+    "maddeler": [
+      "Evren sayfasına karakter, mekân, olay, gezegen ve kavram düğümleriyle sürüklenebilir görsel harita eklendi; yakınlaştırma, mobil dokunma ve klavye ile taşıma destekleniyor.",
+      "Akrabalık, düşmanlık, müttefiklik, mekân, zaman ve kullanıcı tanımlı bağ türleri; haritayı kaydetme ve geri alınabilir onayla sıfırlama eklendi.",
+      "Tarih/dönem, açıklama, olay türü, sıralama, taslak/yayın ayrımı, olay bağlantıları ve aynı dönemde çakışma göstergesi içeren zaman çizelgesi editörü eklendi.",
+      "RLS etkin harita, bağlantı ve zaman çizelgesi tabloları ile sahiplik kontrollü RPC'ler eklendi; auth.uid() dışından sahip kabul edilmez, yayınlanmamış özel veriler public yanıtlara girmez.",
+      "Harita yükleme ve tekil düğüm/bağ güncelleme RPC'leri; 150 düğüm, 300 harita bağı, 500 zaman olayı ve sınırlı JSON/text payload doğrulamaları eklendi.",
+      "Web, PWA, Capacitor Android, dist ve değişiklik günlüğü metadata'sı 6.3.8 sürümüne eşitlendi."
+    ]
+  },
+  {
     "surum": "6.3.7",
     "tarih": "2026-10-03",
     "baslik": "Moderasyon yoğunluğu ve geri alınabilir karantina",

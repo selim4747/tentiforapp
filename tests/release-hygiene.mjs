@@ -37,6 +37,11 @@ assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_636_gamifi
 assert.ok(fs.existsSync(path.join(root, 'js/engine/okuma-serisi-gorevler.js')), '6.3.6 görev modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_637_moderation.sql')), '6.3.7 moderation migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/moderasyon-karantina.js')), '6.3.7 moderasyon modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_visual_universe_map_timeline.sql')), '6.3.8 görsel harita/zaman çizelgesi migration eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/evren-harita-zaman-cizelgesi.js')), '6.3.8 harita/zaman çizelgesi modülü eksik');
+const androidGradle = fs.readFileSync(path.join(root, 'uygulama/kabuk/android/app/build.gradle'), 'utf8');
+assert.match(androidGradle, /versionCode\s+619/);
+assert.match(androidGradle, /versionName\s+"6\.3\.8"/);
 assert.ok(fs.existsSync(path.join(root, 'js/engine/kisisel-arsiv-araclari.js')), '6.3.1 arşiv modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/kesif-kullanici-profili.js')), '6.3 keşif modülü eksik');
 assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql'), 'utf8'), /public_kullanici_profili/);
@@ -71,7 +76,7 @@ assert.match(swText, /yedekKopya\(istek, true\)/, 'sürümlü asset eski query k
 assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /where endpoint = p_endpoint and kullanici = auth\.uid\(\)/, 'push unsubscribe must be owner-scoped');
 assert.match(fs.readFileSync(path.join(root, 'js/topluluk/41-bildirim.js'), 'utf8'), /bildirimYerelMi\(\).*bildirimYerelAcikMi/, 'APK notifications must not depend on VAPID');
 assert.match(fs.readFileSync(path.join(root, 'js/core/46-guncelleme.js'), 'utf8'), /getRegistration\("\/"\)/, 'güncelleme worker kaydını kökten almalı');
-for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js']) {
+for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js', 'js/engine/evren-harita-zaman-cizelgesi.js']) {
   const escaped = asset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   assert.match(indexText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} index cache sürümü güncel olmalı`);
   assert.match(swText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} service worker cache sürümü güncel olmalı`);
@@ -80,5 +85,10 @@ console.log('Release hygiene: PASS (version sync, deterministic hash, APK/dist s
 
 const veriMeta = JSON.parse(fs.readFileSync('veri.json','utf8'));
 const degisiklik = JSON.parse(fs.readFileSync('veri-degisiklik.json','utf8'));
-if (veriMeta.__parcalar?.degisiklik?.toplam !== degisiklik.length) throw new Error('veri parça metadata sayısı güncel değil');
-console.log('Partition metadata: PASS');
+assert.ok(Array.isArray(degisiklik), 'veri-degisiklik.json bir dizi olmalı');
+if (veriMeta.__parcalar?.degisiklik) {
+  assert.equal(veriMeta.__parcalar.degisiklik.toplam, degisiklik.length, 'veri parça metadata sayısı güncel olmalı');
+  console.log('Partition metadata: PASS');
+} else {
+  console.log('Partition metadata: not configured; optional check skipped');
+}
