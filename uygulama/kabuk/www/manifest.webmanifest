@@ -1,8 +1,8 @@
 {
-  "name": "Tentiforverse 6.3.7 — Kişisel Kütüphane",
+  "name": "Tentiforverse 6.3.8 — Kişisel Kütüphane",
   "short_name": "Tentiforverse",
-  "version": "6.3.7",
-  "description": "Tentiforverse 6.3.7: çevrimdışı kütüphane, bildirim kuyruğu ve otomatik güncelleme.",
+  "version": "6.3.8",
+  "description": "Tentiforverse 6.3.8: görsel evren haritası, zaman çizelgesi ve güvenli düzenleme.",
   "lang": "tr",
   "start_url": "./",
   "scope": "./",

@@ -177,8 +177,8 @@ async function main() {
   const source = fs.readFileSync(path.join(ROOT, 'js/topluluk/41-bildirim.js'), 'utf8');
   check(source.includes('bildirim_abone_ol') && source.includes('bildirim_abonelik_sil') && source.includes('bildirim-gonder'), 'web notification client contracts match SQL and Edge Function names');
   const mobile = fs.readFileSync(path.join(ROOT, 'js/core/78-uygulama-kabugu.js'), 'utf8');
-  check(mobile.includes('LocalNotifications') && mobile.includes('checkPermissions') && mobile.includes('schedule') && mobile.includes('createChannel') && mobile.includes('localNotificationActionPerformed'), 'native LocalNotifications lifecycle hooks exist');
-  check(mobile.includes('channelId:KABUK_BLD.kanal') && mobile.includes('location.hash=a'), 'native notification channel and in-app notification click navigation exist');
+  check(mobile.includes('PushNotifications') && mobile.includes('requestPermissions') && mobile.includes('register') && mobile.includes('pushNotificationReceived') && mobile.includes('LocalNotifications') && mobile.includes('schedule') && mobile.includes('createChannel') && mobile.includes('pushNotificationActionPerformed'), 'native push and local notification lifecycle hooks exist');
+  check(mobile.includes('channelId:FCM.kanal') && mobile.includes('location.hash=a'), 'native notification channel and in-app notification click navigation exist');
   console.log(outcomes.join('\n'));
   console.log(`\nLive environment simulation: PASS (${outcomes.length} checks)`);
 }
