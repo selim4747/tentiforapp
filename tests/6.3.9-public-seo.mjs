@@ -32,7 +32,7 @@ assert.match(migration, /least\(coalesce\(p_offset,0\),1000000\)/, 'manifest off
 const canonicalDefinitions = migration.split('-- This is the current-installation marker;')[0].trim();
 assert.ok(setup.includes(canonicalDefinitions), 'canonical setup must contain the exact 6.3.9 public SEO RPC definitions');
 assert.equal((setup.match(/create or replace function public\.kurulum_surumu\b/g) || []).length, 1, 'canonical setup keeps a single install-version marker');
-assert.match(setup, /select '6\.3\.11'::text/);
+assert.match(setup, /select '6\.3\.12'::text/);
 assert.match(migration, /select '6\.3\.9'::text/);
 
 assert.match(client, /addEventListener\('hashchange', handleRoute\)/);
