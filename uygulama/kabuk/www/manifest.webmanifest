@@ -1,8 +1,8 @@
 {
-  "name": "Tentiforverse 6.3.12 — Kişisel Kütüphane",
+  "name": "Tentiforverse 6.3.13 — Kişisel Kütüphane",
   "short_name": "Tentiforverse",
-  "version": "6.3.12",
-  "description": "Tentiforverse 6.3.12: public SEO, güvenli paylaşım bağlantıları ve gizlilik odaklı özet analitik.",
+  "version": "6.3.13",
+  "description": "Tentiforverse 6.3.13: public SEO, güvenli paylaşım bağlantıları ve gizlilik odaklı özet analitik.",
   "lang": "tr",
   "start_url": "./",
   "scope": "./",

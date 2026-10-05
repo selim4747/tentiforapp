@@ -1,4 +1,4 @@
-/* TentiforApp 6.3.12 — taşmasız profil ve bağlamlı alıntı paylaşımı. */
+/* TentiforApp 6.3.13 — taşmasız profil ve bağlamlı alıntı paylaşımı. */
 (function () {
   'use strict';
   var mounted = false;

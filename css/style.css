@@ -148,7 +148,7 @@ html[data-site-tema~=katiller] { --deniz: #ff9aa8; }
 .tf310-history-actions button{min-height:2.5rem;max-width:100%;white-space:normal}
 @media(max-width:600px){.tf310-history-panel{padding:.8rem;margin-inline:0}.tf310-history-actions button{flex:1 1 10rem}.tf310-share-button{width:100%}}
 
-/* 6.3.12 profile layout and contextual sharing */
+/* 6.3.13 profile layout and contextual sharing */
 .profil-topluluk,.hesap-profil{min-width:0;overflow:hidden}
 .profil-topluluk>*{min-width:0;max-width:100%}
 .profil-takip,.tf63-profil-baslik,.tf312-profile-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem .8rem}

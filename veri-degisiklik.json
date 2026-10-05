@@ -1,12 +1,12 @@
 [
   {
-    "surum": "6.3.11",
+    "surum": "6.3.13",
     "tarih": "2026-10-05",
-    "baslik": "APK/site uyumluluk ve Supabase kurulum sürümü güncellemesi",
+    "baslik": "6.3.13 sürüm senkronizasyonu ve Android test düzeltmesi",
     "maddeler": [
-      "Capacitor Android kabuğu güncel web varlıklarıyla yeniden paketlenmek üzere 6.3.11 sürümüne ve versionCode 622’ye yükseltildi.",
-      "Android tarafındaki eski 6.2.7 sürüm testi 6.3.11 sözleşmesine güncellendi; web, PWA ve APK sürüm metadata’sı tek canonical sürümde tutuluyor.",
-      "Supabase kurulum_surumu() canonical SQL dosyasında 6.3.11 döndürecek şekilde yükseltildi; mevcut veriler korunarak yeniden çalıştırılabilir migration eklendi."
+      "Web, PWA, Capacitor Android ve Supabase kurulum sürümü 6.3.13 canonical sürümüne eşitlendi.",
+      "Android versionCode 624 ve instrumented test sürümü 6.3.13 olarak güncellendi.",
+      "Profil/paylaşım ve ücretsiz evren silme modülleri 6.3.13 paketine taşındı."
     ]
   },
   {

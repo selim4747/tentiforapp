@@ -1,4 +1,4 @@
-/* TentiforApp 6.3.12 — küçük taslak evren silme ve güvenli ücretsiz kota iadesi. */
+/* TentiforApp 6.3.13 — küçük taslak evren silme ve güvenli ücretsiz kota iadesi. */
 (function () {
   'use strict';
   var INDIRILEN = 'tentiforapp_indirilen_evrenler';

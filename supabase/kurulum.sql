@@ -3455,7 +3455,7 @@ revoke execute on function public.mod_sikayet_kapat(text, text, text) from publi
 grant execute on function public.mod_sikayet_kapat(text, text, text) to anon, authenticated;
 
 create or replace function public.kurulum_surumu() returns text
-language sql stable security definer set search_path = '' as $$ select '6.3.12'::text $$;
+language sql stable security definer set search_path = '' as $$ select '6.3.13'::text $$;
 revoke all on function public.kurulum_surumu() from public;
 grant execute on function public.kurulum_surumu() to anon, authenticated;
 -- ---------- 5.4 migration: hediye geçmişi, alıcı bildirimi ve plan politikası ----------

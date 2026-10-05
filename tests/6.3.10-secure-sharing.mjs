@@ -55,10 +55,10 @@ assert.match(migration, /select '6\.3\.10'::text/);
 const canonical = migration.split('-- Current-installation marker.')[0].trim();
 assert.ok(setup.includes(canonical), 'canonical setup must mirror the exact 6.3.10 objects');
 assert.equal((setup.match(/create or replace function public\.kurulum_surumu\b/g) || []).length, 1, 'canonical setup must retain one install-version marker');
-assert.match(setup, /select '6\.3\.12'::text/);
-assert.equal(packageJson.version, '6.3.12');
-assert.match(gradle, /versionCode\s+623/);
-assert.match(gradle, /versionName\s+"6\.3\.12"/);
+assert.match(setup, /select '6\.3\.13'::text/);
+assert.equal(packageJson.version, '6.3.13');
+assert.match(gradle, /versionCode\s+624/);
+assert.match(gradle, /versionName\s+"6\.3\.13"/);
 
 assert.match(client, /navigator\.share/);
 assert.match(client, /TentiforKopru\.paylas/);
