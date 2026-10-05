@@ -30,6 +30,8 @@ const tests = [
   'tests/6.3.6-gamification.mjs',
   'tests/6.3.7-moderation.mjs',
   'tests/6.3.8-visual-universe.mjs',
+  'tests/6.3.9-public-seo.mjs',
+  'tests/6.3.10-secure-sharing.mjs',
   'tests/6.2-platform.mjs'
 ];
 

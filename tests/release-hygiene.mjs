@@ -39,16 +39,24 @@ assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_637_modera
 assert.ok(fs.existsSync(path.join(root, 'js/engine/moderasyon-karantina.js')), '6.3.7 moderasyon modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_visual_universe_map_timeline.sql')), '6.3.8 görsel harita/zaman çizelgesi migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/evren-harita-zaman-cizelgesi.js')), '6.3.8 harita/zaman çizelgesi modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_visual_universe_map_timeline_639_seo_cards.sql')), '6.3.9 public SEO migration eksik');
+assert.ok(fs.existsSync(path.join(root, 'scripts/public-seo.mjs')), '6.3.9 static SEO builder eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/seo-meta.js')), '6.3.9 SPA SEO/paylaşım kartı modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_visual_universe_map_timeline_639_seo_cards_6310_secure_sharing.sql')), '6.3.10 güvenli paylaşım migration eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/secure-sharing.js')), '6.3.10 güvenli paylaşım istemcisi eksik');
 const androidGradle = fs.readFileSync(path.join(root, 'uygulama/kabuk/android/app/build.gradle'), 'utf8');
-assert.match(androidGradle, /versionCode\s+619/);
-assert.match(androidGradle, /versionName\s+"6\.3\.8"/);
+assert.match(androidGradle, /versionCode\s+621/);
+assert.match(androidGradle, /versionName\s+"6\.3\.10"/);
+assert.match(fs.readFileSync(path.join(root, 'js/core/78-uygulama-kabugu.js'), 'utf8'), /p_surum:"6\.3\.10"/);
+assert.match(fs.readFileSync(path.join(root, 'js/paket-4.js'), 'utf8'), /KURULUM_BEKLENEN="6\.3\.10"/);
+assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /select '6\.3\.10'::text/);
 assert.ok(fs.existsSync(path.join(root, 'js/engine/kisisel-arsiv-araclari.js')), '6.3.1 arşiv modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/kesif-kullanici-profili.js')), '6.3 keşif modülü eksik');
 assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql'), 'utf8'), /public_kullanici_profili/);
 
 assert.match(fs.readFileSync(path.join(root, 'js/engine/91-v473-uyelik.js'), 'utf8'), new RegExp(`SURUM = '${pkg.version.replaceAll('.', '\\.')}'`));
 
-const runBuild = () => execFileSync(process.execPath, ['scripts/paketle.mjs'], { cwd: root, encoding: 'utf8' });
+const runBuild = () => execFileSync(process.execPath, ['scripts/paketle.mjs'], { cwd: root, encoding: 'utf8', env: { ...process.env, TF_SEO_STATIC_ONLY: '1' } });
 runBuild();
 const first = readJson('surum.json');
 const firstHash = first.paket;
@@ -56,6 +64,17 @@ runBuild();
 const second = readJson('surum.json');
 assert.equal(second.paket, firstHash, 'aynı girdiler deterministik paket hash üretmeli');
 assert.equal(second.kuruldu, first.kuruldu, 'aynı hash yeniden build edilince kurulum tarihi değişmemeli');
+for (const file of ['dist/evren/e25/index.html', 'dist/evren/e99/index.html', 'dist/tomye/index.html', 'dist/fan/index.html', 'dist/oyunlar/index.html', 'dist/atolye/index.html', 'dist/okuma/index.html', 'dist/404.html']) {
+  assert.ok(fs.existsSync(path.join(root, file)), `${file} public SEO fallback çıktısı eksik`);
+}
+const seoPage = fs.readFileSync(path.join(root, 'dist/evren/e25/index.html'), 'utf8');
+assert.match(seoPage, /property="og:title"/);
+assert.match(seoPage, /twitter:card/);
+assert.match(seoPage, /data-tf639-card/);
+assert.match(fs.readFileSync(path.join(root, 'dist/404.html'), 'utf8'), /noindex, follow/);
+const sitemap = fs.readFileSync(path.join(root, 'dist/sitemap.xml'), 'utf8');
+assert.match(sitemap, /https:\/\/tentiforapp\.pages\.dev\/evren\/e25\//);
+assert.doesNotMatch(sitemap, /\/u\/|okuma-yolu\//, 'static-only build must not invent/private-list user routes');
 
 const compare = (a, b) => {
   assert.equal(fs.readFileSync(path.join(root, a), 'utf8'), fs.readFileSync(path.join(root, b), 'utf8'), `${a} ve ${b} senkron olmalı`);
@@ -76,7 +95,7 @@ assert.match(swText, /yedekKopya\(istek, true\)/, 'sürümlü asset eski query k
 assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /where endpoint = p_endpoint and kullanici = auth\.uid\(\)/, 'push unsubscribe must be owner-scoped');
 assert.match(fs.readFileSync(path.join(root, 'js/topluluk/41-bildirim.js'), 'utf8'), /bildirimYerelMi\(\).*bildirimYerelAcikMi/, 'APK notifications must not depend on VAPID');
 assert.match(fs.readFileSync(path.join(root, 'js/core/46-guncelleme.js'), 'utf8'), /getRegistration\("\/"\)/, 'güncelleme worker kaydını kökten almalı');
-for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js', 'js/engine/evren-harita-zaman-cizelgesi.js']) {
+for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js', 'js/engine/evren-harita-zaman-cizelgesi.js', 'js/engine/seo-meta.js', 'js/engine/secure-sharing.js']) {
   const escaped = asset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   assert.match(indexText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} index cache sürümü güncel olmalı`);
   assert.match(swText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} service worker cache sürümü güncel olmalı`);

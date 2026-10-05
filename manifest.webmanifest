@@ -1,8 +1,8 @@
 {
-  "name": "Tentiforverse 6.3.8 — Kişisel Kütüphane",
+  "name": "Tentiforverse 6.3.10 — Kişisel Kütüphane",
   "short_name": "Tentiforverse",
-  "version": "6.3.8",
-  "description": "Tentiforverse 6.3.8: görsel evren haritası, zaman çizelgesi ve güvenli düzenleme.",
+  "version": "6.3.10",
+  "description": "Tentiforverse 6.3.10: public SEO, güvenli paylaşım bağlantıları ve gizlilik odaklı özet analitik.",
   "lang": "tr",
   "start_url": "./",
   "scope": "./",

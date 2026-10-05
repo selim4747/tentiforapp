@@ -1,5 +1,27 @@
 [
   {
+    "surum": "6.3.10",
+    "tarih": "2026-10-05",
+    "baslik": "Süreli public paylaşım bağlantıları ve gizlilik odaklı özet analitik",
+    "maddeler": [
+      "Yalnızca görünürlüğü açık profil, yayımlanmış evren ve public okuma yolu için sahip hesabına bağlı, rastgele ve varsayılan 30 günlük iptal edilebilir bağlantılar eklendi; private/taslak içerik paylaşımı sunucu tarafında reddediliyor.",
+      "Android Capacitor Share ve Web Share API; desteklenmeyen tarayıcılarda pano kopyalama fallback’i eklendi. Bağlantı alıcısı içeriğin halen public olduğunu doğrular; profil sahibine ait geçmiş, iptal ve süre durumu gösterilir.",
+      "Analitik yalnızca günlük açılma/kopyalama/paylaşım toplamı tutar; IP, cihaz/user-agent, referrer, çerez, ziyaretçi hesabı veya kesin ziyaret zamanı saklanmaz. RPC ve hesap başına hız sınırları eklendi.",
+      "Web, PWA, Capacitor Android, SQL canonical kurulum dosyası ve sürüm metadata’sı 6.3.10 sürümüne eşitlendi."
+    ]
+  },
+  {
+    "surum": "6.3.9",
+    "tarih": "2026-10-05",
+    "baslik": "Public SEO sayfaları ve paylaşım kartları",
+    "maddeler": [
+      "Anonim arama motorları için yalnızca görünürlüğü açık profiller, yayımlanmış evrenler ve public okuma yollarından statik sayfa/sitemap üretildi; özel ve taslak kayıtlar dışarıda bırakıldı.",
+      "SPA route değişimlerinde canonical, description, Open Graph ve Twitter metadata'sı güncelleniyor; public içerikler için indirilebilir paylaşım görseli eklendi.",
+      "Bilinmeyen URL'ler noindex 404 fallback kullanıyor; arama görünürlüğü kapalı profiller ve yayın dışı içerikler indekslenmiyor.",
+      "Web, PWA, dist, Capacitor Android ve sürüm metadata'sı 6.3.9 sürümüne eşitlendi."
+    ]
+  },
+  {
     "surum": "6.3.8",
     "tarih": "2026-10-05",
     "baslik": "Görsel evren haritası ve zaman çizelgesi editörleri",

@@ -113,3 +113,37 @@ html[data-site-tema~=katiller] { --deniz: #ff9aa8; }
 .tf638-node{padding:0;overflow:visible}.tf638-node-handle{display:grid;width:100%;gap:.2rem;padding:.45rem .55rem;border:0;border-radius:.58rem;background:transparent;color:inherit;text-align:left;cursor:grab;touch-action:none}.tf638-node-handle:active{cursor:grabbing}.tf638-node-handle:focus-visible{outline:3px solid #2680c2;outline-offset:2px}.tf638-node-controls{display:flex;gap:.45rem;padding:.2rem .45rem .35rem;border-top:1px solid var(--kenar,#d9e2ec);font-size:.7rem}.tf638-node-controls button{padding:0;border:0;background:transparent;color:inherit;font:inherit;text-decoration:underline;cursor:pointer}.tf638-node-controls button:focus-visible{outline:2px solid #2680c2;outline-offset:2px}
 
 .tf638-node{padding:0;overflow:visible}.tf638-node-handle{display:grid;width:100%;gap:.2rem;padding:.45rem .55rem;border:0;border-radius:.58rem;background:transparent;color:inherit;text-align:left;cursor:grab;touch-action:none}.tf638-node-handle:active{cursor:grabbing}.tf638-node-handle:focus-visible{outline:3px solid #2680c2;outline-offset:2px}.tf638-node-controls{display:flex;gap:.45rem;padding:.2rem .45rem .35rem;border-top:1px solid var(--kenar,#d9e2ec);font-size:.7rem}.tf638-node-controls button{padding:0;border:0;background:transparent;color:inherit;font:inherit;text-decoration:underline;cursor:pointer}.tf638-node-controls button:focus-visible{outline:2px solid #2680c2;outline-offset:2px}
+
+
+/* 6.3.9 — crawler-visible public pages and share cards */
+.tf639-seo-fallback{box-sizing:border-box;max-width:70rem;margin:clamp(1rem,4vw,3rem) auto;padding:clamp(1rem,4vw,2.5rem);border:1px solid rgba(35,80,76,.18);border-radius:1rem;background:var(--kart,#fff);color:var(--yazi,#17212b);box-shadow:0 12px 38px rgba(14,36,48,.08);line-height:1.65}
+.tf639-seo-fallback h1,.tf639-read-path h1{margin:.35rem 0 1rem;font-size:clamp(1.65rem,5vw,2.5rem);line-height:1.15;overflow-wrap:anywhere}
+.tf639-seo-fallback h2,.tf639-read-path h2{margin:1.4rem 0 .55rem;font-size:1.2rem}
+.tf639-seo-fallback p,.tf639-read-path p{max-width:72ch;overflow-wrap:anywhere}
+.tf639-seo-fallback ul,.tf639-read-path ol{padding-inline-start:1.5rem}
+.tf639-seo-fallback li,.tf639-read-path li{margin:.45rem 0;overflow-wrap:anywhere}
+.tf639-seo-kind{display:inline-block;color:var(--deniz,#176c61);font-size:.82rem;font-weight:750;letter-spacing:.04em;text-transform:uppercase}
+.tf639-seo-handle,.tf639-seo-author{color:var(--murekkep-2,#53616c);font-weight:650}
+.tf639-seo-brand{margin-top:1.5rem;color:var(--murekkep-2,#53616c);font-size:.9rem;font-weight:700}
+.tf639-card-button{margin:.5rem .5rem .5rem 0;white-space:normal}
+.tf639-read-path{position:fixed;z-index:1200;inset:0;box-sizing:border-box;overflow:auto;padding:clamp(1rem,5vw,3rem);background:var(--kar,#f6f8f7);color:var(--murekkep,#17212b)}
+.tf639-read-path>*{max-width:72rem;margin-inline:auto}
+.tf639-read-path>button{display:block;margin:0 max(calc((100vw - 72rem)/2),0px) 1rem auto}
+.tf639-read-path-open{overflow:hidden}
+@media(max-width:600px){.tf639-seo-fallback{margin:.75rem;padding:1rem;border-radius:.75rem}.tf639-read-path{padding:1rem}.tf639-card-button{width:100%;min-height:2.75rem}}
+
+
+/* 6.3.10 — güvenli paylaşım ve günlük özet geçmişi */
+.tf310-share-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem;margin:.8rem 0;max-width:100%}
+.tf310-share-button{min-height:2.75rem;white-space:normal;overflow-wrap:anywhere}
+.tf310-status{margin:.35rem 0;color:var(--murekkep-2,#53616c);font-size:.92rem;overflow-wrap:anywhere}
+.tf310-status.iyi{color:var(--yesil,#176c61)}
+.tf310-status.kotu{color:var(--kirmizi,#9c3131)}
+.tf310-history-panel{display:grid;gap:.65rem;margin-top:1.25rem;padding:1rem;border:1px solid var(--cizgi,#d5dee6);border-radius:1rem;background:var(--kart,#fff);min-width:0}
+.tf310-history-panel h3,.tf310-history-row p{margin:.15rem 0}
+.tf310-history-list{display:grid;gap:.7rem;min-width:0}
+.tf310-history-row{display:grid;gap:.4rem;min-width:0;padding:.85rem;border:1px solid var(--cizgi,#d5dee6);border-radius:.75rem;background:var(--zemin,#f7fafb);overflow-wrap:anywhere}
+.tf310-history-row strong{overflow-wrap:anywhere}
+.tf310-history-actions{display:flex;flex-wrap:wrap;gap:.55rem}
+.tf310-history-actions button{min-height:2.5rem;max-width:100%;white-space:normal}
+@media(max-width:600px){.tf310-history-panel{padding:.8rem;margin-inline:0}.tf310-history-actions button{flex:1 1 10rem}.tf310-share-button{width:100%}}
