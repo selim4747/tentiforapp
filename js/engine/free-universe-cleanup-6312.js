@@ -26,10 +26,12 @@
     var boyut = taslakBoyutu(alanlar.map(function (key) { return essay[key]; }));
     return boyut.metin <= 600 && boyut.parca <= 6;
   }
-  function isaretli(essay) {
-    if (!essay) return true;
-    var paylasim = essay.tf312Paylasildi || essay.tf312Indirildi || essay.paylasildi || essay.paylasim || essay.paylasimlar || essay.paylasimId || essay.paylasim_id;
-    if (paylasim) return true;
+  function paylasildi(essay) {
+    return !!(essay && (essay.tf312Paylasildi || essay.paylasildi || essay.paylasim || essay.paylasimlar || essay.paylasimId || essay.paylasim_id));
+  }
+  function indirildi(essay) {
+    if (!essay) return false;
+    if (essay.tf312Indirildi) return true;
     try {
       var indirilen = JSON.parse(localStorage.getItem(INDIRILEN) || '{}');
       return !!indirilen[essay.id];
@@ -44,8 +46,8 @@
     var panel = document.querySelector('.fan-form[data-fan-form="evren"]');
     if (!panel || !(typeof EVS !== 'undefined' && EVS && EVS.kaynak === 'benim') || panel.querySelector('[data-tf312-evren-sil]')) return;
     var row = panel.querySelector('.oyun-sira'); if (!row) return;
-    var b = document.createElement('button'); b.type = 'button'; b.className = 'dugme dugme-sade tf312-share'; b.dataset.tf312EvrenSil = ''; b.textContent = 'Taslak evreni sil';
-    b.title = 'En fazla 600 karakterlik küçük taslaklar da silinebilir; indirilmiş veya paylaşılmış evren korunur'; row.appendChild(b);
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'dugme dugme-sade tf312-share'; b.dataset.tf312EvrenSil = ''; b.textContent = 'Evreni sil';
+    b.title = 'Büyük evreni silmeden önce Dosya olarak indir ile telefona indir; küçük taslaklar doğrudan silinebilir'; row.appendChild(b);
   }
   document.addEventListener('click', function (event) {
     var share = event.target.closest && event.target.closest('[data-fan-paylas], [data-fan-indir]');
@@ -55,13 +57,13 @@
     event.preventDefault(); event.stopImmediatePropagation();
     var e = current();
     if (!e) return;
-    if (!taslakMi(e)) { if (typeof eckaBildir === 'function') eckaBildir('Bu evren küçük taslak sınırını aşıyor; yalnızca 600 karaktere ve 6 küçük parçaya kadar taslaklar silinebilir.'); return; }
-    if (isaretli(e)) { if (typeof eckaBildir === 'function') eckaBildir('İndirilmiş veya paylaşılmış evrenin ücretsiz plan kotası geri alınmaz.'); return; }
+    var taslak = taslakMi(e);
+    if (!taslak && !indirildi(e)) { if (typeof eckaBildir === 'function') eckaBildir('Bu büyük evreni silmeden önce “Dosya olarak indir” ile telefona indirmen gerekir. İndirmeden silinemez.'); return; }
     if (b.dataset.onay !== '1') { b.dataset.onay = '1'; b.textContent = 'Emin misin? Sil'; return; }
     var liste = fanEserlerim().filter(function (item) { return item.id !== e.id; });
     fanEserlerimYaz(liste);
-    var iade = typeof window.tf4EvrenKotasiIade === 'function' && window.tf4EvrenKotasiIade();
-    if (typeof eckaBildir === 'function') eckaBildir(iade ? 'Taslak evren silindi; ücretsiz evren kotan geri alındı.' : 'Taslak evren silindi.');
+    var iade = !indirildi(e) && !paylasildi(e) && typeof window.tf4EvrenKotasiIade === 'function' && window.tf4EvrenKotasiIade();
+    if (typeof eckaBildir === 'function') eckaBildir(iade ? 'Taslak evren silindi; ücretsiz evren kotan geri alındı.' : (taslak ? 'Taslak evren silindi.' : 'Evren silindi; indirme yapıldığı için ücretsiz kota geri alınmadı.'));
     location.hash = '#/fan';
   }, true);
   var observer = new MutationObserver(buttonEkle);
