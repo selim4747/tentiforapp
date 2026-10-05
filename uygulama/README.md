@@ -1,4 +1,4 @@
-# Tentiforverse 5.0 mobil dağıtımı
+# Tentiforverse 6.3.11 mobil dağıtımı
 
 Bu dizin, GitHub Actions ile derlenen Tentiforverse Android APK'sini ve yerel web varlıklarını içerir.
 
@@ -7,7 +7,7 @@ Bu dizin, GitHub Actions ile derlenen Tentiforverse Android APK'sini ve yerel we
 - **Kütüphanem:** cihaz içi notlar, favoriler ve son kaldığın yere dönme.
 - **Çevrimdışı paket:** temel uygulama dosyaları ve daha önce alınmış içerikler için yerel Cache Storage paketi.
 - **Paylaş:** Android paylaşım ekranı, tarayıcı paylaşımı veya bağlantı kopyalama geri dönüşü.
-- **APK kimliği:** Tentiforverse 5.0 adı, lacivert-altın tema ve açılış ekranı.
+- **APK kimliği:** Tentiforverse 6.3.11 adı, lacivert-altın tema ve açılış ekranı.
 - **Bildirimler:** Web Push, hedef kullanıcıya bildirim ve Android Local Notifications.
 - **Mobil kullanım:** alt menü, Android geri tuşu, yenilemek için aşağı çekme ve derin bağlantı desteği.
 - **Kişisel veriler:** notlar, favoriler ve okuma konumu Supabase'e gönderilmeden cihazda tutulur.
@@ -20,7 +20,7 @@ Bu dizin, GitHub Actions ile derlenen Tentiforverse Android APK'sini ve yerel we
 
 `.github/workflows/build-apk.yml` dosyası `workflow_dispatch` ile çalıştırılabilir. Workflow şu işlemleri GitHub sunucularında yapar:
 
-1. Web paketini 5.0 olarak oluşturur.
+1. Web paketini 6.3.11 olarak oluşturur.
 2. Capacitor Android kabuğunu kurar ve gerekli eklentileri ekler.
 3. Debug APK'yi derler.
 4. APK'yi `tentiforverse-debug-apk` artifact'i olarak yükler.
