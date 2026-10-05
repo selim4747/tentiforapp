@@ -37,9 +37,9 @@ assert.match(migration, /foreign key \(sahibi, evren_id, kaynak\) references pub
 assert.match(migration, /foreign key \(sahibi, evren_id, hedef\) references public\.evren_zaman_olaylari/);
 assert.match(migration, /select '6\.3\.8'::text/, 'migration updates the database version marker');
 const canonicalMigration = migration.slice(0, migration.indexOf('-- Release marker')).trim();
-assert.ok(setup.trimEnd().endsWith(canonicalMigration), 'canonical setup must include the 6.3.8 migration definitions');
+assert.ok(setup.includes(canonicalMigration), 'canonical setup must retain the 6.3.8 migration definitions before later releases');
 assert.equal((setup.match(/create or replace function public\.kurulum_surumu\b/g) || []).length, 1, 'canonical setup keeps one version marker');
-assert.match(setup, /select '6\.3\.8'::text/);
+assert.match(setup, /select '6\.3\.10'::text/);
 
 for (const rpc of ['evren_gorsel_haritayi_yukle','evren_gorsel_haritayi_kaydet','evren_gorsel_dugumu_guncelle','evren_gorsel_bagi_degistir','evren_zaman_cizelgesi_yukle','evren_zaman_olay_kaydet','evren_zaman_olay_sil','evren_zaman_bagi_degistir']) {
   assert.ok(client.includes(`'${rpc}'`), `client calls ${rpc}`);
@@ -58,6 +58,6 @@ assert.match(css, /@media\(max-width:640px\)/);
 assert.match(css, /touch-action:none/);
 assert.match(css, /\.tf638-node-handle:focus-visible/);
 assert.match(index, /js\/engine\/evren-harita-zaman-cizelgesi\.js/);
-assert.equal(packageJson.version, '6.3.8');
-assert.equal(manifest.version, '6.3.8');
+assert.equal(packageJson.version, '6.3.10');
+assert.equal(manifest.version, '6.3.10');
 console.log('6.3.8 visual universe: PASS (owner/RLS, RPC limits, publication filtering, map/timeline and responsive keyboard/touch contracts)');

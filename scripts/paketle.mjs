@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { fetchPublicSeoPages, renderSeoNotFound, writeSeoRoutes } from './public-seo.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -205,25 +206,30 @@ for (const oge of distDosyalarVeDizinler) {
     }
   }
 }
-// Public route shells: crawler-visible title/description/canonical without changing SPA behavior.
-const seoRoutes = {
-  'tomye': ['Tömye — TentiforApp', 'Tömye evreni ve Tentiforverse arşiv içerikleri'],
-  'fan': ['Fan evrenleri — TentiforApp', 'TentiforApp fan evrenleri ve hikâyeleri'],
-  'oyunlar': ['Oyunlar — TentiforApp', 'TentiforApp oyunları ve yarışları'],
-  'atolye': ['Atölye — TentiforApp', 'TentiforApp evren ve hikâye atölyesi'],
-  'okuma': ['Okuma — TentiforApp', 'TentiforApp okuma alanı']
-};
 const seoIndex = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
-for (const [route, [title, description]] of Object.entries(seoRoutes)) {
-  let page = seoIndex.replace('<head>', '<head>\n<base href="/">')
-    .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
-    .replace(/(<meta name="description" content=")[^"]*(")/, `$1${description}$2`)
-    .replace(/(<link rel="canonical" href=")[^"]*(")/, `$1https://tentiforapp.pages.dev/${route}/$2`)
-    .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1https://tentiforapp.pages.dev/${route}/$2`);
-  const dir = path.join(distDir, route); fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, 'index.html'), page, 'utf8');
+// Crawlers/social bots receive a static, privacy-filtered page snapshot. The same public RPC
+// supplies the sitemap and page body; no private/draft rows are copied into build output.
+const staticSeoPages = [
+  { tur: 'sayfa', path: '/tomye/', title: 'Tömye — TentiforApp', description: 'Tömye evreni ve Tentiforverse arşiv içerikleri.' },
+  { tur: 'sayfa', path: '/fan/', title: 'Fan evrenleri — TentiforApp', description: 'TentiforApp’te yayınlanmış fan evrenleri ve hikâyeler.' },
+  { tur: 'sayfa', path: '/oyunlar/', title: 'Oyunlar — TentiforApp', description: 'TentiforApp oyunları ve yarışları.' },
+  { tur: 'sayfa', path: '/atolye/', title: 'Atölye — TentiforApp', description: 'TentiforApp evren ve hikâye atölyesi.' },
+  { tur: 'sayfa', path: '/okuma/', title: 'Okuma — TentiforApp', description: 'TentiforApp okuma alanı ve okuma rotaları.' },
+  { tur: 'evren', slug: 'e25', baslik: veri.kanonEvrenleri?.e25?.ad || 'E25', ozet: typeof veri.kanonEvrenleri?.e25?.ozet === 'string' ? veri.kanonEvrenleri.e25.ozet : '' },
+  { tur: 'evren', slug: 'e99', baslik: veri.e99?.ad || 'E99', ozet: typeof veri.e99?.ozet === 'string' ? veri.e99.ozet : '' }
+];
+let publicSeoPages = [];
+if (process.env.TF_SEO_STATIC_ONLY !== '1') {
+  try {
+    publicSeoPages = await fetchPublicSeoPages(ROOT_DIR);
+    console.log(`✓ Public SEO snapshot alındı (${publicSeoPages.length} yayınlanabilir profil/evren/okuma rotası)`);
+  } catch {
+    console.warn('⚠ Public SEO snapshot alınamadı; yalnızca kaynakta tanımlı açık rotalar üretildi. Gizli/taslak veri hiçbir zaman fallback’e eklenmez.');
+  }
 }
-console.log('✓ public SEO route shell’leri üretildi');
+const routeCount = writeSeoRoutes({ indexHtml: seoIndex, distDir, items: publicSeoPages, staticPages: staticSeoPages });
+fs.writeFileSync(path.join(distDir, '404.html'), renderSeoNotFound(seoIndex), 'utf8');
+console.log(`✓ ${routeCount} public SEO sayfası ve yalnızca açık rotaları içeren sitemap üretildi`);
 console.log('✓ dist üretim dizini senkronize edildi (Cloudflare Pages uyumlu)');
 
 console.log('✨ Paketleme başarıyla tamamlandı.');

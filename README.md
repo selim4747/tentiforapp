@@ -1,4 +1,4 @@
-# TentiforApp — Tentiforverse Arşivi (v6.3.8)
+# TentiforApp — Tentiforverse Arşivi (v6.3.10)
 
 Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker. Tentiforverse evren arşivi: karakterler, kozmoloji, isim sistemi, takvim ve oyunlar.
 
@@ -10,6 +10,8 @@ Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker. Tentiforverse ev
 - **Kozmoloji & Takvim**: 13 aylık takvim, isim motoru, sözlük.
 - **Evrengezer ve Fan Hikaye Atölyesi**: Evren üretimi, karakter tasarımı ve fan hikayeleri.
 - **PWA & Çevrimdışı Desteği**: Service Worker ile tam çevrimdışı çalışma.
+- **Public SEO & Paylaşım Kartları**: Görünürlüğü açık profiller, yayımlanmış evrenler ve public okuma rotaları için crawler sayfaları; uygulama içi Open Graph/Twitter metadata ve indirilebilir PNG paylaşım kartı. SSR bulunmadığında kullanılan build-time fallback için [SEO notlarına](docs/seo-prerender.md) bakın.
+- **Güvenli Paylaşım & Özet Analitik**: Yalnızca herkese açık içerikler için 30 günlük, iptal edilebilir bağlantılar; Android/Web Share veya pano kopyalama, sahip hesabına özel geçmiş ve IP/cihaz/referrer tutmayan günlük toplulaştırılmış sayımlar. Token iptali içeriğin kendi herkese açık yayınını kapatmaz; bunun için içeriğin görünürlük ayarını değiştirmek gerekir. Ayrıntı: [paylaşım/gizlilik notları](docs/secure-sharing.md).
 - **Mobil APK & Android Desteği**: Capacitor ile paketlenebilir kabuk mimarisi.
 
 ## 6.0 APK yol haritası
