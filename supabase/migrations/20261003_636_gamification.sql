@@ -18,7 +18,7 @@ begin
   insert into public.okuma_gunleri(kullanici,gun,adres) values(uid,bugun,p_adres) on conflict (kullanici,gun) do nothing;
   get diagnostics etkilenen = row_count; yeni := etkilenen > 0;
   select count(*)::int into toplam from public.okuma_gunleri where kullanici=uid;
-  select seri into seri from public.istatistikler where id=uid;
+  select i.seri into seri from public.istatistikler as i where i.id=uid;
   if yeni then
     select exists(select 1 from public.okuma_gunleri where kullanici=uid and gun=bugun-1) into yeni;
     seri:=case when yeni then greatest(1,coalesce(seri,0)+1) else 1 end;
