@@ -147,3 +147,20 @@ html[data-site-tema~=katiller] { --deniz: #ff9aa8; }
 .tf310-history-actions{display:flex;flex-wrap:wrap;gap:.55rem}
 .tf310-history-actions button{min-height:2.5rem;max-width:100%;white-space:normal}
 @media(max-width:600px){.tf310-history-panel{padding:.8rem;margin-inline:0}.tf310-history-actions button{flex:1 1 10rem}.tf310-share-button{width:100%}}
+
+/* 6.3.12 profile layout and contextual sharing */
+.profil-topluluk,.hesap-profil{min-width:0;overflow:hidden}
+.profil-topluluk>*{min-width:0;max-width:100%}
+.profil-takip,.tf63-profil-baslik,.tf312-profile-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem .8rem}
+.profil-takip>span,.tf63-profil-baslik>*{min-width:0;overflow-wrap:anywhere}
+.profil-eserler,.profil-vitrin,.tf63-profil-alan,.tf63-liste{min-width:0;max-width:100%;overflow:hidden}
+.mod-yayin{display:grid;gap:.55rem;margin:.6rem 0 0;padding-left:1.1rem}
+.mod-yayin li{min-width:0;overflow-wrap:anywhere;line-height:1.45}
+.mod-yayin a{overflow-wrap:anywhere}
+.tf63-liste{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:.65rem;margin-top:.6rem}
+.tf63-kart{min-width:0;overflow-wrap:anywhere}
+.tf312-profile-actions{margin:0 0 .8rem;padding:.65rem .75rem;border:1px solid var(--buz);border-radius:var(--r-kucuk);background:var(--beyaz)}
+.tf312-share{white-space:normal;overflow-wrap:anywhere;max-width:100%}
+.tf312-selection{position:absolute;z-index:1400;max-width:calc(100vw - 16px);padding:.35rem;border:1px solid var(--buz);border-radius:var(--r-kucuk);background:var(--beyaz);box-shadow:0 8px 24px rgba(13,53,96,.18)}
+.tf312-selection .dugme{min-height:38px;padding:8px 12px}
+@media(max-width:600px){.profil-takip,.tf63-profil-baslik{align-items:flex-start;flex-direction:column}.profil-takip .dugme,.tf312-profile-actions .dugme{width:100%}.tf312-selection{position:fixed;left:8px!important;right:8px;bottom:12px;top:auto!important;text-align:center}.tf312-selection .dugme{width:100%}}

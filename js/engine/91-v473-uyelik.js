@@ -1,7 +1,7 @@
 /* 6.2.4 — EvrenGezer / EvrenYazar üyelik politikası */
 (function () {
   'use strict';
-  var SURUM = '6.3.11';
+  var SURUM = '6.3.12';
   var AYAR = 'tf4_uyelik_kullanimi';
   var PLAN = {
     ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 3, hikaye: 10, gezegen: 1, takim: 0 },
@@ -121,6 +121,14 @@
   if (typeof oldCiz === 'function') window.anaEvrenlerCiz = function () { oldCiz.apply(this, arguments); var a = document.querySelector('#anaEvrenler .ana-kur'); if (a && gezerPlan()) a.querySelector('.ana-evren-not') && (a.querySelector('.ana-evren-not').textContent = 'EvrenGezer: bu ay ' + say('evren') + ' / 5 evren hakkı kullanıldı.'); };
   fanYeniSar();
   if (typeof window.evrenTabanAcik === 'function') window.evrenTabanAcik = evrenKotaAcik;
+  window.tf4EvrenKotasiIade = function () {
+    if (plan() !== 'ucretsiz') return false;
+    var v = kullanim(), key = dongu(), onceki = Number(v[key].evren || 0);
+    if (onceki <= 0) return false;
+    v[key].evren = onceki - 1;
+    yaz(v);
+    return true;
+  };
   window.tf4Plan = plan; window.tf4PlanAdi = planEtiketi; window.tf4PlanLimit = limit; window.tf4TakimLimit = takimLimit; window.tf4TakimKisiSayisi = takimKisiSayisi; window.tf4TakimKotaAcik = takimKotaAcik; window.tf4UyelikDongu = dongu; window.tf4UyelikDonguBaslangic = donguBaslangic; window.tf4EvrenGezerMi = gezerPlan; window.tf4EvrenYazarMi = ustPlan; window.tf4EvrenKotaAcik = evrenKotaAcik; window.tf4GezegenKotaAcik = gezegenKotaAcik; window.tf4EvrenSinirsiz = evrenSinirsiz; window.tf4UyelikPolitikasi = { SURUM: SURUM, PLAN: PLAN, kota: kota, kullanim: kullanim };
   var observer = new MutationObserver(function () { fanYeniSar(); hediyeAraciniEkle(); });
   if (document.documentElement) observer.observe(document.documentElement, { childList: true, subtree: true });

@@ -43,13 +43,16 @@ assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_visual_uni
 assert.ok(fs.existsSync(path.join(root, 'scripts/public-seo.mjs')), '6.3.9 static SEO builder eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/seo-meta.js')), '6.3.9 SPA SEO/paylaşım kartı modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_visual_universe_map_timeline_639_seo_cards_6310_secure_sharing.sql')), '6.3.10 güvenli paylaşım migration eksik');
+assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_release_6312_profile_sharing.sql')), '6.3.12 profil paylaşım migration eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/profile-sharing-6312.js')), '6.3.12 profil/alinti paylaşım modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/engine/free-universe-cleanup-6312.js')), '6.3.12 boş evren silme modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/secure-sharing.js')), '6.3.10 güvenli paylaşım istemcisi eksik');
 const androidGradle = fs.readFileSync(path.join(root, 'uygulama/kabuk/android/app/build.gradle'), 'utf8');
-assert.match(androidGradle, /versionCode\s+622/);
-assert.match(androidGradle, /versionName\s+"6\.3\.11"/);
-assert.match(fs.readFileSync(path.join(root, 'js/core/78-uygulama-kabugu.js'), 'utf8'), /p_surum:"6\.3\.11"/);
-assert.match(fs.readFileSync(path.join(root, 'js/paket-4.js'), 'utf8'), /KURULUM_BEKLENEN="6\.3\.11"/);
-assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /select '6.3.11'::text/);
+assert.match(androidGradle, /versionCode\s+623/);
+assert.match(androidGradle, /versionName\s+"6\.3\.12"/);
+assert.match(fs.readFileSync(path.join(root, 'js/core/78-uygulama-kabugu.js'), 'utf8'), /p_surum:"6\.3\.12"/);
+assert.match(fs.readFileSync(path.join(root, 'js/paket-4.js'), 'utf8'), /KURULUM_BEKLENEN="6\.3\.12"/);
+assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /select '6.3.12'::text/);
 assert.ok(fs.existsSync(path.join(root, 'js/engine/kisisel-arsiv-araclari.js')), '6.3.1 arşiv modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/kesif-kullanici-profili.js')), '6.3 keşif modülü eksik');
 assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql'), 'utf8'), /public_kullanici_profili/);
@@ -95,7 +98,7 @@ assert.match(swText, /yedekKopya\(istek, true\)/, 'sürümlü asset eski query k
 assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /where endpoint = p_endpoint and kullanici = auth\.uid\(\)/, 'push unsubscribe must be owner-scoped');
 assert.match(fs.readFileSync(path.join(root, 'js/topluluk/41-bildirim.js'), 'utf8'), /bildirimYerelMi\(\).*bildirimYerelAcikMi/, 'APK notifications must not depend on VAPID');
 assert.match(fs.readFileSync(path.join(root, 'js/core/46-guncelleme.js'), 'utf8'), /getRegistration\("\/"\)/, 'güncelleme worker kaydını kökten almalı');
-for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js', 'js/engine/evren-harita-zaman-cizelgesi.js', 'js/engine/seo-meta.js', 'js/engine/secure-sharing.js']) {
+for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js', 'js/engine/evren-harita-zaman-cizelgesi.js', 'js/engine/seo-meta.js', 'js/engine/secure-sharing.js', 'js/engine/profile-sharing-6312.js', 'js/engine/free-universe-cleanup-6312.js']) {
   const escaped = asset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   assert.match(indexText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} index cache sürümü güncel olmalı`);
   assert.match(swText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} service worker cache sürümü güncel olmalı`);
