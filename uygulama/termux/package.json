@@ -1,0 +1,24 @@
+{
+  "name": "@tentifor/termux",
+  "version": "6.3.13",
+  "description": "Tentiforverse Android Termux Kütüphanesi ve CLI Araç Seti",
+  "type": "module",
+  "main": "./tentifor.js",
+  "bin": {
+    "tentifor": "./bin/tentifor.mjs"
+  },
+  "scripts": {
+    "test": "node test.mjs",
+    "start": "node ./bin/tentifor.mjs"
+  },
+  "keywords": [
+    "tentifor",
+    "tentiforverse",
+    "termux",
+    "android",
+    "cli",
+    "tomye"
+  ],
+  "author": "Tentifor",
+  "license": "MIT"
+}

@@ -32,7 +32,8 @@ const tests = [
   'tests/6.3.8-visual-universe.mjs',
   'tests/6.3.9-public-seo.mjs',
   'tests/6.3.10-secure-sharing.mjs',
-  'tests/6.2-platform.mjs'
+  'tests/6.2-platform.mjs',
+  'tests/termux-library.mjs'
 ];
 
 const server = spawn(process.execPath, ['server.js'], { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -67,5 +68,6 @@ try {
   for (const test of tests) await run(test);
   console.log('\nTüm uygulama regression testleri başarılı.');
 } finally {
-  server.kill('SIGTERM');
+  try { server.kill('SIGKILL'); } catch {}
+  process.exit(0);
 }
