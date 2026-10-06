@@ -55,8 +55,13 @@
     target.innerHTML = rows.length ? '<span class="oyun-etiket">' + esc(evren) + ' bağlantıları</span>' + rows.map(function (x) { return '<div class="tf631-satir">' + esc(x.kaynak) + ' — <span class="oyun-not">' + esc(x.iliski) + '</span> → ' + esc(x.hedef) + '</div>'; }).join('') : '<p class="oyun-not">Bu evren için bağlantı yok.</p>';
   }
   async function openPath(id) {
-    var r = await c().rpc('okuma_yolu_detay', { p_yol: id }); if (r.error || !r.data) return;
+    var r = await c().rpc('okuma_yolu_detay', { p_yol: id });
     var cover = document.querySelector('#perde'); if (!cover) return;
+    if (r.error || !r.data) {
+      cover.innerHTML = '<div class="pencere" role="dialog" aria-modal="true"><button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button><span class="oyun-etiket">Okuma yolu</span><h2>Okuma yolu bulunamadı</h2><p class="oyun-not">Bu okuma yolu yayında olmayabilir, gizli olabilir veya silinmiş olabilir.</p><div class="oyun-sira"><a class="dugme" href="#/okuma">Okuma alanına dön</a></div></div>';
+      cover.hidden = false;
+      return;
+    }
     var x = r.data; cover.innerHTML = '<div class="pencere" role="dialog" aria-modal="true"><button class="pencere-kapat" data-kapat="1" aria-label="Kapat">✕</button><span class="oyun-etiket">Okuma yolu · @' + esc(x.sahibi || '') + '</span><h2>' + esc(x.baslik) + '</h2><p class="oyun-not">' + esc(x.aciklama || '') + '</p><ol class="tf631-adimlar">' + (x.adim || []).map(function (a) { return '<li><a class="dugme dugme-sade" href="' + esc(a.adres) + '">' + esc(a.baslik || a.adres) + '</a><span class="oyun-not">' + esc(a.spoiler) + '</span></li>'; }).join('') + '</ol></div>'; cover.hidden = false;
   }
   document.addEventListener('click', function (event) {

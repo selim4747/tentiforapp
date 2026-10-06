@@ -33,7 +33,8 @@ const tests = [
   'tests/6.3.9-public-seo.mjs',
   'tests/6.3.10-secure-sharing.mjs',
   'tests/6.2-platform.mjs',
-  'tests/termux-library.mjs'
+  'tests/termux-library.mjs',
+  'tests/tentifor-terminal.mjs'
 ];
 
 const server = spawn(process.execPath, ['server.js'], { stdio: ['ignore', 'pipe', 'pipe'] });

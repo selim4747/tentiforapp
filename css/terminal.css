@@ -1,0 +1,488 @@
+/* TentiforApp Özel Arşiv Terminali / Cyber-Console Stilleri */
+
+:root {
+  --term-bg: #0d1117;
+  --term-surface: #161b22;
+  --term-border: #30363d;
+  --term-text: #58a6ff;
+  --term-text-bright: #f0f6fc;
+  --term-text-muted: #8b949e;
+  --term-prompt: #3fb950;
+  --term-path: #58a6ff;
+  --term-accent: #d29922;
+  --term-danger: #f85149;
+  --term-success: #3fb950;
+  --term-font: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Tema: Tentifor (Varsayılan Zümrüt & Derin Arşiv Teması) */
+.tema-tentifor,
+.tema-termux {
+  --term-bg: #070d12;
+  --term-surface: #0e1720;
+  --term-border: #1a2a38;
+  --term-text: #e2e8f0;
+  --term-text-bright: #ffffff;
+  --term-text-muted: #64748b;
+  --term-prompt: #10b981;
+  --term-path: #38bdf8;
+  --term-accent: #f59e0b;
+  --term-danger: #ef4444;
+  --term-success: #10b981;
+}
+
+/* Tema: Matrix (Yeşil Fosfor CRT) */
+.tema-matrix {
+  --term-bg: #040d06;
+  --term-surface: #0a1f0f;
+  --term-border: #11421c;
+  --term-text: #00ff66;
+  --term-text-bright: #66ff99;
+  --term-text-muted: #008833;
+  --term-prompt: #33ff77;
+  --term-path: #88ffaa;
+  --term-accent: #ffff55;
+  --term-danger: #ff3344;
+  --term-success: #00ff66;
+}
+
+/* Tema: Kehribar (Amber 1980s Retro CRT) */
+.tema-amber {
+  --term-bg: #120a02;
+  --term-surface: #221404;
+  --term-border: #4a2d08;
+  --term-text: #ffb000;
+  --term-text-bright: #ffd266;
+  --term-text-muted: #996800;
+  --term-prompt: #ffc433;
+  --term-path: #ffe088;
+  --term-accent: #ffffff;
+  --term-danger: #ff4433;
+  --term-success: #ffb000;
+}
+
+/* Tema: Cyberpunk / Neon Gece */
+.tema-cyber {
+  --term-bg: #0a0a14;
+  --term-surface: #141428;
+  --term-border: #2e265c;
+  --term-text: #00f0ff;
+  --term-text-bright: #ffffff;
+  --term-text-muted: #7070a0;
+  --term-prompt: #ff007f;
+  --term-path: #00f0ff;
+  --term-accent: #ffe600;
+  --term-danger: #ff0055;
+  --term-success: #05ffa1;
+}
+
+/* Tema: Drakula / Mor Gece */
+.tema-dracula {
+  --term-bg: #282a36;
+  --term-surface: #1e1f29;
+  --term-border: #44475a;
+  --term-text: #f8f8f2;
+  --term-text-bright: #ffffff;
+  --term-text-muted: #6272a4;
+  --term-prompt: #50fa7b;
+  --term-path: #bd93f9;
+  --term-accent: #f1fa8c;
+  --term-danger: #ff5555;
+  --term-success: #50fa7b;
+}
+
+/* Tema: Monokrom Minimalist */
+.tema-mono {
+  --term-bg: #111111;
+  --term-surface: #1c1c1c;
+  --term-border: #333333;
+  --term-text: #d0d0d0;
+  --term-text-bright: #ffffff;
+  --term-text-muted: #777777;
+  --term-prompt: #ffffff;
+  --term-path: #cccccc;
+  --term-accent: #ffffff;
+  --term-danger: #ff5555;
+  --term-success: #ffffff;
+}
+
+/* Kapsayıcı ve Pencere Yapısı */
+.tentifor-terminal-konteyner {
+  font-family: var(--term-font);
+  background: var(--term-bg);
+  color: var(--term-text);
+  border: 1px solid var(--term-border);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+/* CRT Tarama Çizgisi Efekti */
+.tentifor-terminal-konteyner.crt-aktif::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  z-index: 15;
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+/* Yüzen Pencere / Modal Modu */
+.tentifor-terminal-modal {
+  position: fixed;
+  z-index: 1200;
+  bottom: 24px;
+  right: 24px;
+  width: min(720px, calc(100vw - 32px));
+  height: 520px;
+  max-height: calc(100vh - 48px);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s;
+}
+
+.tentifor-terminal-modal.gizli {
+  display: none !important;
+}
+
+.tentifor-terminal-modal.tamekran {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+  z-index: 9999;
+}
+
+/* 404 Sayfasında Gömülü Terminal */
+.tentifor-terminal-404 {
+  width: 100%;
+  max-width: 820px;
+  height: 440px;
+  margin: 24px auto 0;
+  border-radius: 6px;
+  border: 1px solid var(--term-border);
+}
+
+/* Başlık Çubuğu */
+.term-baslik-cubugu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--term-surface);
+  border-bottom: 1px solid var(--term-border);
+  user-select: none;
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.term-baslik-sol {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.term-noktalar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.term-nokta {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.term-nokta.kirmizi { background: #ff5f56; }
+.term-nokta.sari { background: #ffbd2e; }
+.term-nokta.yesil { background: #27c93f; }
+
+.term-baslik-metin {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--term-text-bright);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.term-baslik-rozet {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--term-border);
+  color: var(--term-prompt);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.term-baslik-sag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.term-dugme {
+  background: transparent;
+  color: var(--term-text-muted);
+  border: 1px solid transparent;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.term-dugme:hover {
+  background: var(--term-border);
+  color: var(--term-text-bright);
+}
+
+/* Hızlı Komut Çubuğu (Mobil ve Hızlı Erişim İçin) */
+.term-hizli-cubuk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px 12px;
+  background: var(--term-surface);
+  border-bottom: 1px solid var(--term-border);
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.term-hizli-cubuk::-webkit-scrollbar { display: none; }
+
+.term-hizli-hap {
+  white-space: nowrap;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 3px 9px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--term-text);
+  border: 1px solid var(--term-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.term-hizli-hap:hover {
+  background: var(--term-prompt);
+  color: #000;
+  border-color: var(--term-prompt);
+}
+
+.term-hizli-hap.vurgulu {
+  border-color: var(--term-prompt);
+  color: var(--term-prompt);
+}
+
+/* Çıktı Ekranı */
+.term-ekran {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  word-break: break-word;
+  white-space: pre-wrap;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--term-border) transparent;
+}
+
+.term-ekran::-webkit-scrollbar {
+  width: 6px;
+}
+.term-ekran::-webkit-scrollbar-thumb {
+  background: var(--term-border);
+  border-radius: 3px;
+}
+
+/* Giriş Satırı */
+.term-giris-satiri {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--term-surface);
+  border-top: 1px solid var(--term-border);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.term-istemi {
+  color: var(--term-prompt);
+  font-weight: 600;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.term-istemi .term-kullanici { color: var(--term-prompt); }
+.term-istemi .term-ayirac { color: var(--term-text-muted); }
+.term-istemi .term-dizin { color: var(--term-path); }
+
+.term-giris {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--term-text-bright);
+  font-family: inherit;
+  font-size: inherit;
+  caret-color: var(--term-prompt);
+  padding: 0;
+}
+
+/* Formatlama Çıktıları */
+.term-satir {
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+.term-komut-tekrar {
+  color: var(--term-text-muted);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.term-vurgu { color: var(--term-prompt); font-weight: 600; }
+.term-yol { color: var(--term-path); }
+.term-basari { color: var(--term-success); }
+.term-uyari { color: var(--term-accent); }
+.term-hata { color: var(--term-danger); font-weight: 500; }
+.term-soluk { color: var(--term-text-muted); }
+.term-parlak { color: var(--term-text-bright); font-weight: 600; }
+
+.term-banner {
+  color: var(--term-prompt);
+  font-weight: bold;
+  margin-bottom: 12px;
+  line-height: 1.25;
+}
+
+.term-tablo {
+  display: table;
+  width: 100%;
+  margin: 6px 0;
+  border-collapse: collapse;
+}
+
+.term-tablo-satir {
+  display: table-row;
+}
+
+.term-tablo-hucre {
+  display: table-cell;
+  padding: 3px 10px 3px 0;
+}
+
+.term-tablo-baslik {
+  font-weight: 600;
+  color: var(--term-path);
+  border-bottom: 1px solid var(--term-border);
+}
+
+.term-agac {
+  color: var(--term-text);
+  line-height: 1.45;
+  font-size: 12.5px;
+}
+
+/* Yüzen Açma Düğmesi (FAB) */
+.tentifor-term-fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1100;
+  background: var(--term-surface, #161b22);
+  color: var(--term-prompt, #3fb950);
+  border: 1px solid var(--term-border, #30363d);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  padding: 9px 14px;
+  border-radius: 20px;
+  font-family: var(--term-font, monospace);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+}
+
+.tentifor-term-fab:hover {
+  transform: translateY(-2px);
+  background: var(--term-prompt, #3fb950);
+  color: #000;
+  box-shadow: 0 6px 20px rgba(63, 185, 80, 0.35);
+}
+
+.tentifor-term-fab .fab-nokta {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3fb950;
+  display: inline-block;
+  animation: fab-nabiz 2s infinite;
+}
+
+@keyframes fab-nabiz {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+/* Matrix Yağmuru Canvas */
+.term-matrix-canvas {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 10;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* 404 Sayfasında Terminal Çağrı Kartı */
+.yok-terminal-kutusu {
+  margin-top: 22px;
+  width: 100%;
+}
+
+.yok-terminal-baslik {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--deniz, #1c5c96);
+}
+
+@media (max-width: 640px) {
+  .tentifor-terminal-modal {
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100vw;
+    height: 75vh;
+    border-radius: 12px 12px 0 0;
+  }
+  .tentifor-terminal-404 {
+    height: 380px;
+  }
+}
