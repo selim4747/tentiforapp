@@ -9,8 +9,9 @@
   var KOMUTLAR = [
     'yardim', 'help', 'saat', 'time', 'takvim', 'cal', 'cevir', 'yas',
     'isim', 'oneri', 'sesler', 'ara', 'karakter', 'evren', 'sozluk',
+    'girilar', 'necale', 'ozan', 'eylul', 'katmanlar', 'somdo', 'defter',
     'kod', 'cuzdan', 'rozetler', 'tema', 'git', 'oyun', 'zar',
-    'matrix', 'necale', 'whoami', 'surum', 'temizle', 'clear', 'echo'
+    'whoami', 'surum', 'temizle', 'clear', 'echo'
   ];
 
   var TEMA_LISTESI = ['buz', 'gece', 'kutuphane', 'orman', 'ara', 'virus', 'uclu', 'tas'];
@@ -195,7 +196,6 @@
 
   var history = [];
   var historyIdx = -1;
-  var matrixTimer = null;
 
   function injectStyles() {
     if (document.getElementById('tentiforTerminalCss')) return;
@@ -223,11 +223,6 @@
   function calistir(rawCmd, container) {
     var full = String(rawCmd || '').trim();
     if (!full) return;
-
-    if (matrixTimer) {
-      clearInterval(matrixTimer);
-      matrixTimer = null;
-    }
 
     appendLine(container, '<span class="tf-term-prompt">tomye@tentifor:~$</span> ' + esc(full), 'cmd');
     history.push(full);
@@ -266,7 +261,6 @@
         appendLine(container, '  <b>whoami</b>             Mevcut oturum ve arşivci kimliğin');
         appendLine(container, '  <b>oyun kelime</b>        Hızlı Kyldo kelime bilmecesi');
         appendLine(container, '  <b>zar [yuz]</b>          Zar atar (1-6, 1-20 veya Tömye usulü 1-25)');
-        appendLine(container, '  <b>matrix</b>             Terminal glitch/yağmur akışı');
         appendLine(container, '  <b>temizle</b>            Terminal ekranını temizler');
         break;
       }
@@ -563,24 +557,55 @@
       }
 
       case 'matrix': {
-        appendLine(container, 'Matrix veri akışı başlatıldı (durdurmak için tıkla veya komut yaz)...', 'good');
-        var glyphs = '01ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟTÖMYEAX24';
-        matrixTimer = setInterval(function () {
-          var str = '';
-          for (var i = 0; i < 48; i++) {
-            str += glyphs[Math.floor(Math.random() * glyphs.length)] + ' ';
-          }
-          appendLine(container, str, 'dim');
-        }, 120);
-        setTimeout(function () {
-          if (matrixTimer) { clearInterval(matrixTimer); matrixTimer = null; }
-        }, 8000);
+        appendLine(container, '"matrix" komutu sistemden tamamen kaldırılmıştır. Terminal Tömye evrenine özgü çalışır.', 'warn');
         break;
       }
 
       case 'necale': {
         appendLine(container, '<i>"Kütüphanede her şeyin bir yeri vardır. Haritalar yer değiştirse de, bir kez yazılan kelime buzdaki çatlak gibi kalır."</i>', 'head');
-        appendLine(container, '— Necale, Arşiv Muhafızı', 'warn');
+        appendLine(container, '— Necale, Arşiv Muhafızı (4. Katman)', 'warn');
+        break;
+      }
+
+      case 'girilar':
+      case 'giri': {
+        appendLine(container, 'GIRILAR: Tömye kütüphanelerini ateşe veren kadim isyancı birlik.', 'head');
+        appendLine(container, '<i>"Kelimeler donarsa medeniyet donar."</i> diyerek arşivleri yaksalar da Kyldo şifreleri küllerin içinde korundu.', 'warn');
+        break;
+      }
+
+      case 'ozan': {
+        appendLine(container, 'OZAN: Buzul gezgini ve yankı arayıcısı. Donmuş denizin altındaki 3. Çatlağı haritalayan kâşif.', 'good');
+        break;
+      }
+
+      case 'eylul': {
+        appendLine(container, 'EYLÜL: Tömye\'nin ayna alfabesini ve ses çifti matrisini ilk deşifre eden yazıt çözücüsü.', 'good');
+        break;
+      }
+
+      case 'katmanlar':
+      case 'katman': {
+        appendLine(container, 'TÖMYE\'NİN 7 DONMUŞ KOZMİK KATMANI:', 'head');
+        appendLine(container, '1. Yüzey Kırağısı | 2. Kyldo Yazıtları | 3. Yankı Havuzları | 4. Baloncuk Evrenler | 5. Yanmış Kitaplık | 6. Dördüncü Çatlak | 7. Arşiv Çekirdeği', 'info');
+        break;
+      }
+
+      case 'somdo': {
+        appendLine(container, 'ŞOMDO: Aynaların arkasındaki sessiz ve kadim Tentifor yankısı (Claude Model Evreni).', 'good');
+        break;
+      }
+
+      case 'defter': {
+        appendLine(container, 'Kişisel Okur Defteriniz: Vurgularınız, okuma seriniz ve madalyalarınız yerel cihazınızda saklanır.', 'info');
+        break;
+      }
+
+      case 'ping':
+      case 'curl':
+      case 'fetch':
+      case 'cowsay': {
+        appendLine(container, '"' + esc(c) + '" komutu siteye / Tömye dünyasına özgü olmadığı için terminalden kaldırılmıştır. Komut listesi için <b>yardim</b> yazın.', 'warn');
         break;
       }
 
@@ -645,7 +670,6 @@
         <button type="button" class="tf-term-pill" data-term-cmd="ara Ax">ara Ax</button>
         <button type="button" class="tf-term-pill" data-term-cmd="karakter Necale">karakter Necale</button>
         <button type="button" class="tf-term-pill" data-term-cmd="zar 25">zar</button>
-        <button type="button" class="tf-term-pill" data-term-cmd="matrix">matrix</button>
         <button type="button" class="tf-term-pill" data-term-cmd="yardim">yardim</button>
       </div>
       <div class="tf-term-input-row">

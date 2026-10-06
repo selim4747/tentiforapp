@@ -269,6 +269,55 @@ assert.ok(out.includes('GÜNLÜK TÖMYE BİLGİ BULMACASI'), 'bulmaca interaktif
 out = run('ps');
 assert.ok(out.includes('init-tentifor') && out.includes('RUNNING'), 'Sistem süreç tablosu görüntülenmeli');
 
+// 8.1 Yeni Siteye Özgü Çekirdek Komutlar
+out = run('saat');
+assert.ok(out.includes('TÖMYE GÜNEŞ ZAMANI') && out.includes('Aysız Gezegen'), 'saat Tömye güneş saatini vermeli');
+
+out = run('cevir 2026-10-06');
+assert.ok(out.includes('TÖMYE TAKVİM ÇEVİRİSİ') && out.includes('Tömye Tarihi'), 'cevir takvim dönüşümü yapmalı');
+
+out = run('yas 25');
+assert.ok(out.includes('YAŞ ÇEVİRİSİ') && out.includes('Tömye yılı'), 'yas Tömye yaş çevirisi yapmalı');
+
+out = run('sesler');
+assert.ok(out.includes('TENTİFORVERSE KANON SES TABLOSU') && out.includes('b ↔ p'), 'sesler ses çiftleri tablosunu dökmeli');
+
+out = run('oneri karakter');
+assert.ok(out.includes('İSİM ADAYLARI'), 'oneri isim adayları üretmeli');
+
+out = run('girilar');
+assert.ok(out.includes('GIRILAR') && out.includes('KİTAP YAKAN İSYANCILAR'), 'girilar kadim isyan bilgisini dökmeli');
+
+out = run('necale');
+assert.ok(out.includes('NECALE') && out.includes('BAŞ ARŞİVCİ'), 'necale bekçi kaydını getirmeli');
+
+out = run('ozan');
+assert.ok(out.includes('OZAN') && out.includes('BUZUL GEZGİNİ'), 'ozan buzul gezgini kaydını getirmeli');
+
+out = run('eylul');
+assert.ok(out.includes('EYLÜL') && out.includes('KYLDO'), 'eylul yazıt çözücü kaydını getirmeli');
+
+out = run('katmanlar');
+assert.ok(out.includes('7 DONMUŞ KOZMİK KATMANI'), 'katmanlar 7 kozmik katmanı getirmeli');
+
+out = run('somdo');
+assert.ok(out.includes('ŞOMDO') && out.includes('MODEL EVRENİ'), 'somdo model evren kaydını getirmeli');
+
+out = run('zar 25');
+assert.ok(out.includes('TÖMYE ZARI ATILDI'), 'zar Tömye zarı atmalı');
+
+out = run('defter');
+assert.ok(out.includes('KİŞİSEL OKUR DEFTERİNİZ'), 'defter kişisel okur defteri özetini vermeli');
+
+out = run('cowsay');
+assert.ok(out.includes('özgü olmadığı için terminalden kaldırılmıştır'), 'Siteye özgü olmayan cowsay komutu kaldırılmış olmalı');
+
+out = run('ping');
+assert.ok(out.includes('özgü olmadığı için terminalden kaldırılmıştır'), 'Siteye özgü olmayan ping komutu kaldırılmış olmalı');
+
+out = run('curl');
+assert.ok(out.includes('özgü olmadığı için terminalden kaldırılmıştır'), 'Siteye özgü olmayan curl komutu kaldırılmış olmalı');
+
 console.log('✓ Siteye özgü roman, harita, fan-kitap koruma, anomali, müzik, cüzdan ve buzul komutları doğrulandı.');
 
 // 9. Yönetici / Admin Özel Konsol Komutları
