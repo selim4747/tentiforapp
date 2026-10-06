@@ -9623,6 +9623,113 @@
       "ozelAlanlar": [],
       "okuma_rehberi": [],
       "oyun_listesi": []
+    },
+    "ax24": {
+      "bicim": "tentifor-eser",
+      "surum": 1,
+      "tur": "evren",
+      "id": "ax24",
+      "ad": "Ax-24",
+      "yazar": "",
+      "ozet": "Gücünü bırakan birinin sıradan bir hayat kurmaya çalıştığı, Tömye ile aynı sistemde dönen gezegen.",
+      "kurallar": [
+        {
+          "ad": "Gücün sessizliği",
+          "tur": "yaşam",
+          "aciklama": "Ax-24’te geçmişteki büyük güçler gündelik hayatın içinde sessiz izler olarak kalır."
+        },
+        {
+          "ad": "Sıradan hayat",
+          "tur": "toplum",
+          "aciklama": "Buradaki insanlar olağan bir günün içinde olağanüstü bir geçmişi fark etmeden yaşayabilir."
+        }
+      ],
+      "kisiler": [
+        {
+          "id": "ax24-gucu-birakan",
+          "ad": "Gücünü bırakan",
+          "rol": "Geçmişini geride bırakıp sıradan yaşamayı seçen kişi.",
+          "aciklama": "Ax-24’te yeni bir hayat kurmuştur; kimse onun daha önce neyi taşıdığını bilmez."
+        },
+        {
+          "id": "ax24-komsu",
+          "ad": "Komşu",
+          "rol": "Gezegenin küçük sırlarını fark eden meraklı göz.",
+          "aciklama": "Gücünü bırakan kişinin hayatındaki küçük tutarsızlıkları ilk sezen kişidir."
+        }
+      ],
+      "yerler": [
+        {
+          "id": "ax24-ev",
+          "ad": "Sessiz Ev",
+          "tur": "Ev",
+          "not": "Gücünü bırakan kişinin sıradan hayatını sürdürdüğü yer."
+        },
+        {
+          "id": "ax24-pazar",
+          "ad": "Kıyı Pazarı",
+          "tur": "Pazar",
+          "not": "Gezegenin gündelik hayatının ve küçük söylentilerinin buluştuğu yer."
+        },
+        {
+          "id": "ax24-istasyon",
+          "ad": "Eski İstasyon",
+          "tur": "İstasyon",
+          "not": "Geçmişten kalan araçların artık yalnızca ulaşım için kullanıldığı istasyon."
+        },
+        {
+          "id": "ax24-golge",
+          "ad": "Gölge Bahçesi",
+          "tur": "Bahçe",
+          "not": "Gücün izlerinin geceleri yüzeye çıktığı, kimsenin nedenini bilmediği bahçe."
+        }
+      ],
+      "tarih": [],
+      "sozluk": [
+        {
+          "terim": "sessizlik",
+          "tanim": "Gücün artık kullanılmamasıyla oluşan yeni yaşam biçimi."
+        },
+        {
+          "terim": "iz",
+          "tanim": "Geçmişteki gücün gündelik hayatta bıraktığı küçük belirti."
+        }
+      ],
+      "ozelAlanlar": [],
+      "okuma_rehberi": [
+        {
+          "sira": 1,
+          "baslik": "Ax-24’e giriş",
+          "dosya": "bolum:ozet"
+        },
+        {
+          "sira": 2,
+          "baslik": "Sıradan hayatın kuralları",
+          "dosya": "bolum:ozet"
+        },
+        {
+          "sira": 3,
+          "baslik": "Gücün bıraktığı izler",
+          "dosya": "bolum:ozet"
+        }
+      ],
+      "oyun_listesi": [
+        {
+          "id": "ax24-kelime",
+          "tur": "kelime",
+          "ad": "Ax-24 kelime avı",
+          "ayarlar": {
+            "kelimeler": [
+              "gücünü",
+              "sıradan",
+              "gölge",
+              "komşu",
+              "bahçe",
+              "pazar"
+            ]
+          }
+        }
+      ]
     }
   },
   "bildirim": {
