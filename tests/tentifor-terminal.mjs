@@ -112,6 +112,13 @@ window.veri = {
 };
 
 // Scripti JSDOM içinde çalıştır
+// Ürün kodu gerçek katalog/izin API'lerini kullanır; fixture bunları açıkça sağlar.
+window.veri.roman = { baslik: 'Test romanı', bolumler: [{ no: 1, baslik: 'Test Bölümü', fiyat: 0, metin: 'Gerçek fixture bölüm metni.' }] };
+window.bolumErisimi = () => true;
+window.romanAcikMi = (b) => b.fiyat === 0;
+window.kanonSayfaErisimi = () => true;
+window.evrenSeciciListesi = () => ({ site: [], fan: window.veri.evren.map((e) => ({ ad: e.baslik, git: `#/ev/fan/${e.id}` })), benim: [], acilan: [] });
+window.fanBul = (_kaynak, _tur, id) => window.veri.evren.find((e) => e.id === id);
 window.eval(jsContent);
 
 assert.ok(window.TentiforTerminal, 'window.TentiforTerminal global nesnesi tanımlanmalı');
@@ -148,6 +155,7 @@ assert.ok(istemiEl, 'Terminal istemi mevcut olmalı');
 
 // 5. Site komut yüzeyi
 function run(cmd) {
+  ekran.textContent = '';
   term.komutCalistir(cmd, ekran, istemiEl, rozetEl, modal);
   return ekran.textContent || '';
 }
