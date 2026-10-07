@@ -225,6 +225,9 @@ const staticSeoPages = [
   { tur: 'evren', slug: 'e99', baslik: veri.e99?.ad || 'E99', ozet: typeof veri.e99?.ozet === 'string' ? veri.e99.ozet : '' },
   ...approvedCanonicalUniversePages(ROOT_DIR, veri)
 ];
+const appRoutes = [
+  { path: '/moderasyon/', title: 'Moderasyon — TentiFor', description: 'TentiFor moderasyon paneli. Erişim için moderatör kodu gerekir.' }
+];
 let publicSeoPages = [];
 if (process.env.TF_SEO_STATIC_ONLY !== '1') {
   try {
@@ -234,7 +237,7 @@ if (process.env.TF_SEO_STATIC_ONLY !== '1') {
     console.warn('⚠ Public SEO snapshot alınamadı; açık statik ve onaylı yerel kanon rotaları üretildi. Gizli/taslak veriler fallback’e eklenmez.');
   }
 }
-const routeCount = writeSeoRoutes({ indexHtml: seoIndex, distDir, items: publicSeoPages, staticPages: staticSeoPages });
+const routeCount = writeSeoRoutes({ indexHtml: seoIndex, distDir, items: publicSeoPages, staticPages: staticSeoPages, appRoutes });
 fs.writeFileSync(path.join(distDir, '404.html'), renderSeoNotFound(seoIndex), 'utf8');
 console.log(`✓ ${routeCount} public SEO sayfası ve yalnızca açık rotaları içeren sitemap üretildi`);
 console.log('✓ dist üretim dizini senkronize edildi (Cloudflare Pages uyumlu)');
