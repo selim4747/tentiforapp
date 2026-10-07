@@ -1,7 +1,6 @@
 /**
  * TentiforApp Özel Arşiv Terminali (Tentifor Cyber-Console / CLI Engine)
- * Web Terminali, Sanal Dosya Sistemi, 404 Otomatik Kurtarma, Yönetici Konsolu,
- * Web Audio Sentezleyici ve Termux Entegrasyonu.
+ * 404 Otomatik Kurtarma, Yönetici Konsolu ve Web Audio Sentezleyici.
  */
 
 (function () {
@@ -134,162 +133,7 @@
     }
   }
 
-  // Sanal Dosya Sistemi (VFS)
-  const SANAL_DIZINLER = {
-    '/': ['evrenler', 'karakterler', 'kitaplar', 'sistem', 'oyunlar', 'loglar'],
-    '/evrenler': [
-      'eterya.json',
-      'somdo.json',
-      'kul.json',
-      'sis.json',
-      'e25-ana-evren.json',
-      'e99-merkez.json'
-    ],
-    '/karakterler': [
-      'necale.txt',
-      'ozan.txt',
-      'eylul.txt',
-      'kemal.txt',
-      'berk.txt',
-      'girilar.txt',
-      'dunya-arsivcileri.txt'
-    ],
-    '/kitaplar': [
-      'gece-vardiyasi.txt',
-      'roman-giris.txt',
-      'kisa-oykuler.txt',
-      'kutuphane-defteri.txt',
-      'girilar-manifestosu.txt',
-      'necale-gunlugu.txt',
-      'sozluk-kavramlar.txt',
-      'buzul-katmanlari.txt'
-    ],
-    '/sistem': [
-      'cekirdek.conf',
-      'surum.json',
-      'ag-durumu.conf',
-      'tomye-kozmolojisi.md',
-      'ses-ciftleri.conf',
-      'guvenlik-kurallari.md',
-      'yonetici-kanon.key',
-      'kyldo-alfabesi.txt'
-    ],
-    '/oyunlar': [
-      'yedi-oyun.txt',
-      'arsiv-avi.txt',
-      'kelime-avcisi.txt',
-      'tomye-zari.txt',
-      'liderlik-tablosu.txt',
-      'rozetler-ve-unvanlar.txt'
-    ],
-    '/loglar': [
-      '404_rotalar.log',
-      'sistem_olaylari.log',
-      'karantina.log'
-    ]
-  };
-
-  const SANAL_DOSYALAR = {
-    '/evrenler/eterya.json': JSON.stringify({
-      id: 'eterya',
-      ad: 'Eterya',
-      tur: 'Model Evreni',
-      kozmoloji: 'Sonsuz buzul kristalize enerji hatları',
-      kurallar: ['Zaman doğrusal akmaz', 'Ses donarak kristalleşir']
-    }, null, 2),
-    '/evrenler/somdo.json': JSON.stringify({
-      id: 'somdo',
-      ad: 'Şomdo',
-      yazar: 'Claude',
-      ozet: 'Aynaların arkasındaki sessiz ve kadim Tentifor yankısı.'
-    }, null, 2),
-    '/evrenler/kul.json': JSON.stringify({
-      id: 'kul',
-      ad: 'Kül Evreni',
-      koku: 'Yanmış parşömen ve unutulmuş kütüphaneler.'
-    }, null, 2),
-    '/evrenler/sis.json': JSON.stringify({
-      id: 'sis',
-      ad: 'Sis Evreni',
-      durum: 'Görünürlük 3 adım; fısıltılar katmanları deler.'
-    }, null, 2),
-    '/evrenler/e25-ana-evren.json': JSON.stringify({
-      id: 'e25',
-      ad: 'E-25 Tömye',
-      kanon: true,
-      ozellik: '28 günlük döngü, 26 saatlik güneş takvimi, aysız gökyüzü.'
-    }, null, 2),
-    '/evrenler/e99-merkez.json': JSON.stringify({
-      id: 'e99',
-      ad: 'E-99 Ortak Evren',
-      ozellik: 'Topluluk katkıları ve birleştirilmiş fan hikâyeleri merkezi.'
-    }, null, 2),
-    '/karakterler/necale.txt':
-      'Ad: Necale\nRol: Baş Arşivci & Kütüphane Bekçisi\nNot: "Yanlış yerleştirilen tek bir sayfa, bir medeniyeti siler."\nDurum: Aktif ve Tetikte.',
-    '/karakterler/ozan.txt':
-      'Ad: Ozan\nRol: Arayıcı & Gezgin\nNot: Buzun altındaki yankıları dinleyen gezgin.\nRotası: 3. Çatlak\'tan Çekirdek\'e uzanan iz.',
-    '/karakterler/eylul.txt':
-      'Ad: Eylül\nRol: Kod ve Yazı Çözücü\nNot: Kyldo alfabesini ve ses çifti matrisini ilk çözen arşivci.',
-    '/karakterler/kemal.txt':
-      'Ad: Kemal\nRol: Koruyucu\nNot: Kanon kilitlerini denetleyen kıdemli gözlemci.',
-    '/karakterler/berk.txt':
-      'Ad: Berk\nRol: Katman Analisti\nNot: Baloncuk evrenlerin sınır sapmalarını ölçer.',
-    '/karakterler/girilar.txt':
-      'Ad: Gırılar\nRol: Kitap Yakan İsyancılar\nKayıt: "Kelimeler donarsa medeniyet donar." diyerek kütüphaneleri ateşe veren kadim birlik.',
-    '/karakterler/dunya-arsivcileri.txt':
-      'Tömye ve Dünya arasındaki sınırda görev yapan 12 kayıt memuru.',
-    '/kitaplar/gece-vardiyasi.txt':
-      'Gece Vardiyası — Bölüm 1:\nKütüphanenin ışıkları söndüğünde raflardan fısıltılar yükselirdi. Necale fenerini kaldırdı...',
-    '/kitaplar/roman-giris.txt':
-      'Tömye Romanı — Giriş:\n"Gökyüzünde ay yoktu. Ama geceleri denizin üstünde donmuş hatıralar parlardı..."',
-    '/kitaplar/kutuphane-defteri.txt':
-      'Kayıt No #404: Bilinmeyen bir ziyaretçi izinsiz katman sınırını aştı.',
-    '/kitaplar/girilar-manifestosu.txt':
-      'Gırılar Manifestosu:\n1. Kaydedilen her kelime bir bağdır.\n2. Buzun altındaki hakikat dondurularak saklanamaz.\n3. Yanmış parşömenlerin külü kütüphane zeminine serpilse de Kyldo şifreleri yok edilemez.',
-    '/kitaplar/necale-gunlugu.txt':
-      'Necale\'nin Koridor Günlüğü:\nGece vardiyasında 4. katmandaki buzul çatlağı fısıldamaya başladı. Fenerin gazı azalıyor ama nöbet terk edilemez.',
-    '/sistem/cekirdek.conf':
-      'PLATFORM=TentiforApp\nSURUM=6.3.13\nCEKIRDEK=Tentifor-MicroV6\nKONTROL_HASH=02be92c9367b\nOFFLINE_CAP=READY',
-    '/sistem/surum.json': JSON.stringify({
-      surum: '6.3.13',
-      derleme: '2026.10',
-      ozellikler: ['PWA', 'Offline Queue', 'Visual Timeline', 'Cyber Terminal']
-    }, null, 2),
-    '/sistem/ag-durumu.conf':
-      'STATUS=ONLINE\nSUPABASE=CONNECTED\nSW_CACHE=tentiforapp-aktif\nFCM=STANDBY',
-    '/sistem/tomye-kozmolojisi.md':
-      '# TÖMYE KOZMOLOJİSİ\n- Aysız Gezegen: Tömye semalarında ay bulunmaz.\n- 28 Günlük Ay Döngüsü: 11 ay 28 gün çeker, 12. ay Kyldo 30 gün.\n- 26 Saatlik Gün: Güneş döngüsü 26 saatlik periyotla akar.\n- 6 Günlük Hafta: Yen, Tan, Gün, Dün, Tün, Son.',
-    '/sistem/ses-ciftleri.conf':
-      'SES_CIFTLERI=b:p,c:ç,d:t,g:k,v:f,z:s,j:ş,r:l,n:m,a:e,ı:i,o:u,ö:ü\nSABITLER=y,h',
-    '/sistem/guvenlik-kurallari.md':
-      '# Tentifor Güvenlik Kuralları\n1. Kanon kilitleri izinsiz delinemez.\n2. Boş fan evrenleri silinirken hikâyeli olanlar korunur.\n3. Yönetici yetkisi denetime tabidir.',
-    '/sistem/yonetici-kanon.key':
-      '-----BEGIN TENTIFOR CANON MASTER KEY-----\nSHA256: 7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069\n-----END TENTIFOR CANON MASTER KEY-----',
-    '/oyunlar/yedi-oyun.txt':
-      '1. Arşiv Avı\n2. İsim Bulmaca\n3. Zaman Çizelgesi\n4. Karakter Eşleştirme\n5. Harita Keşfi\n6. Kelime Oyunu\n7. Buzul Zindanı',
-    '/oyunlar/arsiv-avi.txt':
-      'Kayıp parçaları toplayarak Tömye arşivini tamamla!',
-    '/oyunlar/tomye-zari.txt':
-      'TÖMYE ZAR KURALLARI:\nTömye günü 25/26 saat olduğundan kadim gezginler 25 yüzlü (d25) zar kullanır.\nAy döngüsü için 28 yüzlü (d28) takvim zarı tercih edilir.',
-    '/kitaplar/sozluk-kavramlar.txt':
-      'TÖMYE SÖZLÜĞÜ:\n• Gırılar: Kitapları yakan kadim isyancı birlik.\n• Kyldo: Sesli kaydırma ve ters harf morfolojisine dayalı kadim dil.\n• Akçe: Arşivcilerin kütüphane içi takas birimi.\n• Yankı: Evrenlerin katmanlar arası titreşimiyle oluşan zaman kırılmaları.\n• Buzul: Tömye\'nin hafızasını dondurarak koruyan kozmik tabaka.',
-    '/kitaplar/buzul-katmanlari.txt':
-      'TÖMYE\'NİN 7 DONMUŞ KATMANI:\n1. Katman: Yüzey Kırağısı (Halka açık okuma koridoru)\n2. Katman: Kyldo Yazıtları (Şifreli tabletler)\n3. Katman: Yankı Havuzları (Zaman sapmaları)\n4. Katman: Baloncuk Evrenler (Yan boyutlar)\n5. Katman: Yanmış Kitaplık (Gırılar\'ın kül ettiği arşivler)\n6. Katman: Dördüncü Boyut Çatlağı (Uzay bükülmeleri)\n7. Katman: Çekirdek (Kanonun kalbi & mutlak hafıza)',
-    '/oyunlar/liderlik-tablosu.txt':
-      'LİDERLİK SIRALAMASI:\n1. @necale_bekcisi - 9400 Puan [Kıdemli Arşivci]\n2. @buz_avcisi - 8120 Puan [Kâşif]\n3. @yankilar_ustasi - 7550 Puan [Dilbilgin]\n4. @dunya_gozlemcisi - 6900 Puan [Okur]',
-    '/oyunlar/rozetler-ve-unvanlar.txt':
-      'ROZETLER:\n✦ Buzul Kâşifi: Tüm bölümleri ilk okuyanlara verilir.\n✦ Kanon Muhafızı: Kilitli sırları çözenlere verilir.\n✦ Kyldo Dilbilgini: İsim sisteminde 10 başarılı üretim yapanlara verilir.\n✦ Gece Okuru: Gece Vardiyası serisini tamamlayanlara verilir.',
-    '/sistem/kyldo-alfabesi.txt':
-      'KYLDO ALFABESİ VE SES DÖNÜŞÜMÜ:\na -> e\ne -> i\ni -> o\no -> u\nu -> a\nKural: Kelime önce tersten yazılır, ardından sesli harfler bir basamak kaydırılır.',
-    '/loglar/404_rotalar.log':
-      '[LOG 2026-10-06] 404 tespit: Geçersiz koordinat veya kayıp katman.\n[LOG 2026-10-06] Otomatik kurtarma motoru devrede.',
-    '/loglar/sistem_olaylari.log':
-      '[OK] Veritabanı bütünlüğü doğrulandı.\n[OK] Service Worker önbelleği hazır.\n[OK] Arşiv modülü yüklendi.',
-    '/loglar/karantina.log':
-      '[BILGI] Karantinada bekleyen zararlı veya uygunsuz içerik bulunmuyor.'
-  };
-
-  // Metin Benzerlik / Levenshtein Algoritması (404 Kurtarma İçin)
+  // Metin benzerliği (404 rota kurtarma için)
   function levenshtein(a, b) {
     const s1 = String(a || '').toLowerCase();
     const s2 = String(b || '').toLowerCase();
@@ -301,39 +145,27 @@
     for (let i = 1; i <= m; i++) {
       for (let j = 1; j <= n; j++) {
         const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
-        dp[i][j] = Math.min(
-          dp[i - 1][j] + 1,
-          dp[i][j - 1] + 1,
-          dp[i - 1][j - 1] + cost
-        );
+        dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
       }
     }
     return dp[m][n];
   }
-
-  // Tömye Takvim Çeviricisi
+  // Tömye takvim hesaplayıcısı
   function tomyeZamani() {
     const simdi = new Date();
     const baslangic = new Date(Date.UTC(2024, 0, 1));
     const gecenGun = Math.floor((simdi - baslangic) / 86400000);
-    const tomyeYili = 744 + Math.floor(gecenGun / 336);
     const aylar = ['Buz', 'Çatlak', 'Akıntı', 'Kırağı', 'Yankı', 'Gece', 'Güneş', 'Kül', 'Fırtına', 'Sessizlik', 'Işık', 'Dönüş'];
-    const ayIndeks = Math.floor((gecenGun % 336) / 28);
-    const ayGunu = (gecenGun % 28) + 1;
     const dunyaDakika = simdi.getHours() * 60 + simdi.getMinutes();
     const tomyeDakikaTop = Math.floor((dunyaDakika / 1440) * (26 * 60));
-    const tomyeSaat = Math.floor(tomyeDakikaTop / 60);
-    const tomyeDakika = tomyeDakikaTop % 60;
-
     return {
-      yil: tomyeYili,
-      ay: aylar[ayIndeks] || 'Buz',
-      gun: ayGunu,
-      saat: tomyeSaat,
-      dakika: tomyeDakika
+      yil: 744 + Math.floor(gecenGun / 336),
+      ay: aylar[Math.floor((gecenGun % 336) / 28)] || 'Buz',
+      gun: (gecenGun % 28) + 1,
+      saat: Math.floor(tomyeDakikaTop / 60),
+      dakika: tomyeDakikaTop % 60
     };
   }
-
   // Kanon Ses Çiftleri
   const SES_CIFTI = {
     b: 'p', p: 'b', c: 'ç', ç: 'c', d: 't', t: 'd', g: 'k', k: 'g',
@@ -375,15 +207,12 @@
   class TentiforTerminalEngine {
     constructor() {
       this.ses = new TerminalSes();
-      this.dizin = '/';
       this.gecmis = [];
       this.gecmisIndeksi = -1;
       this.tema = localStorage.getItem('tentifor_term_tema') || 'tentifor';
       this.crt = localStorage.getItem('tentifor_term_crt') === 'acik';
       this.boyut = localStorage.getItem('tentifor_term_boyut') || 'orta';
       this.adminOturumu = false;
-      this.matrixCalisiyor = false;
-      this.matrixAnimId = null;
       this.oyunDurumu = null;
       this.pencereAcik = false;
       this.tamEkran = false;
@@ -415,7 +244,7 @@
     istemiMetni() {
       const user = this.adminOturumu ? 'root' : 'tentifor';
       const host = this.adminOturumu ? 'tentifor-core' : 'arsiv';
-      const path = this.dizin === '/' ? '~' : `~${this.dizin}`;
+      const path = 'arsiv';
       const symbol = this.adminOturumu ? '#' : '$';
       return `<span class="term-kullanici">${user}@${host}</span><span class="term-ayirac">:</span><span class="term-dizin">${path}</span>${symbol} `;
     }
@@ -423,7 +252,7 @@
     istemiDüzMetin() {
       const user = this.adminOturumu ? 'root' : 'tentifor';
       const host = this.adminOturumu ? 'tentifor-core' : 'arsiv';
-      const path = this.dizin === '/' ? '~' : `~${this.dizin}`;
+      const path = 'arsiv';
       const symbol = this.adminOturumu ? '#' : '$';
       return `${user}@${host}:${path}${symbol} `;
     }
@@ -465,7 +294,6 @@
           <button class="term-hizli-hap" data-term-komut="sesler">sesler</button>
           <button class="term-hizli-hap" data-term-komut="oneri karakter">öneri</button>
           <button class="term-hizli-hap" data-term-komut="kurtar">kurtar</button>
-          <button class="term-hizli-hap" data-term-komut="ls">ls</button>
           <button class="term-hizli-hap" data-term-komut="roman son">roman</button>
           <button class="term-hizli-hap" data-term-komut="evren list">evren</button>
           <button class="term-hizli-hap" data-term-komut="karakter list">karakter</button>
@@ -487,7 +315,6 @@
           <button class="term-hizli-hap" data-term-komut="liderlik">liderlik</button>
           <button class="term-hizli-hap" data-term-komut="bulmaca">bulmaca</button>
           <button class="term-hizli-hap" data-term-komut="oyun">oyun</button>
-          <button class="term-hizli-hap" data-term-komut="matrix">kozmik akış</button>
           <button class="term-hizli-hap" data-term-komut="admin">admin</button>
           <button class="term-hizli-hap" data-term-komut="temizle">temizle</button>
         </div>
@@ -600,14 +427,14 @@
     }
 
     sonrakiTema(konteyner) {
-      const temalar = ['tentifor', 'matrix', 'amber', 'cyber', 'dracula', 'mono'];
+      const temalar = ['tentifor', 'amber', 'cyber', 'dracula', 'mono'];
       const suankiIndeks = temalar.indexOf(this.tema);
       const sonraki = temalar[(suankiIndeks + 1) % temalar.length];
       this.temaAyarla(sonraki, konteyner);
     }
 
     temaAyarla(yeniTema, konteyner) {
-      const temalar = ['tentifor', 'matrix', 'amber', 'cyber', 'dracula', 'mono'];
+      const temalar = ['tentifor', 'amber', 'cyber', 'dracula', 'mono'];
       if (!temalar.includes(yeniTema)) return;
       temalar.forEach((t) => konteyner.classList.remove(`tema-${t}`));
       konteyner.classList.add(`tema-${yeniTema}`);
@@ -629,17 +456,16 @@
       const sonKelime = parcalar[parcalar.length - 1];
 
       const tumKomutlar = [
-        'yardim', 'help', 'temizle', 'clear', 'cls', 'saat', 'time', 'tarih', 'date', 'zaman',
+        'yardim', 'help', 'temizle', 'saat', 'tarih',
         'takvim', 'cevir', 'yas', 'sesler', 'sescifti', 'alfabe', 'oneri', 'kod', 'sifre',
-        'uname', 'surum', 'whoami', 'kimim', 'pwd', 'ls', 'dir', 'cd', 'cat', 'oku',
-        'tree', 'find', 'bul', '404', 'neredeyim', 'kurtar', 'fix', 'rotalar',
+        'surum', '404', 'neredeyim', 'kurtar', 'rotalar',
         'roman', 'evren', 'karakter', 'katmanlar', 'katman', 'necale', 'ozan', 'eylul', 'girilar',
         'somdo', 'harita', 'sozluk', 'kyldo', 'baglar', 'fankitap', 'fanhikaye', 'kanon',
         'anomali', 'delilik', 'gorevler', 'muzik', 'ezgi', 'liderlik', 'rozetler', 'cuzdan',
         'defter', 'koleksiyon', 'buzul', 'zar', 'yankilar', 'bulmaca', 'hikaye',
-        'bildirimler', 'isim', 'alinti', 'ara', 'git', 'goto',
-        'matrix', 'oyun', 'macera', 'tema', 'theme',
-        'crt', 'ses', 'sound', 'ps', 'top', 'export', 'admin', 'sudo', 'cikis'
+        'bildirimler', 'isim', 'alinti', 'ara', 'git',
+        'oyun', 'macera', 'tema',
+        'crt', 'ses', 'export', 'admin', 'cikis'
       ];
 
       if (parcalar.length === 1) {
@@ -647,21 +473,7 @@
         if (eslesen.length >= 1) return `${eslesen[0]} `;
       } else {
         const ilk = parcalar[0].toLowerCase();
-        if (ilk === 'cd') {
-          const dizinler = SANAL_DIZINLER[this.dizin] || [];
-          const eslesen = dizinler.filter((d) => d.startsWith(sonKelime.toLowerCase()));
-          if (eslesen.length === 1) {
-            parcalar[parcalar.length - 1] = eslesen[0];
-            return parcalar.join(' ');
-          }
-        } else if (ilk === 'cat' || ilk === 'oku') {
-          const dosyalar = SANAL_DIZINLER[this.dizin] || [];
-          const eslesen = dosyalar.filter((d) => d.startsWith(sonKelime.toLowerCase()));
-          if (eslesen.length === 1) {
-            parcalar[parcalar.length - 1] = eslesen[0];
-            return parcalar.join(' ');
-          }
-        } else if (ilk === 'evren') {
+        if (ilk === 'evren') {
           const altlar = ['list', 'bilgi', 'git'];
           const es = altlar.filter((a) => a.startsWith(sonKelime.toLowerCase()));
           if (es.length === 1) {
@@ -755,64 +567,26 @@
             break;
 
           case 'temizle':
-          case 'clear':
-          case 'cls':
             ekran.innerHTML = '';
             break;
 
-          case 'echo':
-          case 'yaz':
-            this.yaz(ekran, this.kacir(kalanMetin));
-            break;
 
           case 'tarih':
-          case 'date':
-          case 'zaman':
             this.komutTarih(ekran);
             this.ses.onay();
             break;
 
-          case 'uname':
           case 'surum':
-          case 'version':
             this.komutSurum(ekran);
             this.ses.onay();
             break;
 
-          case 'whoami':
-          case 'kimim':
-            this.komutWhoami(ekran);
-            this.ses.onay();
-            break;
 
-          case 'pwd':
-            this.yaz(ekran, `<span class="term-yol">${this.dizin}</span>`);
-            break;
 
-          case 'ls':
-          case 'dir':
-            this.komutLs(ekran, argumanlar[0]);
-            this.ses.onay();
-            break;
 
-          case 'cd':
-            this.komutCd(ekran, argumanlar[0], istemiEl);
-            break;
 
-          case 'cat':
-          case 'oku':
-            this.komutCat(ekran, argumanlar[0]);
-            break;
 
-          case 'tree':
-            this.komutTree(ekran);
-            this.ses.onay();
-            break;
 
-          case 'find':
-          case 'bul':
-            this.komutFind(ekran, argumanlar[0]);
-            break;
 
           case '404':
           case 'neredeyim':
@@ -1037,23 +811,8 @@
             this.ses.onay();
             break;
 
-          case 'ps':
-          case 'top':
-            this.komutPs(ekran);
-            this.ses.onay();
-            break;
 
-          case 'ping':
-          case 'curl':
-          case 'fetch':
-          case 'cowsay':
-            this.ses.hata();
-            this.yaz(ekran, `<span class="term-uyari">"${this.kacir(anaKomut)}" komutu siteye / Tömye dünyasına özgü olmadığı için terminalden kaldırılmıştır.</span><br><span class="term-soluk">Siteye özgü komutları görmek için <b>yardim</b> yazabilirsiniz.</span>`);
-            break;
 
-          case 'matrix':
-            this.komutMatrix(konteyner, ekran);
-            break;
 
           case 'oyun':
           case 'macera':
@@ -1061,12 +820,12 @@
             break;
 
           case 'tema':
-          case 'theme':
             if (argumanlar[0]) {
-              this.temaAyarla(argumanlar[0].toLowerCase(), konteyner);
+              const secilenTema = argumanlar[0].toLowerCase();
+              this.temaAyarla(secilenTema, konteyner);
               this.yaz(ekran, `<span class="term-basari">Tema değiştirildi: <b>${this.tema}</b></span>`);
             } else {
-              this.yaz(ekran, '<span class="term-soluk">Kullanım: tema [tentifor | matrix | amber | cyber | dracula | mono]</span>');
+              this.yaz(ekran, '<span class="term-soluk">Kullanım: tema [tentifor | amber | cyber | dracula | mono]</span>');
             }
             break;
 
@@ -1080,7 +839,6 @@
             break;
 
           case 'ses':
-          case 'sound':
             if (argumanlar[0] === 'test') {
               this.ses.onay();
               setTimeout(() => this.ses.zil(), 200);
@@ -1096,10 +854,6 @@
             }
             break;
 
-          case 'history':
-          case 'gecmis':
-            this.yaz(ekran, this.gecmis.map((cmd, i) => `<span class="term-soluk">${(i + 1).toString().padStart(3, ' ')}</span>  ${this.kacir(cmd)}`).join('<br>'));
-            break;
 
           case 'export':
           case 'indir':
@@ -1108,12 +862,9 @@
 
           case 'admin':
           case 'yonetici':
-          case 'sudo':
             this.komutAdmin(ekran, argumanlar, istemiEl, rozetEl);
             break;
 
-          case 'exit':
-          case 'quit':
           case 'kapat':
             this.kapat();
             break;
@@ -1141,7 +892,6 @@
 <span class="term-vurgu">admin loglar</span>          : Güvenlik, 404 audit ve sistem erişim günlükleri.
 <span class="term-vurgu">admin panel</span>           : Görsel yönetici kontrol panelini (#yonetici) açar.
 <span class="term-vurgu">admin cikis</span>           : Root oturumunu kapatır ve normal moda döner.
-<span class="term-vurgu">sudo &lt;komut&gt;</span>         : Root yetkisiyle doğrudan komut yürütür.
         `);
         return;
       }
@@ -1201,7 +951,6 @@
   <span class="term-vurgu">defter</span>                       : Cihazınızdaki yerel okur defteri ve vurgular.
   <span class="term-vurgu">kod &lt;sifre&gt;</span>                  : Terminalden gizli arşiv kilitlerini açar.
   <span class="term-vurgu">muzik</span> [liste|cal|dur]        : Web Audio Tömye synthesizer retro ezgileri.
-  <span class="term-vurgu">matrix</span>                       : Tömye Kozmik Buzul & Kyldo Sinyal Akışı.
 
 <span class="term-parlak">🧭 404 & Kurtarma Konsolu:</span>
   <span class="term-vurgu">404</span>                          : Bulunulan sayfanın 404 analiz raporu.
@@ -1209,16 +958,12 @@
   <span class="term-vurgu">rotalar</span>                      : Geçerli tüm sistem rotalarını listeler.
   <span class="term-vurgu">git &lt;sayfa&gt;</span>                  : Doğrudan sayfaya geçiş yapar (git okuma, git sen...).
 
-<span class="term-parlak">📁 Dosya Sistemi (VFS):</span>
-  <span class="term-vurgu">ls</span> [yol] / <span class="term-vurgu">cd</span> / <span class="term-vurgu">cat</span> / <span class="term-vurgu">tree</span> / <span class="term-vurgu">find</span> : Sanal Tömye kütüphane arşivinde gezinme.
 
 <span class="term-parlak">⚙️ Sistem & Tercihler:</span>
   <span class="term-vurgu">yardim</span> [kat]                 : Yardım rehberi (örn: yardim admin).
   <span class="term-vurgu">temizle</span>                      : Terminal ekranını temizler.
   <span class="term-vurgu">surum</span>                        : Tömye Arşiv Çekirdeği sürüm bilgisi.
-  <span class="term-vurgu">whoami</span>                       : Aktif arşivci profili ve oturum durumu.
-  <span class="term-vurgu">ps</span>                           : Tömye arşiv arka plan katman ve süreçleri.
-  <span class="term-vurgu">tema &lt;ad&gt;</span>                    : tentifor, matrix, amber, cyber, dracula, mono.
+  <span class="term-vurgu">tema &lt;ad&gt;</span>                    : tentifor, amber, cyber, dracula, mono.
   <span class="term-vurgu">crt</span> [ac|kapat]               : Retro CRT tarama çizgisi efekti.
   <span class="term-vurgu">ses</span> [ac|kapat|test]          : Web Audio terminal seslerini ayarlar.
   <span class="term-vurgu">export</span>                       : Terminal oturum günlüğünü indirir.
@@ -1272,113 +1017,6 @@
 <span class="term-parlak">Cüzdan     :</span> ${cuzdan}
 <span class="term-parlak">Oturum     :</span> ${isAdmin ? '<span class="term-basari">ROOT TERMINAL SESSION</span>' : 'Standard Visitor'}
       `);
-    }
-
-    komutLs(ekran, hedefYol) {
-      const yol = this.cozYol(hedefYol || this.dizin);
-      const liste = SANAL_DIZINLER[yol];
-
-      if (!liste) {
-        this.ses.hata();
-        this.yaz(ekran, `<span class="term-hata">Dizin bulunamadı: ${this.kacir(yol)}</span>`);
-        return;
-      }
-
-      const ciktilar = liste.map((oge) => {
-        const tamYol = yol === '/' ? `/${oge}` : `${yol}/${oge}`;
-        const isDir = Boolean(SANAL_DIZINLER[tamYol]);
-        if (isDir) {
-          return `<span class="term-yol">📁 ${oge}/</span>`;
-        }
-        return `<span class="term-soluk">📄 ${oge}</span>`;
-      });
-
-      this.yaz(ekran, `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;margin:4px 0;">${ciktilar.join('')}</div>`);
-    }
-
-    komutCd(ekran, hedefYol, istemiEl) {
-      if (!hedefYol || hedefYol === '~') {
-        this.dizin = '/';
-        if (istemiEl) istemiEl.innerHTML = this.istemiMetni();
-        return;
-      }
-
-      if (hedefYol === '..') {
-        if (this.dizin !== '/') {
-          const parcalar = this.dizin.split('/').filter(Boolean);
-          parcalar.pop();
-          this.dizin = parcalar.length ? `/${parcalar.join('/')}` : '/';
-        }
-        if (istemiEl) istemiEl.innerHTML = this.istemiMetni();
-        return;
-      }
-
-      const yeniYol = this.cozYol(hedefYol);
-      if (SANAL_DIZINLER[yeniYol]) {
-        this.dizin = yeniYol;
-        if (istemiEl) istemiEl.innerHTML = this.istemiMetni();
-        this.ses.onay();
-      } else {
-        this.ses.hata();
-        this.yaz(ekran, `<span class="term-hata">Böyle bir dizin yok: ${this.kacir(hedefYol)}</span>`);
-      }
-    }
-
-    komutCat(ekran, dosyaAdi) {
-      if (!dosyaAdi) {
-        this.yaz(ekran, '<span class="term-soluk">Kullanım: cat &lt;dosya_adı&gt;</span>');
-        return;
-      }
-
-      let tamYol = dosyaAdi.startsWith('/') ? dosyaAdi : (this.dizin === '/' ? `/${dosyaAdi}` : `${this.dizin}/${dosyaAdi}`);
-      tamYol = pathNormalize(tamYol);
-
-      const icerik = SANAL_DOSYALAR[tamYol];
-      if (icerik !== undefined) {
-        this.ses.onay();
-        this.yaz(ekran, `<div class="term-kod-kutusu" style="background:rgba(255,255,255,0.03);padding:8px;border-radius:4px;border:1px solid var(--term-border);font-size:12px;">${this.kacir(icerik)}</div>`);
-      } else {
-        this.ses.hata();
-        this.yaz(ekran, `<span class="term-hata">Dosya bulunamadı: ${this.kacir(dosyaAdi)}</span>`);
-      }
-    }
-
-    komutTree(ekran) {
-      let agacHtml = '<div class="term-agac">\n<span class="term-vurgu">/</span> (Tentiforverse Sanal Kütüphanesi)\n';
-      const rootList = SANAL_DIZINLER['/'] || [];
-
-      rootList.forEach((dizin, i) => {
-        const isLastDir = i === rootList.length - 1;
-        const dirPrefix = isLastDir ? '└── ' : '├── ';
-        agacHtml += `${dirPrefix}<span class="term-yol">${dizin}/</span>\n`;
-
-        const subItems = SANAL_DIZINLER[`/${dizin}`] || [];
-        subItems.forEach((sub, j) => {
-          const isLastSub = j === subItems.length - 1;
-          const subPrefix = isLastDir ? '    ' : '│   ';
-          const filePrefix = isLastSub ? '└── ' : '├── ';
-          agacHtml += `${subPrefix}${filePrefix}<span class="term-soluk">${sub}</span>\n`;
-        });
-      });
-
-      agacHtml += '</div>';
-      this.yaz(ekran, agacHtml);
-    }
-
-    komutFind(ekran, aranan) {
-      if (!aranan) {
-        this.yaz(ekran, '<span class="term-soluk">Kullanım: find &lt;terim&gt;</span>');
-        return;
-      }
-      const terim = aranan.toLowerCase();
-      const bulunanlar = Object.keys(SANAL_DOSYALAR).filter((f) => f.toLowerCase().includes(terim));
-
-      if (bulunanlar.length) {
-        this.yaz(ekran, `<span class="term-parlak">Eşleşen Dosyalar (${bulunanlar.length}):</span>\n` +
-          bulunanlar.map((b) => `<span class="term-yol">${b}</span>`).join('\n'));
-      } else {
-        this.yaz(ekran, `<span class="term-soluk">"${this.kacir(aranan)}" ile eşleşen sanal dosya bulunamadı.</span>`);
-      }
     }
 
     komut404(ekran) {
@@ -2078,21 +1716,6 @@ ${gorevler.map((g) => {
       this.yaz(ekran, `<span class="term-basari">🎶 Çalınıyor: <b>${ad}</b> (8-Bit Synthesizer)</span>\n<span class="term-soluk">Durdurmak için: <b>muzik dur</b></span>`);
     }
 
-    komutPs(ekran) {
-      this.yaz(ekran, `
-<span class="term-parlak">TÖMYE ARŞİV KATMANLARI VE SÜREÇ İZLEME MOTORU:</span>
-<span class="term-soluk">PID  KATMAN   ZAMAN    SÜREÇ ADI         DURUM    BELLEK   AÇIKLAMA</span>
-  1  kat/0    00:00:02 init-tentifor     RUNNING  14.2 MB  24. Evren Çekirdek Başlatıcısı
- 12  kat/1    00:00:01 tomye-takvim      RUNNING   5.4 MB  28 Gün / 26 Saat Çark Senkronu
- 28  kat/2    00:00:01 kyldo-fonetik     ACTIVE    4.1 MB  Kadim Ses Çifti & İsim Matrisi
- 42  kat/3    00:00:01 sw-cache-worker   IDLE      8.6 MB  Çevrimdışı Arşiv Senkronizasyonu
- 77  kat/1    00:00:00 audio-synth       READY     2.1 MB  Web Audio Tömye Rezonans Sentezi
-104  kat/4    00:00:03 offline-queue     SLEEP     4.8 MB  İşlem Kuyruğu & Çakışma Yönetimi
-128  kat/5    00:00:00 buzul-muhafiz     ACTIVE    3.9 MB  Necale Kütüphane Bekçi Nöbeti
-215  kat/0    00:00:00 web-terminal      ACTIVE    6.4 MB  T-Term Siber Konsol Motoru
-      `);
-    }
-
     komutSaat(ekran) {
       const tomye = tomyeZamani();
       const gunOrani = (tomye.saat * 60 + tomye.dakika) / (26 * 60);
@@ -2237,7 +1860,7 @@ ${secilen.map((kok, i) => {
 <span class="term-vurgu">Tarihsel İz :</span> İsyanda yüz binlerce cilt parşömen kül edildi. Fakat Baş Arşivci Necale
 ve dilbilimciler, kelimeleri Kyldo ses çiftleri ve ayna yazısıyla şifreleyerek buzulun altına gömdü.
 <span class="term-vurgu">Durum       :</span> Küller kütüphanenin zeminine karıştı; yangın bitti ama metinler hâlâ şifreli.
-<span class="term-soluk">Detaylı inceleme için: <b>cat /kitaplar/girilar-manifestosu.txt</b></span>
+<span class="term-soluk">Detaylı inceleme için: <b>girilar</b></span>
       `);
     }
 
@@ -2251,7 +1874,7 @@ ve dilbilimciler, kelimeleri Kyldo ses çiftleri ve ayna yazısıyla şifreleyer
 <span class="term-vurgu">Kişisel Not :</span> Gırılar kütüphaneyi yakarken alevlerin arasından çıkardığı son cilt,
 Tentifor Kanon Anahtarı'dır. Gece nöbetlerinde feneriyle donmuş rafları teftiş eder.
 <span class="term-vurgu">Durum       :</span> Aktif ve Tetikte.
-<span class="term-soluk">Detay için: <b>cat /karakterler/necale.txt</b> veya <b>muzik cal necale</b></span>
+<span class="term-soluk">Detay için: <b>necale</b> veya <b>muzik cal necale</b></span>
       `);
     }
 
@@ -2261,7 +1884,7 @@ Tentifor Kanon Anahtarı'dır. Gece nöbetlerinde feneriyle donmuş rafları tef
 <span class="term-vurgu">Görevi      :</span> Tömye'nin donmuş okyanusunda çatlakları dinlemek.
 <span class="term-vurgu">Gözlemi     :</span> <i>"Buzun altındaki yankılar sadece geçmişi değil; yazılmamış hikâyeleri de fısıldar."</i>
 <span class="term-vurgu">Rotası      :</span> Üçüncü Çatlak'tan Dördüncü Katman Çekirdeği'ne uzanan gizli iz.
-<span class="term-soluk">Detay için: <b>cat /karakterler/ozan.txt</b></span>
+<span class="term-soluk">Detay için: <b>ozan</b></span>
       `);
     }
 
@@ -2271,7 +1894,7 @@ Tentifor Kanon Anahtarı'dır. Gece nöbetlerinde feneriyle donmuş rafları tef
 <span class="term-vurgu">Başarısı    :</span> Tömye'nin ayna alfabesini ve ses çifti matrisini ilk deşifre eden arşivci.
 <span class="term-vurgu">İlkesi      :</span> <i>"Bir kelimeyi tersten okuduğunda duyduğun ses, onun gerçek kökenidir."</i>
 <span class="term-vurgu">Çalışması   :</span> Ses çiftleri tablosunu ve 28 günlük ay takvimini belgeledi.
-<span class="term-soluk">Detay için: <b>cat /karakterler/eylul.txt</b> veya <b>sesler</b></span>
+<span class="term-soluk">Detay için: <b>eylul</b> veya <b>sesler</b></span>
       `);
     }
 
@@ -2287,7 +1910,7 @@ Tentifor Kanon Anahtarı'dır. Gece nöbetlerinde feneriyle donmuş rafları tef
 <span class="term-vurgu">5. Katman: Yanmış Kitaplık</span>      — Gırılar'ın kül ettiği kadim arşiv odaları.
 <span class="term-vurgu">6. Katman: Dördüncü Çatlak</span>      — Uzay-zaman bükülmeleri ve geçitler.
 <span class="term-vurgu">7. Katman: Arşiv Çekirdeği</span>      — Kanonun kalbi, aysız gökyüzünün mutlak sırrı.
-<span class="term-soluk">Katman metnini okumak için: <b>cat /kitaplar/buzul-katmanlari.txt</b></span>
+<span class="term-soluk">Katman metnini okumak için: <b>katmanlar</b></span>
       `);
     }
 
@@ -2298,7 +1921,7 @@ Tentifor Kanon Anahtarı'dır. Gece nöbetlerinde feneriyle donmuş rafları tef
 <span class="term-vurgu">Köken       :</span> Aynaların arkasındaki sessiz ve kadim Tentifor yankısı.
 <span class="term-vurgu">Kozmoloji   :</span> Işığın kırılmadığı, yalnızca donduğu derin boyut.
 <span class="term-vurgu">Dosya Kaydı :</span> <code>/evrenler/somdo.json</code>
-<span class="term-soluk">İçeriği görmek için: <b>cat /evrenler/somdo.json</b> veya <b>evren bilgi somdo</b></span>
+<span class="term-soluk">İçeriği görmek için: <b>evren bilgi somdo</b> veya <b>evren bilgi somdo</b></span>
       `);
     }
 
@@ -2330,59 +1953,6 @@ Tentifor Kanon Anahtarı'dır. Gece nöbetlerinde feneriyle donmuş rafları tef
 <span class="term-vurgu">Cihaz Durumu         :</span> Çevrimdışı yerel defter hazır
 <span class="term-soluk">Defter bölümünü sitede açmak için: <b>git sen</b></span>
       `);
-    }
-
-    komutMatrix(konteyner, ekran) {
-      if (this.matrixCalisiyor) return;
-      this.matrixCalisiyor = true;
-
-      const canvas = document.createElement('canvas');
-      canvas.className = 'term-matrix-canvas';
-      konteyner.appendChild(canvas);
-
-      const ctx = canvas.getContext('2d');
-      canvas.width = konteyner.clientWidth;
-      canvas.height = konteyner.clientHeight;
-
-      const chars = 'TÖMYEᚠᚢᚦ01AXGERDECKYLDOÇATLAK24BUZE25GIRINECALE';
-      const fontSize = 14;
-      const columns = Math.floor(canvas.width / fontSize);
-      const drops = Array.from({ length: columns }, () => 1);
-
-      this.yaz(ekran, '<span class="term-basari">Tömye Kozmik Buzul & Kyldo Sinyal Akışı başlatıldı. Durdurmak için ekrana tıklayın.</span>');
-
-      const draw = () => {
-        ctx.fillStyle = 'rgba(7, 13, 18, 0.08)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#38bdf8';
-        ctx.font = `${fontSize}px monospace`;
-
-        for (let i = 0; i < drops.length; i++) {
-          const text = chars.charAt(Math.floor(Math.random() * chars.length));
-          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-          if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-            drops[i] = 0;
-          }
-          drops[i]++;
-        }
-        if (this.matrixCalisiyor) {
-          this.matrixAnimId = requestAnimationFrame(draw);
-        }
-      };
-
-      draw();
-
-      const durdur = () => {
-        this.matrixCalisiyor = false;
-        if (this.matrixAnimId) cancelAnimationFrame(this.matrixAnimId);
-        canvas.remove();
-        this.yaz(ekran, '<span class="term-soluk">Kozmik buzul akışı sonlandırıldı.</span>');
-      };
-
-      canvas.addEventListener('click', durdur, { once: true });
-      setTimeout(() => {
-        if (this.matrixCalisiyor) durdur();
-      }, 15000);
     }
 
     komutOyun(ekran, adim) {
@@ -2587,13 +2157,6 @@ Raporlanan Fan Evren : 0
       }
     }
 
-    // Yol Normalizasyonu & Çözümü
-    cozYol(hedef) {
-      if (!hedef) return this.dizin;
-      let tamYol = hedef.startsWith('/') ? hedef : (this.dizin === '/' ? `/${hedef}` : `${this.dizin}/${hedef}`);
-      return pathNormalize(tamYol);
-    }
-
     kacir(metin) {
       return String(metin == null ? '' : metin)
         .replace(/&/g, '&amp;')
@@ -2710,12 +2273,59 @@ Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
     }
   });
 
-  // Yüzen Düğme (FAB) Ekleme
-  document.addEventListener('DOMContentLoaded', () => {
+  // Menü ve Header'a Terminal Tuşu Ekleme Fonksiyonu
+  function menuTerminalTusuEkle() {
+    // 1. Header (Üst Menü Çubuğu) Tuşu
+    const header = document.querySelector('header.ust');
+    if (header && !header.querySelector('#btnTerminalUst')) {
+      const btn = document.createElement('button');
+      btn.className = 'ust-ikon terminal-menu-btn';
+      btn.id = 'btnTerminalUst';
+      btn.type = 'button';
+      btn.setAttribute('data-term-ac', '1');
+      btn.setAttribute('aria-label', 'Tentifor Terminal Konsolu');
+      btn.setAttribute('title', 'Terminal Konsolu (>_)');
+      btn.innerHTML = '&gt;_';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        terminalInstance.ac();
+      });
+      const btnKod = header.querySelector('#btnKod');
+      if (btnKod) {
+        header.insertBefore(btn, btnKod);
+      } else {
+        header.appendChild(btn);
+      }
+    }
+
+    // 2. Gezinme (Desktop Navigasyon Menüsü) Tuşu
+    const gezinme = document.querySelector('#gezinme');
+    if (gezinme && !gezinme.querySelector('#terminalGezBtn')) {
+      const gezBtn = document.createElement('button');
+      gezBtn.className = 'gez-btn gez-terminal';
+      gezBtn.id = 'terminalGezBtn';
+      gezBtn.type = 'button';
+      gezBtn.setAttribute('data-term-ac', '1');
+      gezBtn.setAttribute('aria-label', 'Tentifor Terminal Konsolu');
+      gezBtn.setAttribute('title', 'Tentifor Arşiv Terminali (Ctrl+`)');
+      gezBtn.innerHTML = '&gt;_ Terminal';
+      gezBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        terminalInstance.ac();
+      });
+      gezinme.appendChild(gezBtn);
+    }
+  }
+
+  // Yüzen Düğme (FAB) ve Menü Tuşları Başlatma
+  function arayuzDugmeleriKur() {
+    menuTerminalTusuEkle();
+
     if (!document.querySelector('#tentiforTermFab')) {
       const fab = document.createElement('button');
       fab.id = 'tentiforTermFab';
       fab.className = 'tentifor-term-fab';
+      fab.setAttribute('data-term-ac', '1');
       fab.setAttribute('aria-label', 'Tentifor Arşiv Terminalini Aç');
       fab.setAttribute('title', 'Tentifor Terminali Aç (Ctrl+`)');
       fab.innerHTML = '<span class="fab-nokta"></span> >_ Terminal';
@@ -2724,10 +2334,26 @@ Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
       });
       document.body.appendChild(fab);
     }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', arayuzDugmeleriKur);
+  } else {
+    arayuzDugmeleriKur();
+  }
+
+  // Tıklama Olay Delegasyonu (Mobil Menü, Header ve Linkler)
+  document.addEventListener('click', (e) => {
+    const hedef = e.target.closest && e.target.closest('#btnTerminalUst, #terminalGezBtn, #btnTerminal, [data-term-ac], [data-mobil-eylem="terminal"], [data-gez-git="terminal"]');
+    if (hedef) {
+      e.preventDefault();
+      terminalInstance.ac();
+    }
   });
 
   // Rota Kontrolü: #/terminal veya #/konsol açılırsa
   function rotaTerminalKontrol() {
+    menuTerminalTusuEkle();
     const hash = (typeof location !== 'undefined' ? location.hash : '').toLowerCase();
     if (hash === '#/terminal' || hash === '#/konsol') {
       terminalInstance.ac();

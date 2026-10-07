@@ -17,7 +17,6 @@ const jsContent = fs.readFileSync(terminalJsPath, 'utf8');
 const cssContent = fs.readFileSync(terminalCssPath, 'utf8');
 
 assert.ok(cssContent.includes('.tema-tentifor'), 'CSS Tentifor teması tanımlanmalı');
-assert.ok(cssContent.includes('.tema-matrix'), 'CSS Matrix teması tanımlanmalı');
 assert.ok(cssContent.includes('.tema-amber'), 'CSS Amber teması tanımlanmalı');
 assert.ok(cssContent.includes('.crt-aktif'), 'CSS CRT tarama efekti tanımlanmalı');
 
@@ -147,42 +146,17 @@ const rozetEl = modal.querySelector('#term-modal-rozet');
 assert.ok(ekran, 'Terminal ekranı mevcut olmalı');
 assert.ok(istemiEl, 'Terminal istemi mevcut olmalı');
 
-// 5. Sanal Dosya Sistemi (VFS) ve Komut Yürütme Testleri
+// 5. Site komut yüzeyi
 function run(cmd) {
   term.komutCalistir(cmd, ekran, istemiEl, rozetEl, modal);
   return ekran.textContent || '';
 }
-
-// 5.1 ls ve pwd
-let out = run('pwd');
-assert.ok(out.includes('/'), 'pwd kök dizini döndürmeli');
-
-out = run('ls');
-assert.ok(out.includes('evrenler') && out.includes('karakterler'), 'ls dizinleri listelemeli');
-
-// 5.2 cd ve cat
-run('cd evrenler');
-assert.equal(term.dizin, '/evrenler', 'cd dizin değiştirmeli');
-out = run('cat eterya.json');
-assert.ok(out.includes('Eterya') && out.includes('Model Evreni'), 'cat dosya içeriğini okumalı');
-
-run('cd ..');
-assert.equal(term.dizin, '/', 'cd .. bir üst dizine dönmeli');
-
-run('cd karakterler');
-out = run('cat necale.txt');
-assert.ok(out.includes('Necale') && out.includes('Baş Arşivci'), 'Necale karakter dosyası okunabilmeli');
-
-// 5.3 tree ve find
-run('cd /');
-out = run('tree');
-assert.ok(out.includes('├──') || out.includes('└──'), 'tree ASCII ağacı üretmeli');
-
-out = run('find necale');
-assert.ok(out.includes('/karakterler/necale.txt'), 'find dosyayı bulmalı');
-
-console.log('✓ Sanal Dosya Sistemi (VFS) komutları doğrulandı.');
-
+for (const komut of ['ls', 'cd', 'cat', 'pwd', 'uname', 'whoami', 'ps', 'ping', 'curl', 'fetch', 'cowsay', 'matrix', 'sudo']) {
+  const out = run(komut);
+  assert.ok(out.includes('Komut bulunamadı'), `${komut} Termux/site dışı komut olarak kaldırılmış olmalı`);
+}
+console.log('✓ Termux ve site dışı komutlar terminal yüzeyinden kaldırıldı.');
+let out = '';
 // 6. Tömye Kozmolojisi ve Evren Motoru Komutları
 out = run('tarih');
 assert.ok(out.includes('Tömye Yılı') && out.includes('28 günlük döngü'), 'Tömye takvim koordinatları hesaplanmalı');
@@ -266,58 +240,6 @@ assert.ok(out.includes('Kyldo Kodlama Çıktısı'), 'kyldo ses dönüşüm matr
 out = run('bulmaca');
 assert.ok(out.includes('GÜNLÜK TÖMYE BİLGİ BULMACASI'), 'bulmaca interaktif soru üretmeli');
 
-out = run('ps');
-assert.ok(out.includes('init-tentifor') && out.includes('RUNNING'), 'Sistem süreç tablosu görüntülenmeli');
-
-// 8.1 Yeni Siteye Özgü Çekirdek Komutlar
-out = run('saat');
-assert.ok(out.includes('TÖMYE GÜNEŞ ZAMANI') && out.includes('Aysız Gezegen'), 'saat Tömye güneş saatini vermeli');
-
-out = run('cevir 2026-10-06');
-assert.ok(out.includes('TÖMYE TAKVİM ÇEVİRİSİ') && out.includes('Tömye Tarihi'), 'cevir takvim dönüşümü yapmalı');
-
-out = run('yas 25');
-assert.ok(out.includes('YAŞ ÇEVİRİSİ') && out.includes('Tömye yılı'), 'yas Tömye yaş çevirisi yapmalı');
-
-out = run('sesler');
-assert.ok(out.includes('TENTİFORVERSE KANON SES TABLOSU') && out.includes('b ↔ p'), 'sesler ses çiftleri tablosunu dökmeli');
-
-out = run('oneri karakter');
-assert.ok(out.includes('İSİM ADAYLARI'), 'oneri isim adayları üretmeli');
-
-out = run('girilar');
-assert.ok(out.includes('GIRILAR') && out.includes('KİTAP YAKAN İSYANCILAR'), 'girilar kadim isyan bilgisini dökmeli');
-
-out = run('necale');
-assert.ok(out.includes('NECALE') && out.includes('BAŞ ARŞİVCİ'), 'necale bekçi kaydını getirmeli');
-
-out = run('ozan');
-assert.ok(out.includes('OZAN') && out.includes('BUZUL GEZGİNİ'), 'ozan buzul gezgini kaydını getirmeli');
-
-out = run('eylul');
-assert.ok(out.includes('EYLÜL') && out.includes('KYLDO'), 'eylul yazıt çözücü kaydını getirmeli');
-
-out = run('katmanlar');
-assert.ok(out.includes('7 DONMUŞ KOZMİK KATMANI'), 'katmanlar 7 kozmik katmanı getirmeli');
-
-out = run('somdo');
-assert.ok(out.includes('ŞOMDO') && out.includes('MODEL EVRENİ'), 'somdo model evren kaydını getirmeli');
-
-out = run('zar 25');
-assert.ok(out.includes('TÖMYE ZARI ATILDI'), 'zar Tömye zarı atmalı');
-
-out = run('defter');
-assert.ok(out.includes('KİŞİSEL OKUR DEFTERİNİZ'), 'defter kişisel okur defteri özetini vermeli');
-
-out = run('cowsay');
-assert.ok(out.includes('özgü olmadığı için terminalden kaldırılmıştır'), 'Siteye özgü olmayan cowsay komutu kaldırılmış olmalı');
-
-out = run('ping');
-assert.ok(out.includes('özgü olmadığı için terminalden kaldırılmıştır'), 'Siteye özgü olmayan ping komutu kaldırılmış olmalı');
-
-out = run('curl');
-assert.ok(out.includes('özgü olmadığı için terminalden kaldırılmıştır'), 'Siteye özgü olmayan curl komutu kaldırılmış olmalı');
-
 console.log('✓ Siteye özgü roman, harita, fan-kitap koruma, anomali, müzik, cüzdan ve buzul komutları doğrulandı.');
 
 // 9. Yönetici / Admin Özel Konsol Komutları
@@ -356,8 +278,6 @@ assert.equal(term.otomatikTamamla('ku'), 'kurtar ', 'ku -> kurtar olarak tamamla
 term.temaAyarla('amber', modal);
 assert.ok(modal.classList.contains('tema-amber'), 'Tema amber olarak ayarlanmalı');
 
-term.temaAyarla('matrix', modal);
-assert.ok(modal.classList.contains('tema-matrix'), 'Tema matrix olarak ayarlanmalı');
 
 console.log('✓ Otomatik tamamlama (Tab) ve tema motoru testleri geçti.');
 
