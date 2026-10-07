@@ -190,7 +190,7 @@ const distDosyalarVeDizinler = [
 
 // APK dağıtımı ve Android App Links de production çıktısına aittir.
 // Native/Termux kaynak kodu ve bundled www production web çıktısına taşınmaz.
-for (const oge of ['uygulama/indir', '.well-known']) {
+for (const oge of ['uygulama/indir', 'uygulama/ac', '.well-known']) {
   const kaynak = path.join(ROOT_DIR, oge);
   const hedef = path.join(distDir, oge);
   if (fs.existsSync(kaynak)) fs.cpSync(kaynak, hedef, { recursive: true });

@@ -33,6 +33,11 @@ assert.match(read('uygulama/kabuk/android/app/src/main/java/dev/pages/tentiforap
 assert.match(read('uygulama/kabuk/android/app/src/main/res/layout/tentifor_widget.xml'),/android:text="TentiFor"/);
 assert.ok(!fs.existsSync('dist/uygulama/kabuk'),'native source must not be part of production web output');
 assert.ok(fs.existsSync('dist/uygulama/indir/apk.json'),'APK distribution metadata must remain available');
+assert.ok(fs.existsSync('dist/uygulama/ac/index.html'),'public native auth bridge must remain available');
+const authFunction=read('js/core/28-hesap.js').match(/function hesapDonusAdresi\(e\)\{([^}]+)\}/)[1];
+const callback=new Function('e','location','kabukMu',authFunction);
+assert.equal(callback('onay',{origin:'https://localhost',pathname:'/'},()=>true),'https://tentifor.com/uygulama/ac/?hesap=onay');
+assert.equal(callback('yenisifre',{origin:'https://tentifor.com',pathname:'/'},()=>false),'https://tentifor.com/?hesap=yenisifre');
 assert.doesNotMatch(read('uygulama/kabuk/www/hata.html'),/TentiforApp|pages\.dev/,'preserved native error fallback must use new branding');
 const routeDoc=new JSDOM(read('dist/evren/e25/index.html')).window.document;
 assert.equal(routeDoc.querySelector('meta[name="twitter:url"]').content,'https://tentifor.com/evren/e25/');
