@@ -31,21 +31,6 @@
   --term-success: #10b981;
 }
 
-/* Tema: Matrix (Yeşil Fosfor CRT) */
-.tema-matrix {
-  --term-bg: #040d06;
-  --term-surface: #0a1f0f;
-  --term-border: #11421c;
-  --term-text: #00ff66;
-  --term-text-bright: #66ff99;
-  --term-text-muted: #008833;
-  --term-prompt: #33ff77;
-  --term-path: #88ffaa;
-  --term-accent: #ffff55;
-  --term-danger: #ff3344;
-  --term-success: #00ff66;
-}
-
 /* Tema: Kehribar (Amber 1980s Retro CRT) */
 .tema-amber {
   --term-bg: #120a02;
@@ -448,13 +433,53 @@
   100% { transform: scale(0.9); opacity: 0.7; }
 }
 
-/* Matrix Yağmuru Canvas */
-.term-matrix-canvas {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  z-index: 10;
-  pointer-events: auto;
+/* Terminal Menü Düğmeleri Stilleri */
+.terminal-menu-btn {
+  font-family: var(--term-font, monospace) !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  letter-spacing: -0.5px;
+  color: var(--deniz, #1c5c96) !important;
+  border: 1px solid var(--buz, #dce8f1);
+  background: var(--kart, #ffffff);
+  border-radius: 8px;
+  padding: 0 8px;
+  min-width: 36px;
+  height: 36px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.terminal-menu-btn:hover,
+.terminal-menu-btn:focus-visible {
+  background: var(--deniz, #1c5c96);
+  color: #ffffff !important;
+  border-color: var(--deniz, #1c5c96);
+}
+
+.gez-btn.gez-terminal {
+  font-family: var(--term-font, monospace) !important;
+  font-size: 12.5px !important;
+  font-weight: 600;
+  color: var(--deniz, #1c5c96);
+  border: 1px dashed var(--deniz, #1c5c96);
+  background: rgba(56, 189, 248, 0.08);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gez-btn.gez-terminal:hover,
+.gez-btn.gez-terminal:focus-visible {
+  background: var(--deniz, #1c5c96);
+  color: #ffffff !important;
+  border-style: solid;
 }
 
 /* 404 Sayfasında Terminal Çağrı Kartı */

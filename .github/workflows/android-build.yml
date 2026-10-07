@@ -29,7 +29,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
       - name: Enable KVM for Android emulator
         run: |
@@ -43,7 +42,7 @@ jobs:
           fi
 
       - name: Install web dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-audit --no-fund
 
       - name: Build web and synchronize APK assets
         run: npm run build

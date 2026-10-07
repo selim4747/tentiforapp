@@ -11,7 +11,7 @@
     'isim', 'oneri', 'sesler', 'ara', 'karakter', 'evren', 'sozluk',
     'girilar', 'necale', 'ozan', 'eylul', 'katmanlar', 'somdo', 'defter',
     'kod', 'cuzdan', 'rozetler', 'tema', 'git', 'oyun', 'zar',
-    'matrix', 'whoami', 'surum', 'temizle', 'clear', 'echo'
+    'whoami', 'surum', 'temizle', 'clear', 'echo'
   ];
 
   var TEMA_LISTESI = ['buz', 'gece', 'kutuphane', 'orman', 'ara', 'virus', 'uclu', 'tas'];
@@ -196,7 +196,6 @@
 
   var history = [];
   var historyIdx = -1;
-  var matrixTimer = null;
 
   function injectStyles() {
     if (document.getElementById('tentiforTerminalCss')) return;
@@ -224,11 +223,6 @@
   function calistir(rawCmd, container) {
     var full = String(rawCmd || '').trim();
     if (!full) return;
-
-    if (matrixTimer) {
-      clearInterval(matrixTimer);
-      matrixTimer = null;
-    }
 
     appendLine(container, '<span class="tf-term-prompt">tomye@tentifor:~$</span> ' + esc(full), 'cmd');
     history.push(full);
@@ -267,7 +261,6 @@
         appendLine(container, '  <b>whoami</b>             Mevcut oturum ve arşivci kimliğin');
         appendLine(container, '  <b>oyun kelime</b>        Hızlı Kyldo kelime bilmecesi');
         appendLine(container, '  <b>zar [yuz]</b>          Zar atar (1-6, 1-20 veya Tömye usulü 1-25)');
-        appendLine(container, '  <b>matrix</b>             Terminal glitch/yağmur akışı');
         appendLine(container, '  <b>temizle</b>            Terminal ekranını temizler');
         break;
       }
@@ -564,18 +557,7 @@
       }
 
       case 'matrix': {
-        appendLine(container, 'Tömye Kozmik Buzul & Kyldo Sinyal Akışı başlatıldı...', 'good');
-        var glyphs = '01ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟTÖMYEAX24GERDECKYLDO';
-        matrixTimer = setInterval(function () {
-          var str = '';
-          for (var i = 0; i < 48; i++) {
-            str += glyphs[Math.floor(Math.random() * glyphs.length)] + ' ';
-          }
-          appendLine(container, str, 'dim');
-        }, 120);
-        setTimeout(function () {
-          if (matrixTimer) { clearInterval(matrixTimer); matrixTimer = null; }
-        }, 8000);
+        appendLine(container, '"matrix" komutu sistemden tamamen kaldırılmıştır. Terminal Tömye evrenine özgü çalışır.', 'warn');
         break;
       }
 
@@ -688,7 +670,6 @@
         <button type="button" class="tf-term-pill" data-term-cmd="ara Ax">ara Ax</button>
         <button type="button" class="tf-term-pill" data-term-cmd="karakter Necale">karakter Necale</button>
         <button type="button" class="tf-term-pill" data-term-cmd="zar 25">zar</button>
-        <button type="button" class="tf-term-pill" data-term-cmd="matrix">matrix</button>
         <button type="button" class="tf-term-pill" data-term-cmd="yardim">yardim</button>
       </div>
       <div class="tf-term-input-row">
