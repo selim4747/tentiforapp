@@ -1,13 +1,13 @@
 {
-  "kod": "c7dd9e676154",
-  "surum": "6.3.7",
-  "boyut": 7763493,
-  "tarih": "2026-10-03T10:20:03+03:00",
-  "not": "TentiforApp 6.3.7: ücretsiz planda aylık 1 evren, 3 EvrenGezer, 10 fan hikâyesi ve evren başına 1 ek gezegen; evrenle gelen başlangıç gezegeni limite dahil değildir.",
-  "sha256": "c7dd9e67615478adad2bb68d35a7a7594d3a2a3f65daf5c596475dd22f39f838",
-  "version": "6.3.7",
-  "size": 7763493,
-  "sizeBytes": 7763493,
-  "updatedAt": "2026-10-03T07:20:03Z",
-  "notes": "TentiforApp 6.3.7 FCM Android bildirimli APK — uygulama kapalıyken bildirim kanalı düzeltildi."
+  "kod": "8f13f07676cb",
+  "surum": "6.3.13",
+  "boyut": 7202487,
+  "tarih": "2026-10-07T11:14:11+00:00",
+  "not": "TentiFor 6.3.13: yeni kalıcı imzalı release APK; uygulama kimliği ve web bağlantıları korunur.",
+  "sha256": "8f13f07676cbe29679a7973519a7161dcd1662b1c0381ae98ef4d6025992616a",
+  "version": "6.3.13",
+  "size": 7202487,
+  "sizeBytes": 7202487,
+  "updatedAt": "2026-10-07T11:14:11Z",
+  "notes": "TentiFor 6.3.13 yeni kalıcı imzalı release APK — mevcut eski APK üzerine güncelleme yapılamaz; yeniden kurulum gerekir."
 }

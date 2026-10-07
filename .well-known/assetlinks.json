@@ -7,7 +7,8 @@
       "namespace": "android_app",
       "package_name": "dev.pages.tentiforapp",
       "sha256_cert_fingerprints": [
-        "68:62:F4:DE:23:17:52:3E:C0:48:ED:EB:41:67:8B:22:D9:48:96:5A:67:35:74:19:5C:1F:FB:32:3F:FC:5C:29"
+        "68:62:F4:DE:23:17:52:3E:C0:48:ED:EB:41:67:8B:22:D9:48:96:5A:67:35:74:19:5C:1F:FB:32:3F:FC:5C:29",
+        "7D:DE:5A:8E:4A:B8:E2:85:FC:5F:AE:67:98:72:79:C0:DA:81:F8:42:EF:6B:37:C9:C9:34:6C:09:99:15:12:DE"
       ]
     }
   }

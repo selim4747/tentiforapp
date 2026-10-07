@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -9,11 +10,18 @@ const pkg = readJson('package.json');
 const data = readJson('veri.json');
 const manifest = readJson('manifest.webmanifest');
 const shellPkg = readJson('uygulama/kabuk/package.json');
+const apkMeta = readJson('uygulama/indir/apk.json');
+const apkPath = path.join(root, 'uygulama/indir/tentiforapp.apk');
 
 assert.match(pkg.version, /^\d+\.\d+\.\d+$/);
 assert.equal(data.surum, pkg.version, 'veri.json package.json ile aynı sürümü taşımalı');
 assert.equal(manifest.version, pkg.version, 'manifest package.json ile aynı sürümü taşımalı');
 assert.equal(shellPkg.version, pkg.version, 'APK kabuğu package.json ile aynı sürümü taşımalı');
+assert.equal(apkMeta.version, pkg.version, 'APK metadata sürümü package.json ile aynı olmalı');
+assert.equal(apkMeta.sizeBytes, fs.statSync(apkPath).size, 'APK metadata boyutu binary ile aynı olmalı');
+assert.equal(apkMeta.sha256, crypto.createHash('sha256').update(fs.readFileSync(apkPath)).digest('hex'), 'APK metadata hash’i binary ile aynı olmalı');
+const assetLinks = readJson('.well-known/assetlinks.json');
+assert.ok(assetLinks.some((entry) => entry.target?.sha256_cert_fingerprints?.some((fp) => fp.replaceAll(':', '').toLowerCase() === '7dde5a8e4ab8e285fc5fae67987279c0da81f842ef6b37c9c9346c09991512de')), 'yeni release APK fingerprint’i App Links allowlistesinde olmalı');
 assert.equal(manifest.name, 'TentiFor', 'PWA görünen adı TentiFor olmalı; sürüm version alanında korunur');
 assert.match(fs.readFileSync(path.join(root, 'README.md'), 'utf8').split('\n')[0], new RegExp(`v${pkg.version.replaceAll('.', '\\.')}`));
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_629_security.sql')), '6.2.9 security migration eksik');
