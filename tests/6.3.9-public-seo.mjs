@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildSitemap, fetchPublicSeoPages, renderSeoNotFound, renderSeoPage, seoMetadata, writeSeoRoutes } from '../scripts/public-seo.mjs';
+import { approvedCanonicalUniversePages, buildSitemap, fetchPublicSeoPages, renderSeoNotFound, renderSeoPage, seoMetadata, writeSeoRoutes } from '../scripts/public-seo.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
@@ -38,6 +38,7 @@ assert.match(migration, /select '6\.3\.9'::text/);
 assert.match(client, /addEventListener\('hashchange', handleRoute\)/);
 assert.match(client, /addEventListener\('popstate', handleRoute\)/);
 assert.match(client, /public_seo_sayfa/);
+assert.match(client, /approvedCanonicalUniverse/);
 assert.match(client, /noindex, follow/);
 assert.doesNotMatch(client, /\.innerHTML\s*=/, 'untrusted public profile/world text must be rendered with textContent/attributes, never HTML parsing');
 assert.match(index, /js\/engine\/seo-meta\.js/);
@@ -73,6 +74,13 @@ assert.match(sitemap, /\/evren\/%C4%B1%C5%9F%C4%B1k-evren\//);
 assert.doesNotMatch(sitemap, /bad\/route/);
 assert.doesNotMatch(sitemap, /\/sen\/|\/admin\/|draft/i);
 
+const approvedLocalUniverses = approvedCanonicalUniversePages(root, JSON.parse(read('veri.json')));
+const e126 = approvedLocalUniverses.find((item) => item.slug === 'e126');
+assert.ok(e126, 'the explicitly approved E126 file should have a local SEO route');
+assert.equal(e126.baslik, 'E126');
+assert.match(buildSitemap([e126]), /https:\/\/tentifor\.com\/evren\/e126\//);
+assert.match(renderSeoPage(shell, e126), /<link rel="canonical" href="https:\/\/tentifor\.com\/evren\/e126\/">/);
+
 const notFound = renderSeoNotFound(shell);
 assert.match(notFound, /<base href="\/">/);
 assert.match(notFound, /<meta name="robots" content="noindex, follow">/);
@@ -80,6 +88,16 @@ assert.match(notFound, /<h1>Sayfa bulunamadı<\/h1>/);
 
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'tentifor-seo-test-'));
 try {
+  const fixtureRoot = path.join(temp, 'fixture');
+  fs.mkdirSync(path.join(fixtureRoot, 'evrenler'), { recursive: true });
+  fs.writeFileSync(path.join(fixtureRoot, 'evrenler/e126.json'), JSON.stringify({ tur: 'evren', id: 'e126', ad: 'E126', ozet: 'Onaylı evren' }));
+  fs.writeFileSync(path.join(fixtureRoot, 'evrenler/e127.json'), JSON.stringify({ tur: 'evren', id: 'e127', ad: 'E127' }));
+  const fixturePages = approvedCanonicalUniversePages(fixtureRoot, { fanEserleri: { evrenler: [
+    { tur: 'evren', id: 'e126', kanon: true, dosya: 'evrenler/e126.json' },
+    { tur: 'evren', id: 'e127', kanon: false, dosya: 'evrenler/e127.json' },
+    { tur: 'evren', id: 'e128', kanon: true, dosya: '../e128.json' }
+  ] } });
+  assert.deepEqual(fixturePages.map((item) => item.slug), ['e126'], 'unapproved and traversal records must never be emitted');
   const written = writeSeoRoutes({ indexHtml: shell, distDir: temp, items: [profile, hostile, turkishWorld, { tur: 'okuma', id: 'bad-id' }], staticPages: [{ tur: 'sayfa', path: '/fan/', title: 'Fan', description: 'Public fan route' }] });
   assert.equal(written, 4, 'only validated public routes are written');
   assert.ok(fs.existsSync(path.join(temp, 'u/selim_test/index.html')));

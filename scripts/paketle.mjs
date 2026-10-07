@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { fetchPublicSeoPages, renderSeoNotFound, writeSeoRoutes } from './public-seo.mjs';
+import { approvedCanonicalUniversePages, fetchPublicSeoPages, renderSeoNotFound, writeSeoRoutes } from './public-seo.mjs';
 import { syncTerminalRoutes } from './sync-terminal-routes.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -49,7 +49,7 @@ if (veri.surum !== canonicalVersion) {
 syncTerminalRoutes(ROOT_DIR);
 const hashGirdileri = [
   'index.html', 'manifest.webmanifest', 'package.json', 'veri.json',
-  'veri-degisiklik.json', 'paylasim.png', 'css', 'js', 'ikon', 'yazitipi', 'evrenler'
+  'veri-degisiklik.json', 'paylasim.png', 'favicon.ico', 'css', 'js', 'ikon', 'yazitipi', 'evrenler'
 ];
 function hashGirdisi(relative) {
   const full = path.join(ROOT_DIR, relative);
@@ -136,6 +136,7 @@ if (fs.existsSync(path.dirname(wwwDir))) {
     'veri.json',
     'surum.json',
     'manifest.webmanifest',
+    'favicon.ico',
     'sw.js',
     'robots.txt',
     'sitemap.xml',
@@ -175,6 +176,7 @@ const distDosyalarVeDizinler = [
   'veri-degisiklik.json',
   'surum.json',
   'manifest.webmanifest',
+  'favicon.ico',
   'sw.js',
   'robots.txt',
   'sitemap.xml',
@@ -210,8 +212,9 @@ for (const oge of distDosyalarVeDizinler) {
   }
 }
 const seoIndex = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
-// Crawlers/social bots receive a static, privacy-filtered page snapshot. The same public RPC
-// supplies the sitemap and page body; no private/draft rows are copied into build output.
+// Crawlers/social bots receive a static page snapshot. Database entries come only from the
+// privacy-filtered public RPC; local universe pages require an approved registry record and a
+// matching evrenler/{id}.json file. Private/draft database rows are never copied into output.
 const staticSeoPages = [
   { tur: 'sayfa', path: '/tomye/', title: 'Tömye — TentiFor', description: 'Tömye evreni ve Tentiforverse arşiv içerikleri.' },
   { tur: 'sayfa', path: '/fan/', title: 'Fan evrenleri — TentiFor', description: 'TentiFor’te yayınlanmış fan evrenleri ve hikâyeler.' },
@@ -219,7 +222,8 @@ const staticSeoPages = [
   { tur: 'sayfa', path: '/atolye/', title: 'Atölye — TentiFor', description: 'TentiFor evren ve hikâye atölyesi.' },
   { tur: 'sayfa', path: '/okuma/', title: 'Okuma — TentiFor', description: 'TentiFor okuma alanı ve okuma rotaları.' },
   { tur: 'evren', slug: 'e25', baslik: veri.kanonEvrenleri?.e25?.ad || 'E25', ozet: typeof veri.kanonEvrenleri?.e25?.ozet === 'string' ? veri.kanonEvrenleri.e25.ozet : '' },
-  { tur: 'evren', slug: 'e99', baslik: veri.e99?.ad || 'E99', ozet: typeof veri.e99?.ozet === 'string' ? veri.e99.ozet : '' }
+  { tur: 'evren', slug: 'e99', baslik: veri.e99?.ad || 'E99', ozet: typeof veri.e99?.ozet === 'string' ? veri.e99.ozet : '' },
+  ...approvedCanonicalUniversePages(ROOT_DIR, veri)
 ];
 let publicSeoPages = [];
 if (process.env.TF_SEO_STATIC_ONLY !== '1') {
@@ -227,7 +231,7 @@ if (process.env.TF_SEO_STATIC_ONLY !== '1') {
     publicSeoPages = await fetchPublicSeoPages(ROOT_DIR);
     console.log(`✓ Public SEO snapshot alındı (${publicSeoPages.length} yayınlanabilir profil/evren/okuma rotası)`);
   } catch {
-    console.warn('⚠ Public SEO snapshot alınamadı; yalnızca kaynakta tanımlı açık rotalar üretildi. Gizli/taslak veri hiçbir zaman fallback’e eklenmez.');
+    console.warn('⚠ Public SEO snapshot alınamadı; açık statik ve onaylı yerel kanon rotaları üretildi. Gizli/taslak veriler fallback’e eklenmez.');
   }
 }
 const routeCount = writeSeoRoutes({ indexHtml: seoIndex, distDir, items: publicSeoPages, staticPages: staticSeoPages });
