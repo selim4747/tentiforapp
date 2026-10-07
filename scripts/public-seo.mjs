@@ -270,7 +270,31 @@ export async function fetchPublicSeoPages(rootDir, options = {}) {
   return results;
 }
 
-export function writeSeoRoutes({ indexHtml, distDir, items = [], staticPages = [] }) {
+export function renderNoindexAppRoute(indexHtml, route) {
+  if (!route || typeof route !== 'object' || typeof route.path !== 'string') throw new TypeError('Geçersiz uygulama rotası.');
+  const segments = route.path.split('/').filter(Boolean);
+  if (!segments.length || route.path !== `/${segments.join('/')}/` || segments.some((segment) => !/^[a-z0-9-]+$/i.test(segment))) {
+    throw new TypeError('Güvenli olmayan uygulama rotası.');
+  }
+  const canonical = `${SEO_ORIGIN}${route.path}`;
+  const title = short(route.title || 'TentiFor', 70);
+  const description = short(route.description || 'TentiFor uygulama alanı.', 155);
+  let html = indexHtml.replace(/<!--[\s\S]*?-->/g, '');
+  if (!/<base\b/i.test(html)) html = html.replace('<head>', '<head>\n<base href="/">');
+  html = html.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`);
+  html = replaceMeta(html, 'name', 'description', description);
+  html = replaceMeta(html, 'name', 'robots', 'noindex, follow');
+  html = replaceMeta(html, 'property', 'og:title', title);
+  html = replaceMeta(html, 'property', 'og:description', description);
+  html = replaceMeta(html, 'property', 'og:url', canonical);
+  html = replaceMeta(html, 'name', 'twitter:title', title);
+  html = replaceMeta(html, 'name', 'twitter:description', description);
+  html = replaceMeta(html, 'name', 'twitter:url', canonical);
+  html = replaceCanonical(html, canonical);
+  return html;
+}
+
+export function writeSeoRoutes({ indexHtml, distDir, items = [], staticPages = [], appRoutes = [] }) {
   const allItems = [...staticPages, ...items].filter((item) => seoMetadata(item));
   const seen = new Set();
   let written = 0;
@@ -282,6 +306,22 @@ export function writeSeoRoutes({ indexHtml, distDir, items = [], staticPages = [
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, renderSeoPage(indexHtml, item), 'utf8');
     written += 1;
+  }
+  const distRoot = path.resolve(distDir);
+  for (const route of appRoutes) {
+    if (!route || typeof route.path !== 'string' || seen.has(route.path)) continue;
+    const segments = route.path.split('/').filter(Boolean);
+    if (!segments.length || route.path !== `/${segments.join('/')}/` || segments.some((segment) => !/^[a-z0-9-]+$/i.test(segment))) continue;
+    const html = renderNoindexAppRoute(indexHtml, route);
+    const target = path.resolve(distRoot, ...segments, 'index.html');
+    if (!target.startsWith(`${distRoot}${path.sep}`)) continue;
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, html, 'utf8');
+    const flatTarget = path.resolve(distRoot, ...segments.slice(0, -1), `${segments.at(-1)}.html`);
+    if (flatTarget.startsWith(`${distRoot}${path.sep}`)) {
+      fs.mkdirSync(path.dirname(flatTarget), { recursive: true });
+      fs.writeFileSync(flatTarget, html, 'utf8');
+    }
   }
   fs.writeFileSync(path.join(distDir, 'sitemap.xml'), buildSitemap(allItems), 'utf8');
   return written;

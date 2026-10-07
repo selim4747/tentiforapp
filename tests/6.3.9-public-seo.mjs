@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { approvedCanonicalUniversePages, buildSitemap, fetchPublicSeoPages, renderSeoNotFound, renderSeoPage, seoMetadata, writeSeoRoutes } from '../scripts/public-seo.mjs';
+import { approvedCanonicalUniversePages, buildSitemap, fetchPublicSeoPages, renderNoindexAppRoute, renderSeoNotFound, renderSeoPage, seoMetadata, writeSeoRoutes } from '../scripts/public-seo.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
@@ -11,6 +11,8 @@ const migrationPath = 'supabase/migrations/20261005_visual_universe_map_timeline
 const migration = read(migrationPath);
 const setup = read('supabase/kurulum.sql');
 const client = read('js/engine/seo-meta.js');
+const routeSource = read('js/core/00-rota.js');
+const routeBundle = read('js/paket-1.js');
 const buildScript = read('scripts/paketle.mjs');
 const index = read('index.html');
 const sw = read('sw.js');
@@ -40,6 +42,9 @@ assert.match(client, /addEventListener\('popstate', handleRoute\)/);
 assert.match(client, /public_seo_sayfa/);
 assert.match(client, /approvedCanonicalUniverse/);
 assert.match(client, /noindex, follow/);
+const moderationPrivacyRule = 'ROTA_KISISEL=/^#\\/(moderasyon(?:\\/|$)|sen|';
+assert.ok(routeSource.includes(moderationPrivacyRule), 'moderation is a private noindex app route');
+assert.ok(routeBundle.includes(moderationPrivacyRule), 'served route bundle matches the privacy rule in source');
 assert.doesNotMatch(client, /\.innerHTML\s*=/, 'untrusted public profile/world text must be rendered with textContent/attributes, never HTML parsing');
 assert.match(index, /js\/engine\/seo-meta\.js/);
 assert.match(sw, /js\/engine\/seo-meta\.js/);
@@ -85,6 +90,13 @@ const notFound = renderSeoNotFound(shell);
 assert.match(notFound, /<base href="\/">/);
 assert.match(notFound, /<meta name="robots" content="noindex, follow">/);
 assert.match(notFound, /<h1>Sayfa bulunamadı<\/h1>/);
+const moderationShell = renderNoindexAppRoute(shell, { path: '/moderasyon/', title: 'Moderasyon — TentiFor', description: 'Moderatör erişimi gerekir.' });
+assert.match(moderationShell, /<base href="\/">/);
+assert.match(moderationShell, /<meta name="robots" content="noindex, follow">/);
+assert.match(moderationShell, /<link rel="canonical" href="https:\/\/tentifor\.com\/moderasyon\/">/);
+assert.doesNotMatch(moderationShell, /data-seo-not-found|data-seo-fallback|Sayfa bulunamadı/);
+assert.match(moderationShell, /<main id="tepe"><h2>App<\/h2><\/main>/, 'private moderation route keeps the app background visible');
+assert.throws(() => renderNoindexAppRoute(shell, { path: '/../secrets/' }), /Güvenli olmayan uygulama rotası/);
 
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'tentifor-seo-test-'));
 try {
@@ -98,12 +110,17 @@ try {
     { tur: 'evren', id: 'e128', kanon: true, dosya: '../e128.json' }
   ] } });
   assert.deepEqual(fixturePages.map((item) => item.slug), ['e126'], 'unapproved and traversal records must never be emitted');
-  const written = writeSeoRoutes({ indexHtml: shell, distDir: temp, items: [profile, hostile, turkishWorld, { tur: 'okuma', id: 'bad-id' }], staticPages: [{ tur: 'sayfa', path: '/fan/', title: 'Fan', description: 'Public fan route' }] });
+  const written = writeSeoRoutes({ indexHtml: shell, distDir: temp, items: [profile, hostile, turkishWorld, { tur: 'okuma', id: 'bad-id' }], staticPages: [{ tur: 'sayfa', path: '/fan/', title: 'Fan', description: 'Public fan route' }], appRoutes: [{ path: '/moderasyon/', title: 'Moderasyon — TentiFor' }] });
   assert.equal(written, 4, 'only validated public routes are written');
   assert.ok(fs.existsSync(path.join(temp, 'u/selim_test/index.html')));
   assert.ok(fs.existsSync(path.join(temp, 'evren/safe-world/index.html')));
   assert.ok(fs.existsSync(path.join(temp, 'evren/ışık-evren/index.html')));
   assert.ok(fs.existsSync(path.join(temp, 'fan/index.html')));
+  const moderationFile = fs.readFileSync(path.join(temp, 'moderasyon/index.html'), 'utf8');
+  assert.ok(fs.existsSync(path.join(temp, 'moderasyon.html')), 'the extensionless Cloudflare Pages path gets an app shell too');
+  assert.match(moderationFile, /noindex, follow/);
+  assert.doesNotMatch(moderationFile, /data-seo-not-found|Sayfa bulunamadı/);
+  assert.doesNotMatch(fs.readFileSync(path.join(temp, 'sitemap.xml'), 'utf8'), /moderasyon/);
   assert.doesNotMatch(fs.readFileSync(path.join(temp, 'sitemap.xml'), 'utf8'), /bad-id/);
 } finally { fs.rmSync(temp, { recursive: true, force: true }); }
 
