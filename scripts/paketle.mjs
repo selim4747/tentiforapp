@@ -3,6 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { fetchPublicSeoPages, renderSeoNotFound, writeSeoRoutes } from './public-seo.mjs';
+import { syncTerminalRoutes } from './sync-terminal-routes.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,6 +46,7 @@ if (veri.surum !== canonicalVersion) {
 }
 
 // 2. Paket karması hesapla. Tarih kullanılmaz; aynı girdiler aynı cache adını üretir.
+syncTerminalRoutes(ROOT_DIR);
 const hashGirdileri = [
   'index.html', 'manifest.webmanifest', 'package.json', 'veri.json',
   'veri-degisiklik.json', 'css', 'js', 'ikon', 'yazitipi', 'evrenler'

@@ -34,7 +34,9 @@ const tests = [
   'tests/6.3.10-secure-sharing.mjs',
   'tests/6.2-platform.mjs',
   'tests/termux-library.mjs',
-  'tests/tentifor-terminal.mjs'
+  'tests/tentifor-terminal.mjs',
+  'tests/terminal-integration-regression.mjs',
+  'tests/test-runner-exit-code.mjs'
 ];
 
 const server = spawn(process.execPath, ['server.js'], { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -70,5 +72,4 @@ try {
   console.log('\nTüm uygulama regression testleri başarılı.');
 } finally {
   try { server.kill('SIGKILL'); } catch {}
-  process.exit(0);
 }

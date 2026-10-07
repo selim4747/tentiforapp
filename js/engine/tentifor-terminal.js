@@ -6,10 +6,26 @@
 (function () {
   'use strict';
 
+  // Uygulama veriyi lexical bağlamda tutar; window.veri olmak zorunda değildir.
+  function uygulamaVerisi() {
+    try {
+      if (typeof veri !== 'undefined' && veri && typeof veri === 'object') return veri;
+    } catch { /* Veri başlangıç sırasında henüz hazır olmayabilir. */ }
+    return typeof window !== 'undefined' && window.veri && typeof window.veri === 'object' ? window.veri : null;
+  }
+
+  function ayariOku(anahtar, varsayilan = null) {
+    try { return localStorage.getItem(anahtar) ?? varsayilan; } catch { return varsayilan; }
+  }
+
+  function ayariKaydet(anahtar, deger) {
+    try { localStorage.setItem(anahtar, deger); } catch { /* Depolama olmadan da çalışır. */ }
+  }
+
   // Ses Sentezleyici (Web Audio API)
   class TerminalSes {
     constructor() {
-      this.aktif = localStorage.getItem('tentifor_term_ses') !== 'kapali';
+      this.aktif = ayariOku('tentifor_term_ses') !== 'kapali';
       this.ctx = null;
     }
 
@@ -128,7 +144,7 @@
 
     ayar(durum) {
       this.aktif = Boolean(durum);
-      localStorage.setItem('tentifor_term_ses', this.aktif ? 'acik' : 'kapali');
+      ayariKaydet('tentifor_term_ses', this.aktif ? 'acik' : 'kapali');
       if (this.aktif) this.onay();
     }
   }
@@ -209,23 +225,27 @@
       this.ses = new TerminalSes();
       this.gecmis = [];
       this.gecmisIndeksi = -1;
-      this.tema = localStorage.getItem('tentifor_term_tema') || 'tentifor';
-      this.crt = localStorage.getItem('tentifor_term_crt') === 'acik';
-      this.boyut = localStorage.getItem('tentifor_term_boyut') || 'orta';
+      const kayitliTema = ayariOku('tentifor_term_tema', 'tentifor');
+      this.tema = ['tentifor', 'amber', 'cyber', 'dracula', 'mono'].includes(kayitliTema) ? kayitliTema : 'tentifor';
+      this.crt = ayariOku('tentifor_term_crt') === 'acik';
+      this.boyut = ayariOku('tentifor_term_boyut', 'orta');
       this.adminOturumu = false;
       this.oyunDurumu = null;
       this.pencereAcik = false;
       this.tamEkran = false;
+      this.oncekiOdak = null;
       this.gecmisYukle();
     }
 
     gecmisYukle() {
       try {
         const h = localStorage.getItem('tentifor_term_history');
-        if (h) this.gecmis = JSON.parse(h) || [];
+        const kayit = h ? JSON.parse(h) : [];
+        this.gecmis = Array.isArray(kayit) ? kayit.filter((komut) => typeof komut === 'string').slice(-80) : [];
       } catch {
         this.gecmis = [];
       }
+      this.gecmisIndeksi = this.gecmis.length;
     }
 
     gecmisKaydet(komut) {
@@ -262,6 +282,9 @@
       const wrapper = document.createElement('div');
       wrapper.id = `${idPrefix}-konteyner`;
       wrapper.className = `tentifor-terminal-konteyner tema-${this.tema} ${this.crt ? 'crt-aktif' : ''} ${is404 ? 'tentifor-terminal-404' : 'tentifor-terminal-modal'}`;
+      wrapper.setAttribute('role', is404 ? 'region' : 'dialog');
+      wrapper.setAttribute('aria-label', is404 ? '404 kurtarma terminali' : 'Tentifor Arşiv Terminali');
+      if (!is404) wrapper.setAttribute('aria-modal', 'false');
 
       wrapper.innerHTML = `
         <div class="term-baslik-cubugu" data-term-surukle="1">
@@ -387,11 +410,13 @@
           if (tip === 'kapat') {
             if (is404) {
               konteyner.style.display = 'none';
+              this.gomuluTerminaliGeriAl();
             } else {
               this.kapat();
             }
           } else if (tip === 'kucult') {
-            this.kapat();
+            if (is404) { konteyner.style.display = 'none'; this.gomuluTerminaliGeriAl(); }
+            else this.kapat();
           } else if (tip === 'tamekran') {
             this.tamEkranDegistir(konteyner);
           } else if (tip === 'ses') {
@@ -404,11 +429,11 @@
             this.yaz(ekran, `<span class="term-bilgi">Aktif tema: <b>${this.tema}</b></span>`);
           } else if (tip === 'crt') {
             this.crt = !this.crt;
-            localStorage.setItem('tentifor_term_crt', this.crt ? 'acik' : 'kapali');
+            ayariKaydet('tentifor_term_crt', this.crt ? 'acik' : 'kapali');
             konteyner.classList.toggle('crt-aktif', this.crt);
             this.yaz(ekran, `<span class="term-bilgi">CRT tarama etkisi: <b>${this.crt ? 'Açık' : 'Kapalı'}</b></span>`);
           }
-          giris.focus();
+          if (tip !== 'kapat' && tip !== 'kucult') giris.focus({ preventScroll: true });
           return;
         }
 
@@ -422,8 +447,29 @@
     }
 
     tamEkranDegistir(konteyner) {
+      if (konteyner.classList.contains('tentifor-terminal-404')) {
+        if (konteyner.classList.contains('tamekran')) { this.gomuluTerminaliGeriAl(); return; }
+        // main/section transform veya contain kullandığında fixed, viewport'a bağlanmaz.
+        // Modal gibi body altında göster; yer tutucu ile aynı yere geri dön.
+        const yer = document.createComment('404 terminalinin gömülü yeri');
+        konteyner.parentNode.insertBefore(yer, konteyner);
+        this.gomuluTamEkran = { terminal: konteyner, yer };
+        document.body.appendChild(konteyner);
+      }
       konteyner.classList.toggle('tamekran');
       this.tamEkran = konteyner.classList.contains('tamekran');
+    }
+
+    gomuluTerminaliGeriAl() {
+      const kayit = this.gomuluTamEkran;
+      if (!kayit) return;
+      this.gomuluTamEkran = null;
+      kayit.terminal.classList.remove('tamekran');
+      if (kayit.yer.isConnected) {
+        kayit.yer.parentNode.insertBefore(kayit.terminal, kayit.yer);
+        kayit.yer.remove();
+      } else kayit.terminal.remove();
+      this.tamEkran = false;
     }
 
     sonrakiTema(konteyner) {
@@ -439,7 +485,7 @@
       temalar.forEach((t) => konteyner.classList.remove(`tema-${t}`));
       konteyner.classList.add(`tema-${yeniTema}`);
       this.tema = yeniTema;
-      localStorage.setItem('tentifor_term_tema', yeniTema);
+      ayariKaydet('tentifor_term_tema', yeniTema);
     }
 
     yaz(ekran, html) {
@@ -833,7 +879,7 @@
             if (argumanlar[0] === 'ac') this.crt = true;
             else if (argumanlar[0] === 'kapat') this.crt = false;
             else this.crt = !this.crt;
-            localStorage.setItem('tentifor_term_crt', this.crt ? 'acik' : 'kapali');
+            ayariKaydet('tentifor_term_crt', this.crt ? 'acik' : 'kapali');
             konteyner.classList.toggle('crt-aktif', this.crt);
             this.yaz(ekran, `<span class="term-bilgi">CRT etkisi: <b>${this.crt ? 'Açık' : 'Kapalı'}</b></span>`);
             break;
@@ -1037,7 +1083,8 @@
     }
 
     komutKurtar(ekran, ozelHedef) {
-      const ham = ozelHedef || (typeof location !== 'undefined' ? location.hash.replace(/^#\/?/, '') : '');
+      const guncelRota = typeof window.rota === 'function' ? window.rota() : location.hash || location.pathname;
+      const ham = ozelHedef || this.kayipAdres || guncelRota.replace(/^#\/?/, '');
       const hedef = String(ham).replace(/^\//, '').split('/')[0].toLowerCase();
 
       const gecerliRotalar = [
@@ -1109,88 +1156,100 @@ ${enIyi ? `En yakın olası rota: <span class="term-basari">#/${enIyi.id}</span>
       }
     }
 
-    komutEvren(ekran, altKomut, parametre) {
-      const alt = (altKomut || 'list').toLowerCase();
-      const veri = typeof window !== 'undefined' ? window.veri : null;
+    bolumYetkisi(id) {
+      return typeof window.bolumErisimi === 'function' && Boolean(window.bolumErisimi(id));
+    }
 
-      if (alt === 'list') {
-        const evrenler = (veri && veri.evren) ? veri.evren : [
-          { id: 'eterya', baslik: 'Eterya', bolum: 'Model' },
-          { id: 'somdo', baslik: 'Şomdo', bolum: 'Claude' },
-          { id: 'kul', baslik: 'Kül', bolum: 'Arşiv' },
-          { id: 'sis', baslik: 'Sis', bolum: 'Arşiv' },
-          { id: 'e25', baslik: 'E-25 Tömye', bolum: 'Kanon' }
-        ];
-
-        this.yaz(ekran, `<span class="term-parlak">Yayındaki Evrenler (${evrenler.length}):</span>\n` +
-          evrenler.map((e) => `<span class="term-vurgu">• [${e.id || '—'}]</span> <b>${this.kacir(e.baslik || e.ad || 'İsimsiz')}</b> <span class="term-soluk">(${e.bolum || e.tur || 'Evren'})</span>`).join('\n') +
-          '\n<span class="term-soluk">Detay için: evren bilgi &lt;id&gt; | Gitmek için: evren git &lt;id&gt;</span>');
-      } else if (alt === 'bilgi') {
-        if (!parametre) {
-          this.yaz(ekran, '<span class="term-soluk">Kullanım: evren bilgi &lt;id&gt;</span>');
-          return;
-        }
-        const aranan = parametre.toLowerCase();
-        const evrenler = (veri && veri.evren) ? veri.evren : [];
-        const bulunan = evrenler.find((e) => (e.id || '').toLowerCase() === aranan || (e.baslik || '').toLowerCase().includes(aranan));
-
-        if (bulunan) {
-          this.yaz(ekran, `
-<span class="term-parlak">=== EVREN DETAYI ===</span>
-<span class="term-vurgu">ID     :</span> ${bulunan.id}
-<span class="term-vurgu">Başlık :</span> ${this.kacir(bulunan.baslik || bulunan.ad)}
-<span class="term-vurgu">Bölüm  :</span> ${this.kacir(bulunan.bolum || '—')}
-<span class="term-vurgu">Özet   :</span> ${this.kacir(bulunan.ozet || 'Özet bulunmuyor.')}
-<span class="term-vurgu">Metin  :</span> ${this.kacir((bulunan.metin || '').slice(0, 200))}...
-          `);
-        } else {
-          this.yaz(ekran, `<span class="term-hata">Evren bulunamadı: ${this.kacir(parametre)}</span>`);
-        }
-      } else if (alt === 'git') {
-        if (!parametre) {
-          this.yaz(ekran, '<span class="term-soluk">Kullanım: evren git &lt;id&gt;</span>');
-          return;
-        }
-        if (typeof location !== 'undefined') {
-          location.hash = `#/evren/${encodeURIComponent(parametre)}`;
-          this.yaz(ekran, `<span class="term-basari">Evrene yönlendiriliyor: ${this.kacir(parametre)}</span>`);
+    evrenKayitlari() {
+      if (!uygulamaVerisi() || typeof window.evrenSeciciListesi !== 'function') return [];
+      const katalog = window.evrenSeciciListesi();
+      const v = uygulamaVerisi();
+      const kayitlar = [];
+      const gorulen = new Set();
+      for (const grup of ['site', 'fan', 'benim', 'acilan']) {
+        for (const item of katalog[grup] || []) {
+          for (const e of [item, ...(item.alt || [])]) {
+            if (!e.git || gorulen.has(e.git)) continue;
+            gorulen.add(e.git);
+            let id = e.git.startsWith('harita:') ? e.git.slice(7) : e.git.split('/').filter(Boolean).pop();
+            if (e.git === '#/arsiv') id = (v.haritalar || [])[0]?.id || 'tomye';
+            if (e.git === '#/claude') id = 'claude';
+            kayitlar.push({ ...e, id, grup });
+          }
         }
       }
+      return kayitlar;
+    }
+
+    komutEvren(ekran, altKomut, parametre) {
+      const alt = (altKomut || 'list').toLowerCase();
+      const kayitlar = this.evrenKayitlari();
+      if (alt === 'list' || alt === 'liste') {
+        this.yaz(ekran, `<span class="term-parlak">Yayındaki Evrenler (${kayitlar.length}):</span>\n` +
+          kayitlar.map((e) => `<span class="term-vurgu">• [${this.kacir(e.id)}]</span> <b>${this.kacir(e.ad)}</b> <span class="term-soluk">(${this.kacir(e.not || e.grup)}${e.kilitli ? ' · KİLİTLİ' : ''})</span>`).join('\n') +
+          (kayitlar.length ? '\n<span class="term-soluk">Detay: evren bilgi &lt;id&gt; | Git: evren git &lt;id&gt;</span>' : '\n<span class="term-soluk">Evren verisi henüz hazır değil veya katalog boş.</span>'));
+        return;
+      }
+      if (!['bilgi', 'git'].includes(alt) || !parametre) {
+        this.yaz(ekran, '<span class="term-soluk">Kullanım: evren list | evren bilgi &lt;id&gt; | evren git &lt;id&gt;</span>');
+        return;
+      }
+      const normal = (s) => String(s || '').toLocaleLowerCase('tr-TR');
+      const q = normal(parametre);
+      const e = kayitlar.find((x) => normal(x.id) === q) || kayitlar.find((x) => normal(x.id).replace(/^fornek-/, '') === q || normal(x.ad).includes(q));
+      if (!e) {
+        this.yaz(ekran, `<span class="term-hata">Evren bulunamadı: ${this.kacir(parametre)}</span>`);
+        return;
+      }
+      if (alt === 'git') {
+        if (typeof window.evrenGit === 'function') window.evrenGit(e.git);
+        else if (e.git.startsWith('#/')) location.hash = e.git;
+        else { this.yaz(ekran, '<span class="term-hata">Evren yönlendirmesi henüz hazır değil.</span>'); return; }
+        this.yaz(ekran, `<span class="term-basari">Evrene yönlendiriliyor: ${this.kacir(e.ad)} (${this.kacir(e.git)})</span>`);
+        return;
+      }
+      const v = uygulamaVerisi();
+      const site = /^#\/ev\/site\//.test(e.git);
+      const kilitli = Boolean(e.kilitli || (site && (typeof window.kanonSayfaErisimi !== 'function' || !window.kanonSayfaErisimi(e.id))));
+      if (kilitli) {
+        this.yaz(ekran, `<span class="term-uyari">${this.kacir(e.ad)} kilitli. İçerik için mevcut kanon erişimini açmalısınız.</span>`);
+        return;
+      }
+      let eser = null;
+      if (site) eser = v.kanonEvrenleri?.[e.id];
+      else if (e.git === '#/ev/e99') eser = v.e99;
+      else if (e.grup === 'fan' || e.grup === 'acilan') {
+        if (typeof window.fanBul === 'function') eser = window.fanBul(e.grup === 'fan' ? 'site' : 'acilan', 'evren', e.id);
+      } else if (e.grup === 'benim' && typeof window.evrenBenimBul === 'function') eser = window.evrenBenimBul(e.id);
+      else eser = (v.haritalar || []).find((x) => x.id === e.id);
+      this.yaz(ekran, `<span class="term-parlak">=== EVREN DETAYI ===</span>\n` +
+        `<span class="term-vurgu">ID:</span> ${this.kacir(e.id)}\n<span class="term-vurgu">Başlık:</span> ${this.kacir(e.ad)}\n` +
+        `<span class="term-vurgu">Tür:</span> ${this.kacir(e.not || e.grup)}\n<span class="term-vurgu">Özet:</span> ${this.kacir(eser?.ozet || 'Bu evrenin özet kaydı bulunmuyor.')}\n` +
+        `<span class="term-yol">${this.kacir(e.git)}</span>`);
     }
 
     komutKarakter(ekran, altKomut, parametre) {
-      const alt = (altKomut || 'list').toLowerCase();
-      const veri = typeof window !== 'undefined' ? window.veri : null;
-      const karakterler = (veri && veri.karakterler) ? veri.karakterler : [
-        { id: 'necale', ad: 'Necale', unvan: 'Baş Arşivci', ozet: 'Kütüphane bekçisi.' },
-        { id: 'ozan', ad: 'Ozan', unvan: 'Gezgin', ozet: 'Buzun altındaki yankıları arar.' }
-      ];
-
-      if (alt === 'list') {
-        this.yaz(ekran, `<span class="term-parlak">Karakter Arşivi (${karakterler.length}):</span>\n` +
-          karakterler.map((k) => `<span class="term-vurgu">• ${this.kacir(k.ad)}</span> <span class="term-soluk">— ${this.kacir(k.unvan || 'Karakter')} [id: ${k.id}]</span>`).join('\n') +
-          '\n<span class="term-soluk">Detay için: karakter bilgi &lt;ad/id&gt;</span>');
-      } else if (alt === 'bilgi' || alt === 'ara') {
-        if (!parametre) {
-          this.yaz(ekran, '<span class="term-soluk">Kullanım: karakter bilgi &lt;isim&gt;</span>');
-          return;
-        }
-        const aranan = parametre.toLowerCase();
-        const bulunan = karakterler.find((k) => (k.id || '').toLowerCase() === aranan || (k.ad || '').toLowerCase().includes(aranan));
-
-        if (bulunan) {
-          this.yaz(ekran, `
-<span class="term-parlak">=== KARAKTER DOSYASI ===</span>
-<span class="term-vurgu">Ad       :</span> ${this.kacir(bulunan.ad)}
-<span class="term-vurgu">Unvan    :</span> ${this.kacir(bulunan.unvan || '—')}
-<span class="term-vurgu">Grup     :</span> ${this.kacir(bulunan.grup || '—')}
-<span class="term-vurgu">Özet     :</span> ${this.kacir(bulunan.ozet || '—')}
-<span class="term-vurgu">Ayrıntı  :</span> ${this.kacir((bulunan.detay || '').slice(0, 240))}...
-          `);
-        } else {
-          this.yaz(ekran, `<span class="term-hata">Karakter bulunamadı: ${this.kacir(parametre)}</span>`);
-        }
+      if (!this.bolumYetkisi('arsiv')) {
+        this.yaz(ekran, '<span class="term-uyari">Karakter arşivi kilitli. Mevcut kanon erişimi gereklidir.</span>');
+        return;
       }
+      const alt = (altKomut || 'list').toLowerCase();
+      const karakterler = uygulamaVerisi()?.karakterler || [];
+      if (alt === 'list' || alt === 'liste') {
+        this.yaz(ekran, `<span class="term-parlak">Karakter Arşivi (${karakterler.length}):</span>\n` +
+          karakterler.map((k) => `<span class="term-vurgu">• ${this.kacir(k.ad)}</span> <span class="term-soluk">— ${this.kacir(k.unvan || 'Karakter')} [id: ${this.kacir(k.id)}]</span>`).join('\n'));
+        return;
+      }
+      if (!['bilgi', 'ara'].includes(alt) || !parametre) {
+        this.yaz(ekran, '<span class="term-soluk">Kullanım: karakter list | karakter bilgi &lt;ad/id&gt;</span>');
+        return;
+      }
+      const q = parametre.toLocaleLowerCase('tr-TR');
+      const k = karakterler.find((x) => String(x.id || '').toLocaleLowerCase('tr-TR') === q) || karakterler.find((x) => String(x.ad || '').toLocaleLowerCase('tr-TR').includes(q));
+      if (!k) { this.yaz(ekran, `<span class="term-hata">Karakter bulunamadı: ${this.kacir(parametre)}</span>`); return; }
+      this.yaz(ekran, `<span class="term-parlak">=== KARAKTER DOSYASI ===</span>\n` +
+        `<span class="term-vurgu">Ad:</span> ${this.kacir(k.ad)}\n<span class="term-vurgu">Unvan:</span> ${this.kacir(k.unvan || '—')}\n` +
+        `<span class="term-vurgu">Özet:</span> ${this.kacir(k.ozet || '—')}\n<span class="term-vurgu">Ayrıntı:</span> ${this.kacir(k.detay || '')}`);
     }
 
     komutTakvim(ekran) {
@@ -1238,92 +1297,60 @@ ${sonuclar.map((s) => `<span class="term-vurgu">• ${s.yol.padEnd(24, ' ')}:</s
     }
 
     komutAra(ekran, terim) {
-      if (!terim) {
-        this.yaz(ekran, '<span class="term-soluk">Kullanım: ara &lt;kelime&gt;</span>');
-        return;
-      }
-      const t = terim.toLowerCase();
-      const veri = typeof window !== 'undefined' ? window.veri : null;
-      const sonuclar = [];
-
-      if (veri) {
-        (veri.karakterler || []).forEach((k) => {
-          if ((k.ad && k.ad.toLowerCase().includes(t)) || (k.ozet && k.ozet.toLowerCase().includes(t))) {
-            sonuclar.push(`[Karakter] ${k.ad} — ${k.unvan || ''}`);
-          }
-        });
-        (veri.evren || []).forEach((e) => {
-          if ((e.baslik && e.baslik.toLowerCase().includes(t)) || (e.ozet && e.ozet.toLowerCase().includes(t))) {
-            sonuclar.push(`[Evren] ${e.baslik} — ${e.bolum || ''}`);
-          }
-        });
-      }
-
-      if (sonuclar.length) {
-        this.yaz(ekran, `<span class="term-parlak">Bulunan Kayıtlar (${sonuclar.length}):</span>\n` +
-          sonuclar.slice(0, 10).map((s) => `<span class="term-vurgu">•</span> ${this.kacir(s)}`).join('\n'));
-      } else {
-        this.yaz(ekran, `<span class="term-soluk">"${this.kacir(terim)}" ile ilgili sonuç bulunamadı.</span>`);
-      }
+      if (!terim) { this.yaz(ekran, '<span class="term-soluk">Kullanım: ara &lt;kelime&gt;</span>'); return; }
+      const normal = typeof window.trNormal === 'function' ? window.trNormal : (s) => String(s || '').toLocaleLowerCase('tr-TR');
+      const kelimeler = normal(terim).split(/\s+/).filter(Boolean);
+      const dizin = typeof window.aramaDizini === 'function' ? window.aramaDizini() : [];
+      const romanBolumleri = uygulamaVerisi()?.roman?.bolumler || [];
+      const sonuclar = dizin.filter((s) => {
+        if (s.tur === 'Bölüm') {
+          if (!this.bolumYetkisi('roman')) return false;
+          const b = romanBolumleri[s.i] || romanBolumleri.find((x) => String(x.no) === String(s.git).split('/').pop());
+          if (!b || typeof window.romanAcikMi !== 'function' || !window.romanAcikMi(b)) return false;
+        }
+        return kelimeler.every((k) => normal([s.ad, s.alt, s.metin].join(' ')).includes(k));
+      });
+      this.yaz(ekran, sonuclar.length ? `<span class="term-parlak">Bulunan Kayıtlar (${sonuclar.length}):</span>\n` +
+        sonuclar.slice(0, 20).map((s) => `<span class="term-vurgu">• [${this.kacir(s.tur)}]</span> ${this.kacir(s.ad)} — ${this.kacir(s.alt || '')} <span class="term-yol">${this.kacir(s.git)}</span>`).join('\n') :
+        `<span class="term-soluk">"${this.kacir(terim)}" ile ilgili erişilebilir sonuç bulunamadı.</span>`);
     }
 
     komutRoman(ekran, altKomut, parametre) {
-      const alt = (altKomut || 'liste').toLowerCase();
-      const veri = typeof window !== 'undefined' ? window.veri : null;
-      const roman = (veri && veri.roman) ? veri.roman : null;
-      const bolumler = (roman && Array.isArray(roman.bolumler)) ? roman.bolumler : [];
-
-      if (alt === 'liste') {
-        let cikti = `<span class="term-parlak">📖 TÖMYE ROMANI: "${this.kacir((roman && roman.baslik) || 'Tömye')}"</span>\n`;
-        if (roman && roman.altbaslik) cikti += `<span class="term-soluk">${this.kacir(roman.altbaslik)}</span>\n`;
-        cikti += `<span class="term-vurgu">Mevcut Bölümler (${bolumler.length || 4}):</span>\n`;
-
-        if (bolumler.length) {
-          cikti += bolumler.map((b, i) => {
-            const no = b.no || (i + 1);
-            const baslik = b.baslik || `Bölüm ${no}`;
-            return `<span class="term-vurgu">• [Bölüm ${no}]</span> <b>${this.kacir(baslik)}</b> <span class="term-soluk">(${b.kelimeSayisi || (b.metin ? b.metin.length : 1200)} karakter)</span>`;
-          }).join('\n');
-        } else {
-          cikti += `• [Bölüm 1] Buzun Üstündeki Fenerler\n• [Bölüm 2] Yanmış Raflar Arasında\n• [Bölüm 3] Dördüncü Çatlak\n• [Bölüm 4] Kütüphanenin Çekirdeği`;
-        }
-        cikti += '\n<span class="term-soluk">Okumak için: <b>roman oku &lt;no&gt;</b> | Son bölüm için: <b>roman son</b> | Özet için: <b>roman ozet</b></span>';
-        this.yaz(ekran, cikti);
-      } else if (alt === 'son') {
-        const sonBolum = bolumler.length ? bolumler[bolumler.length - 1] : { no: 4, baslik: 'Kütüphanenin Çekirdeği', metin: 'Necale son sayfayı kapattı. Buzun altındaki yankı nihayet susmuştu.' };
-        this.yaz(ekran, `
-<span class="term-parlak">=== EN SON YAYINLANAN BÖLÜM: [Bölüm ${sonBolum.no || bolumler.length}] ===</span>
-<span class="term-vurgu">Başlık:</span> <b>${this.kacir(sonBolum.baslik || 'Son Bölüm')}</b>
-<div class="term-kod-kutusu" style="margin:6px 0;padding:8px;background:rgba(255,255,255,0.03);border:1px solid var(--term-border);font-size:12px;max-height:160px;overflow-y:auto;">
-${this.kacir((sonBolum.metin || sonBolum.ozet || 'Bölüm içeriği arşivde hazır.').slice(0, 500))}...
-</div>
-<span class="term-soluk">Tamamı okuma modunda: <b>git okuma</b></span>
-        `);
-      } else if (alt === 'oku') {
-        const no = parseInt(parametre, 10) || 1;
-        const bolum = bolumler.find((b, i) => (b.no === no || (i + 1) === no)) || (bolumler[no - 1]);
-        if (bolum) {
-          this.yaz(ekran, `
-<span class="term-parlak">=== BÖLÜM ${no}: ${this.kacir(bolum.baslik || '')} ===</span>
-<div class="term-kod-kutusu" style="margin:6px 0;padding:8px;background:rgba(255,255,255,0.03);border:1px solid var(--term-border);font-size:12px;max-height:220px;overflow-y:auto;">
-${this.kacir(bolum.metin || bolum.ozet || 'Bölüm metni yükleniyor...')}
-</div>
-<span class="term-bilgi">Okuma paneline gitmek için: <b>git okuma</b></span>
-          `);
-        } else {
-          this.yaz(ekran, `<span class="term-hata">Bölüm ${no} bulunamadı. Mevcut bölümler için: <b>roman liste</b></span>`);
-        }
-      } else if (alt === 'ozet') {
-        this.yaz(ekran, `
-<span class="term-parlak">TÖMYE ROMANI HAKKINDA:</span>
-${this.kacir((roman && roman.giris) || 'Tömye Kütüphanesi\'nin sekizinci görevlisinin hikâyesi. Gece ve gündüz arasındaki ince çizgide, hafıza ve buzul katmanlarının çözülüşü.')}
-        `);
+      if (!this.bolumYetkisi('roman')) {
+        this.yaz(ekran, '<span class="term-uyari">Roman kilitli. Okuma sayfasındaki mevcut kanon erişimi gereklidir.</span>');
+        return;
       }
+      const alt = (altKomut || 'liste').toLowerCase();
+      const roman = uygulamaVerisi()?.roman;
+      const bolumler = Array.isArray(roman?.bolumler) ? roman.bolumler : [];
+      const acik = (b) => typeof window.romanAcikMi === 'function' && Boolean(window.romanAcikMi(b));
+      if (alt === 'liste' || alt === 'list') {
+        this.yaz(ekran, `<span class="term-parlak">TÖMYE ROMANI: ${this.kacir(roman?.baslik || 'Tömye')}</span>\nMevcut Bölümler (${bolumler.length}):\n` +
+          bolumler.map((b, i) => `<span class="term-vurgu">• [Bölüm ${this.kacir(b.no ?? i + 1)}]</span> ${this.kacir(b.baslik)} <span class="term-soluk">[${acik(b) ? 'AÇIK' : `KİLİTLİ · ${this.kacir(b.fiyat || 0)} ECKA`}]</span>`).join('\n') +
+          (bolumler.length ? '\n<span class="term-soluk">Okumak için: roman oku &lt;no&gt; | Son bölüm: roman son</span>' : '\nHenüz yayınlanmış bölüm yok.'));
+        return;
+      }
+      if (alt === 'ozet') {
+        this.yaz(ekran, `<span class="term-parlak">TÖMYE ROMANI HAKKINDA:</span>\n${this.kacir(roman?.giris || 'Roman özeti henüz eklenmedi.')}`);
+        return;
+      }
+      if (!['oku', 'son'].includes(alt) || (alt === 'oku' && !/^[1-9]\d*$/.test(parametre || ''))) {
+        this.yaz(ekran, '<span class="term-soluk">Kullanım: roman liste | roman oku &lt;no&gt; | roman son | roman ozet</span>');
+        return;
+      }
+      const b = alt === 'son' ? bolumler.at(-1) : bolumler.find((x, i) => Number(x.no ?? i + 1) === Number(parametre));
+      if (!b) { this.yaz(ekran, `<span class="term-hata">${alt === 'son' ? 'Son bölüm' : `Bölüm ${this.kacir(parametre)}`} bulunamadı.</span>`); return; }
+      if (!acik(b)) {
+        this.yaz(ekran, `<span class="term-uyari">Bölüm ${this.kacir(b.no)} kilitli (${this.kacir(b.fiyat || 0)} ECKA). Açmak için Okuma sayfasını kullanın; terminal bakiye harcamaz.</span>`);
+        return;
+      }
+      this.yaz(ekran, `<span class="term-parlak">=== ${alt === 'son' ? 'EN SON YAYINLANAN ' : ''}BÖLÜM ${this.kacir(b.no)}: ${this.kacir(b.baslik)} ===</span>\n` +
+        `<div class="term-roman-metin">${this.kacir(b.metin || 'Bölüm metni henüz eklenmedi.')}</div>`);
     }
 
     komutHarita(ekran, altKomut, parametre) {
       const alt = (altKomut || 'yerler').toLowerCase();
-      const veri = typeof window !== 'undefined' ? window.veri : null;
+      const veri = uygulamaVerisi();
       const haritalar = (veri && Array.isArray(veri.haritalar)) ? veri.haritalar : [];
       const tomyeHarita = haritalar.find((h) => h.id === 'tomye') || haritalar[0] || {};
       const yerler = Array.isArray(tomyeHarita.yerler) ? tomyeHarita.yerler : [];
@@ -1362,7 +1389,7 @@ ${this.kacir((roman && roman.giris) || 'Tömye Kütüphanesi\'nin sekizinci gör
     }
 
     komutSozluk(ekran, terim) {
-      const veri = typeof window !== 'undefined' ? window.veri : null;
+      const veri = uygulamaVerisi();
       const sozlukListesi = (veri && Array.isArray(veri.sozluk)) ? veri.sozluk : [];
 
       if (!terim) {
@@ -1509,7 +1536,7 @@ ${rozetler.map((r) => {
     }
 
     komutYankilar(ekran) {
-      const veri = typeof window !== 'undefined' ? window.veri : null;
+      const veri = uygulamaVerisi();
       const yankilar = (veri && Array.isArray(veri.yankilar)) ? veri.yankilar : [
         { no: 'Y-01', baslik: 'Kırağı Yankısı', metin: 'Buzun altından gelen düzenli vuruş sesleri.' },
         { no: 'Y-02', baslik: 'Yanmış Sayfa Yankısı', metin: 'Kütüphanenin 5. katmanından yükselen kül kokusu.' },
@@ -1604,7 +1631,7 @@ ${oykuler.map((o) => `<span class="term-vurgu">• [Öykü ${o.no}] <b>${o.basli
 
     komutFanKitap(ekran, altKomut, parametre) {
       const alt = (altKomut || 'liste').toLowerCase();
-      const veri = typeof window !== 'undefined' ? window.veri : null;
+      const veri = uygulamaVerisi();
       const fanEserleri = (veri && veri.fanEserleri) ? veri.fanEserleri : {};
       const hikayeler = Array.isArray(fanEserleri.hikayeler) ? fanEserleri.hikayeler : [];
 
@@ -2118,7 +2145,7 @@ Raporlanan Fan Evren : 0
 <span class="term-basari">Tüm içerikler temiz ve yayında.</span>
         `);
       } else if (alt === 'yedek') {
-        const veri = typeof window !== 'undefined' ? window.veri : null;
+        const veri = uygulamaVerisi();
         if (veri) {
           const jsonStr = JSON.stringify(veri, null, 2);
           if (typeof Blob !== 'undefined' && typeof document !== 'undefined') {
@@ -2168,6 +2195,7 @@ Raporlanan Fan Evren : 0
 
     // Modal Pencere Kontrolleri
     ac() {
+      if (!this.pencereAcik) this.oncekiOdak = document.activeElement;
       let modal = document.querySelector('#tentifor-terminal-modal-kapsayici');
       if (!modal) {
         modal = this.olusturTerminalElement('term-modal', false);
@@ -2188,13 +2216,16 @@ Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
       modal.classList.remove('gizli');
       this.pencereAcik = true;
       const giris = modal.querySelector('#term-modal-giris');
-      if (giris) setTimeout(() => giris.focus(), 50);
+      if (giris) setTimeout(() => { if (this.pencereAcik) giris.focus({ preventScroll: true }); }, 50);
     }
 
     kapat() {
       const modal = document.querySelector('#tentifor-terminal-modal-kapsayici');
       if (modal) modal.classList.add('gizli');
       this.pencereAcik = false;
+      if (this.oncekiOdak && this.oncekiOdak.isConnected && typeof this.oncekiOdak.focus === 'function') {
+        this.oncekiOdak.focus({ preventScroll: true });
+      }
     }
 
     gecis() {
@@ -2209,12 +2240,18 @@ Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
     mount404(arananAdres) {
       const yokSayfa = document.querySelector('#yokSayfa');
       if (!yokSayfa) return;
+      if (this.gomuluTamEkran && !this.gomuluTamEkran.yer.isConnected) this.gomuluTerminaliGeriAl();
 
-      let varolan = yokSayfa.querySelector('#term-404-konteyner');
-      if (varolan) varolan.remove();
+      const adres = String(arananAdres || '');
+      this.kayipAdres = adres;
+      const onceki = yokSayfa.querySelector('.yok-terminal-kutusu');
+      if (onceki && onceki.dataset.termAdres === adres && (onceki.querySelector('#term-404-konteyner') || this.gomuluTamEkran?.yer.isConnected)) return;
+      this.gomuluTerminaliGeriAl();
+      yokSayfa.querySelectorAll('.yok-terminal-kutusu').forEach((kutu) => kutu.remove());
 
       const kutu = document.createElement('div');
       kutu.className = 'yok-terminal-kutusu';
+      kutu.dataset.termAdres = adres;
       kutu.innerHTML = `
         <div class="yok-terminal-baslik">
           <span>⚡ Tentifor Kurtarma Terminali (404 Sinyal Kaybı)</span>
@@ -2270,6 +2307,12 @@ Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
     if ((e.ctrlKey && (e.key === '`' || e.code === 'Backquote')) || (e.altKey && e.key.toLowerCase() === 't')) {
       e.preventDefault();
       terminalInstance.gecis();
+    } else if (e.key === 'Escape' && terminalInstance.gomuluTamEkran) {
+      e.preventDefault();
+      terminalInstance.gomuluTerminaliGeriAl();
+    } else if (e.key === 'Escape' && terminalInstance.pencereAcik) {
+      e.preventDefault();
+      terminalInstance.kapat();
     }
   });
 
@@ -2317,23 +2360,10 @@ Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
     }
   }
 
-  // Yüzen Düğme (FAB) ve Menü Tuşları Başlatma
+  // Üst/gezinti düğmeleri yeterli; alt menüyü örten ikinci bir tetikleyici üretme.
   function arayuzDugmeleriKur() {
     menuTerminalTusuEkle();
-
-    if (!document.querySelector('#tentiforTermFab')) {
-      const fab = document.createElement('button');
-      fab.id = 'tentiforTermFab';
-      fab.className = 'tentifor-term-fab';
-      fab.setAttribute('data-term-ac', '1');
-      fab.setAttribute('aria-label', 'Tentifor Arşiv Terminalini Aç');
-      fab.setAttribute('title', 'Tentifor Terminali Aç (Ctrl+`)');
-      fab.innerHTML = '<span class="fab-nokta"></span> >_ Terminal';
-      fab.addEventListener('click', () => {
-        terminalInstance.gecis();
-      });
-      document.body.appendChild(fab);
-    }
+    document.querySelectorAll('#tentiforTermFab').forEach((dugme) => dugme.remove());
   }
 
   if (document.readyState === 'loading') {
@@ -2344,7 +2374,7 @@ Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
 
   // Tıklama Olay Delegasyonu (Mobil Menü, Header ve Linkler)
   document.addEventListener('click', (e) => {
-    const hedef = e.target.closest && e.target.closest('#btnTerminalUst, #terminalGezBtn, #btnTerminal, [data-term-ac], [data-mobil-eylem="terminal"], [data-gez-git="terminal"]');
+    const hedef = e.target.closest && e.target.closest('#btnTerminalUst, #terminalGezBtn, #btnTerminal, #yokTerminalAc, [data-term-ac], [data-mobil-eylem="terminal"], [data-gez-git="terminal"]');
     if (hedef) {
       e.preventDefault();
       terminalInstance.ac();
@@ -2354,13 +2384,62 @@ Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
   // Rota Kontrolü: #/terminal veya #/konsol açılırsa
   function rotaTerminalKontrol() {
     menuTerminalTusuEkle();
-    const hash = (typeof location !== 'undefined' ? location.hash : '').toLowerCase();
-    if (hash === '#/terminal' || hash === '#/konsol') {
+    const adres = typeof window.rota === 'function' ? window.rota() : location.hash || `#${location.pathname.replace(/\/$/, '')}`;
+    if (/^#\/(terminal|konsol)\/?$/i.test(adres)) {
       terminalInstance.ac();
     }
   }
 
   window.addEventListener('hashchange', rotaTerminalKontrol);
   setTimeout(rotaTerminalKontrol, 200);
+
+  // Router 404 bölümünü dinamik üretir. Aynı adreste tekrar olay gelirse yeniden kurma.
+  function kurtarmaTerminaliniEsitle() {
+    const sayfa = document.querySelector('#yokSayfa');
+    if (!sayfa) { terminalInstance.gomuluTerminaliGeriAl(); return; }
+    if (sayfa.hidden || window.getComputedStyle(sayfa).display === 'none') return;
+    const kod = sayfa.querySelector('.yok-adres code, .yok-ic code, code');
+    const adres = kod ? kod.textContent.trim() : (typeof window.rota === 'function' ? window.rota() : location.hash || location.pathname);
+    terminalInstance.mount404(adres);
+  }
+
+  let kurtarmaBekliyor = false;
+  function kurtarmaKontrolunuPlanla() {
+    if (kurtarmaBekliyor) return;
+    kurtarmaBekliyor = true;
+    const sonra = window.requestAnimationFrame || ((fn) => setTimeout(fn, 0));
+    sonra.call(window, () => {
+      kurtarmaBekliyor = false;
+      kurtarmaTerminaliniEsitle();
+    });
+  }
+
+  function viewportEsitle() {
+    const viewport = window.visualViewport;
+    const yukseklik = viewport ? viewport.height : window.innerHeight;
+    const altBosluk = viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
+    document.documentElement.style.setProperty('--term-viewport-height', `${yukseklik}px`);
+    document.documentElement.style.setProperty('--term-viewport-bottom', `${altBosluk}px`);
+  }
+
+  function terminalEntegrasyonunuKur() {
+    const kok = document.querySelector('main') || document.body;
+    if (kok && typeof MutationObserver !== 'undefined') {
+      new MutationObserver(kurtarmaKontrolunuPlanla).observe(kok, {
+        childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'hidden']
+      });
+    }
+    viewportEsitle();
+    kurtarmaKontrolunuPlanla();
+  }
+  window.addEventListener('hashchange', kurtarmaKontrolunuPlanla);
+  window.addEventListener('popstate', kurtarmaKontrolunuPlanla);
+  window.addEventListener('resize', viewportEsitle);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', viewportEsitle);
+    window.visualViewport.addEventListener('scroll', viewportEsitle);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', terminalEntegrasyonunuKur, { once: true });
+  else terminalEntegrasyonunuKur();
 
 })();
