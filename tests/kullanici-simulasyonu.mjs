@@ -53,7 +53,7 @@ async function main() {
   await new Promise(r => setTimeout(r, 1500));
 
   try {
-    if (!document.title.includes('TentiforApp')) {
+    if (!document.title.includes('TentiFor')) {
       throw new Error(`Beklenmeyen başlık: ${document.title}`);
     }
     adimGec(`Sayfa başlığı doğrulandı: "${document.title}"`);

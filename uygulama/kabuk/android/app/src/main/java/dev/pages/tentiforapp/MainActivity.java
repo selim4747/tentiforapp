@@ -21,10 +21,10 @@ public class MainActivity extends BridgeActivity {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         NotificationChannel channel = new NotificationChannel(
                 "tentiforapp",
-                "TentiforApp bildirimleri",
+                "TentiFor bildirimleri",
                 NotificationManager.IMPORTANCE_HIGH
         );
-        channel.setDescription("TentiforApp kişisel bildirimleri");
+        channel.setDescription("TentiFor kişisel bildirimleri");
         channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
         NotificationManager manager = getSystemService(NotificationManager.class);
         if (manager != null) manager.createNotificationChannel(channel);

@@ -246,7 +246,7 @@ async function main() {
       }
       try {
         const data = eser.dosyadanOku(file);
-        console.log(`${C.green}✓ Dosya geçerli bir TentiforApp eseridir!${C.reset}`);
+        console.log(`${C.green}✓ Dosya geçerli bir TentiFor eseridir!${C.reset}`);
         console.log(`  Başlık/Ad : ${data.ad || data.baslik}`);
         console.log(`  Tür       : ${data.tur}`);
         console.log(`  ID        : ${data.id}`);
@@ -298,7 +298,7 @@ async function main() {
     }
 
     case 'bildirim': {
-      const title = args[1] || 'TentiforApp';
+      const title = args[1] || 'TentiFor';
       const msg = args.slice(2).join(' ') || 'Tömye takviminde yeni bir döngü başladı.';
       const res = await termux.bildirim({ baslik: title, metin: msg });
       if (res.basarili) {
@@ -310,7 +310,7 @@ async function main() {
     }
 
     case 'toast': {
-      const msg = args.slice(1).join(' ') || 'TentiforApp Termux Hazır';
+      const msg = args.slice(1).join(' ') || 'TentiFor Termux Hazır';
       await termux.toast(msg);
       console.log(`${C.green}✓ Toast çağrıldı.${C.reset}`);
       break;

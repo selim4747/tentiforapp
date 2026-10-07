@@ -322,7 +322,7 @@ export const eser = {
       return parsed;
     }
     const match = icerik.match(/<script type="application\/json" id="tentifor-eser">([\s\S]*?)<\/script>/);
-    if (!match) throw new Error('Geçerli bir TentiforApp eser dosyası bulunamadı.');
+    if (!match) throw new Error('Geçerli bir TentiFor eser dosyası bulunamadı.');
     const parsed = JSON.parse(match[1]);
     const v = this.dogrula(parsed);
     if (!v.gecerli) throw new Error(v.hata);
@@ -338,7 +338,7 @@ export const eser = {
     const html = `<!DOCTYPE html>
 <html lang="tr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${baslik} — TentiforApp fan eseri</title>
+<title>${baslik} — TentiFor fan eseri</title>
 <style>
 body{margin:0;background:#F4F9FD;color:#0A0F14;font:18px/1.7 Georgia,serif}
 main{max-width:680px;margin:0 auto;padding:32px 18px 60px}
@@ -348,7 +348,7 @@ footer{margin-top:48px;font:13px/1.6 system-ui,sans-serif;color:#3D4A57;border-t
 </head><body><main>
 <h1>${baslik}</h1>
 <p>${eserObj.ozet || ''}</p>
-<footer>TentiforApp taşınabilir fan eseri · Termux aracı ile paketlendi.</footer>
+<footer>TentiFor taşınabilir fan eseri · Termux aracı ile paketlendi.</footer>
 </main>
 <script type="application/json" id="tentifor-eser">${jsonText}</script>
 </body></html>\n`;
@@ -375,7 +375,7 @@ export const termux = {
     }
   },
 
-  async bildirim({ baslik = 'TentiforApp', metin = '', id = 'tentifor_notif', url = '' } = {}) {
+  async bildirim({ baslik = 'TentiFor', metin = '', id = 'tentifor_notif', url = '' } = {}) {
     const args = ['--title', baslik, '--content', metin, '--id', id];
     if (url) args.push('--action', `am start -a android.intent.action.VIEW -d "${url}"`);
     return this.komutCalistir('termux-notification', args);

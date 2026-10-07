@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-export const SEO_ORIGIN = 'https://tentiforapp.pages.dev';
+export const SEO_ORIGIN = 'https://tentifor.com';
 export const SEO_PAGE_LIMIT = 100;
 export const SEO_PAGE_CAP = 5000;
 const SOCIAL_IMAGE = `${SEO_ORIGIN}/paylasim.png`;
@@ -54,29 +54,29 @@ export function seoMetadata(item) {
   const route = publicRoute(item);
   if (!route) return null;
   if (item.tur === 'sayfa') {
-    return { route, title: short(item.title || 'TentiforApp', 70), description: short(item.description || 'TentiforApp — Tentiforverse arşivi, evrenler ve okuma alanı.', 155), type: 'website', author: 'TentiforApp' };
+    return { route, title: short(item.title || 'TentiFor', 70), description: short(item.description || 'TentiFor — Tentiforverse arşivi, evrenler ve okuma alanı.', 155), type: 'website', author: 'TentiFor' };
   }
   if (item.tur === 'profil') {
     const username = cleanText(item.kullanici_adi, 20).toLowerCase();
     const display = cleanText(item.gorunen_ad || username, 80);
-    const title = `${short(display, 22)} (@${username}) | TentiforApp`;
+    const title = `${short(display, 22)} (@${username}) | TentiFor`;
     let description = cleanText(item.hakkinda, 280);
-    if (item.icerik_gorunur === false) description = `${display} (@${username}) için TentiforApp’te herkese açık profil.`;
-    else if (!description) description = `${display} (@${username}) için TentiforApp’teki herkese açık profil ve yayınlanmış evrenler.`;
+    if (item.icerik_gorunur === false) description = `${display} (@${username}) için TentiFor’te herkese açık profil.`;
+    else if (!description) description = `${display} (@${username}) için TentiFor’teki herkese açık profil ve yayınlanmış evrenler.`;
     else description = `${display} (@${username}): ${description}`;
     return { route, title: short(title, 70), description: short(description, 155), type: 'profile', author: display };
   }
   if (item.tur === 'evren') {
     const slug = safeWorldSlug(item.slug);
     const name = cleanText(item.baslik || slug, 120);
-    const title = `${short(name, 30)} · ${short(slug, 10)} | TentiforApp`;
+    const title = `${short(name, 30)} · ${short(slug, 10)} | TentiFor`;
     let description = cleanText(item.ozet, 600);
-    if (!description) description = `${name} — TentiforApp’te yayımlanmış bir evren.`;
-    return { route, title: short(title, 70), description: short(description, 155), type: 'article', author: cleanText(item.yazar_adi || item.yazar || 'TentiforApp', 80) };
+    if (!description) description = `${name} — TentiFor’te yayımlanmış bir evren.`;
+    return { route, title: short(title, 70), description: short(description, 155), type: 'article', author: cleanText(item.yazar_adi || item.yazar || 'TentiFor', 80) };
   }
   const name = cleanText(item.baslik || 'Okuma yolu', 120);
-  const title = `${short(name, 32)} · Okuma yolu | TentiforApp`;
-  const author = cleanText(item.yazar_adi || item.yazar || 'TentiforApp', 80);
+  const title = `${short(name, 32)} · Okuma yolu | TentiFor`;
+  const author = cleanText(item.yazar_adi || item.yazar || 'TentiFor', 80);
   const description = cleanText(item.aciklama, 600) || `${name} — ${author} tarafından paylaşılan herkese açık okuma rotası.`;
   return { route, title: short(title, 70), description: short(description, 155), type: 'article', author };
 }
@@ -97,7 +97,7 @@ export function renderSeoBody(item) {
   if (!meta) throw new TypeError('SEO sayfası güvenli ve desteklenen bir public route değil.');
   let body = '';
   if (item.tur === 'sayfa') {
-    body = `<span class="tf639-seo-kind">TentiforApp</span><h1>${escapeHtml(meta.title.replace(/\s*[|·].*$/, ''))}</h1><p>${escapeHtml(meta.description)}</p>`;
+    body = `<span class="tf639-seo-kind">TentiFor</span><h1>${escapeHtml(meta.title.replace(/\s*[|·].*$/, ''))}</h1><p>${escapeHtml(meta.description)}</p>`;
   } else if (item.tur === 'profil') {
     const username = cleanText(item.kullanici_adi, 20).toLowerCase();
     const display = cleanText(item.gorunen_ad || username, 80);
@@ -111,9 +111,9 @@ export function renderSeoBody(item) {
     const author = cleanText(item.yazar_adi || item.yazar || '', 80);
     body = `<span class="tf639-seo-kind">Yayınlanmış evren</span><h1>${escapeHtml(cleanText(item.baslik || item.slug, 120))}</h1>` +
       (author ? `<p class="tf639-seo-author">Yazar: ${escapeHtml(author)}</p>` : '') +
-      (item.ozet ? `<p>${escapeHtml(cleanText(item.ozet, 600))}</p>` : '<p>TentiforApp’te yayınlanmış bir evren.</p>');
+      (item.ozet ? `<p>${escapeHtml(cleanText(item.ozet, 600))}</p>` : '<p>TentiFor’te yayınlanmış bir evren.</p>');
   } else {
-    const author = cleanText(item.yazar_adi || item.yazar || 'TentiforApp', 80);
+    const author = cleanText(item.yazar_adi || item.yazar || 'TentiFor', 80);
     const steps = Array.isArray(item.adimlar) ? item.adimlar.slice(0, 100) : [];
     body = `<span class="tf639-seo-kind">Herkese açık okuma yolu</span><h1>${escapeHtml(cleanText(item.baslik || 'Okuma yolu', 120))}</h1>` +
       `<p class="tf639-seo-author">Yazar: ${escapeHtml(author)}</p>` +
@@ -121,7 +121,7 @@ export function renderSeoBody(item) {
       (steps.length ? `<h2>Okuma sırası</h2><ol>${steps.map((step) => `<li>${escapeHtml(cleanText(step && step.baslik || 'Başlıksız adım', 160))}${step && step.tur ? ` <span>(${escapeHtml(cleanText(step.tur, 24))})</span>` : ''}</li>`).join('')}</ol>` : '<p>Bu rotada henüz adım yok.</p>');
   }
   const card = item.tur === 'sayfa' ? '' : cardButton(meta);
-  return `<article class="tf639-seo-fallback" id="tf639SeoFallback" data-seo-fallback aria-labelledby="tf639SeoTitle">${body.replace('<h1>', '<h1 id="tf639SeoTitle">')}<p class="tf639-seo-brand">TentiforApp · Tentiforverse Arşivi</p>${card}<p><a href="${escapeHtml(meta.route)}">Uygulamada aç</a></p></article>`;
+  return `<article class="tf639-seo-fallback" id="tf639SeoFallback" data-seo-fallback aria-labelledby="tf639SeoTitle">${body.replace('<h1>', '<h1 id="tf639SeoTitle">')}<p class="tf639-seo-brand">TentiFor · Tentiforverse Arşivi</p>${card}<p><a href="${escapeHtml(meta.route)}">Uygulamada aç</a></p></article>`;
 }
 
 function replaceMeta(html, keyType, key, content) {
@@ -158,6 +158,7 @@ export function renderSeoPage(indexHtml, item) {
   html = replaceMeta(html, 'property', 'og:image', SOCIAL_IMAGE);
   html = replaceMeta(html, 'name', 'twitter:card', 'summary_large_image');
   html = replaceMeta(html, 'name', 'twitter:title', meta.title);
+  html = replaceMeta(html, 'name', 'twitter:url', canonical);
   html = replaceMeta(html, 'name', 'twitter:description', meta.description);
   html = replaceMeta(html, 'name', 'twitter:image', SOCIAL_IMAGE);
   html = replaceCanonical(html, canonical);
@@ -175,13 +176,13 @@ export function renderSeoPage(indexHtml, item) {
 export function renderSeoNotFound(indexHtml) {
   let html = indexHtml.replace(/<!--[\s\S]*?-->/g, '');
   if (!/<base\b/i.test(html)) html = html.replace('<head>', '<head>\n<base href="/">');
-  html = html.replace(/<title>[^<]*<\/title>/i, '<title>Sayfa bulunamadı — TentiforApp</title>');
+  html = html.replace(/<title>[^<]*<\/title>/i, '<title>Sayfa bulunamadı — TentiFor</title>');
   html = replaceMeta(html, 'name', 'robots', 'noindex, follow');
-  html = replaceMeta(html, 'name', 'description', 'Bu TentiforApp sayfası yayında olmayabilir veya adresi değişmiş olabilir.');
-  html = replaceMeta(html, 'property', 'og:title', 'Sayfa bulunamadı — TentiforApp');
+  html = replaceMeta(html, 'name', 'description', 'Bu TentiFor sayfası yayında olmayabilir veya adresi değişmiş olabilir.');
+  html = replaceMeta(html, 'property', 'og:title', 'Sayfa bulunamadı — TentiFor');
   html = replaceMeta(html, 'property', 'og:description', 'Bu içerik yayında olmayabilir veya adresi değişmiş olabilir.');
   html = html.replace(/<main\b(?=[^>]*\bid=["']tepe["'])[^>]*>/i, (tag) => tag.replace(/\s+hidden\b/i, '').replace(/\s+data-seo-route-background\b/i, '').replace(/>$/, ' hidden data-seo-route-background>'));
-  return html.replace(/<body([^>]*)>/i, '<body$1 data-seo-not-found><article class="tf639-seo-fallback"><span class="tf639-seo-kind">TentiforApp</span><h1>Sayfa bulunamadı</h1><p>Bu içerik yayında olmayabilir veya adres değişmiş olabilir.</p><p><a href="/">TentiforApp ana sayfasına dön</a></p></article>');
+  return html.replace(/<body([^>]*)>/i, '<body$1 data-seo-not-found><article class="tf639-seo-fallback"><span class="tf639-seo-kind">TentiFor</span><h1>Sayfa bulunamadı</h1><p>Bu içerik yayında olmayabilir veya adres değişmiş olabilir.</p><p><a href="/">TentiFor ana sayfasına dön</a></p></article>');
 }
 
 export function buildSitemap(items, staticPaths = ['/', '/tomye/', '/fan/', '/oyunlar/', '/atolye/', '/okuma/', '/evren/e25/', '/evren/e99/']) {

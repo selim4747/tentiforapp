@@ -32,16 +32,16 @@
     if (!username) return;
     var actions = panel.querySelector('.tf312-profile-actions');
     if (!actions) { actions = document.createElement('div'); actions.className = 'tf312-profile-actions'; panel.insertBefore(actions, panel.firstChild); }
-    var b = button('Profilimi paylaş', 'profil', 'TentiforApp profili: @' + username, 'Profilim');
+    var b = button('Profilimi paylaş', 'profil', 'TentiFor profili: @' + username, 'Profilim');
     b.dataset.tf312Url = window.location.href.split('#')[0] + '#/u/' + encodeURIComponent(username);
     actions.appendChild(b);
   }
   function mountProfiles() { document.querySelectorAll('.hesap-profil').forEach(profileButton); }
   function quoteScope(node) { return node && node.closest('.karakter-kart, .kisi-kart, .evr-kisi-sayfa, .fan-metin, .hikaye-metin, .detay-metin, .olay-kart, .kisa-hikaye-kart, [data-karakter], [data-hikaye]'); }
   function selectionTitle(scope) {
-    if (!scope) return 'TentiforApp alıntısı';
+    if (!scope) return 'TentiFor alıntısı';
     var heading = scope.querySelector('h1,h2,h3,h4,.olay-baslik,.kisi-bas b,.kisi-bas strong');
-    return clean(heading && heading.textContent || 'TentiforApp alıntısı', 140);
+    return clean(heading && heading.textContent || 'TentiFor alıntısı', 140);
   }
   function mountSelectionShare() {
     var selection = window.getSelection && window.getSelection();
@@ -60,8 +60,8 @@
     var b = event.target.closest && event.target.closest('[data-tf312-share]');
     if (!b) { if (!event.target.closest('[data-tf312-selection]')) { var old = document.querySelector('[data-tf312-selection]'); if (old) old.remove(); } return; }
     event.preventDefault();
-    var url = b.dataset.tf312Url || shareUrl(), title = b.dataset.tf312Title || 'TentiforApp alıntısı', text = b.dataset.tf312Text || '';
-    deliver({ title: title + ' — TentiforApp', text: text, url: url }, b);
+    var url = b.dataset.tf312Url || shareUrl(), title = b.dataset.tf312Title || 'TentiFor alıntısı', text = b.dataset.tf312Text || '';
+    deliver({ title: title + ' — TentiFor', text: text, url: url }, b);
   });
   function boot() {
     mountProfiles();

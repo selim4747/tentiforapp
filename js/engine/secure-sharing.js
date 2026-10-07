@@ -156,7 +156,7 @@
         setAccountMessage('Profilin şu anda herkese açık değil; paylaşım bağlantısı oluşturulmadı.', false);
         return;
       }
-      var payload = { title: target.title || 'TentiforApp', text: target.description || 'TentiforApp’te herkese açık içerik', url: shareUrl };
+      var payload = { title: target.title || 'TentiFor', text: target.description || 'TentiFor’te herkese açık içerik', url: shareUrl };
       var mode = '';
       try {
         if (window.TentiforKopru && typeof window.TentiforKopru.paylas === 'function') {
@@ -192,7 +192,7 @@
     var user = account();
     var handle = clean(user && user.kullanici_adi, 20).toLowerCase();
     if (!/^[a-z0-9_]{3,20}$/.test(handle)) return null;
-    return { type: 'profil', id: handle, path: '/u/' + encodeURIComponent(handle) + '/', title: handle + ' (@' + handle + ') | TentiforApp', description: 'TentiforApp’te herkese açık profil.', verifiedPublic: false };
+    return { type: 'profil', id: handle, path: '/u/' + encodeURIComponent(handle) + '/', title: handle + ' (@' + handle + ') | TentiFor', description: 'TentiFor’te herkese açık profil.', verifiedPublic: false };
   }
   function addHistoryPanel(box) {
     if (!box || box.querySelector('[data-tf310-history-panel]')) return;

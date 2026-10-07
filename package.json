@@ -1,7 +1,7 @@
 {
   "name": "tentiforapp",
   "version": "6.3.13",
-  "description": "TentiforApp — Tentiforverse Arşivi",
+  "description": "TentiFor — Tentiforverse Arşivi",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -21,7 +21,7 @@
     "tomye",
     "pwa"
   ],
-  "author": "Tentifor",
+  "author": "TentiFor",
   "license": "MIT",
   "devDependencies": {
     "eslint": "^9.39.5",

@@ -1,7 +1,7 @@
 /* TentiforApp 6.3.9 — privacy-filtered route metadata and client-side public share cards. */
 (function () {
   'use strict';
-  var SITE = 'https://tentiforapp.pages.dev';
+  var SITE = 'https://tentifor.com';
   var IMAGE = SITE + '/paylasim.png';
   var lastKey = '';
   var requestNo = 0;
@@ -29,7 +29,7 @@
     return node;
   }
   function setMeta(data) {
-    document.title = safeText(data.title, 100) || 'TentiforApp — Tentiforverse Arşivi';
+    document.title = safeText(data.title, 100) || 'TentiFor — Tentiforverse Arşivi';
     var description = ensureMeta('meta[name="description"]', { name: 'description' });
     description.setAttribute('content', safeText(data.description, 180));
     var robots = ensureMeta('meta[name="robots"]', { name: 'robots' });
@@ -44,7 +44,7 @@
       var node = ensureMeta('meta[property="' + item[0] + '"]', { property: item[0] });
       node.setAttribute('content', safeText(item[1], 180));
     });
-    [['twitter:card', 'summary_large_image'], ['twitter:title', data.title], ['twitter:description', data.description], ['twitter:image', IMAGE]].forEach(function (item) {
+    [['twitter:card', 'summary_large_image'], ['twitter:title', data.title], ['twitter:url', SITE + data.path], ['twitter:description', data.description], ['twitter:image', IMAGE]].forEach(function (item) {
       var node = ensureMeta('meta[name="' + item[0] + '"]', { name: item[0] });
       node.setAttribute('content', safeText(item[1], 180));
     });
@@ -55,18 +55,18 @@
       var handle = safeText(item.kullanici_adi, 20).toLowerCase();
       var display = safeText(item.gorunen_ad || handle, 80);
       var description = safeText(item.hakkinda, 280);
-      if (item.icerik_gorunur === false) description = display + ' (@' + handle + ') için TentiforApp’te herkese açık profil.';
-      else if (!description) description = display + ' (@' + handle + ') için TentiforApp’teki herkese açık profil ve yayınlanmış evrenler.';
+      if (item.icerik_gorunur === false) description = display + ' (@' + handle + ') için TentiFor’te herkese açık profil.';
+      else if (!description) description = display + ' (@' + handle + ') için TentiFor’teki herkese açık profil ve yayınlanmış evrenler.';
       else description = display + ' (@' + handle + '): ' + description;
-      return { path: path, title: display.slice(0, 22) + ' (@' + handle + ') | TentiforApp', description: description.slice(0, 155), author: display, kind: 'Profil', ogType: 'profile' };
+      return { path: path, title: display.slice(0, 22) + ' (@' + handle + ') | TentiFor', description: description.slice(0, 155), author: display, kind: 'Profil', ogType: 'profile' };
     }
     if (item.tur === 'evren') {
       var slug = safeText(item.slug, 60).normalize('NFC').toLocaleLowerCase('tr-TR');
       var name = safeText(item.baslik || slug, 120);
-      return { path: path, title: name.slice(0, 30) + ' · ' + slug.slice(0, 10) + ' | TentiforApp', description: safeText(item.ozet, 155) || (name + ' — TentiforApp’te yayımlanmış bir evren.'), author: safeText(item.yazar_adi || item.yazar || 'TentiforApp', 80), kind: 'Evren', ogType: 'article' };
+      return { path: path, title: name.slice(0, 30) + ' · ' + slug.slice(0, 10) + ' | TentiFor', description: safeText(item.ozet, 155) || (name + ' — TentiFor’te yayımlanmış bir evren.'), author: safeText(item.yazar_adi || item.yazar || 'TentiFor', 80), kind: 'Evren', ogType: 'article' };
     }
     var readTitle = safeText(item.baslik || 'Okuma yolu', 120);
-    return { path: path, title: readTitle.slice(0, 32) + ' · Okuma yolu | TentiforApp', description: safeText(item.aciklama, 155) || (readTitle + ' — ' + safeText(item.yazar_adi || item.yazar || 'TentiforApp', 80) + ' tarafından paylaşılan herkese açık okuma rotası.'), author: safeText(item.yazar_adi || item.yazar || 'TentiforApp', 80), kind: 'Okuma yolu', ogType: 'article' };
+    return { path: path, title: readTitle.slice(0, 32) + ' · Okuma yolu | TentiFor', description: safeText(item.aciklama, 155) || (readTitle + ' — ' + safeText(item.yazar_adi || item.yazar || 'TentiFor', 80) + ' tarafından paylaşılan herkese açık okuma rotası.'), author: safeText(item.yazar_adi || item.yazar || 'TentiFor', 80), kind: 'Okuma yolu', ogType: 'article' };
   }
   function announcePublicItem(item, meta) {
     var pending = { item: item, meta: meta };
@@ -183,12 +183,12 @@
     } else return;
     if (!path) return;
     var current = ++requestNo; lastKey = type + ':' + id;
-    setMeta({ path: path, title: 'TentiforApp — herkese açık içerik', description: 'Yayınlanabilir içerik doğrulanıyor.', public: false });
+    setMeta({ path: path, title: 'TentiFor — herkese açık içerik', description: 'Yayınlanabilir içerik doğrulanıyor.', public: false });
     try {
       var item = await publicRpc(type, id);
       if (current !== requestNo || lastKey !== type + ':' + id) return;
       var meta = item && item.tur === type ? metadata(item, path) : null;
-      if (!item || !meta) { setMeta({ path: path, title: 'İçerik bulunamadı — TentiforApp', description: 'Bu profil veya içerik herkese açık değil.', public: false }); return; }
+      if (!item || !meta) { setMeta({ path: path, title: 'İçerik bulunamadı — TentiFor', description: 'Bu profil veya içerik herkese açık değil.', public: false }); return; }
       setMeta({ ...meta, public: true });
       if (type === 'profil') { if (mountProfileCard(item, meta)) unhideApp(); }
       else if (type === 'evren') { if (mountUniverseCard(item, meta)) unhideApp(); }
@@ -198,7 +198,7 @@
       if (fallback && (type === 'okuma' || document.querySelector('.hesap-profil, #evrenSayfa'))) fallback.hidden = true;
     } catch (_) {
       if (current !== requestNo) return;
-      setMeta({ path: path, title: 'İçerik doğrulanamadı — TentiforApp', description: 'İçeriğin yayın durumu doğrulanamadı.', public: false });
+      setMeta({ path: path, title: 'İçerik doğrulanamadı — TentiFor', description: 'İçeriğin yayın durumu doğrulanamadı.', public: false });
     }
   }
 
@@ -221,13 +221,13 @@
     ctx.fillStyle = gradient; ctx.fillRect(0, 0, 1200, 630);
     ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.beginPath(); ctx.arc(1080, 80, 250, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#bde8dc'; ctx.fillRect(82, 88, 76, 8);
-    ctx.fillStyle = '#d4fff2'; ctx.font = '700 27px Arial, sans-serif'; ctx.fillText(safeText(button.dataset.type || 'TentiforApp', 24).toLocaleUpperCase('tr'), 82, 145);
+    ctx.fillStyle = '#d4fff2'; ctx.font = '700 27px Arial, sans-serif'; ctx.fillText(safeText(button.dataset.type || 'TentiFor', 24).toLocaleUpperCase('tr'), 82, 145);
     ctx.fillStyle = '#fff'; ctx.font = '700 54px Arial, sans-serif';
     wrappedLines(ctx, safeText(button.dataset.title, 100), 82, 238, 1036, 66, 2);
     ctx.fillStyle = '#d4fff2'; ctx.font = '600 28px Arial, sans-serif'; ctx.fillText(safeText(button.dataset.author, 70), 82, 405);
     ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.font = '25px Arial, sans-serif';
     wrappedLines(ctx, safeText(button.dataset.description, 180), 82, 458, 1036, 36, 3);
-    ctx.fillStyle = '#fff'; ctx.font = '700 24px Arial, sans-serif'; ctx.fillText('TENTIFORAPP', 82, 586);
+    ctx.fillStyle = '#fff'; ctx.font = '700 24px Arial, sans-serif'; ctx.fillText('TentiFor', 82, 586);
     ctx.fillStyle = 'rgba(255,255,255,.78)'; ctx.font = '20px Arial, sans-serif'; ctx.textAlign = 'right'; ctx.fillText('Tentiforverse Arşivi', 1118, 586); ctx.textAlign = 'left';
     var blob = await new Promise(function (resolve, reject) { canvas.toBlob(function (value) { value ? resolve(value) : reject(new Error('Görsel kart oluşturulamadı.')); }, 'image/png'); });
     var objectUrl = URL.createObjectURL(blob); var link = document.createElement('a');

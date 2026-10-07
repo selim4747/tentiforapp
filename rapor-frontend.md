@@ -1,3 +1,5 @@
+> Alan adı geçiş notu (2026-10-07): bu rapordaki site bağlantıları güncel ana alan adına taşındı; tarihsel test bulguları değişmedi.
+
 # TentiforApp — Frontend / SEO / PWA / Erişilebilirlik Denetimi
 
 **Denetim tarihi:** 2026-10-03  
@@ -13,8 +15,8 @@ Proje temel HTML yapısı, `lang="tr"`, tek H1, meta açıklama, OG görseli, ma
 ### F-01 — Yüksek — Robots sitemap'i gerçek sitemap değil (kırık/yanlış içerik bağlantısı)
 
 - **Dosya:satır:** `robots.txt:3`
-- **Sorun:** `Sitemap: https://tentiforapp.pages.dev/sitemap.xml` bildiriliyor; repoda `sitemap.xml` yok.
-- **Kanıt:** `find` ile repoda hiçbir `sitemap.xml` bulunmadı. Canlı kontrolde `curl -L https://tentiforapp.pages.dev/sitemap.xml` **HTTP 200**, `Content-Type: text/html; charset=utf-8` döndürdü; yanıtın ilk satırı `<!DOCTYPE html>` ve ana SPA HTML'i. Bu, XML sitemap değildir; 200 olması kırığı gizleyen SPA fallback davranışıdır.
+- **Sorun:** `Sitemap: https://tentifor.com/sitemap.xml` bildiriliyor; repoda `sitemap.xml` yok.
+- **Kanıt:** `find` ile repoda hiçbir `sitemap.xml` bulunmadı. Canlı kontrolde `curl -L https://tentifor.com/sitemap.xml` **HTTP 200**, `Content-Type: text/html; charset=utf-8` döndürdü; yanıtın ilk satırı `<!DOCTYPE html>` ve ana SPA HTML'i. Bu, XML sitemap değildir; 200 olması kırığı gizleyen SPA fallback davranışıdır.
 - **Önerilen düzeltme:** Gerçek bir `sitemap.xml` üretip build çıktısına kopyalayın; en azından canonical public URL'leri XML formatında verin ve `Content-Type: application/xml` döndürün. Sitemap üretilemeyecekse robots satırını kaldırın.
 
 ### F-02 — Yüksek — Service Worker CSS önbellek anahtarı HTML ile uyuşmuyor
@@ -51,7 +53,7 @@ Proje temel HTML yapısı, `lang="tr"`, tek H1, meta açıklama, OG görseli, ma
 
 - **Dosya:satır:** `index.html:13-14,52-53`; `js/core/00-rota.js:1`
 - **Sorun:** `/tomye/`, `/sen/`, `/evren/e25/`, `/yasal/kvkk/` gibi path'ler sunucudan ayrı sayfa yerine aynı root SPA shell'ini alıyor. Tüm yanıtların canonical/title/meta içeriği root sayfayı gösteriyor.
-- **Kanıt:** Canlı `curl -L` ile `/tomye/`, `/sen/`, `/evren/e25/`, `/yasal/kvkk/` ve `/fanAc/` için **HTTP 200**, aynı `text/html` shell'i alındı; her yanıt yaklaşık 74 KB. `index.html:52-53` canonical ve `og:url` her durumda `https://tentiforapp.pages.dev/`; title da `index.html:13`'te tek sabit başlık. Route kodu istemci tarafında `location.pathname`/hash çeviriyor; sunucu tarafında route'a özel head yok.
+- **Kanıt:** Canlı `curl -L` ile `/tomye/`, `/sen/`, `/evren/e25/`, `/yasal/kvkk/` ve `/fanAc/` için **HTTP 200**, aynı `text/html` shell'i alındı; her yanıt yaklaşık 74 KB. `index.html:52-53` canonical ve `og:url` her durumda `https://tentifor.com/`; title da `index.html:13`'te tek sabit başlık. Route kodu istemci tarafında `location.pathname`/hash çeviriyor; sunucu tarafında route'a özel head yok.
 - **Etkisi:** Public route'lar benzersiz içerik/başlık/description ile taranamaz; tüm sayfalar root URL ile kanonikleşir. JS çalıştırmayan/JS'yi gecikmeli çalıştıran crawler için route içeriği de güvenilir biçimde görünmez.
 - **Önerilen düzeltme:** Public SEO rotaları için prerender/static route HTML üretin veya edge/server tarafında route'a özel title, description, canonical, OG ve JSON-LD enjekte edin. Hash-only kişisel rotaları `noindex` tutun; public path'leri sitemap'e ekleyin.
 
@@ -131,11 +133,11 @@ Proje temel HTML yapısı, `lang="tr"`, tek H1, meta açıklama, OG görseli, ma
 
 - **HTML yapısı:** `index.html` için `div`, `section`, `main`, `header`, `footer`, `button`, `form`, `label`, `script` açma-kapama sayıları eşleşti; `section` sayısı 58. Statik DOM'da duplicate `id` bulunmadı.
 - **SEO temel etiketleri:** `html lang="tr"` (`index.html:2`), tek H1 (`index.html:81`), `robots=index, follow` (`:30`), 141 karakter description (`:14`) ve 34 karakter title (`:13`) mevcut. Description uzunluğu pratik snippet aralığında.
-- **Canonical/OG:** Gerçek (yorum dışı) canonical `https://tentiforapp.pages.dev/` (`index.html:52`) ile `og:url` (`:53`) aynı. `og:image`/Twitter image canlıda **HTTP 200** ve `paylasim.png` gerçek ölçüsü **1200×630**. Twitter `twitter:url` yok; bu zorunlu bir etiket değildir, canonical/og:url yeterli fallback sağlar.
+- **Canonical/OG:** Gerçek (yorum dışı) canonical `https://tentifor.com/` (`index.html:52`) ile `og:url` (`:53`) aynı. `og:image`/Twitter image canlıda **HTTP 200** ve `paylasim.png` gerçek ölçüsü **1200×630**. Twitter `twitter:url` yok; bu zorunlu bir etiket değildir, canonical/og:url yeterli fallback sağlar.
 - **JSON-LD:** `index.html:32-41` JSON olarak parse ediliyor; `@context`, `@type=WebSite`, `name`, `description`, `inLanguage` geçerli temel alanlar. Ancak route'a özgü değildir ve `url` alanı eklenmesi önerilir; mevcut hali “geçersiz JSON-LD” olarak raporlanmadı.
 - **Manifest varlıkları:** `ikon/ikon-192.png` 192×192, `ikon-512.png` 512×512, maskable 512×512; ekran görüntüleri sırasıyla 824×1648, 824×1648 ve 1280×800. Manifestteki `sizes` ile gerçek piksel ölçüleri eşleşiyor.
 - **CSS varlıkları:** `css/style.css` içindeki 26 font `url()` referansının tamamı yerel dosyaya çözüldü. Manifest ikonları ve ekran görüntülerinde eksik dosya bulunmadı.
-- **Dış bağlantılar:** Görülebilen `https://tentiforapp.pages.dev/`, `paylasim.png` ve Cloudflare beacon URL'si canlı kontrolde 200 döndü. `assetlinks.json`, manifest ve `sw.js` de 200 döndü. `sitemap.xml` tek istisna: HTTP statüsü 200 olsa da semantik olarak XML değil (F-01).
+- **Dış bağlantılar:** Görülebilen `https://tentifor.com/`, `paylasim.png` ve Cloudflare beacon URL'si canlı kontrolde 200 döndü. `assetlinks.json`, manifest ve `sw.js` de 200 döndü. `sitemap.xml` tek istisna: HTTP statüsü 200 olsa da semantik olarak XML değil (F-01).
 - **Hash rotaları:** Kök JS/index içinde görülen `#/` değerlerinin önemli bölümü (örn. `#/tomye`, `#/harita`, `#/yasal/*`, `#/sen`, `#/ev/*`, `#/u/*`) istemci route/renderer kodu tarafından ele alınıyor; yalnızca statik `id` karşılaştırmasıyla “kırık” ilan edilmedi. Doğrudan path navigasyonları da canlıda 200 shell alıyor; bu durum F-05'te SEO/SSR sorunu olarak raporlandı.
 - **Büyük resimler:** İncelenen PWA/OG görselleri yaklaşık 2.3–111 KB aralığında; “çok büyük resim dosyası” olarak doğrulanabilir bir sorun bulunmadı. Dinamik kullanıcı yüklemeleri bu ölçümün dışındadır.
 

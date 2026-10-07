@@ -3,7 +3,7 @@ import webpush from 'npm:web-push';
 import { SignJWT, importPKCS8 } from 'npm:jose@5';
 
 const cors = {
-  'Access-Control-Allow-Origin': 'https://tentiforapp.pages.dev',
+  'Access-Control-Allow-Origin': 'https://tentifor.com',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Content-Type': 'application/json; charset=utf-8',
 };
@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
       const { data: abonelikler, error: abonelikHatasi } = hedefId ? await query.eq('kullanici', hedefId) : await query;
       if (abonelikHatasi) return cevap({ durum: 'hata', mesaj: 'Web abonelikleri okunamadı' }, 500);
       try {
-        webpush.setVapidDetails('mailto:admin@tentiforapp.pages.dev', vapidPublic, vapidPrivate);
+        webpush.setVapidDetails('https://tentifor.com', vapidPublic, vapidPrivate);
         webPushKuruldu = true;
         const payload = JSON.stringify({ baslik, metin, adres: uygulamaAdresi });
         for (const abonelik of abonelikler || []) {

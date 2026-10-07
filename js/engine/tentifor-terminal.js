@@ -283,7 +283,7 @@
       wrapper.id = `${idPrefix}-konteyner`;
       wrapper.className = `tentifor-terminal-konteyner tema-${this.tema} ${this.crt ? 'crt-aktif' : ''} ${is404 ? 'tentifor-terminal-404' : 'tentifor-terminal-modal'}`;
       wrapper.setAttribute('role', is404 ? 'region' : 'dialog');
-      wrapper.setAttribute('aria-label', is404 ? '404 kurtarma terminali' : 'Tentifor Arşiv Terminali');
+      wrapper.setAttribute('aria-label', is404 ? '404 kurtarma terminali' : 'TentiFor Arşiv Terminali');
       if (!is404) wrapper.setAttribute('aria-modal', 'false');
 
       wrapper.innerHTML = `
@@ -295,7 +295,7 @@
               <button class="term-nokta yesil" title="Tam Ekran" data-term-aksiyon="tamekran"></button>
             </div>
             <div class="term-baslik-metin">
-              <span>Tentifor Arşiv Terminali</span>
+              <span>TentiFor Arşiv Terminali</span>
               <span class="term-baslik-rozet" id="${idPrefix}-rozet">${this.adminOturumu ? 'ROOT / YÖNETİCİ' : 'V6.3.13'}</span>
             </div>
           </div>
@@ -2207,7 +2207,7 @@ Raporlanan Fan Evren : 0
         const ekran = modal.querySelector('#term-modal-ekran');
         this.yaz(ekran, `
 <span class="term-banner">
-Tentifor Arşiv Terminali V6.3.13 [Cyber-Console Ready]
+TentiFor Arşiv Terminali V6.3.13 [Cyber-Console Ready]
 Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
 </span>
 <span class="term-soluk">Kullanılabilir komutlar için <b>yardim</b> yazın veya hızlı düğmeleri kullanın.</span>
@@ -2254,7 +2254,7 @@ Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
       kutu.dataset.termAdres = adres;
       kutu.innerHTML = `
         <div class="yok-terminal-baslik">
-          <span>⚡ Tentifor Kurtarma Terminali (404 Sinyal Kaybı)</span>
+          <span>⚡ TentiFor Kurtarma Terminali (404 Sinyal Kaybı)</span>
           <button class="term-dugme" id="yokTermBuyutBtn">⛶ Tam Ekranda Aç</button>
         </div>
       `;
@@ -2326,7 +2326,7 @@ Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
       btn.id = 'btnTerminalUst';
       btn.type = 'button';
       btn.setAttribute('data-term-ac', '1');
-      btn.setAttribute('aria-label', 'Tentifor Terminal Konsolu');
+      btn.setAttribute('aria-label', 'TentiFor Terminal Konsolu');
       btn.setAttribute('title', 'Terminal Konsolu (>_)');
       btn.innerHTML = '&gt;_';
       btn.addEventListener('click', (e) => {
@@ -2349,8 +2349,8 @@ Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
       gezBtn.id = 'terminalGezBtn';
       gezBtn.type = 'button';
       gezBtn.setAttribute('data-term-ac', '1');
-      gezBtn.setAttribute('aria-label', 'Tentifor Terminal Konsolu');
-      gezBtn.setAttribute('title', 'Tentifor Arşiv Terminali (Ctrl+`)');
+      gezBtn.setAttribute('aria-label', 'TentiFor Terminal Konsolu');
+      gezBtn.setAttribute('title', 'TentiFor Arşiv Terminali (Ctrl+`)');
       gezBtn.innerHTML = '&gt;_ Terminal';
       gezBtn.addEventListener('click', (e) => {
         e.preventDefault();

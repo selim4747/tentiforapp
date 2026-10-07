@@ -21,7 +21,7 @@ public class TentiforWidgetProvider extends AppWidgetProvider {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         views.setOnClickPendingIntent(R.id.widget_root, pending);
-        views.setTextViewText(R.id.widget_title, "TentiforApp");
+        views.setTextViewText(R.id.widget_title, "TentiFor");
         views.setTextViewText(R.id.widget_body, "Günün kelimesi hazır mı? Dokun ve oyna.");
         manager.updateAppWidget(widgetId, views);
     }

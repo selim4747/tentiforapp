@@ -1,3 +1,5 @@
+> Alan adı geçiş notu (2026-10-07): bu rapordaki site bağlantıları güncel ana alan adına taşındı; tarihsel test bulguları değişmedi.
+
 # TentiforApp — Derinlemesine Hata, Eksik Bağlantı ve Sorun Raporu
 
 **Denetim tarihi:** 2026-10-03  
@@ -127,7 +129,7 @@ Depo **derleniyor, lint ve mevcut regresyon testleri geçiyor**; ancak bu testle
 ### H-11 — Yüksek — Public path rotaları route'a özgü SEO HTML'i sunmuyor
 
 - **Kanıt:** `index.html:13-14,52-53`; `js/core/00-rota.js:1`.
-- `/tomye/`, `/sen/`, `/evren/e25/`, `/yasal/kvkk/` aynı root SPA shell'ini, sabit title/description/canonical (`https://tentiforapp.pages.dev/`) alıyor.
+- `/tomye/`, `/sen/`, `/evren/e25/`, `/yasal/kvkk/` aynı root SPA shell'ini, sabit title/description/canonical (`https://tentifor.com/`) alıyor.
 
 **Etki:** Public rotalar benzersiz içerikle indekslenemez; JS'siz crawler için içerik güvenilir değildir.
 

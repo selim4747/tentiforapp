@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
 
-console.log('🚀 TentiforApp paketleme başlatılıyor...');
+console.log('🚀 TentiFor paketleme başlatılıyor...');
 
 // 1. Sürüm ve veri kontrolü. package.json tek canonical sürüm kaynağıdır.
 const veriPath = path.join(ROOT_DIR, 'veri.json');
@@ -49,7 +49,7 @@ if (veri.surum !== canonicalVersion) {
 syncTerminalRoutes(ROOT_DIR);
 const hashGirdileri = [
   'index.html', 'manifest.webmanifest', 'package.json', 'veri.json',
-  'veri-degisiklik.json', 'css', 'js', 'ikon', 'yazitipi', 'evrenler'
+  'veri-degisiklik.json', 'paylasim.png', 'css', 'js', 'ikon', 'yazitipi', 'evrenler'
 ];
 function hashGirdisi(relative) {
   const full = path.join(ROOT_DIR, relative);
@@ -189,7 +189,8 @@ const distDosyalarVeDizinler = [
 ];
 
 // APK dağıtımı ve Android App Links de production çıktısına aittir.
-for (const oge of ['uygulama', '.well-known']) {
+// Native/Termux kaynak kodu ve bundled www production web çıktısına taşınmaz.
+for (const oge of ['uygulama/indir', '.well-known']) {
   const kaynak = path.join(ROOT_DIR, oge);
   const hedef = path.join(distDir, oge);
   if (fs.existsSync(kaynak)) fs.cpSync(kaynak, hedef, { recursive: true });
@@ -212,11 +213,11 @@ const seoIndex = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
 // Crawlers/social bots receive a static, privacy-filtered page snapshot. The same public RPC
 // supplies the sitemap and page body; no private/draft rows are copied into build output.
 const staticSeoPages = [
-  { tur: 'sayfa', path: '/tomye/', title: 'Tömye — TentiforApp', description: 'Tömye evreni ve Tentiforverse arşiv içerikleri.' },
-  { tur: 'sayfa', path: '/fan/', title: 'Fan evrenleri — TentiforApp', description: 'TentiforApp’te yayınlanmış fan evrenleri ve hikâyeler.' },
-  { tur: 'sayfa', path: '/oyunlar/', title: 'Oyunlar — TentiforApp', description: 'TentiforApp oyunları ve yarışları.' },
-  { tur: 'sayfa', path: '/atolye/', title: 'Atölye — TentiforApp', description: 'TentiforApp evren ve hikâye atölyesi.' },
-  { tur: 'sayfa', path: '/okuma/', title: 'Okuma — TentiforApp', description: 'TentiforApp okuma alanı ve okuma rotaları.' },
+  { tur: 'sayfa', path: '/tomye/', title: 'Tömye — TentiFor', description: 'Tömye evreni ve Tentiforverse arşiv içerikleri.' },
+  { tur: 'sayfa', path: '/fan/', title: 'Fan evrenleri — TentiFor', description: 'TentiFor’te yayınlanmış fan evrenleri ve hikâyeler.' },
+  { tur: 'sayfa', path: '/oyunlar/', title: 'Oyunlar — TentiFor', description: 'TentiFor oyunları ve yarışları.' },
+  { tur: 'sayfa', path: '/atolye/', title: 'Atölye — TentiFor', description: 'TentiFor evren ve hikâye atölyesi.' },
+  { tur: 'sayfa', path: '/okuma/', title: 'Okuma — TentiFor', description: 'TentiFor okuma alanı ve okuma rotaları.' },
   { tur: 'evren', slug: 'e25', baslik: veri.kanonEvrenleri?.e25?.ad || 'E25', ozet: typeof veri.kanonEvrenleri?.e25?.ozet === 'string' ? veri.kanonEvrenleri.e25.ozet : '' },
   { tur: 'evren', slug: 'e99', baslik: veri.e99?.ad || 'E99', ozet: typeof veri.e99?.ozet === 'string' ? veri.e99.ozet : '' }
 ];

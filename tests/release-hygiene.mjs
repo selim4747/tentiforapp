@@ -14,7 +14,7 @@ assert.match(pkg.version, /^\d+\.\d+\.\d+$/);
 assert.equal(data.surum, pkg.version, 'veri.json package.json ile aynı sürümü taşımalı');
 assert.equal(manifest.version, pkg.version, 'manifest package.json ile aynı sürümü taşımalı');
 assert.equal(shellPkg.version, pkg.version, 'APK kabuğu package.json ile aynı sürümü taşımalı');
-assert.match(manifest.name, new RegExp(` ${pkg.version.replaceAll('.', '\\.')}`));
+assert.equal(manifest.name, 'TentiFor', 'PWA görünen adı TentiFor olmalı; sürüm version alanında korunur');
 assert.match(fs.readFileSync(path.join(root, 'README.md'), 'utf8').split('\n')[0], new RegExp(`v${pkg.version.replaceAll('.', '\\.')}`));
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_629_security.sql')), '6.2.9 security migration eksik');
 assert.match(fs.readFileSync(path.join(root, 'js/core/odeme.js'), 'utf8'), /TF4_PAYTR_HUKUK_GATED=true/);
@@ -22,7 +22,7 @@ assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_6210_offline_operations.sql')), '6.2.10 offline migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/core/95-offline-transport.js')), 'offline transport modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_6212_audit_quality.sql')), '6.2.12 audit migration eksik');
-assert.match(fs.readFileSync(path.join(root, 'dist/tomye/index.html'), 'utf8'), /Tömye — TentiforApp/);
+assert.match(fs.readFileSync(path.join(root, 'dist/tomye/index.html'), 'utf8'), /Tömye — TentiFor/);
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql')), '6.3 discovery migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_631_archive_tools.sql')), '6.3.1 archive tools migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_632_social_feed.sql')), '6.3.2 social feed migration eksik');
@@ -76,7 +76,7 @@ assert.match(seoPage, /twitter:card/);
 assert.match(seoPage, /data-tf639-card/);
 assert.match(fs.readFileSync(path.join(root, 'dist/404.html'), 'utf8'), /noindex, follow/);
 const sitemap = fs.readFileSync(path.join(root, 'dist/sitemap.xml'), 'utf8');
-assert.match(sitemap, /https:\/\/tentiforapp\.pages\.dev\/evren\/e25\//);
+assert.match(sitemap, /https:\/\/tentifor\.com\/evren\/e25\//);
 assert.doesNotMatch(sitemap, /\/u\/|okuma-yolu\//, 'static-only build must not invent/private-list user routes');
 
 const compare = (a, b) => {

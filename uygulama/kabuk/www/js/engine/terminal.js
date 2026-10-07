@@ -620,7 +620,7 @@
       }
 
       case 'surum': {
-        appendLine(container, 'TentiforApp v6.3.13 (Platform Engine: 2026-10-06)', 'info');
+        appendLine(container, 'TentiFor v6.3.13 (Platform Engine: 2026-10-06)', 'info');
         break;
       }
 

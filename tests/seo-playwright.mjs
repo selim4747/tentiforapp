@@ -36,10 +36,11 @@ try {
   const crawler = await browser.newPage({ javaScriptEnabled: false });
   const staticResponse = await crawler.goto(`${origin}/evren/e25/`, { waitUntil: 'domcontentloaded' });
   assert.equal(staticResponse.status(), 200);
-  assert.match(await crawler.title(), /E25.*TentiforApp/);
+  assert.match(await crawler.title(), /E25.*TentiFor/);
   assert.match(await crawler.locator('meta[name="description"]').getAttribute('content'), /Evrengezerlerin evreni/);
-  assert.equal(await crawler.locator('link[rel="canonical"]').getAttribute('href'), 'https://tentiforapp.pages.dev/evren/e25/');
-  assert.equal(await crawler.locator('meta[property="og:url"]').getAttribute('content'), 'https://tentiforapp.pages.dev/evren/e25/');
+  assert.equal(await crawler.locator('link[rel="canonical"]').getAttribute('href'), 'https://tentifor.com/evren/e25/');
+  assert.equal(await crawler.locator('meta[property="og:url"]').getAttribute('content'), 'https://tentifor.com/evren/e25/');
+  assert.equal(await crawler.locator('meta[name="twitter:url"]').getAttribute('content'), 'https://tentifor.com/evren/e25/');
   assert.match(await crawler.locator('h1').first().textContent(), /E25/);
   await crawler.close();
 
@@ -75,9 +76,10 @@ try {
   // Client-side route transition updates title, description, social metadata and canonical URL.
   await page.goto(origin, { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => { location.hash = '#/ev/site/e25'; });
-  await page.waitForFunction(() => document.title.includes('E25') && document.querySelector('link[rel="canonical"]')?.href === 'https://tentiforapp.pages.dev/evren/e25/');
+  await page.waitForFunction(() => document.title.includes('E25') && document.querySelector('link[rel="canonical"]')?.href === 'https://tentifor.com/evren/e25/');
   assert.match(await page.locator('meta[name="description"]').getAttribute('content'), /Evrengezerlerin evreni/);
-  assert.equal(await page.locator('meta[property="og:url"]').getAttribute('content'), 'https://tentiforapp.pages.dev/evren/e25/');
+  assert.equal(await page.locator('meta[property="og:url"]').getAttribute('content'), 'https://tentifor.com/evren/e25/');
+  assert.equal(await page.locator('meta[name="twitter:url"]').getAttribute('content'), 'https://tentifor.com/evren/e25/');
   assert.equal(await page.locator('meta[name="twitter:card"]').getAttribute('content'), 'summary_large_image');
 
   const missing = await page.goto(`${origin}/private-draft-not-published/`, { waitUntil: 'domcontentloaded' });
