@@ -28,6 +28,41 @@ function safeWorldSlug(value) {
   return /^[\p{L}\p{N}][\p{L}\p{N}-]{2,59}$/u.test(slug) ? slug : null;
 }
 
+export function approvedCanonicalUniversePages(rootDir, sourceData) {
+  const entries = sourceData && sourceData.fanEserleri && sourceData.fanEserleri.evrenler;
+  if (!Array.isArray(entries)) return [];
+  const root = path.resolve(rootDir);
+  const worldRoot = path.join(root, 'evrenler');
+  const seen = new Set();
+  const pages = [];
+  for (const entry of entries) {
+    if (!entry || entry.tur !== 'evren' || entry.kanon !== true) continue;
+    const id = cleanText(entry.id, 24).toLowerCase();
+    if (!/^e\d{1,6}$/.test(id) || seen.has(id)) continue;
+    const relative = `evrenler/${id}.json`;
+    if (entry.dosya !== relative) continue;
+    const file = path.resolve(root, relative);
+    if (!file.startsWith(`${worldRoot}${path.sep}`) || !fs.existsSync(file)) continue;
+    let realRoot; let realFile; let world;
+    try {
+      realRoot = fs.realpathSync(worldRoot);
+      realFile = fs.realpathSync(file);
+      world = JSON.parse(fs.readFileSync(realFile, 'utf8'));
+    } catch { continue; }
+    if (!realFile.startsWith(`${realRoot}${path.sep}`) || !world || world.tur !== 'evren' || String(world.id || '').toLowerCase() !== id) continue;
+    const item = {
+      tur: 'evren', slug: id,
+      baslik: cleanText(world.ad || entry.ad || id.toUpperCase(), 120),
+      ozet: cleanText(world.ozet || entry.ozet, 600),
+      yazar_adi: cleanText(world.yazar_kadi || entry.yazar_kadi || world.yazar || entry.yazar || 'TentiFor', 80)
+    };
+    if (!seoMetadata(item)) continue;
+    seen.add(id);
+    pages.push(item);
+  }
+  return pages;
+}
+
 function publicRoute(item) {
   if (!item || typeof item !== 'object') return null;
   if (item.tur === 'sayfa') {

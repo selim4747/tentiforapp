@@ -6,8 +6,10 @@
   var lastKey = '';
   var requestNo = 0;
   var deferredMountObserver = null;
+  var cardMaintenanceObserver = null;
   var pendingMount = null;
   var pageCache = new Map();
+  var localRegistryPromise = null;
 
   function safeText(value, max) {
     return String(value == null ? '' : value).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim().slice(0, max || 600);
@@ -18,6 +20,25 @@
     if (type === 'evren' && /^[\p{L}\p{N}][\p{L}\p{N}-]{2,59}$/u.test(value)) return '/evren/' + encodeURIComponent(value) + '/';
     if (type === 'okuma' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)) return '/okuma-yolu/' + value + '/';
     return null;
+  }
+  function canonicalUniverseFrom(data, value) {
+    var entries = data && data.fanEserleri && data.fanEserleri.evrenler;
+    if (!Array.isArray(entries)) return null;
+    var entry = entries.find(function (item) {
+      return item && item.tur === 'evren' && item.kanon === true && String(item.id || '').toLowerCase() === value && item.dosya === 'evrenler/' + value + '.json';
+    });
+    return entry ? { tur: 'evren', slug: value, baslik: entry.ad || value.toUpperCase(), ozet: entry.ozet || '', yazar_adi: entry.yazar_kadi || entry.yazar || 'TentiFor' } : null;
+  }
+  async function approvedCanonicalUniverse(id) {
+    var value = String(id || '').toLowerCase();
+    if (!/^e\d{1,6}$/.test(value)) return null;
+    var item = typeof veri !== 'undefined' ? canonicalUniverseFrom(veri, value) : null;
+    if (item) return item;
+    if (!localRegistryPromise) localRegistryPromise = fetch('/veri.json', { cache: 'no-store' }).then(function (response) {
+      if (!response.ok) return null;
+      return response.json();
+    }).catch(function () { return null; });
+    return canonicalUniverseFrom(await localRegistryPromise, value);
   }
   function ensureMeta(selector, attrs) {
     var node = document.head.querySelector(selector);
@@ -77,6 +98,9 @@
       if (!mounted) return false;
       pendingMount = null;
       if (deferredMountObserver) { deferredMountObserver.disconnect(); deferredMountObserver = null; }
+      var fallback = document.querySelector('[data-seo-fallback]');
+      if (fallback && (item.tur === 'okuma' || document.querySelector('.hesap-profil, #evrenSayfa'))) fallback.hidden = true;
+      if (item.tur === 'evren') maintainUniverseCard(item, meta);
       unhideApp();
       window.dispatchEvent(new CustomEvent('tf639-public-item', { detail: { item: item, meta: meta } }));
       return true;
@@ -115,6 +139,18 @@
     button.setAttribute('aria-label', meta.kind + ' paylaşım kartını indir');
     button.textContent = 'Paylaşım kartını indir';
     parent.insertBefore(button, parent.firstChild);
+  }
+  function maintainUniverseCard(item, meta) {
+    if (cardMaintenanceObserver) cardMaintenanceObserver.disconnect();
+    if (!document.body) return;
+    cardMaintenanceObserver = new MutationObserver(function () {
+      var panel = document.querySelector('#evrenSayfa');
+      var slot = panel && panel.querySelector('.evs-govde');
+      if (slot && !slot.querySelector('[data-tf639-card]')) shareButton(slot, item, meta);
+      var fallback = document.querySelector('[data-seo-fallback]');
+      if (fallback && panel) fallback.hidden = true;
+    });
+    cardMaintenanceObserver.observe(document.body, { childList: true, subtree: true });
   }
   function mountProfileCard(item, meta) {
     var panel = document.querySelector('.hesap-profil');
@@ -159,6 +195,7 @@
     if (main) main.hidden = false;
   }
   async function handleRoute() {
+    if (cardMaintenanceObserver) { cardMaintenanceObserver.disconnect(); cardMaintenanceObserver = null; }
     if (deferredMountObserver) { deferredMountObserver.disconnect(); deferredMountObserver = null; }
     pendingMount = null;
     document.querySelector('#tf639ReadPathView')?.remove();
@@ -185,7 +222,8 @@
     var current = ++requestNo; lastKey = type + ':' + id;
     setMeta({ path: path, title: 'TentiFor — herkese açık içerik', description: 'Yayınlanabilir içerik doğrulanıyor.', public: false });
     try {
-      var item = await publicRpc(type, id);
+      var item = type === 'evren' ? await approvedCanonicalUniverse(id) : null;
+      if (!item) item = await publicRpc(type, id);
       if (current !== requestNo || lastKey !== type + ':' + id) return;
       var meta = item && item.tur === type ? metadata(item, path) : null;
       if (!item || !meta) { setMeta({ path: path, title: 'İçerik bulunamadı — TentiFor', description: 'Bu profil veya içerik herkese açık değil.', public: false }); return; }

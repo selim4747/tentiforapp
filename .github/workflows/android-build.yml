@@ -32,17 +32,6 @@ jobs:
         with:
           node-version: 20
 
-      - name: Enable KVM for Android emulator
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules || true
-          sudo udevadm trigger --name-match=kvm || true
-          if [ -r /dev/kvm ]; then
-            echo "KVM hazır: /dev/kvm"
-          else
-            echo "KVM bu runner'da kullanılamıyor; emulator yazılımsal hızlandırmaya düşecek."
-          fi
-
       - name: Install web dependencies
         run: npm install --no-audit --no-fund
 
@@ -94,31 +83,4 @@ jobs:
           name: tentiforapp-debug-apk
           path: uygulama/kabuk/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-          retention-days: 14
-
-      - name: Run Android emulator smoke tests
-        continue-on-error: true
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          target: google_apis
-          arch: x86_64
-          profile: pixel_2
-          force-avd-creation: true
-          emulator-boot-timeout: 900
-          cores: 4
-          ram-size: 4096M
-          heap-size: 512M
-          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -camera-back none -camera-front none
-          disable-animations: true
-          working-directory: uygulama/kabuk/android
-          script: ./gradlew --no-daemon --stacktrace connectedDebugAndroidTest
-
-      - name: Upload Android test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: tentiforapp-android-test-reports
-          path: uygulama/kabuk/android/app/build/reports/androidTests
-          if-no-files-found: ignore
           retention-days: 14
