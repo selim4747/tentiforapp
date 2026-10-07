@@ -9468,6 +9468,45 @@
           }
         ],
         "oyun_listesi": []
+      },
+      {
+        "bicim": "tentifor-eser",
+        "surum": 1,
+        "tur": "evren",
+        "id": "e126",
+        "ad": "E126",
+        "yazar": "",
+        "ozet": "Fantastik · Bazı kişilerin bedenlerinin iki evren arasinda gezmesi",
+        "dosya": "evrenler/e126.json",
+        "boyut": 3491,
+        "sayilar": {
+          "kural": 1,
+          "kisi": 3,
+          "yer": 4,
+          "gezegen": 0,
+          "bolum": 0,
+          "cizim": 0
+        },
+        "eklenme": "2026-10-07",
+        "olusturma": "2026-10-02T10:17:30.332Z",
+        "guncelleme": "2026-10-07T11:54:55.417Z",
+        "para": {
+          "ad": "Maoru",
+          "simge": "ပ",
+          "kur": 0.1
+        },
+        "stil": {
+          "ana": "#8B3A2E",
+          "zemin": "#E9E7E4",
+          "yazi": "#232120",
+          "font": "serif",
+          "kose": 4,
+          "desen": "dalga",
+          "boyut": "buyuk",
+          "hiza": "orta"
+        },
+        "yazar_kadi": "selimblackstone",
+        "kanon": true
       }
     ],
     "kisiler": [
