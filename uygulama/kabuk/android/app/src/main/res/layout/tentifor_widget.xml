@@ -13,7 +13,7 @@
         android:id="@+id/widget_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TentiforApp"
+        android:text="TentiFor"
         android:textColor="#F4B942"
         android:textSize="18sp"
         android:textStyle="bold" />

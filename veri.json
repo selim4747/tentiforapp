@@ -8113,7 +8113,7 @@
         "Her sayfada \"Evren seç\": sitedeki evrenler, fanmade evrenler ve senin evrenlerin tek menüde",
         "Her evrenin kendi sayfası; kendi evreninin tam yöneticisi sensin: haritasına yer ekle, taşı, kıta ve bölge çiz",
         "E99: herkesin yazabildiği boş evren. Yazdığın önce yalnızca sende durur, yönetici onaylayınca yayına girer",
-        "Site artık Cloudflare Pages'te: tentiforapp.pages.dev"
+        "Site artık Cloudflare Pages'te: tentifor.com"
       ],
       "yeniler": []
     },
@@ -9361,7 +9361,7 @@
         "tur": "evren",
         "id": "fornek-sis",
         "ad": "Sis Denizi",
-        "yazar": "TentiforApp örneği",
+        "yazar": "TentiFor örneği",
         "ozet": "Kıtasız bir okyanus dünyası. Güneş hiç batmaz ama sis her akşam denizden yükselir; şehirler sisin üstünde yüzer, sisin altına inen gemiler başka bir zamana varır.\n\nBu bir örnek evrendir: kendi evrenini kurarken neler yapabileceğini göstermek için hazırlandı.",
         "dosya": "evrenler/fornek-sis.json",
         "boyut": 4756,
@@ -9396,7 +9396,7 @@
         "tur": "evren",
         "id": "fornek-kul",
         "ad": "Kül Ormanı",
-        "yazar": "TentiforApp örneği",
+        "yazar": "TentiFor örneği",
         "ozet": "Hiç yeşermeyen, küllü bir orman ve kenarındaki köy. Ormandaki varlıklar her dileği yerine getirir; karşılığında bir şey isterler ama asla altın istemezler.\n\nBu bir örnek evrendir. Haritasında Sis Denizi'ne açılan bir geçit var.",
         "dosya": "evrenler/fornek-kul.json",
         "boyut": 2434,
@@ -9432,7 +9432,7 @@
         "id": "fornek-eterya",
         "ad": "Eterya: Yıldız Kırıkları",
         "yazar": "Model Vitrini",
-        "ozet": "Gökyüzünün cam gibi çatladığı ve kırıklardan saf eter ışığının süzüldüğü bir dünya. İnsanlar sözcükleri sesle değil, havaya çizdikleri ışık glifleriyle söyler; yerçekimi gezegenin merkezine değil, en yakın eter kırığına doğrudur.\n\nBu bir model test ve vitrin evrenidir: TentiforApp Evren Kurucu'nun tüm yeteneklerini (harita, kurallar, kişiler, zaman çizgisi, yapımlar, glif alfabesi ve okuma rehberi) insanlara sergilemek amacıyla hazırlanmıştır.",
+        "ozet": "Gökyüzünün cam gibi çatladığı ve kırıklardan saf eter ışığının süzüldüğü bir dünya. İnsanlar sözcükleri sesle değil, havaya çizdikleri ışık glifleriyle söyler; yerçekimi gezegenin merkezine değil, en yakın eter kırığına doğrudur.\n\nBu bir model test ve vitrin evrenidir: TentiFor Evren Kurucu'nun tüm yeteneklerini (harita, kurallar, kişiler, zaman çizgisi, yapımlar, glif alfabesi ve okuma rehberi) insanlara sergilemek amacıyla hazırlanmıştır.",
         "dosya": "evrenler/fornek-eterya.json",
         "boyut": 5200,
         "sayilar": {
@@ -9480,7 +9480,7 @@
         "ad": "Orlan Ivo",
         "unvan": "Haritasız gezgin",
         "ozet": "Hiçbir haritaya güvenmez; gittiği her evrende önce yolları yürüyerek öğrenir. Cebinde yarım kalmış bir defter taşır. Bu bir örnek kişidir: kendi Evrengezerini E25'e ekleyebilirsin.",
-        "yazar": "TentiforApp örneği",
+        "yazar": "TentiFor örneği",
         "olusturma": "2026-09-26T12:00:00.000Z",
         "guncelleme": "2026-09-26T12:00:00.000Z",
         "eklenme": "2026-09-26",
@@ -9971,8 +9971,8 @@
     }
   },
   "yasal": {
-    "mesafeli": "TENTİFORAPP MESAFELİ SATIŞ SÖZLEŞMESİ\n\n1. TARAFLAR\nİşbu sözleşme, TentiforApp platformu üzerinden Yaratıcı Pro dijital abonelik hizmeti satın alan kullanıcı (\"Alıcı\") ile TentiforApp platform işleticisi (\"Satıcı\") arasında 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği hükümleri uyarınca akdedilmiştir.\n\n2. SÖZLEŞMENİN KONUSU\nİşbu sözleşmenin konusu, Alıcı'nın platform üzerinden elektronik ortamda siparişini verdiği Yaratıcı Pro dijital içerik, sınırsız evren oluşturma ve öncelikli başvuru abonelik hizmetinin satışı, ifası ve bedelinin ödenmesine ilişkin hak ve yükümlülüklerin belirlenmesidir.\n\n3. HİZMET BEDELİ VE ÖDEME\nYaratıcı Pro abonelik bedeli aylık 249 TL olup KDV dahildir. Ödemeler lisanslı ödeme kuruluşu PayTR altyapısı üzerinden güvenli 3D Secure protokolü ile tahsil edilir. Kredi kartı ve banka kartı bilgileri Satıcı sunucularında kesinlikle saklanmaz.\n\n4. DİJİTAL İFA VE KULLANIM\nAbonelik ödemesi PayTR onayından geçtiği anda elektronik ortamda anında ifa edilir ve Alıcı'nın hesabına Yaratıcı Pro yetkileri tanımlanır. Kullanım süresi satın alma anından itibaren 30 (otuz) gündür.\n\n5. YÜRÜRLÜK\nAlıcı, ödeme adımından önce işbu sözleşmenin tüm koşullarını okuduğunu, anladığını ve elektronik ortamda onayladığını gayrikabili rücu kabul, beyan ve taahhüt eder.",
-    "iade": "TENTİFORAPP İPTAL VE İADE KOŞULLARI\n\n1. CAYMA HAKKI VE İSTİSNALARI\n6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği'nin 15. maddesinin (ğ) bendi uyarınca; \"Elektronik ortamda anında ifa edilen hizmetler veya tüketiciye anında teslim edilen gayrimaddi mallara ilişkin sözleşmeler\" cayma hakkının istisnaları kapsamındadır.\n\n2. İADE PROSEDÜRÜ\nYaratıcı Pro aboneliği dijital ortamda derhal erişime açılan bir hizmet niteliğinde olduğundan, abonelik tanımlandıktan sonra kural olarak cayma hakkı ve ücret iadesi uygulanmaz. Ancak sistem kaynaklı mükerrer ödeme veya hizmetin teknik nedenlerle hiç sunulamaması hallerinde, Alıcı'nın yazılı başvurusu üzerine PayTR kanalıyla tam ücret iadesi gerçekleştirilir.\n\n3. ABONELİK İPTALİ VE YENİLEME\nKullanıcılar diledikleri zaman aboneliklerini yenilememe hakkına sahiptir. Mevcut 30 günlük dönemin sonuna kadar tüm Pro ayrıcalıkları kesintisiz devam eder; dönem bitiminde karttan otomatik veya izinsiz çekim yapılmaz.\n\n4. İLETİŞİM VE DESTEK\nİade ve fatura talepleriniz için platform destek kanalları veya kayıtlı e-posta adresimiz üzerinden bizimle 7/24 iletişime geçebilirsiniz.",
-    "kvkk": "TENTİFORAPP KİŞİSEL VERİLERİN KORUNMASI (KVKK) AYDINLATMA METNİ\n\n1. VERİ SORUMLUSU\n6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca, TentiforApp olarak kullanıcılarımızın kişisel verilerinin güvenliğine ve gizliliğine en üst düzeyde önem veriyoruz.\n\n2. İŞLENEN KİŞİSEL VERİLER VE İŞLEME AMAÇLARI\nPlatformumuzda hesap açma, profil yönetimi ve abonelik süreçlerinde yalnızca zorunlu veriler (e-posta adresi, kullanıcı adı, işlem logları, oturum tokenları) işlenmektedir. Finansal kart verileri doğrudan lisanslı ödeme kuruluşu PayTR tarafından işlenmekte olup sistemlerimize erişilmez ve kaydedilmez.\n\n3. KİŞİSEL VERİLERİN AKTARILMASI\nKişisel verileriniz, yasal zorunluluklar ve ödeme doğrulama süreçleri haricinde hiçbir üçüncü taraf, reklam veren veya aracı kurumla paylaşılmaz ve ticari amaçla satılmaz.\n\n4. HAKLARINIZ\nKVKK'nın 11. maddesi uyarınca veri sahipleri; kişisel verilerinin işlenip işlenmediğini öğrenme, işlenmişse bilgi talep etme, silinmesini veya düzeltilmesini isteme haklarına sahiptir. Bu taleplerinizi platform üzerinden veya destek adresimizden iletebilirsiniz."
+    "mesafeli": "TentiFor MESAFELİ SATIŞ SÖZLEŞMESİ\n\n1. TARAFLAR\nİşbu sözleşme, TentiFor platformu üzerinden Yaratıcı Pro dijital abonelik hizmeti satın alan kullanıcı (\"Alıcı\") ile TentiFor platform işleticisi (\"Satıcı\") arasında 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği hükümleri uyarınca akdedilmiştir.\n\n2. SÖZLEŞMENİN KONUSU\nİşbu sözleşmenin konusu, Alıcı'nın platform üzerinden elektronik ortamda siparişini verdiği Yaratıcı Pro dijital içerik, sınırsız evren oluşturma ve öncelikli başvuru abonelik hizmetinin satışı, ifası ve bedelinin ödenmesine ilişkin hak ve yükümlülüklerin belirlenmesidir.\n\n3. HİZMET BEDELİ VE ÖDEME\nYaratıcı Pro abonelik bedeli aylık 249 TL olup KDV dahildir. Ödemeler lisanslı ödeme kuruluşu PayTR altyapısı üzerinden güvenli 3D Secure protokolü ile tahsil edilir. Kredi kartı ve banka kartı bilgileri Satıcı sunucularında kesinlikle saklanmaz.\n\n4. DİJİTAL İFA VE KULLANIM\nAbonelik ödemesi PayTR onayından geçtiği anda elektronik ortamda anında ifa edilir ve Alıcı'nın hesabına Yaratıcı Pro yetkileri tanımlanır. Kullanım süresi satın alma anından itibaren 30 (otuz) gündür.\n\n5. YÜRÜRLÜK\nAlıcı, ödeme adımından önce işbu sözleşmenin tüm koşullarını okuduğunu, anladığını ve elektronik ortamda onayladığını gayrikabili rücu kabul, beyan ve taahhüt eder.",
+    "iade": "TentiFor İPTAL VE İADE KOŞULLARI\n\n1. CAYMA HAKKI VE İSTİSNALARI\n6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği'nin 15. maddesinin (ğ) bendi uyarınca; \"Elektronik ortamda anında ifa edilen hizmetler veya tüketiciye anında teslim edilen gayrimaddi mallara ilişkin sözleşmeler\" cayma hakkının istisnaları kapsamındadır.\n\n2. İADE PROSEDÜRÜ\nYaratıcı Pro aboneliği dijital ortamda derhal erişime açılan bir hizmet niteliğinde olduğundan, abonelik tanımlandıktan sonra kural olarak cayma hakkı ve ücret iadesi uygulanmaz. Ancak sistem kaynaklı mükerrer ödeme veya hizmetin teknik nedenlerle hiç sunulamaması hallerinde, Alıcı'nın yazılı başvurusu üzerine PayTR kanalıyla tam ücret iadesi gerçekleştirilir.\n\n3. ABONELİK İPTALİ VE YENİLEME\nKullanıcılar diledikleri zaman aboneliklerini yenilememe hakkına sahiptir. Mevcut 30 günlük dönemin sonuna kadar tüm Pro ayrıcalıkları kesintisiz devam eder; dönem bitiminde karttan otomatik veya izinsiz çekim yapılmaz.\n\n4. İLETİŞİM VE DESTEK\nİade ve fatura talepleriniz için platform destek kanalları veya kayıtlı e-posta adresimiz üzerinden bizimle 7/24 iletişime geçebilirsiniz.",
+    "kvkk": "TentiFor KİŞİSEL VERİLERİN KORUNMASI (KVKK) AYDINLATMA METNİ\n\n1. VERİ SORUMLUSU\n6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca, TentiFor olarak kullanıcılarımızın kişisel verilerinin güvenliğine ve gizliliğine en üst düzeyde önem veriyoruz.\n\n2. İŞLENEN KİŞİSEL VERİLER VE İŞLEME AMAÇLARI\nPlatformumuzda hesap açma, profil yönetimi ve abonelik süreçlerinde yalnızca zorunlu veriler (e-posta adresi, kullanıcı adı, işlem logları, oturum tokenları) işlenmektedir. Finansal kart verileri doğrudan lisanslı ödeme kuruluşu PayTR tarafından işlenmekte olup sistemlerimize erişilmez ve kaydedilmez.\n\n3. KİŞİSEL VERİLERİN AKTARILMASI\nKişisel verileriniz, yasal zorunluluklar ve ödeme doğrulama süreçleri haricinde hiçbir üçüncü taraf, reklam veren veya aracı kurumla paylaşılmaz ve ticari amaçla satılmaz.\n\n4. HAKLARINIZ\nKVKK'nın 11. maddesi uyarınca veri sahipleri; kişisel verilerinin işlenip işlenmediğini öğrenme, işlenmişse bilgi talep etme, silinmesini veya düzeltilmesini isteme haklarına sahiptir. Bu taleplerinizi platform üzerinden veya destek adresimizden iletebilirsiniz."
   }
 }

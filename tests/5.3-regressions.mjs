@@ -19,7 +19,7 @@ const guncellemeBildirimi = fs.readFileSync('js/core/46-guncelleme.js', 'utf8');
 assert(!guncellemeBildirimi.includes('new Notification('), 'güncelleme bildirimi illegal Notification constructor kullanmamalı');
 assert(guncellemeBildirimi.includes('showNotification('), 'güncelleme bildirimi ServiceWorkerRegistration.showNotification kullanmalı');
 
-const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://tentiforapp.pages.dev/', runScripts: 'outside-only' });
+const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://tentifor.com/', runScripts: 'outside-only' });
 const { window } = dom;
 window.TF4 = { uyelik: { tip: 'evrengezer' } };
 window.tf4UyelikDongu = () => 'd30-0';

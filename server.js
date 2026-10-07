@@ -111,5 +111,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`TentiforApp sunucusu http://localhost:${PORT} üzerinde çalışıyor.`);
+  console.log(`TentiFor sunucusu http://localhost:${PORT} üzerinde çalışıyor.`);
 });

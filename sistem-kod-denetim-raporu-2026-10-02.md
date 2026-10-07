@@ -1,9 +1,11 @@
+> Alan adı geçiş notu (2026-10-07): bu rapordaki site bağlantıları güncel ana alan adına taşındı; tarihsel test bulguları değişmedi.
+
 # TentiforApp sistem kod denetim raporu
 
 **Tarih:** 2026-10-02  
 **Depo:** `selim4747/tentiforapp`  
 **HEAD:** `a90688f` — `Fix setup version warning and notification test`  
-**Canlı adres:** `https://tentiforapp.pages.dev/`
+**Canlı adres:** `https://tentifor.com/`
 
 ## 1. Kısa sonuç
 
@@ -319,7 +321,7 @@ navigator.serviceWorker.register("sw.js")
 Bu göreli URL’dir. Kullanıcının verdiği adres `/sen/` olduğundan tarayıcı şu adresi ister:
 
 ```text
-https://tentiforapp.pages.dev/sen/sw.js
+https://tentifor.com/sen/sw.js
 ```
 
 Canlı HTTP testi:

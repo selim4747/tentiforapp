@@ -21,7 +21,7 @@
     const p=kabukEklenti("PushNotifications");
     if(!p)return!1;
     FCM.basladi=!0;
-    try{await p.createChannel({id:FCM.kanal,name:"TentiforApp bildirimleri",description:"TentiforApp kişisel ve hatırlatma bildirimleri",importance:5,sound:"default",visibility:1})}catch{}
+    try{await p.createChannel({id:FCM.kanal,name:"TentiFor bildirimleri",description:"TentiFor kişisel ve hatırlatma bildirimleri",importance:5,sound:"default",visibility:1})}catch{}
     await p.addListener("registration",async function(e){
       const t=String(e&&e.value||"").trim();
       if(!t)return;
@@ -32,7 +32,7 @@
     await p.addListener("pushNotificationReceived",async function(e){
       const l=kabukEklenti("LocalNotifications");
       if(!l)return;
-      try{await l.schedule({notifications:[{id:Date.now()%2147483647,title:String(e&&e.title||"TentiforApp"),body:String(e&&e.body||""),channelId:FCM.kanal,extra:e&&e.data||{}}]})}catch{}
+      try{await l.schedule({notifications:[{id:Date.now()%2147483647,title:String(e&&e.title||"TentiFor"),body:String(e&&e.body||""),channelId:FCM.kanal,extra:e&&e.data||{}}]})}catch{}
     });
     await p.addListener("pushNotificationActionPerformed",function(e){
       const d=e&&e.notification&&e.notification.data||{};

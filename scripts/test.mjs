@@ -36,7 +36,8 @@ const tests = [
   'tests/termux-library.mjs',
   'tests/tentifor-terminal.mjs',
   'tests/terminal-integration-regression.mjs',
-  'tests/test-runner-exit-code.mjs'
+  'tests/test-runner-exit-code.mjs',
+  'tests/domain-brand-regression.mjs'
 ];
 
 const server = spawn(process.execPath, ['server.js'], { stdio: ['ignore', 'pipe', 'pipe'] });

@@ -32,8 +32,8 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="tentiforapp.pages.dev" />
-                <data android:scheme="https" android:host="www.tentiforapp.com" />
+                <data android:scheme="https" android:host="tentifor.com" />
+                <data android:scheme="https" android:host="www.tentifor.com" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

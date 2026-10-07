@@ -103,7 +103,7 @@
             }
             try {
               const kayit = await navigator.serviceWorker.ready;
-              await kayit.showNotification("TentiforApp v4.7.2", {
+              await kayit.showNotification("TentiFor v4.7.2", {
                 body: "Bildirim sistemi çalışıyor.",
                 icon: "ikon/ikon-192.png",
                 tag: "tentiforapp-test-bildirim"

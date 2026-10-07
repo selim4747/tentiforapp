@@ -37,7 +37,7 @@
     return new Promise(function (resolve, reject) {
       if (!file || file.size > 16 * 1024 * 1024) return reject(new Error('Yedek dosyası 16 MB sınırını aşamaz.'));
       var reader = new FileReader(); reader.onload = function () { try {
-        var payload = JSON.parse(reader.result); if (!payload || !/^tentiforapp-6\.2\.[1234]-backup$/.test(String(payload.format || '')) || !payload.data) throw new Error('Geçersiz TentiforApp yedeği.');
+        var payload = JSON.parse(reader.result); if (!payload || !/^tentiforapp-6\.2\.[1234]-backup$/.test(String(payload.format || '')) || !payload.data) throw new Error('Geçersiz TentiFor yedeği.');
         var count = 0; Object.keys(payload.data).forEach(function (key) { if (/^supabase\.|tf4_uyelik$|tentiforapp_6_2$/.test(key)) return; if (typeof payload.data[key] === 'string') { localStorage.setItem(key, payload.data[key]); count++; } });
         read(); toast(count + ' kayıt geri yüklendi. Sayfa yenileniyor.', true); resolve(count); setTimeout(function () { location.reload(); }, 500);
       } catch (e) { reject(e); } }; reader.onerror = function () { reject(new Error('Yedek okunamadı.')); }; reader.readAsText(file);
