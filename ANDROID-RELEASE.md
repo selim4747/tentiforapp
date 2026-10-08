@@ -12,6 +12,12 @@
 
 6.3.13 sürümü aynı kalıcı release sertifikasıyla kuruluysa 6.3.14 normal uygulama güncellemesi olarak yüklenebilir. Daha eski, farklı sertifikayla imzalı kurulumların kaldırılıp yeniden kurulması gerekir. Supabase hesapları ve sunucu verileri bundan etkilenmez; cihazdaki yerel veriler kaldırma sırasında silinebilir.
 
+## APK güncelleme politikası
+
+İmzalı APK her web sürümünde yeniden derlenmeyecek veya sürüm numarasıyla zorunlu olarak eşitlenmeyecek. APK yalnızca önemli sürümlerde ya da native/mobil davranışı etkileyen değişikliklerde güncellenecek; web-only sürümlerde son önemli APK ve `versionCode` korunacak. Web varlıkları yeni web sürümüyle birlikte güncellenebilir.
+
+Yeni/yenilenen kanonik evren verisi Android uygulaması çevrimiçiyken her açılışta `https://tentifor.com/veri.json` adresinden alınır; ağ yoksa APK içindeki son veriyle çalışmaya devam eder. Hesap ve ortak evren değişiklikleri de Supabase eşitleme akışından gelir. Böylece evren ekleme/düzenleme için APK’yi yeniden kurmak gerekmez. Yeni APK gerektiğinde aynı kalıcı sertifika ve artan `versionCode` kullanılır; mevcut kullanıcılar uygulamayı kaldırmadan güncelleyebilir.
+
 ## Gelecek release’ler
 
 İmzalama anahtarı repoya, APK içine veya loglara konmaz. Gelecekte aynı uygulamanın güncellenebilmesi için aynı keystore korunmalı ve aşağıdaki GitHub Actions secret’ları güvenli biçimde yapılandırılmalıdır:

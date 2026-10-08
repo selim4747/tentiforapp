@@ -12,12 +12,23 @@ const manifest = readJson('manifest.webmanifest');
 const shellPkg = readJson('uygulama/kabuk/package.json');
 const apkMeta = readJson('uygulama/indir/apk.json');
 const apkPath = path.join(root, 'uygulama/indir/tentiforapp.apk');
+const androidGradle = fs.readFileSync(path.join(root, 'uygulama/kabuk/android/app/build.gradle'), 'utf8');
+const androidVersionCode = Number(androidGradle.match(/versionCode\s+(\d+)/)?.[1]);
+const androidVersionName = androidGradle.match(/versionName\s+"([^"]+)"/)?.[1];
+const versionCompare = (left, right) => {
+  const a = left.split('.').map(Number); const b = right.split('.').map(Number);
+  for (let i = 0; i < 3; i += 1) if (a[i] !== b[i]) return a[i] - b[i];
+  return 0;
+};
 
 assert.match(pkg.version, /^\d+\.\d+\.\d+$/);
 assert.equal(data.surum, pkg.version, 'veri.json package.json ile aynı sürümü taşımalı');
 assert.equal(manifest.version, pkg.version, 'manifest package.json ile aynı sürümü taşımalı');
-assert.equal(shellPkg.version, pkg.version, 'APK kabuğu package.json ile aynı sürümü taşımalı');
-assert.equal(apkMeta.version, pkg.version, 'APK metadata sürümü package.json ile aynı olmalı');
+assert.ok(versionCompare(shellPkg.version, pkg.version) <= 0, 'Android kabuğu web sürümünden yeni olamaz; web-only releases APK’yi geride bırakabilir');
+assert.ok(versionCompare(apkMeta.version, pkg.version) <= 0, 'Android APK’si web sürümünden yeni olamaz; önemli APK sürümleri arasında web güncellenebilir');
+assert.equal(shellPkg.version, androidVersionName, 'Android package sürümü Gradle native sürümüyle eşleşmeli');
+assert.equal(apkMeta.version, androidVersionName, 'APK metadata sürümü Android native sürümüyle eşleşmeli');
+assert.equal(apkMeta.versionCode, androidVersionCode, 'APK metadata versionCode’u Gradle native versionCode ile eşleşmeli');
 assert.equal(apkMeta.sizeBytes, fs.statSync(apkPath).size, 'APK metadata boyutu binary ile aynı olmalı');
 assert.equal(apkMeta.sha256, crypto.createHash('sha256').update(fs.readFileSync(apkPath)).digest('hex'), 'APK metadata hash’i binary ile aynı olmalı');
 const assetLinks = readJson('.well-known/assetlinks.json');
@@ -55,12 +66,10 @@ assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_release_63
 assert.ok(fs.existsSync(path.join(root, 'js/engine/profile-sharing-6313.js')), '6.3.13 profil/alinti paylaşım modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/free-universe-cleanup-6313.js')), '6.3.13 boş evren silme modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/secure-sharing.js')), '6.3.10 güvenli paylaşım istemcisi eksik');
-const androidGradle = fs.readFileSync(path.join(root, 'uygulama/kabuk/android/app/build.gradle'), 'utf8');
-assert.match(androidGradle, /versionCode\s+625/);
-assert.match(androidGradle, /versionName\s+"6\.3\.14"/);
-assert.match(fs.readFileSync(path.join(root, 'js/core/78-uygulama-kabugu.js'), 'utf8'), /p_surum:"6\.3\.14"/);
-assert.match(fs.readFileSync(path.join(root, 'js/paket-4.js'), 'utf8'), /KURULUM_BEKLENEN="6\.3\.14"/);
-assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /select '6.3.14'::text/);
+const webVersionRegex = pkg.version.replaceAll('.', '\\.');
+assert.match(fs.readFileSync(path.join(root, 'js/core/78-uygulama-kabugu.js'), 'utf8'), new RegExp(`p_surum:"${webVersionRegex}"`));
+assert.match(fs.readFileSync(path.join(root, 'js/paket-4.js'), 'utf8'), new RegExp(`KURULUM_BEKLENEN="${webVersionRegex}"`));
+assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), new RegExp(`select '${webVersionRegex}'::text`));
 assert.ok(fs.existsSync(path.join(root, 'js/engine/kisisel-arsiv-araclari.js')), '6.3.1 arşiv modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/kesif-kullanici-profili.js')), '6.3 keşif modülü eksik');
 assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql'), 'utf8'), /public_kullanici_profili/);
@@ -111,7 +120,7 @@ for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js', 'js/engin
   assert.match(indexText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} index cache sürümü güncel olmalı`);
   assert.match(swText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} service worker cache sürümü güncel olmalı`);
 }
-console.log('Release hygiene: PASS (version sync, deterministic hash, APK/dist sync)');
+console.log('Release hygiene: PASS (web/native version separation, deterministic hash, APK/dist sync)');
 
 const veriMeta = JSON.parse(fs.readFileSync('veri.json','utf8'));
 const degisiklik = JSON.parse(fs.readFileSync('veri-degisiklik.json','utf8'));
