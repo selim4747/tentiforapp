@@ -94,46 +94,104 @@ const world = {
   id: 'test-evren',
   ad: 'Rüya Katmanı',
   kisiler: [{ id: 'l25', ad: 'L25', gizliKimlikler: [{ ad: 'Star Saver', aciklama: 'Dış kimlik.' }] }],
-  icEvren: { acik: true, ad: 'İç Rüya', bedenler: [] },
+  // Old records migrate from `bedenler`; former shared sleep flags/trace fields are not retained.
+  icEvren: { acik: true, ad: 'İç Rüya', bedenler: [{
+    id: 'l25', ad: 'L25', ustHal: 'Uyuyor', icHal: 'Uyanık',
+    kisilik: [{ ad: 'Eski hâl', aciklama: 'Bu kayda özgüdür.' }],
+    izler: [{ yer: 'Eski olay', metin: 'Bu evrende yaşandı.' }],
+  }] },
+};
+const secondWorld = {
+  tur: 'evren', id: 'test-evren-2', ad: 'İkinci Rüya Katmanı',
+  kisiler: [{ id: 'l25', ad: 'L25', gizliKimlikler: [{ ad: 'Star Saver', aciklama: 'Dış kimlik.' }] }],
+  icEvren: { acik: true, ad: 'İkinci İç Rüya', kisiler: [] },
 };
 worldWindow.EVS = { kaynak: 'benim', id: world.id, sekme: 'icevren', eser: world };
 worldWindow.tf4EvrenYazarMi = () => true;
-worldWindow.evrenSayfaVerisi = () => ({ eser: world });
-worldWindow.evrenBenimDegistir = (id, mutate) => mutate(world);
+worldWindow.evrenSayfaVerisi = () => ({ eser: worldWindow.EVS.eser });
+worldWindow.evrenBenimDegistir = (id, mutate) => mutate(id === secondWorld.id ? secondWorld : world);
 worldWindow.evrenSayfaCiz = () => {};
 worldWindow.eckaBildir = () => {};
+worldWindow.fanEserlerim = () => [world, secondWorld];
+worldWindow.fanSiteListesi = () => [];
 worldWindow.eval(innerSource);
 
-function renderInner() {
-  worldWindow.document.body.innerHTML = worldWindow.evrenEkBolum({ eser: world });
+function renderInner(activeWorld = world) {
+  worldWindow.EVS.id = activeWorld.id;
+  worldWindow.EVS.eser = activeWorld;
+  worldWindow.document.body.innerHTML = worldWindow.evrenEkBolum({ eser: activeWorld });
 }
 function click(selector) {
   const button = worldWindow.document.querySelector(selector);
   assert.ok(button, `Tıklanabilir iç evren düğmesi eksik: ${selector}`);
   button.dispatchEvent(new worldWindow.MouseEvent('click', { bubbles: true, cancelable: true }));
 }
-renderInner();
-assert.ok(worldWindow.document.querySelector('#iceKisiSec option[value="l25"]'), 'Mevcut kişi iç evrene bağlanabilmeli');
-worldWindow.document.querySelector('#iceKisiSec').value = 'l25';
-click('[data-ice-beden-ekle]');
-assert.equal(world.icEvren.bedenler[0].gizliKimlikler[0].ad, 'Star Saver', 'Kişinin var olan kimliği yeni iç bedenle taşınmalı');
 
 renderInner();
-const innerIdentityField = worldWindow.document.querySelector('[data-ice-gizli-kimlikler="l25"]');
-assert.ok(innerIdentityField, 'İç evren beden editöründe ayrı kimlik alanı olmalı');
-innerIdentityField.value = 'Star Saver: L25’in iç katmandaki karşılığı.\nGölge: Gece arşivcisi.';
-click('[data-ice-kimlik-kaydet="l25"]');
-assert.deepEqual(JSON.parse(JSON.stringify(world.icEvren.bedenler[0].gizliKimlikler)), [
-  { ad: 'Star Saver', aciklama: 'L25’in iç katmandaki karşılığı.' },
-  { ad: 'Gölge', aciklama: 'Gece arşivcisi.' },
+const migratedIdentityField = worldWindow.document.querySelector('[data-ice-gizli-kimlikler="l25"]');
+assert.ok(migratedIdentityField, 'Eski iç kayıt ayrı bir kişi kimlik kartına taşınmalı');
+assert.ok(worldWindow.document.querySelector('[data-ice-kisilik="l25"]'), 'İç evren kişiliği kartta düzenlenebilmeli');
+const sameWorldLink = worldWindow.document.querySelector('[data-ice-yan-kisi="l25"]');
+assert.ok(sameWorldLink, 'Kişi kartında isteğe bağlı yan-evren bağlantı alanı olmalı');
+assert.equal([...sameWorldLink.options].some((option) => option.value === JSON.stringify({ evrenId: world.id, kisiId: 'l25' })), false, 'Kişi kendi iç evrenindeki kartına bağlanmamalı');
+migratedIdentityField.value = 'Gölge: Sadece ilk iç evrendeki kimlik.';
+worldWindow.document.querySelector('[data-ice-kisilik="l25"]').value = 'Yalnız: İlk evrende içine kapanıktır.';
+click('[data-ice-kisi-kaydet="l25"]');
+assert.equal(world.icEvren.bedenler, undefined, 'İlk kayıt sonrası eski beden birleşimi alanı kaldırılmalı');
+assert.equal(world.icEvren.kisiler[0].kaynakKisiId, 'l25', 'Ana evren kişi çapası tutulmalı');
+assert.deepEqual(JSON.parse(JSON.stringify(world.icEvren.kisiler[0].gizliKimlikler)), [
+  { ad: 'Gölge', aciklama: 'Sadece ilk iç evrendeki kimlik.' },
+]);
+assert.deepEqual(JSON.parse(JSON.stringify(world.icEvren.kisiler[0].kisilik)), [
+  { ad: 'Yalnız', aciklama: 'İlk evrende içine kapanıktır.' },
+]);
+assert.equal(world.icEvren.kisiler[0].ustHal, undefined, 'Önceki çapraz uyku durumu taşınmamalı');
+assert.equal(world.kisiler[0].gizliKimlikler[0].ad, 'Star Saver', 'Ana evrenin kanonik kimliği değişmemeli');
+
+const legacyEvents = worldWindow.document.querySelector('[data-ice-olaylar="l25"]');
+assert.ok(legacyEvents, 'Her kişi kartında bu evrene özel olay alanı olmalı');
+legacyEvents.value = 'İlk karşılaşma: Eski arşivde tanıştılar.';
+click('[data-ice-olaylar-kaydet="l25"]');
+assert.deepEqual(JSON.parse(JSON.stringify(world.icEvren.kisiler[0].olaylar)), [
+  { ad: 'İlk karşılaşma', aciklama: 'Eski arşivde tanıştılar.' },
 ]);
 
+renderInner(secondWorld);
+assert.ok(worldWindow.document.querySelector('#iceKisiSec option[value="l25"]'), 'Aynı ana kişi ikinci iç evrende de bağımsız karta dönüştürülebilmeli');
+worldWindow.document.querySelector('#iceKisiSec').value = 'l25';
+click('[data-ice-kisi-ekle]');
+const secondId = secondWorld.icEvren.kisiler[0].id;
+assert.notEqual(secondId, 'l25', 'İkinci evren kendi yerel kart kimliğini üretmeli');
+assert.equal(secondWorld.icEvren.kisiler[0].kaynakKisiId, 'l25');
+assert.deepEqual(JSON.parse(JSON.stringify(secondWorld.icEvren.kisiler[0].gizliKimlikler)), [], 'Ana kimlikler yeni iç karta otomatik kopyalanmamalı');
+renderInner(secondWorld);
+const secondPersonality = worldWindow.document.querySelector(`[data-ice-kisilik="${secondId}"]`);
+secondPersonality.value = 'Cesur: İkinci evrende öne atılır.';
+worldWindow.document.querySelector(`[data-ice-gizli-kimlikler="${secondId}"]`).value = 'Kutup: İkinci evrenin saklı adı.';
+click(`[data-ice-kisi-kaydet="${secondId}"]`);
+worldWindow.document.querySelector(`[data-ice-olaylar="${secondId}"]`).value = 'İkinci olay: Başka bir tarihte başladı.';
+click(`[data-ice-olaylar-kaydet="${secondId}"]`);
+assert.equal(world.icEvren.kisiler[0].kisilik[0].ad, 'Yalnız', 'İkinci evren düzenlemesi ilk evrenin kişiliğini değiştirmemeli');
+assert.equal(world.icEvren.kisiler[0].olaylar[0].ad, 'İlk karşılaşma', 'Olaylar evrenler arasında paylaşılmamalı');
+assert.equal(secondWorld.icEvren.kisiler[0].kisilik[0].ad, 'Cesur');
+assert.equal(secondWorld.icEvren.kisiler[0].olaylar[0].ad, 'İkinci olay');
+
+renderInner(secondWorld);
+const counterpart = worldWindow.document.querySelector(`[data-ice-yan-kisi="${secondId}"]`);
+const counterpartOption = [...counterpart.options].find((option) => option.value === JSON.stringify({ evrenId: world.id, kisiId: 'l25' }));
+assert.ok(counterpartOption, 'Başka iç evrende bulunan kişi kartı yalnızca karşılık olarak seçilebilmeli');
+counterpart.value = counterpartOption.value;
+click(`[data-ice-yan-kisi-kaydet="${secondId}"]`);
+assert.deepEqual(JSON.parse(JSON.stringify(secondWorld.icEvren.kisiler[0].yanKisi)), { evrenId: world.id, kisiId: 'l25' });
+assert.equal(world.icEvren.kisiler[0].kisilik[0].ad, 'Yalnız', 'Karşılık bağlantısı verileri birleştirmemeli');
+
 worldWindow.EVS.kaynak = 'site';
-renderInner();
+renderInner(secondWorld);
 const innerReveal = worldWindow.document.querySelector('.ice-gizli-kimlik');
 assert.ok(innerReveal, 'Okur iç evrendeki gizli kimlikleri görebilmeli');
 assert.equal(innerReveal.hasAttribute('open'), false, 'İç evren kimlikleri ilk açılışta spoiler olarak kapalı kalmalı');
 assert.match(innerReveal.textContent, /Gizli kimlik · spoiler/, 'Okur spoiler alanını açığa çıkmadan tanıyabilmeli');
+assert.match(worldWindow.document.body.textContent, /Yan evrendeki karşılığı/, 'Okur kişi kartındaki karşılık bağlantısını görebilmeli');
 worldDom.window.close();
 
-console.log('Hidden identities: legacy signatures, own-person edit/create, safe spoiler rendering, and inner-universe link/edit/view checks passed.');
+console.log('Hidden identities: legacy migration, independent inner-world cards/personality/events, counterpart-only links, and spoiler rendering checks passed.');

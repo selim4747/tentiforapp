@@ -164,3 +164,23 @@ html[data-site-tema~=katiller] { --deniz: #ff9aa8; }
 .tf312-selection{position:absolute;z-index:1400;max-width:calc(100vw - 16px);padding:.35rem;border:1px solid var(--buz);border-radius:var(--r-kucuk);background:var(--beyaz);box-shadow:0 8px 24px rgba(13,53,96,.18)}
 .tf312-selection .dugme{min-height:38px;padding:8px 12px}
 @media(max-width:600px){.profil-takip,.tf63-profil-baslik{align-items:flex-start;flex-direction:column}.profil-takip .dugme,.tf312-profile-actions .dugme{width:100%}.tf312-selection{position:fixed;left:8px!important;right:8px;bottom:12px;top:auto!important;text-align:center}.tf312-selection .dugme{width:100%}}
+
+/* 6.3.14: spoiler identity editor and independent inner-world character cards */
+.y-gizli-kimlik-editor{min-width:0}
+.y-gizli-kimlik-editor textarea{box-sizing:border-box;width:100%;max-width:100%;min-width:0;line-height:1.55;overflow-wrap:anywhere}
+.kanon-gizli-kimlikler{margin:16px 0;padding:12px 14px;border:1px solid var(--sig,#B8D6EC);border-radius:6px;background:color-mix(in srgb,var(--beyaz,#fff) 86%,transparent)}
+.kanon-gizli-kimlikler summary{cursor:pointer;font-weight:650;min-height:36px;display:flex;align-items:center}
+.kanon-gizli-kimlikler dl{display:grid;grid-template-columns:minmax(100px,.4fr) minmax(0,1fr);gap:6px 12px;margin:12px 0 0}
+.kanon-gizli-kimlikler dt{font-weight:650}
+.kanon-gizli-kimlikler dd{margin:0;min-width:0;overflow-wrap:anywhere}
+@media(max-width:640px){
+  .y-gizli-kimlik-editor{padding:12px}
+  .y-gizli-kimlik-editor textarea{min-height:120px;font-size:16px}
+  .kanon-gizli-kimlikler{padding:10px 12px}
+  .kanon-gizli-kimlikler dl{grid-template-columns:minmax(0,1fr);gap:3px}
+  .kanon-gizli-kimlikler dd{margin:0 0 8px}
+  .ice-kisi-karti{padding:12px!important}
+  .ice-kisi-karti input,.ice-kisi-karti textarea,.ice-kisi-karti select{font-size:16px;min-height:44px}
+  .ice-kisi-karti textarea{min-height:96px}
+  .ice-kisi-karti button,.ice-kisi-ekle button{min-height:44px}
+}

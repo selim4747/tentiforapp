@@ -3455,7 +3455,7 @@ revoke execute on function public.mod_sikayet_kapat(text, text, text) from publi
 grant execute on function public.mod_sikayet_kapat(text, text, text) to anon, authenticated;
 
 create or replace function public.kurulum_surumu() returns text
-language sql stable security definer set search_path = '' as $$ select '6.3.13'::text $$;
+language sql stable security definer set search_path = '' as $$ select '6.3.14'::text $$;
 revoke all on function public.kurulum_surumu() from public;
 grant execute on function public.kurulum_surumu() to anon, authenticated;
 -- ---------- 5.4 migration: hediye geçmişi, alıcı bildirimi ve plan politikası ----------
@@ -4840,7 +4840,7 @@ grant execute on function public.paylasim_baglanti_iptal(uuid) to authenticated;
 notify pgrst, 'reload schema';
 
 
--- 6.3.13 E26 özel kanon yöneticisi: site geneli admin değildir.
+-- 6.3.14 E26 özel kanon yöneticisi: site geneli admin değildir.
 create table if not exists public.kanon_evren_yetkileri (
   kullanici uuid not null references auth.users(id) on delete cascade,
   evren text not null,

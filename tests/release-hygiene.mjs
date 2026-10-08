@@ -56,11 +56,11 @@ assert.ok(fs.existsSync(path.join(root, 'js/engine/profile-sharing-6313.js')), '
 assert.ok(fs.existsSync(path.join(root, 'js/engine/free-universe-cleanup-6313.js')), '6.3.13 boş evren silme modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/secure-sharing.js')), '6.3.10 güvenli paylaşım istemcisi eksik');
 const androidGradle = fs.readFileSync(path.join(root, 'uygulama/kabuk/android/app/build.gradle'), 'utf8');
-assert.match(androidGradle, /versionCode\s+624/);
-assert.match(androidGradle, /versionName\s+"6\.3\.13"/);
-assert.match(fs.readFileSync(path.join(root, 'js/core/78-uygulama-kabugu.js'), 'utf8'), /p_surum:"6\.3\.13"/);
-assert.match(fs.readFileSync(path.join(root, 'js/paket-4.js'), 'utf8'), /KURULUM_BEKLENEN="6\.3\.13"/);
-assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /select '6.3.13'::text/);
+assert.match(androidGradle, /versionCode\s+625/);
+assert.match(androidGradle, /versionName\s+"6\.3\.14"/);
+assert.match(fs.readFileSync(path.join(root, 'js/core/78-uygulama-kabugu.js'), 'utf8'), /p_surum:"6\.3\.14"/);
+assert.match(fs.readFileSync(path.join(root, 'js/paket-4.js'), 'utf8'), /KURULUM_BEKLENEN="6\.3\.14"/);
+assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /select '6.3.14'::text/);
 assert.ok(fs.existsSync(path.join(root, 'js/engine/kisisel-arsiv-araclari.js')), '6.3.1 arşiv modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/kesif-kullanici-profili.js')), '6.3 keşif modülü eksik');
 assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql'), 'utf8'), /public_kullanici_profili/);

@@ -1,13 +1,14 @@
 {
-  "kod": "8f13f07676cb",
-  "surum": "6.3.13",
-  "boyut": 7202487,
-  "tarih": "2026-10-07T11:14:11+00:00",
-  "not": "TentiFor 6.3.13: yeni kalıcı imzalı release APK; uygulama kimliği ve web bağlantıları korunur.",
-  "sha256": "8f13f07676cbe29679a7973519a7161dcd1662b1c0381ae98ef4d6025992616a",
-  "version": "6.3.13",
-  "size": 7202487,
-  "sizeBytes": 7202487,
-  "updatedAt": "2026-10-07T11:14:11Z",
-  "notes": "TentiFor 6.3.13 yeni kalıcı imzalı release APK — mevcut eski APK üzerine güncelleme yapılamaz; yeniden kurulum gerekir."
+  "kod": "408d77b7dc6c",
+  "surum": "6.3.14",
+  "version": "6.3.14",
+  "versionCode": 625,
+  "boyut": 7212134,
+  "size": 7212134,
+  "sizeBytes": 7212134,
+  "tarih": "2026-10-08T08:33:36Z",
+  "updatedAt": "2026-10-08T08:33:36Z",
+  "sha256": "408d77b7dc6cce788d1659223e3bced832a68b93f34b04648ba8e83a8d3160aa",
+  "not": "TentiFor 6.3.14 / Android versionCode 625; mevcut kalıcı release sertifikasıyla imzalı APK.",
+  "notes": "TentiFor 6.3.14 (625), aynı kalıcı release sertifikası. 6.3.13 sürümü bu sertifikayla kurulmuşsa normal uygulama güncellemesi yapılabilir; daha eski farklı sertifikalı sürümlerde kaldırıp yeniden kurmak gerekir."
 }

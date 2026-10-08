@@ -296,7 +296,7 @@
             </div>
             <div class="term-baslik-metin">
               <span>TentiFor Arşiv Terminali</span>
-              <span class="term-baslik-rozet" id="${idPrefix}-rozet">${this.adminOturumu ? 'ROOT / YÖNETİCİ' : 'V6.3.13'}</span>
+              <span class="term-baslik-rozet" id="${idPrefix}-rozet">${this.adminOturumu ? 'ROOT / YÖNETİCİ' : 'V6.3.14'}</span>
             </div>
           </div>
           <div class="term-baslik-sag">
@@ -945,7 +945,7 @@
       this.yaz(ekran, `
 <span class="term-banner">
 ╔══════════════════════════════════════════════════════════╗
-║        TENTİFOR ARŞİV TERMİNALİ (V6.3.13)               ║
+║        TENTİFOR ARŞİV TERMİNALİ (V6.3.14)               ║
 ║   Tömye Kozmolojisi & Siber Kurtarma Konsolu            ║
 ╚══════════════════════════════════════════════════════════╝</span>
 <span class="term-parlak">⏳ Zaman, Takvim & Yaş:</span>
@@ -1033,7 +1033,7 @@
     komutSurum(ekran) {
       const sw = typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller ? 'AKTİF (Offline Ready)' : 'STANDBY';
       this.yaz(ekran, `
-<span class="term-parlak">Tömye Arşiv Çekirdeği:</span> Tentifor-MicroV6 (Build 6.3.13)
+<span class="term-parlak">Tömye Arşiv Çekirdeği:</span> Tentifor-MicroV6 (Build 6.3.14)
 <span class="term-vurgu">Kozmoloji    :</span> 24. Evren · Tömye (Aysız Gezegen / 28 Günlük Takvim)
 <span class="term-vurgu">Epok Yılı    :</span> 744 Tömye Yılı (Dünya: 2026.10)
 <span class="term-vurgu">Platform     :</span> Web PWA / Capacitor Shell Native
@@ -1622,7 +1622,7 @@ ${oykuler.map((o) => `<span class="term-vurgu">• [Öykü ${o.no}] <b>${o.basli
     komutBildirimler(ekran) {
       this.yaz(ekran, `
 <span class="term-parlak">🔔 GÜNCEL SİSTEM BİLDİRİMLERİ & DUYURULAR:</span>
-<span class="term-vurgu">• [YENİ] V6.3.13 Arşiv Terminali Devrede:</span> 404 kurtarma motoru ve VFS arşivi yayına alındı.
+<span class="term-vurgu">• [YENİ] V6.3.14 Arşiv Terminali Devrede:</span> 404 kurtarma motoru ve VFS arşivi yayına alındı.
 <span class="term-vurgu">• [KORUMA] Fan Hikâyeleri Güvencesi:</span> Fan hikâyesi yazılmış evrenlerin silinmesi kalıcı olarak engellendi.
 <span class="term-vurgu">• [ROMAN] Bölüm 4 Yayında:</span> Tömye romanının yeni bölümü kütüphaneye eklendi.
 <span class="term-vurgu">• [PWA] Çevrimdışı Desteği:</span> Tüm kayıtlar IndexedDB üzerinden senkronize ediliyor.
@@ -2095,7 +2095,7 @@ Yardım için: <b>yardim admin</b>
           try { window.yoneticiCikis(); } catch {}
         }
         if (istemiEl) istemiEl.innerHTML = this.istemiMetni();
-        if (rozetEl) rozetEl.textContent = 'V6.3.13';
+        if (rozetEl) rozetEl.textContent = 'V6.3.14';
         this.yaz(ekran, '<span class="term-soluk">Yönetici oturumu kapatıldı. Standart moda dönüldü.</span>');
         return;
       }
@@ -2207,7 +2207,7 @@ Raporlanan Fan Evren : 0
         const ekran = modal.querySelector('#term-modal-ekran');
         this.yaz(ekran, `
 <span class="term-banner">
-TentiFor Arşiv Terminali V6.3.13 [Cyber-Console Ready]
+TentiFor Arşiv Terminali V6.3.14 [Cyber-Console Ready]
 Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
 </span>
 <span class="term-soluk">Kullanılabilir komutlar için <b>yardim</b> yazın veya hızlı düğmeleri kullanın.</span>

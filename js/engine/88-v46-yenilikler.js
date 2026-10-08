@@ -188,7 +188,7 @@
   function v47IcEvrenYukle() {
     if (document.querySelector('script[data-v47]')) return;
     const s = document.createElement('script');
-    s.src = 'js/engine/89-v47-ic-evren.js?v=472';
+    s.src = 'js/engine/89-v47-ic-evren.js?v=6314';
     s.defer = true;
     s.setAttribute('data-v47', '1');
     document.head.appendChild(s);
