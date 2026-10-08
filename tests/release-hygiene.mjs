@@ -41,6 +41,10 @@ assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_6210_offline_operations.sql')), '6.2.10 offline migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/core/95-offline-transport.js')), 'offline transport modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_6212_audit_quality.sql')), '6.2.12 audit migration eksik');
+const runBuild = () => execFileSync(process.execPath, ['scripts/paketle.mjs'], { cwd: root, encoding: 'utf8', env: { ...process.env, TF_SEO_STATIC_ONLY: '1' } });
+runBuild();
+const first = readJson('surum.json');
+const firstHash = first.paket;
 assert.match(fs.readFileSync(path.join(root, 'dist/tomye/index.html'), 'utf8'), /Tömye — TentiFor/);
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql')), '6.3 discovery migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_631_archive_tools.sql')), '6.3.1 archive tools migration eksik');
@@ -76,10 +80,6 @@ assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_d
 
 assert.match(fs.readFileSync(path.join(root, 'js/engine/91-v473-uyelik.js'), 'utf8'), new RegExp(`SURUM = '${pkg.version.replaceAll('.', '\\.')}'`));
 
-const runBuild = () => execFileSync(process.execPath, ['scripts/paketle.mjs'], { cwd: root, encoding: 'utf8', env: { ...process.env, TF_SEO_STATIC_ONLY: '1' } });
-runBuild();
-const first = readJson('surum.json');
-const firstHash = first.paket;
 runBuild();
 const second = readJson('surum.json');
 assert.equal(second.paket, firstHash, 'aynı girdiler deterministik paket hash üretmeli');
@@ -87,6 +87,9 @@ assert.equal(second.kuruldu, first.kuruldu, 'aynı hash yeniden build edilince k
 for (const file of ['dist/evren/e25/index.html', 'dist/evren/e99/index.html', 'dist/tomye/index.html', 'dist/fan/index.html', 'dist/oyunlar/index.html', 'dist/atolye/index.html', 'dist/okuma/index.html', 'dist/404.html']) {
   assert.ok(fs.existsSync(path.join(root, file)), `${file} public SEO fallback çıktısı eksik`);
 }
+assert.ok(fs.existsSync(path.join(root, 'favicon.ico')) && fs.existsSync(path.join(root, 'dist/favicon.ico')) && fs.existsSync(path.join(root, 'uygulama/kabuk/www/favicon.ico')), 'favicon web ve APK çıktılarında bulunmalı');
+assert.ok(fs.readFileSync(path.join(root, 'favicon.ico')).equals(fs.readFileSync(path.join(root, 'dist/favicon.ico'))), 'favicon dist ile aynı olmalı');
+assert.ok(fs.readFileSync(path.join(root, 'favicon.ico')).equals(fs.readFileSync(path.join(root, 'uygulama/kabuk/www/favicon.ico'))), 'favicon Capacitor www ile aynı olmalı');
 const seoPage = fs.readFileSync(path.join(root, 'dist/evren/e25/index.html'), 'utf8');
 assert.match(seoPage, /property="og:title"/);
 assert.match(seoPage, /twitter:card/);
@@ -103,9 +106,11 @@ for (const file of ['index.html', 'veri.json', 'surum.json', 'manifest.webmanife
   compare(file, path.join('uygulama/kabuk/www', file));
   compare(file, path.join('dist', file));
 }
+assert.ok(fs.readFileSync(path.join(root, 'index.html'), 'utf8').includes('href="/favicon.ico"'), 'index favicon URL must use the root icon');
 assert.equal(fs.readFileSync(path.join(root, 'sw.js'), 'utf8').match(/const ONBELLEK = "tentiforapp-([^"]+)"/)[1], second.paket);
 const indexText = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const swText = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+assert.ok(swText.includes('"favicon.ico"'), 'service worker must precache the favicon');
 const setupSql = fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8');
 for (const fn of ['kurulum_surumu', 'abonelik_hediye', 'kullaniciya_bildir', 'bildirimlerim']) {
   const count = (setupSql.match(new RegExp(`create or replace function public\\.${fn}\\b`, 'g')) || []).length;
