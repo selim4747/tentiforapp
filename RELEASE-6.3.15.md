@@ -30,3 +30,4 @@
 - Android `assembleRelease` — **PASS**; aynı kalıcı release sertifikasıyla signed APK üretildi. APK imzası `apksigner`, `versionName=6.3.15` ve `versionCode=626` ise Android paket metadata’sıyla doğrulandı.
 - Final APK SHA-256/byte sayısı, indirme metadata’sı ve `dist` kopyası; CSS kaynak/`dist`/Capacitor `www` eşitliği — **PASS**.
 - Canlı yayın kontrolü bu değişiklik için yapılmadı; merge sonrasında Cloudflare Pages dağıtımı doğrulanabilir.
+- PR #136 GitHub `mergeStateStatus=UNSTABLE` bildiriyor; `gh pr checks` hosted-check ayrıntılarına `403 Resource not accessible by integration` nedeniyle erişemedi. Bu oturumda uzak CI sonucu doğrulanamadı; yerel test sonuçları yukarıda ayrı kaydedilmiştir.
