@@ -25,8 +25,8 @@ Kanonik evren verisi, Android uygulaması çevrimiçiyken her açılışta [`htt
 - Android signed release build (`assembleRelease`) — **başarılı**.
 - APK imzası doğrulandı. Sertifika SHA-256 parmak izi `7dde5a8e4ab8e285fc5fae67987279c0da81f842ef6b37c9c9346c09991512de`; App Links allowlistesiyle eşleşiyor.
 - APK manifesti: `dev.pages.tentiforapp`, `versionName=6.3.14`, `versionCode=625`.
-- APK boyutu: **7,217,750 bayt**.
-- APK SHA-256: `1c5bdc56db8107a494a5f6570027507fced0e567a6627e1ff78d9add3f3cdfb2`.
+- APK boyutu: **7,217,311 bayt**.
+- APK SHA-256: `82426d220956fd3c721b103bd2c2914e560ed840f26634b5879455981fbe17a7`.
 - `https://tentifor.com/veri.json` için 200 yanıtı, `Access-Control-Allow-Origin: *` ve `Cache-Control: public, max-age=0, must-revalidate` başlıkları salt-okunur şekilde doğrulandı.
 - GitHub-hosted check-runs/status entegrasyonu bu oturumda `403 Resource not accessible by integration` döndürdü; bu nedenle uzak CI sonucu raporlanmıyor. Yerel test, lint ve build sonuçları yukarıdadır.
 
