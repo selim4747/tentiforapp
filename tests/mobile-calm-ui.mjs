@@ -25,12 +25,25 @@ for (const [name, engine] of engines) {
     await page.goto('http://127.0.0.1:3000/', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('.ana-tomye', { timeout: 15000 });
     await page.waitForSelector('#altMenu', { timeout: 15000 });
+    await page.waitForSelector('#anaEvrenler .ana-evren-sar .ana-yildiz', { timeout: 15000 });
 
     const mobile = await page.evaluate(() => {
       const hero = document.querySelector('.ana-tomye');
       const primary = document.querySelector('.hero-eylem .dugme');
+      const random = document.querySelector('#rastgeleHero');
       const nav = document.querySelector('#altMenu');
       const tip = document.querySelector('#turIpucu');
+      const intro = document.querySelector('.ana-giris');
+      const codeButton = document.querySelector('#btnKod');
+      const visibleStarCards = [...document.querySelectorAll('#anaEvrenler .ana-evren-sar')]
+        .filter((card) => card.getBoundingClientRect().width > 0 && card.querySelector('.ana-yildiz'));
+      const starsAnchored = visibleStarCards.length > 0 && visibleStarCards.every((wrapper) => {
+        const box = wrapper.getBoundingClientRect();
+        const star = wrapper.querySelector('.ana-yildiz').getBoundingClientRect();
+        return getComputedStyle(wrapper).position === 'relative'
+          && star.left >= box.left - 1 && star.right <= box.right + 1
+          && star.top >= box.top - 1 && star.bottom <= box.bottom + 1;
+      });
       const r = (element) => element.getBoundingClientRect();
       return {
         width: innerWidth,
@@ -38,10 +51,21 @@ for (const [name, engine] of engines) {
         background: getComputedStyle(document.documentElement).getPropertyValue('--kar').trim().toLowerCase(),
         heroRadius: parseFloat(getComputedStyle(hero).borderTopLeftRadius),
         primaryHeight: Math.round(r(primary).height),
+        primaryWidth: Math.round(r(primary).width),
+        randomWidth: Math.round(r(random).width),
+        starsAnchored,
         navHeight: Math.round(r(nav).height),
         navBottom: Math.round(r(nav).bottom),
         tipBottom: tip ? Math.round(r(tip).bottom) : null,
         navTop: Math.round(r(nav).top),
+        tourTag: tip?.tagName || null,
+        tourOpen: Boolean(tip?.open),
+        tourModal: Boolean(tip?.matches(':modal')),
+        tourTitle: tip?.querySelector('#turBaslik')?.innerText.trim() || '',
+        tourSkipText: tip?.querySelector('.tur-kapat')?.innerText.trim() || '',
+        tourSkipLabel: tip?.querySelector('.tur-kapat')?.getAttribute('aria-label') || '',
+        codeButtonText: codeButton?.innerText.trim() || '',
+        introText: intro?.innerText.trim() || '',
       };
     });
     assert.equal(mobile.width, 390, `${name}: mobile viewport was not applied`);
@@ -49,14 +73,28 @@ for (const [name, engine] of engines) {
     assert.equal(mobile.background, '#f5f7f4', `${name}: light mobile palette should be calm and consistent`);
     assert.ok(mobile.heroRadius >= 18, `${name}: hero card should have a soft rounded shape`);
     assert.ok(mobile.primaryHeight >= 44, `${name}: primary action should meet touch target minimum`);
+    assert.ok(mobile.starsAnchored, `${name}: each visible favorite star must stay inside its own universe card`);
+    assert.ok(mobile.randomWidth >= mobile.primaryWidth - 2, `${name}: random discovery action should not be stranded in half a row`);
     assert.ok(mobile.navHeight >= 60, `${name}: bottom navigation should include safe-area space`);
     if (mobile.tipBottom !== null) assert.ok(mobile.tipBottom <= mobile.navTop + 1, `${name}: onboarding tip must not cover bottom navigation`);
+    assert.equal(mobile.tourTag, 'DIALOG', `${name}: first-visit tour must use an accessible dialog`);
+    assert.ok(mobile.tourOpen && mobile.tourModal, `${name}: tour must clearly open as a modal`);
+    assert.ok(mobile.tourTitle, `${name}: tour must have a labelled heading`);
+    assert.equal(mobile.tourSkipText, 'Atla', `${name}: tour skip action must be visible and explicit`);
+    assert.equal(mobile.tourSkipLabel, 'Turu atla', `${name}: tour skip action must have an accessible label`);
+    assert.equal(mobile.codeButtonText, 'Kod gir', `${name}: header code action should state what it does`);
+    assert.equal(mobile.introText, 'Evrenleri keşfet; oku, oyna ya da kendi evrenini kur.', `${name}: home intro should avoid unexplained jargon`);
+
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => !document.querySelector('#turIpucu'));
+    const tourDismissed = await page.evaluate(() => localStorage.getItem('tentiforapp_tur'));
+    assert.equal(tourDismissed, 'bitti', `${name}: Escape should dismiss and remember the tour`);
 
     await page.evaluate(() => document.documentElement.setAttribute('data-ayar-tema', 'gece'));
     const darkBackground = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--kar').trim().toLowerCase());
     assert.equal(darkBackground, '#0b1017', `${name}: mobile palette must preserve the existing night theme`);
     assert.equal(pageErrors.length, 0, `${name}: runtime errors ${pageErrors.join('; ')}`);
-    results.push(`${name}: PASS (390px home, calm mobile palette, no horizontal overflow, touch CTA, safe bottom navigation, onboarding clearance, night theme)`);
+    results.push(`${name}: PASS (390px home, calm palette, no overflow, anchored universe stars, balanced CTA rows, accessible modal tour/skip/Escape, clear code action, night theme)`);
     await page.close();
   } catch (error) {
     results.push(`${name}: FAIL (${error.stack || error})`);

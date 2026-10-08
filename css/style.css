@@ -484,3 +484,96 @@ html[data-site-tema~=katiller] { --deniz: #ff9aa8; }
   }
   #altMenu .alt-oge { font-size: 10.5px; }
 }
+
+
+/* First-visit guidance is a deliberate dialog, not a floating card over page controls. */
+.tur-ipucu {
+  width: auto;
+  box-sizing: border-box;
+}
+.tur-ipucu::backdrop {
+  background: rgba(11, 16, 23, .46);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.tur-ipucu .tur-ipucu-ust { gap: 10px; }
+.tur-ipucu .tur-tur-etiket {
+  color: var(--deniz);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tur-ipucu .tur-sayac {
+  margin-left: auto;
+  color: var(--murekkep-2);
+  font-family: var(--govde);
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+.tur-ipucu .tur-kapat {
+  display: inline-flex;
+  min-width: 64px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 1px solid var(--buz);
+  border-radius: 999px;
+  background: var(--zemin);
+  color: var(--murekkep-2);
+  font: 600 13px/1.2 var(--govde);
+  cursor: pointer;
+}
+.tur-ipucu h2 {
+  margin: 14px 0 5px;
+  color: var(--murekkep);
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+.tur-ipucu > .dugme {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+@media (max-width: 720px) {
+  .tur-ipucu {
+    right: 14px;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    left: 14px;
+    max-width: 460px;
+    max-height: min(54vh, 360px);
+    padding: 16px 17px 17px;
+    border-radius: 22px;
+  }
+  .tur-ipucu h2 { font-size: 22px; }
+}
+
+
+/* Override the user-agent dialog inset so the mobile sheet sits above the nav. */
+.tur-ipucu { top: auto; }
+
+
+/* Keep each favorite star attached to its own universe card. */
+.ana-evren-sar {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+.ana-evren-sar > .ana-evren {
+  flex: 1;
+  min-width: 0;
+  padding-right: 54px;
+}
+.ana-evren-sar > .ana-yildiz { z-index: 1; }
+@media (max-width: 720px) {
+  .hero-eylem > #rastgeleHero { grid-column: 1 / -1; }
+}
