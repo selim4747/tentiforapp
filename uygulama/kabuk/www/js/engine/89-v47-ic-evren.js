@@ -59,6 +59,7 @@
           ad: String((b && (b.ad || b.kisiAd)) || '').slice(0, 80),
           ustHal: b && b.ustHal === 'uyuyor' ? 'uyuyor' : 'uyanik',
           icHal: b && b.icHal === 'uyuyor' ? 'uyuyor' : 'uyanik',
+          gizliKimlikler: iceGizliKimlikleriTemizle(b && b.gizliKimlikler),
           izler: Array.isArray(b && b.izler) ? b.izler.slice(0, 20).map(function (z) {
             return {
               yer: String((z && z.yer) || '').slice(0, 40),
@@ -96,10 +97,47 @@
       if (!k || k.kutu) return;
       liste.push({
         id: String(k.id || k.ad || '').slice(0, 40),
-        ad: String(k.ad || 'Adsız').slice(0, 80)
+        ad: String(k.ad || 'Adsız').slice(0, 80),
+        gizliKimlikler: iceGizliKimlikleriTemizle(k.gizliKimlikler)
       });
     });
     return liste;
+  }
+
+  function iceGizliKimlikleriTemizle(value) {
+    return (Array.isArray(value) ? value : []).slice(0, 8).map(function (item) {
+      return {
+        ad: String(item && item.ad || '').trim().slice(0, 80),
+        aciklama: String(item && item.aciklama || '').trim().slice(0, 800)
+      };
+    }).filter(function (item) { return item.ad || item.aciklama; });
+  }
+
+  function iceGizliKimlikleriAyir(value) {
+    return iceGizliKimlikleriTemizle(String(value || '').split(/\n+/).map(function (line) {
+      line = line.trim();
+      if (!line) return null;
+      var colon = line.indexOf(':');
+      return colon > -1
+        ? { ad: line.slice(0, colon).trim(), aciklama: line.slice(colon + 1).trim() }
+        : { ad: line, aciklama: '' };
+    }).filter(Boolean));
+  }
+
+  function iceGizliKimlikMetni(value) {
+    return iceGizliKimlikleriTemizle(value).map(function (item) {
+      return item.ad + (item.aciklama ? ': ' + item.aciklama : '');
+    }).join('\n');
+  }
+
+  function iceGizliKimlikHtml(value) {
+    var identities = iceGizliKimlikleriTemizle(value);
+    if (!identities.length) return '';
+    return '<details class="ice-gizli-kimlik"><summary>Gizli kimlik · spoiler (' + identities.length + ')</summary><dl>' +
+      identities.map(function (item) {
+        return '<dt>' + iceKacir(item.ad || 'Adsız kimlik') + '</dt>' +
+          (item.aciklama ? '<dd>' + iceKacir(item.aciklama).replace(/\n/g, '<br>') + '</dd>' : '');
+      }).join('') + '</dl></details>';
   }
 
   function iceBedenBul(ic, id, ad) {
@@ -168,6 +206,7 @@
       return (
         '<div class="ice-beden">' +
           '<h4>' + iceKacir(b.ad || 'Adsız') + '</h4>' +
+          iceGizliKimlikHtml(b.gizliKimlikler) +
           '<div class="ice-hal">' +
             '<span class="oyun-etiket">Dış evren</span> <b>' + (b.ustHal === 'uyuyor' ? 'uyuyor' : 'uyanık') + '</b>' +
             '<span class="oyun-etiket">İç evren</span> <b>' + (b.icHal === 'uyuyor' ? 'uyuyor' : 'uyanık') + '</b>' +
@@ -233,6 +272,12 @@
             '</button>' +
           '</div>' +
           '<p class="oyun-not">Biri uyanıksa diğeri uyur. Aynı beden; iz iki tarafta da durur.</p>' +
+          '<label for="iceGizliKimlikler-' + anahtar + '">Bu iç evrendeki gizli kimlikler · spoiler</label>' +
+          '<textarea class="kod-giris arac-giris" id="iceGizliKimlikler-' + anahtar + '" data-ice-gizli-kimlikler="' + anahtar + '" maxlength="7080" rows="3" ' +
+            'placeholder="Her satır: kod adı: iç evrendeki karşılığı">' +
+            iceKacir(iceGizliKimlikMetni(b.gizliKimlikler)) + '</textarea>' +
+          '<p class="oyun-not">Her satır: kimlik adı: açıklama. Profilde spoiler olarak açılır; evren kaydı paylaşıldığında bu metin de paylaşılır.</p>' +
+          '<div class="oyun-sira"><button type="button" class="dugme dugme-sade y-kucuk" data-ice-kimlik-kaydet="' + anahtar + '">İç evren kimliklerini kaydet</button></div>' +
           (iz || '<p class="oyun-not">İz yok.</p>') +
           '<div class="ice-grid ice-iki">' +
             '<input class="kod-giris arac-giris" id="iceYer-' + anahtar + '" maxlength="40" placeholder="Nereye? (el, boyun, sırt…)">' +
@@ -335,7 +380,7 @@
 
   document.addEventListener('click', function (ev) {
     var n = ev.target && ev.target.closest && ev.target.closest(
-      '[data-ice-kaydet], [data-ice-kapat], [data-ice-fizik-ekle], [data-ice-beden-ekle], [data-ice-beden-sil], [data-ice-hal], [data-ice-iz-ekle], [data-ice-iz-sil]'
+      '[data-ice-kaydet], [data-ice-kapat], [data-ice-fizik-ekle], [data-ice-beden-ekle], [data-ice-beden-sil], [data-ice-hal], [data-ice-iz-ekle], [data-ice-iz-sil], [data-ice-kimlik-kaydet]'
     );
     if (!n) return;
     if (typeof EVS === 'undefined' || !EVS || EVS.kaynak !== 'benim') return;
@@ -390,6 +435,7 @@
         ic.bedenler.push({
           id: kisi.id,
           ad: kisi.ad,
+          gizliKimlikler: iceGizliKimlikleriTemizle(kisi.gizliKimlikler),
           ustHal: 'uyuyor',
           icHal: 'uyanik',
           izler: []
@@ -407,6 +453,26 @@
           return (b.id || b.ad) !== silId;
         });
       });
+      if (typeof evrenSayfaCiz === 'function') evrenSayfaCiz();
+      return;
+    }
+
+    if (n.hasAttribute('data-ice-kimlik-kaydet')) {
+      var kimlikId = n.getAttribute('data-ice-kimlik-kaydet');
+      var kimlikAlani = null;
+      var kimlikAlanlari = document.querySelectorAll('[data-ice-gizli-kimlikler]');
+      for (var ki = 0; ki < kimlikAlanlari.length; ki += 1) {
+        if (kimlikAlanlari[ki].getAttribute('data-ice-gizli-kimlikler') === kimlikId) {
+          kimlikAlani = kimlikAlanlari[ki];
+          break;
+        }
+      }
+      var yeniKimlikler = iceGizliKimlikleriAyir(kimlikAlani ? kimlikAlani.value : '');
+      iceYaz(function (ic) {
+        var beden = iceBedenBul(ic, kimlikId, kimlikId);
+        if (beden) beden.gizliKimlikler = yeniKimlikler;
+      });
+      iceBildir('İç evrenin gizli kimlikleri kaydedildi.');
       if (typeof evrenSayfaCiz === 'function') evrenSayfaCiz();
       return;
     }

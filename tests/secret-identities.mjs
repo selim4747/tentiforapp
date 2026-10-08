@@ -3,13 +3,19 @@ import fs from 'node:fs';
 import { JSDOM } from 'jsdom';
 
 const personSource = fs.readFileSync('js/engine/47-e25-kisiler.js', 'utf8');
-const personBundle = fs.readFileSync('js/paket-3.js', 'utf8');
 const innerSource = fs.readFileSync('js/engine/89-v47-ic-evren.js', 'utf8');
-const index = fs.readFileSync('index.html', 'utf8');
 const extensionStart = personSource.indexOf('/* Hidden identity editor for creator-owned E25 people.');
 assert.ok(extensionStart >= 0, 'Yaratıcı kişi gizli kimlik uzantısı bulunmalı');
-assert.ok(personBundle.includes(personSource), 'Üretimde yüklenen paket 3 kaynak modülünü içermeli');
-assert.match(index, /js\/paket-3\.js/, 'Site gizli kimlik kodunu taşıyan kişi paketini yüklemeli');
+for (const output of ['js/paket-3.js', 'dist/js/paket-3.js', 'uygulama/kabuk/www/js/paket-3.js']) {
+  const bundle = fs.readFileSync(output, 'utf8');
+  assert.ok(bundle.includes(personSource), `${output} yaratıcı kişi kaynak modülünü içermeli`);
+}
+for (const output of ['js/engine/89-v47-ic-evren.js', 'dist/js/engine/89-v47-ic-evren.js', 'uygulama/kabuk/www/js/engine/89-v47-ic-evren.js']) {
+  assert.equal(fs.readFileSync(output, 'utf8'), innerSource, `${output} iç evren kaynak dosyasıyla eşleşmeli`);
+}
+for (const output of ['index.html', 'dist/index.html', 'uygulama/kabuk/www/index.html']) {
+  assert.match(fs.readFileSync(output, 'utf8'), /js\/paket-3\.js/, `${output} gizli kimlik modülünü taşıyan kişi paketini yüklemeli`);
+}
 
 const personDom = new JSDOM('<!doctype html><html><body><textarea id="kisiGizliKimlikler"></textarea></body></html>', {
   url: 'https://tentifor.com/',
@@ -58,7 +64,7 @@ assert.equal(signatureWithIdentity.gizliKimlikler[0][0], 'Star Saver', 'Yeni giz
 
 const form = personWindow.kisiFormHtml(incoming);
 assert.match(form, /id="kisiGizliKimlikler"/, 'Yeni ve mevcut kişi formunda gizli kimlik alanı olmalı');
-assert.match(form, /profilde spoiler olarak açılır/, 'Form gizli kimliklerin spoiler olduğunu ve dosyada taşındığını açıklamalı');
+assert.match(form, /profilde spoiler olarak açılır/i, 'Form gizli kimliklerin spoiler olduğunu ve dosyada taşındığını açıklamalı');
 assert.match(form, /Star Saver: L25’in sakladığı ikinci kimlik\./, 'Mevcut kimlikler düzenleme formunda korunmalı');
 
 personWindow.document.querySelector('#kisiGizliKimlikler').value = 'Star Saver: L25’in sakladığı ad.\nFeil: Yaşam ve kütüphaneci.';
