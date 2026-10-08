@@ -5,6 +5,7 @@ const ONBELLEK = "tentiforapp-6c56a6f892f7";
 const ILK = [
   "./",
   "index.html",
+  "favicon.ico",
   "css/style.css?v=be2f302c44ec",
   "veri.json",
   "veri-degisiklik.json?v=a1aad374ff",
