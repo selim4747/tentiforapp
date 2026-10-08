@@ -1,5 +1,5 @@
 {
-  "surum": "6.3.13",
+  "surum": "6.3.14",
   "guncelleme": "2026-10-01",
   "delilik": {
     "baslik": "Delilik",
@@ -98,6 +98,20 @@
       "evrenler": [
         "tomye",
         "e25"
+      ],
+      "gizliKimlikler": [
+        {
+          "ad": "Yaşam",
+          "aciklama": "Feil’in diğer kimliği."
+        },
+        {
+          "ad": "Kütüphaneci",
+          "aciklama": "Feil’in kütüphaneci kimliği."
+        },
+        {
+          "ad": "Bilim insanı",
+          "aciklama": "L25 ile birlikte çalışır."
+        }
       ]
     },
     {
@@ -246,7 +260,13 @@
       "ozellikler": {
         "meslek": "Bilim Adamı",
         "aile": "L Projesi"
-      }
+      },
+      "gizliKimlikler": [
+        {
+          "ad": "Star Saver",
+          "aciklama": "L25’in gerçek kimliği."
+        }
+      ]
     },
     {
       "id": "dost",

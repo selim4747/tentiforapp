@@ -1,6 +1,6 @@
 {
   "name": "@tentifor/termux",
-  "version": "6.3.13",
+  "version": "6.3.14",
   "description": "Tentiforverse Android Termux Kütüphanesi ve CLI Araç Seti",
   "type": "module",
   "main": "./tentifor.js",

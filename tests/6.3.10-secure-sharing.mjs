@@ -11,6 +11,7 @@ const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const gradle = fs.readFileSync('uygulama/kabuk/android/app/build.gradle', 'utf8');
 const nativeWrapper = fs.readFileSync('js/admin/74-yonetim-kurulum.js', 'utf8');
 const androidPackage = JSON.parse(fs.readFileSync('uygulama/kabuk/package.json', 'utf8'));
+const apkMeta = JSON.parse(fs.readFileSync('uygulama/indir/apk.json', 'utf8'));
 
 for (const table of ['paylasim_baglantilari', 'paylasim_olay_ozetleri']) {
   assert.match(migration, new RegExp(`create table if not exists public\\.${table}\\b`), `${table} table is required`);
@@ -55,10 +56,13 @@ assert.match(migration, /select '6\.3\.10'::text/);
 const canonical = migration.split('-- Current-installation marker.')[0].trim();
 assert.ok(setup.includes(canonical), 'canonical setup must mirror the exact 6.3.10 objects');
 assert.equal((setup.match(/create or replace function public\.kurulum_surumu\b/g) || []).length, 1, 'canonical setup must retain one install-version marker');
-assert.match(setup, /select '6\.3\.13'::text/);
-assert.equal(packageJson.version, '6.3.13');
-assert.match(gradle, /versionCode\s+624/);
-assert.match(gradle, /versionName\s+"6\.3\.13"/);
+const webVersionPattern = packageJson.version.replaceAll('.', '\\.');
+assert.match(setup, new RegExp(`select '${webVersionPattern}'::text`));
+assert.equal(packageJson.version, JSON.parse(fs.readFileSync('veri.json', 'utf8')).surum);
+assert.equal(androidPackage.version, apkMeta.version);
+assert.match(gradle, new RegExp(`versionCode\\s+${apkMeta.versionCode}\\b`));
+const mobileVersionPattern = apkMeta.version.replaceAll('.', '\\.');
+assert.match(gradle, new RegExp(`versionName\\s+"${mobileVersionPattern}"`));
 
 assert.match(client, /navigator\.share/);
 assert.match(client, /TentiforKopru\.paylas/);

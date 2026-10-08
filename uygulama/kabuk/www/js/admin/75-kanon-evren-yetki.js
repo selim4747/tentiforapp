@@ -1,4 +1,4 @@
-/* TentiforApp 6.3.13 — evren kapsamlı yönetici yetkisi */
+/* TentiforApp 6.3.14 — evren kapsamlı yönetici yetkisi */
 (function () {
   var yetkiler = Object.create(null), yukleniyor = null;
   function setYetkiler(data) {

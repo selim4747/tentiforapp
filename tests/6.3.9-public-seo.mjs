@@ -16,6 +16,7 @@ const routeBundle = read('js/paket-1.js');
 const buildScript = read('scripts/paketle.mjs');
 const index = read('index.html');
 const sw = read('sw.js');
+const packageJson = JSON.parse(read('package.json'));
 
 assert.match(migration, /create or replace function public\.public_seo_sayfa\(p_tur text, p_id text\) returns jsonb/);
 assert.match(migration, /create or replace function public\.public_seo_sayfalar\(p_tur text, p_limit int default 100, p_offset int default 0\) returns jsonb/);
@@ -34,7 +35,8 @@ assert.match(migration, /least\(coalesce\(p_offset,0\),1000000\)/, 'manifest off
 const canonicalDefinitions = migration.split('-- This is the current-installation marker;')[0].trim();
 assert.ok(setup.includes(canonicalDefinitions), 'canonical setup must contain the exact 6.3.9 public SEO RPC definitions');
 assert.equal((setup.match(/create or replace function public\.kurulum_surumu\b/g) || []).length, 1, 'canonical setup keeps a single install-version marker');
-assert.match(setup, /select '6\.3\.13'::text/);
+const webVersionPattern = packageJson.version.replaceAll('.', '\\.');
+assert.match(setup, new RegExp(`select '${webVersionPattern}'::text`));
 assert.match(migration, /select '6\.3\.9'::text/);
 
 assert.match(client, /addEventListener\('hashchange', handleRoute\)/);

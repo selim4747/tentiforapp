@@ -43,7 +43,7 @@ public class ExampleInstrumentedTest {
         assertNotNull(activity);
         assertEquals("dev.pages.tentiforapp.MainActivity", activity.getClass().getName());
         assertFalse(activity.isFinishing());
-        assertEquals("APK sürümü 6.3.13 olmalı", "6.3.13", packageManager.getPackageInfo(appContext.getPackageName(), 0).versionName);
+        assertEquals("APK sürümü 6.3.14 olmalı", "6.3.14", packageManager.getPackageInfo(appContext.getPackageName(), 0).versionName);
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

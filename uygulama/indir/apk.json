@@ -1,13 +1,14 @@
 {
-  "kod": "8f13f07676cb",
-  "surum": "6.3.13",
-  "boyut": 7202487,
-  "tarih": "2026-10-07T11:14:11+00:00",
-  "not": "TentiFor 6.3.13: yeni kalıcı imzalı release APK; uygulama kimliği ve web bağlantıları korunur.",
-  "sha256": "8f13f07676cbe29679a7973519a7161dcd1662b1c0381ae98ef4d6025992616a",
-  "version": "6.3.13",
-  "size": 7202487,
-  "sizeBytes": 7202487,
-  "updatedAt": "2026-10-07T11:14:11Z",
-  "notes": "TentiFor 6.3.13 yeni kalıcı imzalı release APK — mevcut eski APK üzerine güncelleme yapılamaz; yeniden kurulum gerekir."
+  "kod": "1c5bdc56db81",
+  "surum": "6.3.14",
+  "version": "6.3.14",
+  "versionCode": 625,
+  "boyut": 7217750,
+  "size": 7217750,
+  "sizeBytes": 7217750,
+  "tarih": "2026-10-08T09:34:08Z",
+  "updatedAt": "2026-10-08T09:34:08Z",
+  "sha256": "1c5bdc56db8107a494a5f6570027507fced0e567a6627e1ff78d9add3f3cdfb2",
+  "not": "TentiFor 6.3.14 / Android versionCode 625; aynı kalıcı release sertifikasıyla imzalı. Kanonik evren verisi çevrimiçi açılışta yenilenir; çevrimdışı APK kopyası güncel evren verisini içerir.",
+  "notes": "TentiFor 6.3.14 (625), aynı kalıcı release sertifikası. Evren içeriği için sonraki çevrimiçi açılışlarda yeni APK/yeniden kurulum gerekmez; uygulama kanonik veriyi açılışta eşitler. Sonraki APK güncellemeleri önemli/native sürümlere ayrılır. 6.3.13 aynı sertifikayla kurulmuşsa normal güncelleme yapılabilir; daha eski farklı sertifikalı sürümlerde kaldırıp yeniden kurmak gerekir."
 }
