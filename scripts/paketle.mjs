@@ -70,8 +70,11 @@ function hashGirdisi(relative) {
 const paketHash = crypto.createHash('md5');
 hashGirdileri.forEach(hashGirdisi);
 const karma = paketHash.digest('hex').substring(0, 12);
+const cssPath = path.join(ROOT_DIR, 'css', 'style.css');
+const cssHash = crypto.createHash('md5').update(fs.readFileSync(cssPath)).digest('hex').substring(0, 12);
 
 console.log(`✓ Yeni paket karması: ${karma}`);
+console.log(`✓ CSS cache hash’i: ${cssHash}`);
 
 // 3. surum.json güncelle
 let eskiSurum = null;
@@ -97,6 +100,7 @@ if (fs.existsSync(swPath)) {
     /const ONBELLEK = ["'][^"']+["'];/,
     `const ONBELLEK = "tentiforapp-${karma}";`
   );
+  swIcerik = swIcerik.replace(/css\/style\.css\?v=[^"'\s]+/g, `css/style.css?v=${cssHash}`);
   swIcerik = swIcerik.replace(/((?:js|css)\/(?!style\.css\?v=|engine\/101-v61-universe\.js\?v=)[^"'\s?]+\?v=)[^"'&\s]+/g, `$1${karma}`);
   fs.writeFileSync(swPath, swIcerik, 'utf-8');
   console.log(`✓ sw.js önbellek anahtarı güncellendi (tentiforapp-${karma})`);
@@ -118,7 +122,7 @@ if (fs.existsSync(indexPath)) {
   }
   indexIcerik = indexIcerik.replace(/((?:js|css)\/(?!style\.css\?v=|engine\/101-v61-universe\.js\?v=)[^"'\s?]+\?v=)[^"'&\s]+/g, `$1${karma}`);
   indexIcerik = indexIcerik.replace(/js\/engine\/101-v61-universe\.js\?v=[^"']+/g, 'js/engine/101-v61-universe.js?v=612');
-  indexIcerik = indexIcerik.replace(/css\/style\.css\?v=[^"']+/g, 'css/style.css?v=be2f302c44ec');
+  indexIcerik = indexIcerik.replace(/css\/style\.css\?v=[^"']+/g, `css/style.css?v=${cssHash}`);
   fs.writeFileSync(indexPath, indexIcerik, 'utf-8');
   console.log(`✓ index.html meta paketi güncellendi (${karma})`);
 }

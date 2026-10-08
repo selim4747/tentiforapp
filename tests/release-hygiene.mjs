@@ -110,6 +110,10 @@ assert.ok(fs.readFileSync(path.join(root, 'index.html'), 'utf8').includes('href=
 assert.equal(fs.readFileSync(path.join(root, 'sw.js'), 'utf8').match(/const ONBELLEK = "tentiforapp-([^"]+)"/)[1], second.paket);
 const indexText = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const swText = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+const cssHash = crypto.createHash('md5').update(fs.readFileSync(path.join(root, 'css/style.css'))).digest('hex').slice(0, 12);
+for (const [name, text] of [['index.html', indexText], ['sw.js', swText]]) {
+  assert.ok(text.includes(`css/style.css?v=${cssHash}`), `${name} CSS cache-buster must match the current stylesheet`);
+}
 assert.ok(swText.includes('"favicon.ico"'), 'service worker must precache the favicon');
 const setupSql = fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8');
 for (const fn of ['kurulum_surumu', 'abonelik_hediye', 'kullaniciya_bildir', 'bildirimlerim']) {

@@ -33,7 +33,7 @@ function createLoader({ native = false, injected = undefined, fetchImpl }) {
 }
 
 const response = (data) => ({ ok: true, status: 200, text: async () => JSON.stringify(data) });
-const liveData = { surum: '6.3.14', karakterler: [{ ad: 'Live canonical data' }] };
+const liveData = { surum: '6.3.15', karakterler: [{ ad: 'Live canonical data' }] };
 const nativeLive = createLoader({
   native: true,
   fetchImpl: async (url, options) => {
@@ -47,7 +47,7 @@ assert.equal(JSON.stringify(await nativeLive.promise), JSON.stringify(liveData))
 assert.equal(nativeLive.calls.length, 1, 'native online startup prefers the live canonical dataset');
 assert.equal(nativeLive.context.veriTabanHam, JSON.stringify(liveData));
 
-const offlineData = { surum: '6.3.14', karakterler: [{ ad: 'Bundled offline data' }] };
+const offlineData = { surum: '6.3.15', karakterler: [{ ad: 'Bundled offline data' }] };
 const nativeOffline = createLoader({
   native: true,
   fetchImpl: async (url) => {

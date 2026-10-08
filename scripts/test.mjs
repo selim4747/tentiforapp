@@ -21,6 +21,7 @@ const tests = [
   'tests/android-native.mjs',
   'tests/6.1-universe-center.mjs',
   'tests/mobile-menu-regression.mjs',
+  'tests/mobile-calm-ui.mjs',
   'tests/6.3-discovery.mjs',
   'tests/6.3.1-archive-tools.mjs',
   'tests/6.3.2-social-feed.mjs',

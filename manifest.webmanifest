@@ -1,7 +1,7 @@
 {
   "name": "TentiFor",
   "short_name": "TentiFor",
-  "version": "6.3.14",
+  "version": "6.3.15",
   "description": "TentiFor: Tentiforverse arşivi, kişisel kütüphane, evrenler ve oyunlar.",
   "lang": "tr",
   "start_url": "./",
