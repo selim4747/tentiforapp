@@ -1,6 +1,6 @@
 # TentiFor 6.3.15 — Release Report
 
-**Durum:** Mobil UI yenilemesi ayrı `feat/calm-mobile-ui` dalında hazır. PR oluşturulduktan sonra bağlantı eklenecek; henüz merge veya canlı deploy yapılmadı.
+**Durum:** [PR #136](https://github.com/selim4747/tentiforapp/pull/136) `main` hedefine açık. Henüz merge edilmedi; bu nedenle Cloudflare Pages canlı dağıtımı yapılmadı.
 
 ## Sürüm özeti
 
