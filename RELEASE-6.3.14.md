@@ -1,6 +1,6 @@
 # TentiFor 6.3.14 — Release Report
 
-**Kapsam:** PR #135 üzerinden `main`’e alınacak 6.3.14 değişiklik seti ve doğrulanan release artifact’i. Merge ve canlı yayın durumu GitHub/Cloudflare Pages üzerindeki güncel durumdur.
+**Durum:** PR [#135](https://github.com/selim4747/tentiforapp/pull/135) `main` dalına merge edildi (`7a097952`, 2026-10-08 21:25:07 UTC). Post-merge düzeltmeler `f8df273` ve `f193b03` olarak `main`’e push edildi.
 
 ## Sürüm özeti
 
@@ -18,20 +18,22 @@ Kanonik evren verisi, Android uygulaması çevrimiçiyken her açılışta [`htt
 
 ## Doğrulama
 
-- `npm test` — **başarılı**; tüm regression/unit testleri, release hijyeni, APK metadata/checksum ve yeni canlı veri remote-first/çevrimdışı fallback sözleşmeleri geçti.
-- `npm run lint` — **başarılı**; 177 JavaScript dosyası.
-- Chromium, Firefox ve WebKit — **başarılı**; 390px mobil genişlikte admin kimlik kaydetme, spoiler açma, iç evren kişilik/kimlik/olay kaydetme, yan evren bağlantısının kayıtları birleştirmemesi, iç evrene özgü kişi oluşturma, yatay taşma ve dokunma hedefleri kontrol edildi.
-- `npm run build` — **başarılı**; `dist` ve Capacitor `www` kaynakları eşitlendi.
-- Android signed release build (`assembleRelease`) — **başarılı**.
-- APK imzası doğrulandı. Sertifika SHA-256 parmak izi `7dde5a8e4ab8e285fc5fae67987279c0da81f842ef6b37c9c9346c09991512de`; App Links allowlistesiyle eşleşiyor.
+- `npm test` — **PASS**, PR merge edildikten sonra `main` üzerindeki `f193b03` commit’inde tam regression/unit paketi.
+- `npm run lint` — **PASS**, 177 JavaScript dosyası.
+- Chromium, Firefox ve WebKit — **PASS**; post-merge 390px mobil admin kimlik kaydetme, spoiler açma, bağımsız iç-evren kişilik/kimlik/olay, karşılık bağlantısının kayıt birleştirmemesi, iç evrene özgü kişi oluşturma, yatay taşma ve dokunma hedefleri.
+- `npm run build` — **PASS**; üretim hash’i `6c56a6f892f7`, `dist` ve Capacitor `www` eşitlendi.
+- Android signed release build (`assembleRelease`) — **PASS**; APK aynı kalıcı release sertifikasıyla imzalı.
+- APK içeriğinde güncel `veri.json` (E126 dahil), root favicon ve favicon’u precache eden Service Worker doğrulandı.
+- APK sertifika SHA-256 parmak izi `7dde5a8e4ab8e285fc5fae67987279c0da81f842ef6b37c9c9346c09991512de`; App Links allowlistesiyle eşleşiyor.
 - APK manifesti: `dev.pages.tentiforapp`, `versionName=6.3.14`, `versionCode=625`.
 - APK boyutu: **7,217,324 bayt**.
 - APK SHA-256: `7b0889f92c15e0c3b1a0d25ebf81dca470f9a8199df0996f3ff964feff8d8b5a`.
-- `https://tentifor.com/veri.json` için 200 yanıtı, `Access-Control-Allow-Origin: *` ve `Cache-Control: public, max-age=0, must-revalidate` başlıkları salt-okunur şekilde doğrulandı.
-- GitHub-hosted check-runs/status entegrasyonu bu oturumda `403 Resource not accessible by integration` döndürdü; bu nedenle uzak CI sonucu raporlanmıyor. Yerel test, lint ve build sonuçları yukarıdadır.
+- Canlı üretim kontrolü: `https://tentifor.com/surum.json` ve `https://tentifor.com/` **HTTP 200**; manifest `6.3.14` / `6c56a6f892f7` bildiriyor. Canlı `sw.js` favicon’u precache ediyor; root favicon ve kimlik renderer’ı 200, canlı `veri.json` E126 ve kanonik kimlikleri içeriyor.
+- `https://tentifor.com/veri.json` için `Access-Control-Allow-Origin: *` ve `Cache-Control: public, max-age=0, must-revalidate` başlıkları doğrulandı.
+- GitHub-hosted check-runs/status entegrasyonu bu oturumda `403 Resource not accessible by integration` döndürdü; bu nedenle uzak CI sonucu doğrulanamadı. Yukarıdaki yerel post-merge kontrolleri başarılıdır.
 
 ## Dağıtım dosyası
 
 [İmzalı Android APK — 6.3.14 (625)](uygulama/indir/tentiforapp.apk)
 
-APK ve web değişiklikleri PR #135 kapsamındadır; Cloudflare Pages üretim dağıtımı `main` dalındaki deploy durumuna bağlıdır. Gelecek web-only sürümlerde APK/versionCode aynı bırakılacak; APK yalnızca önemli veya native davranışı etkileyen sürümlerde yenilenecek.
+PR #135 merge edildi ve Cloudflare Pages’in canlı manifesti 6.3.14’ü doğruluyor. Gelecek web-only sürümlerde APK/versionCode aynı bırakılacak; APK yalnızca önemli veya native davranışı etkileyen sürümlerde yenilenecek. 6.3.13 aynı sertifikayla kurulmuşsa bu APK normal güncelleme olarak yüklenebilir; daha eski farklı sertifikalı sürümlerde kaldırıp yeniden kurmak gerekir.
