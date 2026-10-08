@@ -1,22 +1,32 @@
 # TentiFor Android release
 
-## 6.3.14 signed release
+## 6.3.15 signed release
 
-`uygulama/indir/tentiforapp.apk` şu package ve sürümle yayımlanır:
+`uygulama/indir/tentiforapp.apk` bu önemli mobil arayüz sürümüdür:
 
 - Package: `dev.pages.tentiforapp`
-- Version code: `625`
-- Version name: `6.3.14`
-- APK SHA-256: `408d77b7dc6cce788d1659223e3bced832a68b93f34b04648ba8e83a8d3160aa`
+- Version code: `626`
+- Version name: `6.3.15`
+- APK size: `7,219,124` bytes
+- APK SHA-256: `b4900dfefa639168ae5237df7613bd1bf7322a20b53909e6901294abffcdddb1`
 - Release certificate SHA-256: `7D:DE:5A:8E:4A:B8:E2:85:FC:5F:AE:67:98:72:79:C0:DA:81:F8:42:EF:6B:37:C9:C9:34:6C:09:99:15:12:DE`
 
-6.3.13 sürümü aynı kalıcı release sertifikasıyla kuruluysa 6.3.14 normal uygulama güncellemesi olarak yüklenebilir. Daha eski, farklı sertifikayla imzalı kurulumların kaldırılıp yeniden kurulması gerekir. Supabase hesapları ve sunucu verileri bundan etkilenmez; cihazdaki yerel veriler kaldırma sırasında silinebilir.
+6.3.15 mobil arayüz yenilemesi daha yumuşak adaçayı/mavi-gri renkler, rahat okunur kartlar, belirgin ana eylem, dokunmaya uygun hedefler, güvenli alanı hesaba katan alt gezinme ve gece temasını koruyan stiller içerir. 6.3.14 / `versionCode 625` aynı kalıcı release sertifikasıyla kurulmuşsa yeni APK uygulama kaldırılmadan normal bir güncelleme olarak yüklenebilir.
 
-## APK güncelleme politikası
+## Önceki signed release: 6.3.14
 
-İmzalı APK her web sürümünde yeniden derlenmeyecek veya sürüm numarasıyla zorunlu olarak eşitlenmeyecek. APK yalnızca önemli sürümlerde ya da native/mobil davranışı etkileyen değişikliklerde güncellenecek; web-only sürümlerde son önemli APK ve `versionCode` korunacak. Web varlıkları yeni web sürümüyle birlikte güncellenebilir.
+- Version code: `625`
+- Version name: `6.3.14`
+- APK size: `7,217,324` bytes
+- APK SHA-256: `7b0889f92c15e0c3b1a0d25ebf81dca470f9a8199df0996f3ff964feff8d8b5a`
 
-Yeni/yenilenen kanonik evren verisi Android uygulaması çevrimiçiyken her açılışta `https://tentifor.com/veri.json` adresinden alınır; ağ yoksa APK içindeki son veriyle çalışmaya devam eder. Hesap ve ortak evren değişiklikleri de Supabase eşitleme akışından gelir. Böylece evren ekleme/düzenleme için APK’yi yeniden kurmak gerekmez. Yeni APK gerektiğinde aynı kalıcı sertifika ve artan `versionCode` kullanılır; mevcut kullanıcılar uygulamayı kaldırmadan güncelleyebilir.
+Daha eski ve farklı sertifikayla imzalı kurulumların kaldırılıp yeniden kurulması gerekebilir; cihazdaki yerel veriler kaldırma sırasında silinebilir. Supabase hesapları ve sunucu verileri bundan etkilenmez.
+
+## APK güncelleme politikası ve içerik eşitleme
+
+İmzalı APK her web sürümünde yeniden derlenmeyecek. APK yalnızca önemli sürümlerde veya native/mobil davranışını etkileyen kapsamlı değişikliklerde güncellenecek; web-only sürümlerde son önemli APK ve `versionCode` korunacak. 6.3.15 bu politika kapsamında önemli bir mobil UI sürümüdür.
+
+Android uygulaması çevrimiçiyken kanonik evren verisini her açılışta `https://tentifor.com/veri.json` adresinden alır; istek başarısız olursa veya veri biçimi geçersizse APK içine gömülü son veriye döner. Hesap ve ortak evren değişiklikleri Supabase eşitleme akışında kalır. Böylece yeni evren ekleme ve evren verisi düzenlemeleri için APK güncellemesi gerekmez. Yeni native APK gerektiğinde aynı kalıcı sertifika ve artan `versionCode` kullanılır; mevcut kullanıcılar uygulamayı kaldırmadan güncelleyebilir.
 
 ## Gelecek release’ler
 

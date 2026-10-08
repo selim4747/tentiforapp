@@ -620,7 +620,7 @@
       }
 
       case 'surum': {
-        appendLine(container, 'TentiFor v6.3.14 (Platform Engine: 2026-10-08)', 'info');
+        appendLine(container, 'TentiFor v6.3.15 (Platform Engine: 2026-10-09)', 'info');
         break;
       }
 
@@ -659,7 +659,7 @@
           <span class="tf-term-dot yellow" title="Büyüt/Küçült" data-term-act="max"></span>
           <span class="tf-term-dot green" title="Temizle" data-term-act="clear"></span>
         </div>
-        <div class="tf-term-title">tentifor@tomye-terminal: ~ (T-Term v6.3.14)</div>
+        <div class="tf-term-title">tentifor@tomye-terminal: ~ (T-Term v6.3.15)</div>
         <div style="font-size:11px; color:#57C7FF;">[?] 'yardim'</div>
       </div>
       <div class="tf-term-body" data-term-body></div>

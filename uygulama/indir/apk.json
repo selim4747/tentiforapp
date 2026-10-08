@@ -1,14 +1,14 @@
 {
-  "kod": "7b0889f92c15",
-  "surum": "6.3.14",
-  "version": "6.3.14",
-  "versionCode": 625,
-  "boyut": 7217324,
-  "size": 7217324,
-  "sizeBytes": 7217324,
-  "tarih": "2026-10-08T21:30:31Z",
-  "updatedAt": "2026-10-08T21:30:31Z",
-  "sha256": "7b0889f92c15e0c3b1a0d25ebf81dca470f9a8199df0996f3ff964feff8d8b5a",
-  "not": "TentiFor 6.3.14 / Android versionCode 625; aynı kalıcı release sertifikasıyla imzalı. Kanonik evren verisi çevrimiçi açılışta yenilenir; çevrimdışı APK kopyası güncel evren verisini içerir.",
-  "notes": "TentiFor 6.3.14 (625), aynı kalıcı release sertifikası. Evren içeriği için sonraki çevrimiçi açılışlarda yeni APK/yeniden kurulum gerekmez; uygulama kanonik veriyi açılışta eşitler. Sonraki APK güncellemeleri önemli/native sürümlere ayrılır. 6.3.13 aynı sertifikayla kurulmuşsa normal güncelleme yapılabilir; daha eski farklı sertifikalı sürümlerde kaldırıp yeniden kurmak gerekir."
+  "kod": "b4900dfefa63",
+  "surum": "6.3.15",
+  "version": "6.3.15",
+  "versionCode": 626,
+  "boyut": 7219124,
+  "size": 7219124,
+  "sizeBytes": 7219124,
+  "tarih": "2026-10-08T22:20:15Z",
+  "updatedAt": "2026-10-08T22:20:15Z",
+  "sha256": "b4900dfefa639168ae5237df7613bd1bf7322a20b53909e6901294abffcdddb1",
+  "not": "TentiFor 6.3.15 / Android versionCode 626; önemli mobil arayüz yenilemesi, aynı kalıcı release sertifikasıyla imzalı.",
+  "notes": "6.3.15 önemli mobil arayüz yenilemesi: yumuşak adaçayı/mavi-gri palet, daha rahat kartlar, dokunmaya uygun kontroller ve safe-area alt menü. 6.3.14/625 aynı sertifikayla kuruluysa uygulamayı kaldırmadan güncellenebilir. Evren içeriği çevrimiçi açılışta eşitlenir; web-only sürümlerde APK yenilenmez."
 }

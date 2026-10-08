@@ -99,7 +99,7 @@ window.AudioContext = class MockAudioContext {
 
 // Veri Nesnesi Mock
 window.veri = {
-  surum: '6.3.14',
+  surum: '6.3.15',
   karakterler: [
     { id: 'necale', ad: 'Necale', unvan: 'Baş Arşivci', ozet: 'Kütüphane bekçisi.' },
     { id: 'ozan', ad: 'Ozan', unvan: 'Gezgin', ozet: 'Buzun altındaki yankıları arar.' }

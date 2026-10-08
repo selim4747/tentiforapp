@@ -296,7 +296,7 @@
             </div>
             <div class="term-baslik-metin">
               <span>TentiFor Arşiv Terminali</span>
-              <span class="term-baslik-rozet" id="${idPrefix}-rozet">${this.adminOturumu ? 'ROOT / YÖNETİCİ' : 'V6.3.14'}</span>
+              <span class="term-baslik-rozet" id="${idPrefix}-rozet">${this.adminOturumu ? 'ROOT / YÖNETİCİ' : 'V6.3.15'}</span>
             </div>
           </div>
           <div class="term-baslik-sag">
@@ -945,7 +945,7 @@
       this.yaz(ekran, `
 <span class="term-banner">
 ╔══════════════════════════════════════════════════════════╗
-║        TENTİFOR ARŞİV TERMİNALİ (V6.3.14)               ║
+║        TENTİFOR ARŞİV TERMİNALİ (V6.3.15)               ║
 ║   Tömye Kozmolojisi & Siber Kurtarma Konsolu            ║
 ╚══════════════════════════════════════════════════════════╝</span>
 <span class="term-parlak">⏳ Zaman, Takvim & Yaş:</span>
@@ -1033,7 +1033,7 @@
     komutSurum(ekran) {
       const sw = typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller ? 'AKTİF (Offline Ready)' : 'STANDBY';
       this.yaz(ekran, `
-<span class="term-parlak">Tömye Arşiv Çekirdeği:</span> Tentifor-MicroV6 (Build 6.3.14)
+<span class="term-parlak">Tömye Arşiv Çekirdeği:</span> Tentifor-MicroV6 (Build 6.3.15)
 <span class="term-vurgu">Kozmoloji    :</span> 24. Evren · Tömye (Aysız Gezegen / 28 Günlük Takvim)
 <span class="term-vurgu">Epok Yılı    :</span> 744 Tömye Yılı (Dünya: 2026.10)
 <span class="term-vurgu">Platform     :</span> Web PWA / Capacitor Shell Native
@@ -2095,7 +2095,7 @@ Yardım için: <b>yardim admin</b>
           try { window.yoneticiCikis(); } catch {}
         }
         if (istemiEl) istemiEl.innerHTML = this.istemiMetni();
-        if (rozetEl) rozetEl.textContent = 'V6.3.14';
+        if (rozetEl) rozetEl.textContent = 'V6.3.15';
         this.yaz(ekran, '<span class="term-soluk">Yönetici oturumu kapatıldı. Standart moda dönüldü.</span>');
         return;
       }
