@@ -577,3 +577,9 @@ html[data-site-tema~=katiller] { --deniz: #ff9aa8; }
 @media (max-width: 720px) {
   .hero-eylem > #rastgeleHero { grid-column: 1 / -1; }
 }
+
+.tf634-kart b{display:block;margin-bottom:.25rem}
+.tf634-kart .oyun-not{display:block}
+.misafir-sen{margin:1rem 0 1.4rem;padding:1rem 1.1rem}
+.sayfa-ust .paylas,.tf310-share-actions{position:static;margin:0 0 1rem;max-width:100%}
+@media(max-width:700px){.tur-ipucu{width:min(100% - 1.5rem,28rem);margin:auto}}
