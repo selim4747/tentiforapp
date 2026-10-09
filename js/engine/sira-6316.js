@@ -12,7 +12,11 @@
   function kayitOku(anahtar) { try { return localStorage.getItem(anahtar); } catch (e) { return ""; } }
   function kayitYaz(anahtar, deger) { try { localStorage.setItem(anahtar, deger); } catch (e) {} }
   function girisli() { return typeof hesapProfil !== "undefined" && hesapProfil && hesapProfil.id; }
-  function kac(s) { return String(s || "").replace(/&/g,"&").replace(/</g,"<").replace(/>/g,">"); }
+  function kac(s) {
+    return String(s || "").replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
 
   function tomyeBugun() {
     var t = (typeof veri !== "undefined" && veri && veri.takvim) || {};
@@ -87,9 +91,10 @@
 
   function eckaYazi() {
     var et = document.querySelector(".cuzdan-etiket");
-    if (et) et.textContent = "eçka";
+    if (et && et.textContent !== "eçka") et.textContent = "eçka";
     var btn = document.getElementById("cuzdanRozet");
-    if (btn) btn.title = "Eçka, oyunlardan biriken iç puan. Başlangıç bakiyesi yeni cihazda görünür.";
+    var title = "Eçka, oyunlardan biriken iç puan. Başlangıç bakiyesi yeni cihazda görünür.";
+    if (btn && btn.title !== title) btn.title = title;
   }
 
   function tarihSeridi() {
