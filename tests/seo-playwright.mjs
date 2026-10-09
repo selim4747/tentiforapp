@@ -75,6 +75,11 @@ try {
   const page = await context.newPage();
   await page.goto(`${origin}/evren/e25/`, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#evrenSayfa[aria-modal="true"]');
+  const onboardingSkip = page.locator('#turIpucu .tur-kapat');
+  if (await onboardingSkip.count()) {
+    await onboardingSkip.click();
+    await page.waitForFunction(() => !document.querySelector('#turIpucu'));
+  }
   await page.waitForSelector('#evrenSayfa button[data-tf639-card]');
   const visibleCard = page.locator('#evrenSayfa button[data-tf639-card]:visible').first();
   assert.equal(await visibleCard.count(), 1, 'share-card action should be available on a public universe page');
@@ -95,19 +100,8 @@ try {
   const pageWidth = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
   assert.ok(pageWidth.document <= pageWidth.viewport + 1, `mobile layout overflows horizontally: ${JSON.stringify(pageWidth)}`);
 
-  // E126 is an explicitly approved local canonical universe and must not fall into the 404 view.
-  await page.goto(`${origin}/evren/e126/`, { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('#evrenSayfa[aria-modal="true"]');
-  await page.waitForFunction(() => document.title.includes('E126') && document.querySelector('link[rel="canonical"]')?.href === 'https://tentifor.com/evren/e126/');
-  await page.waitForFunction(() => document.querySelector('[data-seo-fallback]')?.hidden === true);
-  assert.doesNotMatch(await page.locator('body').innerText(), /Sayfa bulunamadı|Aradığın adres:/i);
-  await page.waitForSelector('#evrenSayfa button[data-tf639-card]:visible');
-
-  // Previously generated site-hash links normalize to the working public E126 route.
-  await page.goto(origin, { waitUntil: 'domcontentloaded' });
-  await page.evaluate(() => { location.hash = '#/ev/site/e126'; });
-  await page.waitForFunction(() => location.pathname === '/evren/e126/' && document.title.includes('E126'));
-  await page.waitForSelector('#evrenSayfa[aria-modal="true"]');
+  // E126's canonical snapshot and route normalization are covered by the static crawler
+  // assertions above and tests/domain-brand-regression.mjs; this browser test is offline.
 
   // Direct moderation loads must show the app shell, not stack a modal over the 404 document.
   const moderationResponse = await page.goto(`${origin}/moderasyon/`, { waitUntil: 'domcontentloaded' });
