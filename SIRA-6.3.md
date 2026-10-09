@@ -4,6 +4,8 @@ Kaynak: 2026-10-09 canlı gezi. Ödeme vitrini "yakında" kalır; bu sıra satı
 
 ## Şimdi
 
+Durum: 6.3 ziyaretçi kapısı eklendi (`js/engine/sira-6316.js`).
+
 1. Okuma başlangıcı. "Okumaya başla" tek bir açık kayda insin. Kilitli romanın önünde neden kilitli olduğu yazsın. Girişsiz okunabilsin. Hesap açılınca kaldığın yer bu kayda bağlansın.
 2. Evren kapısı. `/evren/e25/` Fan gövdesi açmasın; Kapılar Salonu gelsin. Aynı kalıp E99 ve E126 için de geçerli olsun. Yıldız, girişsizken "kaydetmek için giriş" desin.
 3. E26 önizlemesi. Kilit kartında bir cümle ve "bu kilit oyunla açılır" yazsın.

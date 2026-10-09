@@ -583,3 +583,8 @@ html[data-site-tema~=katiller] { --deniz: #ff9aa8; }
 .misafir-sen{margin:1rem 0 1.4rem;padding:1rem 1.1rem}
 .sayfa-ust .paylas,.tf310-share-actions{position:static;margin:0 0 1rem;max-width:100%}
 @media(max-width:700px){.tur-ipucu{width:min(100% - 1.5rem,28rem);margin:auto}}
+
+.sira-kutu{margin:1rem 0;padding:1rem 1.1rem}
+.sira-sozluk{position:fixed;right:1rem;bottom:1rem;z-index:40;max-width:18rem;padding:.8rem 1rem;background:var(--kar,#fff);border:1px solid var(--buz,#d7e3ee)}
+.sira-etiketli{outline:1px dashed var(--deniz,#2d6f9a)}
+.sira-gizle-fan{display:none}

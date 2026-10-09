@@ -61,12 +61,12 @@
   <a class="marka" href="#tepe">
     <span class="marka-ad">Tenti<span class="marka-vurgu">For</span></span>
   </a>
-  <button class="cuzdan-rozet" id="cuzdanRozet" aria-label="Cüzdan ve yedekleme">
-    <span class="cuzdan-etiket">cüzdan</span>
+  <button class="cuzdan-rozet" id="cuzdanRozet" aria-label="Eçka, oyunlardan biriken iç puan">
+    <span class="cuzdan-etiket">eçka</span>
     <span class="cuzdan-tutar" id="cuzdanTutar">—</span>
   </button>
-  <button class="ust-ikon" id="temaAnahtar" aria-label="Gece modu">☀</button>
-  <button class="ust-ikon" id="rastgeleBtn" aria-label="Rastgele keşif">⤳</button>
+  <button class="ust-ikon" id="temaAnahtar" aria-label="Gece modu" title="Gece veya gündüz">☀</button>
+  <button class="ust-ikon" id="rastgeleBtn" aria-label="Rastgele keşif" title="Onaylı bir kayda git">⤳</button>
   <button class="ust-ikon terminal-menu-btn" id="btnTerminalUst" data-term-ac="1" aria-label="Terminal Konsolu" title="Terminal Konsolu (>_)">&gt;_</button>
   <button class="kod-btn" id="btnKod" aria-label="Gizli kod gir">Kod gir</button>
 </header>
@@ -93,9 +93,9 @@
           Cevap, isyanda yakılmış bir dilde yazılıdır.
         </p>
         <div class="hero-eylem">
-          <button class="dugme" data-gez-git="sira">Okumaya başla</button>
+          <button class="dugme" data-sira="oku">Okumaya başla</button>
           <a class="dugme dugme-sade" href="#/tomye">Tömye arşivi</a>
-          <button class="dugme dugme-sade" data-gez-git="oyunlar">Oynamaya başla</button>
+          <button class="dugme dugme-sade" data-sira="oyna">Oynamaya başla</button>
           <button class="dugme dugme-sade" id="rastgeleHero">Rastgele keşfet</button>
         </div>
       </article>
@@ -876,6 +876,7 @@
 <script src="js/core/100-v60-native.js?v=87701055422f"></script>
     <script src="js/core/110-v62-platform.js?v=87701055422f"></script>
 <script src="js/engine/101-v61-universe.js?v=612"></script>
+<script src="js/engine/sira-6316.js?v=sira1"></script>
 <script src="js/engine/tentifor-terminal.js?v=87701055422f"></script>
 
 <!-- Cloudflare Pages Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "63eb58c2a26e4fdabe23d9766a0253bd"}'></script><!-- Cloudflare Pages Analytics --></body>
