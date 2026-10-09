@@ -1,14 +1,14 @@
 {
-  "kod": "3d98ab1a4163",
-  "surum": "6.3.15",
-  "version": "6.3.15",
-  "versionCode": 626,
-  "boyut": 7220272,
-  "size": 7220272,
-  "sizeBytes": 7220272,
-  "tarih": "2026-10-08T22:49:08Z",
-  "updatedAt": "2026-10-08T22:49:08Z",
-  "sha256": "3d98ab1a416333dbef603dcad7cdf1200b57d6e920c253fe34de660e33278a35",
-  "not": "TentiFor 6.3.15 / Android versionCode 626; sade ve erişilebilir mobil arayüz, aynı kalıcı release sertifikasıyla imzalı.",
-  "notes": "6.3.15 önemli mobil yenilemesi: sakin palet, net Kod gir eylemi, sade ana sayfa metni, erişilebilir tanıtım dialogu ve kartlara sabitlenmiş evren yıldızları. 6.3.14/625 aynı sertifikayla kuruluysa yerinde güncellenebilir. Evren içeriği çevrimiçi açılışta eşitlenir; web-only sürümlerde APK yenilenmez."
+  "kod": "b2973f91cbc1",
+  "surum": "6.3.16",
+  "version": "6.3.16",
+  "versionCode": 627,
+  "boyut": 8380457,
+  "size": 8380457,
+  "sizeBytes": 8380457,
+  "tarih": "2026-10-09T11:02:00Z",
+  "updatedAt": "2026-10-09T11:02:00Z",
+  "sha256": "b2973f91cbc1750aace8828ac84605677bbee89cc2970f184b058d6f03698547",
+  "not": "TentiFor 6.3.16 / Android versionCode 627. Release keystore secret yok; bu indirilebilir paket debug imzalı.",
+  "notes": "6.3.16 web kapısı ve ziyaretçi sırası bu APK içinde. İndirilebilir dosya debug sertifikasıyla imzalıdır; 6.3.15 release kurulumunun üstüne güncelleme olarak yüklenmez, kaldırmak gerekir. Release secret konunca aynı sertifikayla yeniden imzalanacak."
 }
