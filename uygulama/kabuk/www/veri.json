@@ -3910,18 +3910,18 @@
   "tur": [
     {
       "baslik": "Burası bir arşiv",
-      "hedef": "#arsiv",
-      "metin": "Tömye'nin donmuş okyanuslarında geçen bir evren. Karakterler, kozmoloji, takvim ve dil — hepsi burada."
+      "hedef": "#/",
+      "metin": "Tömye'nin donmuş okyanuslarında geçen bir evren. Karakterler, kozmoloji, takvim ve dil ana sayfadan açılır."
     },
     {
       "baslik": "Bazı kayıtlar buz altında",
-      "hedef": "#sozluk",
-      "metin": "Spoiler içeren bölümler kilitli. QR kodlarıyla ve oyunları bitirerek açılır. İstersen hiç açmadan da gezebilirsin."
+      "hedef": "#/tomye",
+      "metin": "Spoiler içeren bölümler kilitli. İstersen hiç açmadan da gezebilirsin; kilit, okumanı kesmez."
     },
     {
       "baslik": "Oynanacak şeyler de var",
-      "hedef": "#oyunlar",
-      "metin": "Yedi oyun, eçka kazandırır. Eçka temaları, galeriyi ve kilitli bir oyunu açar."
+      "hedef": "#/",
+      "metin": "Oyunlar eçka kazandırır. Eçka bu arşivin iç puanı; başlangıç bakiyesi üstte yazar. Tur bitince ana sayfada kalırsın."
     }
   ],
   "bulmacalar": [

@@ -267,8 +267,7 @@
     wrappedLines(ctx, safeText(button.dataset.description, 180), 82, 458, 1036, 36, 3);
     ctx.fillStyle = '#fff'; ctx.font = '700 24px Arial, sans-serif'; ctx.fillText('TentiFor', 82, 586);
     ctx.fillStyle = 'rgba(255,255,255,.78)'; ctx.font = '20px Arial, sans-serif'; ctx.textAlign = 'right'; ctx.fillText('Tentiforverse Arşivi', 1118, 586); ctx.textAlign = 'left';
-    var blob = await new Promise(function (resolve, reject) { canvas.toBlob(function (value) { value ? resolve(value) : reject(new Error('Görsel kart oluşturulamadı.')); }, 'image/png'); });
-    var objectUrl = URL.createObjectURL(blob); var link = document.createElement('a');
+    var objectUrl = canvas.toDataURL('image/png'); var link = document.createElement('a');
     var slug = (button.dataset.url || 'tentiforapp').split('/').filter(Boolean).pop() || 'kart';
     link.href = objectUrl; link.download = 'tentiforapp-' + slug.replace(/[^a-z0-9_-]/gi, '-').slice(0, 50) + '.png';
     document.body.appendChild(link); link.click(); link.remove(); setTimeout(function () { URL.revokeObjectURL(objectUrl); }, 1000);

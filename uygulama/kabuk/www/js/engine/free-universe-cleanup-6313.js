@@ -19,7 +19,7 @@
         if (!item || item.tur !== 'hikaye') return false;
         var ev = String(item.evren || '').trim().toLowerCase();
         if (!ev) return false;
-        return (id && ev === id) || (ad && ev === ad);
+        return !!(id && ev === id);
       });
       if (bagliHikaye) return true;
     }
@@ -29,7 +29,7 @@
         if (!item) return false;
         var ev = String(item.evren || '').trim().toLowerCase();
         if (!ev) return false;
-        return (id && ev === id) || (ad && ev === ad);
+        return !!(id && ev === id);
       });
       if (siteHikaye) return true;
     }

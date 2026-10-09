@@ -4,7 +4,7 @@
   var mounted = false;
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>'"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]; }); }
   async function client() { if (typeof hesapIstemci !== 'undefined' && hesapIstemci && hesapIstemci.rpc) return hesapIstemci; if (typeof tf4Istemci === 'function') return tf4Istemci(); return null; }
-  function card(x) { return '<article class="kutu-y tf634-kart"><span class="oyun-etiket">' + esc(x.tur === 'arsivci' ? 'arşivci' : 'evren') + '</span><a href="' + esc(x.adres) + '"><b>' + esc(x.baslik) + '</b><span class="oyun-not">' + esc(x.metin || '') + '</span></a>' + (x.popular ? '<small class="oyun-not">' + Number(x.popular) + ' keşif etkileşimi</small>' : '') + '</article>'; }
+  function okunur(s){s=String(s||'').trim();if(s.length<3||s.length>90)return false;if(/(.)\1{3,}/.test(s))return false;var harf=s.replace(/[^a-zA-ZğüşöçıİĞÜŞÖÇ]/g,'');if(harf.length>10){var ses=(harf.match(/[aeıioöuüAEIİOÖUÜ]/g)||[]).length;if(ses/harf.length<0.28)return false}return true}function card(x) { if(!okunur(x.baslik))return ''; return '<article class="kutu-y tf634-kart"><span class="oyun-etiket">' + esc(x.tur === 'arsivci' ? 'arşivci' : 'evren') + '</span><a href="' + esc(x.adres) + '"><b>' + esc(x.baslik) + '</b><span class="oyun-not">' + esc(x.metin || '') + '</span></a>' + (x.popular ? '<small class="oyun-not">' + Number(x.popular) + ' keşif etkileşimi</small>' : '') + '</article>'; }
   async function load(box) {
     var api = await client(); if (!api) return;
     var type=box.querySelector('[name=tf634-tur]').value, sort=box.querySelector('[name=tf634-siralama]').value;

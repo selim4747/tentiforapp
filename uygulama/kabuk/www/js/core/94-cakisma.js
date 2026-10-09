@@ -4,7 +4,7 @@
   function kopyala(deger) {
     return deger && typeof deger === 'object' ? JSON.parse(JSON.stringify(deger)) : deger;
   }
-  function esit(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  function sirala(v){if(!v||typeof v!=='object')return v;if(Array.isArray(v))return v.map(sirala);return Object.keys(v).sort().reduce(function(o,k){o[k]=sirala(v[k]);return o},{});}function esit(a, b) { return JSON.stringify(sirala(a)) === JSON.stringify(sirala(b)); }
   function alanlar(...nesneler) {
     var set = new Set();
     nesneler.forEach(function (nesne) {
@@ -22,8 +22,8 @@
     var sonuc = kopyala(uzak || {}) || {};
     fark(yerel, uzak, {}).forEach(function (kayit) {
       var tercih = secimler && secimler[kayit.alan];
-      if (tercih === 'yerel') sonuc[kayit.alan] = kopyala(kayit.yerel);
-      if (tercih === 'uzak' || !tercih) sonuc[kayit.alan] = kopyala(kayit.uzak);
+      if (tercih === 'yerel' || (!tercih && typeof kayit.uzak === 'undefined')) sonuc[kayit.alan] = kopyala(kayit.yerel);
+      else if (tercih === 'uzak' || !tercih) sonuc[kayit.alan] = kopyala(kayit.uzak);
     });
     return sonuc;
   }
