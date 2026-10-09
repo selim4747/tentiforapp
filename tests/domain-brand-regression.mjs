@@ -23,12 +23,13 @@ const routeLogic=(text)=>{const start=text.indexOf('function yoldanRota('),end=t
 assert.equal(routeLogic(read('js/paket-1.js')),routeLogic(read('js/core/00-rota.js')),'served route bundle must match its source');
 const routeDom=(url)=>{const dom=new JSDOM('<!doctype html><html><head></head><body></body></html>',{url,runScripts:'outside-only'});dom.window.eval(read('js/core/00-rota.js'));return dom;};
 const e126Direct=routeDom('https://tentifor.com/evren/e126/');
-assert.equal(e126Direct.window.rota(),'#/ev/fan/e126');
-assert.equal(e126Direct.window.rotadanYol('#/ev/fan/e126'),'/evren/e126/');
+assert.equal(e126Direct.window.rota(),'#/ev/site/e126','approved E126 uses its canonical site route, not the fan route');
+assert.equal(e126Direct.window.rotadanYol('#/ev/site/e126'),'/evren/e126/');
+assert.equal(e126Direct.window.rotadanYol('#/ev/fan/e126'),'/evren/e126/','legacy fan hash remains URL-compatible');
 e126Direct.window.close();
 const e126Legacy=routeDom('https://tentifor.com/#/ev/site/e126');
 assert.equal(e126Legacy.window.location.pathname,'/evren/e126/','legacy E126 site route normalizes to its canonical URL');
-assert.equal(e126Legacy.window.rota(),'#/ev/fan/e126');
+assert.equal(e126Legacy.window.rota(),'#/ev/site/e126');
 e126Legacy.window.close();
 const sitemap=buildSitemap([]);
 assert.match(sitemap,/https:\/\/tentifor\.com\/evren\/e25\//);
