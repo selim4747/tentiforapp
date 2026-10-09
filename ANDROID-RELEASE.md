@@ -1,5 +1,20 @@
 # TentiFor Android release
 
+## 6.3.16 indirilebilir APK
+
+`uygulama/indir/tentiforapp.apk` bu dosyadır:
+
+- Package: `dev.pages.tentiforapp`
+- Version code: `627`
+- Version name: `6.3.16`
+- APK size: `8,380,457` bytes
+- APK SHA-256: `b2973f91cbc1750aace8828ac84605677bbee89cc2970f184b058d6f03698547`
+- İmza: debug. Release keystore secret’ları (`TF_ANDROID_KEYSTORE_*`) Actions’ta yok.
+
+6.3.15 release kuruluysa bu paket yerinde güncellenmez; kaldırmak gerekir. Aynı release sertifikasıyla güncelleme, secret’lar konunca yeniden imzalanır.
+
+# TentiFor Android release
+
 ## 6.3.15 signed release
 
 `uygulama/indir/tentiforapp.apk` bu önemli mobil arayüz sürümüdür:
