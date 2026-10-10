@@ -187,6 +187,7 @@ const distDosyalarVeDizinler = [
   'paylasim.png',
   'google-dogrulama.txt',
   '_headers',
+  '_redirects',
   'css',
   'js',
   'ikon',
@@ -243,6 +244,9 @@ if (process.env.TF_SEO_STATIC_ONLY !== '1') {
 }
 const routeCount = writeSeoRoutes({ indexHtml: seoIndex, distDir, items: publicSeoPages, staticPages: staticSeoPages, appRoutes });
 fs.writeFileSync(path.join(distDir, '404.html'), renderSeoNotFound(seoIndex), 'utf8');
+if (fs.existsSync(path.join(distDir, 'sitemap.xml'))) {
+  fs.copyFileSync(path.join(distDir, 'sitemap.xml'), path.join(ROOT_DIR, 'sitemap.xml'));
+}
 console.log(`✓ ${routeCount} public SEO sayfası ve yalnızca açık rotaları içeren sitemap üretildi`);
 console.log('✓ dist üretim dizini senkronize edildi (Cloudflare Pages uyumlu)');
 

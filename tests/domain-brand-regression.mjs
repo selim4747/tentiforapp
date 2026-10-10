@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {JSDOM} from 'jsdom';
 import {SEO_ORIGIN,seoMetadata,buildSitemap,approvedCanonicalUniversePages} from '../scripts/public-seo.mjs';
@@ -60,9 +61,26 @@ assert.equal(routeDoc.querySelector('meta[name="twitter:url"]').content,'https:/
 const e126RouteDoc=new JSDOM(read('dist/evren/e126/index.html')).window.document;
 assert.equal(e126RouteDoc.querySelector('link[rel="canonical"]').href,'https://tentifor.com/evren/e126/');
 assert.match(read('uygulama/kabuk/www/evrenler/e126.json'),/"id"\s*:\s*"e126"/);
-for(const file of execFileSync('git',['ls-files'],{encoding:'utf8'}).trim().split('\n')){
- if(!/\.(?:html|js|mjs|ts|json|xml|md|txt|webmanifest)$/.test(file))continue;
- assert.doesNotMatch(read(file),/tentifor(?:app)?(?:\\?\.)pages(?:\\?\.)dev/i,`${file} should not use previous site address`);
+let allFiles = [];
+try {
+  allFiles = execFileSync('git', ['ls-files'], { encoding: 'utf8' }).trim().split('\n');
+} catch {
+  const walk = (d) => {
+    const entries = fs.readdirSync(d, { withFileTypes: true });
+    let res = [];
+    for (const e of entries) {
+      if (e.name === 'node_modules' || e.name === '.git' || e.name === 'dist') continue;
+      const f = path.join(d, e.name);
+      if (e.isDirectory()) res.push(...walk(f));
+      else res.push(path.relative('.', f));
+    }
+    return res;
+  };
+  allFiles = walk('.');
+}
+for (const file of allFiles) {
+  if (!/\.(?:html|js|mjs|ts|json|xml|md|txt|webmanifest)$/.test(file)) continue;
+  assert.doesNotMatch(read(file), /tentifor(?:app)?(?:\\?\.)pages(?:\\?\.)dev/i, `${file} should not use previous site address`);
 }
 for(const p of ['dist','uygulama/kabuk/www']){
  assert.equal(read(`${p}/manifest.webmanifest`),read('manifest.webmanifest'));

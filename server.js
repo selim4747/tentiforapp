@@ -38,7 +38,6 @@ const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
   res.setHeader('Content-Security-Policy-Report-Only', "default-src 'self' https://static.cloudflareinsights.com; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'");
@@ -70,43 +69,83 @@ const server = http.createServer((req, res) => {
   }
 
   // Prevent directory traversal
-  const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
-  let filePath = path.join(PUBLIC_DIR, safePath);
+  const rawPath = pathname === '/' ? '' : pathname;
+  const safePath = path.normalize(rawPath).replace(/^(\.\.[\/\\])+/, '').replace(/^[/\\]+/, '');
 
-  fs.stat(filePath, (err, stats) => {
-    if (err || !stats.isFile()) {
-      // SPA Fallback: serve index.html
-      filePath = path.join(PUBLIC_DIR, 'index.html');
-    }
-
-    const ext = path.extname(filePath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-    if (ext === '.apk') {
-      res.setHeader('Content-Disposition', 'attachment; filename="tentiforapp.apk"');
-    }
-
-    // Caching headers
-    if (ext === '.apk' || ext === '.html' || pathname === '/sw.js' || pathname.endsWith('.json')) {
-      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+  function resolveStaticPath(target) {
+    const list = [];
+    if (!target || target === 'index.html') {
+      list.push(path.join(PUBLIC_DIR, 'dist', 'index.html'));
+      list.push(path.join(PUBLIC_DIR, 'index.html'));
     } else {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      // 1. Direct file in dist
+      list.push(path.join(PUBLIC_DIR, 'dist', target));
+      // 2. Directory index in dist (e.g. dist/tomye/index.html)
+      list.push(path.join(PUBLIC_DIR, 'dist', target, 'index.html'));
+      // 3. Flat html in dist (e.g. dist/tomye.html)
+      list.push(path.join(PUBLIC_DIR, 'dist', `${target.replace(/\/+$/, '')}.html`));
+      // 4. Direct file in root
+      list.push(path.join(PUBLIC_DIR, target));
+      // 5. Directory index in root
+      list.push(path.join(PUBLIC_DIR, target, 'index.html'));
+      // 6. Flat html in root
+      list.push(path.join(PUBLIC_DIR, `${target.replace(/\/+$/, '')}.html`));
     }
 
-    if (req.method === 'HEAD') {
-      res.writeHead(200, { 'Content-Type': contentType });
-      res.end();
-      return;
+    for (const cand of list) {
+      try {
+        if (fs.existsSync(cand) && fs.statSync(cand).isFile()) {
+          return cand;
+        }
+      } catch {}
     }
+    return null;
+  }
 
-    res.writeHead(200, { 'Content-Type': contentType });
-    const stream = fs.createReadStream(filePath);
-    stream.pipe(res);
-    stream.on('error', () => {
-      if (!res.headersSent) {
-        res.writeHead(500);
-        res.end('Server Error');
-      }
-    });
+  let filePath = resolveStaticPath(safePath);
+  let statusCode = 200;
+
+  if (!filePath) {
+    const ext = path.extname(safePath).toLowerCase();
+    if (ext && ext !== '.html') {
+      // Static asset missing -> 404
+      const dist404 = path.join(PUBLIC_DIR, 'dist', '404.html');
+      filePath = fs.existsSync(dist404) ? dist404 : path.join(PUBLIC_DIR, 'index.html');
+      statusCode = 404;
+    } else {
+      // SPA Fallback: serve index.html (prefer dist/index.html if available)
+      const distIndex = path.join(PUBLIC_DIR, 'dist', 'index.html');
+      filePath = fs.existsSync(distIndex) ? distIndex : path.join(PUBLIC_DIR, 'index.html');
+    }
+  }
+
+  const ext = path.extname(filePath).toLowerCase();
+  const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+  if (ext === '.apk') {
+    res.setHeader('Content-Disposition', 'attachment; filename="tentiforapp.apk"');
+  }
+
+  // Caching headers
+  if (ext === '.apk' || ext === '.html' || pathname === '/sw.js' || pathname.endsWith('.json') || pathname.endsWith('.xml') || pathname.endsWith('.txt')) {
+    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+  } else {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  }
+
+  if (req.method === 'HEAD') {
+    res.writeHead(statusCode, { 'Content-Type': contentType });
+    res.end();
+    return;
+  }
+
+  res.writeHead(statusCode, { 'Content-Type': contentType });
+  const stream = fs.createReadStream(filePath);
+  stream.pipe(res);
+  stream.on('error', () => {
+    if (!res.headersSent) {
+      res.writeHead(500);
+      res.end('Server Error');
+    }
   });
 });
 

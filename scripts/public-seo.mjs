@@ -302,9 +302,17 @@ export function writeSeoRoutes({ indexHtml, distDir, items = [], staticPages = [
     const meta = seoMetadata(item);
     if (!meta || seen.has(meta.route)) continue;
     seen.add(meta.route);
-    const target = path.join(distDir, decodeURIComponent(meta.route.replace(/^\//, '')), 'index.html');
+    const routeRel = decodeURIComponent(meta.route.replace(/^\//, ''));
+    const target = path.join(distDir, routeRel, 'index.html');
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, renderSeoPage(indexHtml, item), 'utf8');
+    const renderedHtml = renderSeoPage(indexHtml, item);
+    fs.writeFileSync(target, renderedHtml, 'utf8');
+    const segments = routeRel.split('/').filter(Boolean);
+    if (segments.length) {
+      const flatTarget = path.join(distDir, ...segments.slice(0, -1), `${segments.at(-1)}.html`);
+      fs.mkdirSync(path.dirname(flatTarget), { recursive: true });
+      fs.writeFileSync(flatTarget, renderedHtml, 'utf8');
+    }
     written += 1;
   }
   const distRoot = path.resolve(distDir);
