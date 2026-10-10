@@ -28,14 +28,48 @@ const MIME_TYPES = {
   '.txt': 'text/plain; charset=utf-8'
 };
 
+const ALIMLAR_FILE = path.join(PUBLIC_DIR, 'alimlar.json');
+
+function getAlimlarDb() {
+  try {
+    if (fs.existsSync(ALIMLAR_FILE)) {
+      return JSON.parse(fs.readFileSync(ALIMLAR_FILE, 'utf-8'));
+    }
+  } catch (e) {
+    console.error('alimlar.json okuma hatası:', e);
+  }
+  return {
+    surum: 1,
+    guncelleme: new Date().toISOString(),
+    toplamAlim: 0,
+    toplamEcka: 0,
+    alimlar: [],
+    evrenler: {},
+    sahipler: {}
+  };
+}
+
+function saveAlimlarDb(db) {
+  try {
+    const jsonStr = JSON.stringify(db, null, 2);
+    fs.writeFileSync(ALIMLAR_FILE, jsonStr, 'utf-8');
+    const distFile = path.join(PUBLIC_DIR, 'dist', 'alimlar.json');
+    if (fs.existsSync(path.dirname(distFile))) {
+      try { fs.writeFileSync(distFile, jsonStr, 'utf-8'); } catch {}
+    }
+  } catch (e) {
+    console.error('alimlar.json kaydetme hatası:', e);
+  }
+}
+
 const server = http.createServer((req, res) => {
-  // CORS & Security headers: statik sunucu yalnızca aynı-origin GET/HEAD sağlar.
+  // CORS & Security headers: statik sunucu ve API
   const origin = String(req.headers.origin || '');
   if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
   }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, HEAD, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -47,20 +81,164 @@ const server = http.createServer((req, res) => {
     res.end();
     return;
   }
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    res.writeHead(405, { Allow: 'GET, HEAD, OPTIONS', 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Method Not Allowed');
-    return;
-  }
 
   // Parse URL
   const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let pathname = decodeURIComponent(reqUrl.pathname);
 
-  // API endpoints mock/passthrough
+  // API endpoints: /api/pano
   if (pathname.startsWith('/api/pano')) {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ durum: 'ok', mesajlar: [] }));
+    return;
+  }
+
+  // API endpoints: /api/alimlar ve /api/alim
+  if (pathname === '/api/alimlar' || pathname === '/api/alim') {
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk;
+        if (body.length > 2e6) req.destroy();
+      });
+      req.on('end', () => {
+        try {
+          const veri = JSON.parse(body || '{}');
+          if (!veri.icerikId && !veri.icerikBaslik) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ durum: 'hata', mesaj: 'İçerik ID veya başlığı gereklidir.' }));
+            return;
+          }
+          const tutar = Math.max(0, Number(veri.tutar) || 0);
+          const alim = {
+            id: veri.id || `alm_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
+            icerikTur: String(veri.icerikTur || 'roman'),
+            icerikId: String(veri.icerikId || ''),
+            icerikBaslik: String(veri.icerikBaslik || 'İçerik'),
+            evrenId: String(veri.evrenId || 'tomye'),
+            evrenAd: String(veri.evrenAd || 'Tömye'),
+            evrenSahip: String(veri.evrenSahip || 'TentiFor'),
+            alici: String(veri.alici || 'ziyaretci'),
+            aliciId: String(veri.aliciId || ''),
+            tutar: tutar,
+            birim: String(veri.birim || 'eçka'),
+            tarih: veri.tarih || new Date().toISOString()
+          };
+
+          const db = getAlimlarDb();
+          db.toplamAlim = (db.toplamAlim || 0) + 1;
+          db.toplamEcka = (db.toplamEcka || 0) + tutar;
+          db.guncelleme = new Date().toISOString();
+          db.alimlar = Array.isArray(db.alimlar) ? db.alimlar : [];
+          db.alimlar.unshift(alim);
+          if (db.alimlar.length > 1000) db.alimlar = db.alimlar.slice(0, 1000);
+
+          db.evrenler = db.evrenler || {};
+          const ev = db.evrenler[alim.evrenId] = db.evrenler[alim.evrenId] || {
+            id: alim.evrenId,
+            ad: alim.evrenAd,
+            sahip: alim.evrenSahip,
+            toplamAlim: 0,
+            toplamEcka: 0,
+            roman: { adet: 0, ecka: 0 },
+            cizim: { adet: 0, ecka: 0 },
+            sonAlimlar: []
+          };
+          ev.ad = alim.evrenAd || ev.ad;
+          ev.sahip = alim.evrenSahip || ev.sahip;
+          ev.toplamAlim = (ev.toplamAlim || 0) + 1;
+          ev.toplamEcka = (ev.toplamEcka || 0) + tutar;
+          if (alim.icerikTur === 'roman') {
+            ev.roman = ev.roman || { adet: 0, ecka: 0 };
+            ev.roman.adet = (ev.roman.adet || 0) + 1;
+            ev.roman.ecka = (ev.roman.ecka || 0) + tutar;
+          } else if (alim.icerikTur === 'cizim') {
+            ev.cizim = ev.cizim || { adet: 0, ecka: 0 };
+            ev.cizim.adet = (ev.cizim.adet || 0) + 1;
+            ev.cizim.ecka = (ev.cizim.ecka || 0) + tutar;
+          }
+          ev.sonAlimlar = Array.isArray(ev.sonAlimlar) ? ev.sonAlimlar : [];
+          ev.sonAlimlar.unshift(alim);
+          if (ev.sonAlimlar.length > 50) ev.sonAlimlar = ev.sonAlimlar.slice(0, 50);
+
+          db.sahipler = db.sahipler || {};
+          const sh = db.sahipler[alim.evrenSahip] = db.sahipler[alim.evrenSahip] || {
+            sahip: alim.evrenSahip,
+            toplamAlim: 0,
+            toplamEcka: 0,
+            evrenler: {}
+          };
+          sh.toplamAlim = (sh.toplamAlim || 0) + 1;
+          sh.toplamEcka = (sh.toplamEcka || 0) + tutar;
+          sh.evrenler = sh.evrenler || {};
+          sh.evrenler[alim.evrenId] = (sh.evrenler[alim.evrenId] || 0) + tutar;
+
+          saveAlimlarDb(db);
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ durum: 'ok', mesaj: 'Alım sunucuya başarıyla yazıldı.', alim, evrenOzeti: ev }));
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ durum: 'hata', mesaj: 'Geçersiz JSON: ' + (err && err.message) }));
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      const db = getAlimlarDb();
+      const evrenParam = reqUrl.searchParams.get('evren');
+      const sahipParam = reqUrl.searchParams.get('sahip');
+
+      if (evrenParam) {
+        const ev = (db.evrenler && db.evrenler[evrenParam]) || {
+          id: evrenParam,
+          toplamAlim: 0,
+          toplamEcka: 0,
+          roman: { adet: 0, ecka: 0 },
+          cizim: { adet: 0, ecka: 0 },
+          sonAlimlar: []
+        };
+        const alimlarListesi = (db.alimlar || []).filter((a) => a.evrenId === evrenParam);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ durum: 'ok', evrenId: evrenParam, evrenOzeti: ev, alimlar: alimlarListesi }));
+        return;
+      }
+
+      if (sahipParam) {
+        const sh = (db.sahipler && db.sahipler[sahipParam]) || {
+          sahip: sahipParam,
+          toplamAlim: 0,
+          toplamEcka: 0,
+          evrenler: {}
+        };
+        const alimlarListesi = (db.alimlar || []).filter((a) => a.evrenSahip === sahipParam);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ durum: 'ok', sahip: sahipParam, sahipOzeti: sh, alimlar: alimlarListesi }));
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        durum: 'ok',
+        toplamAlim: db.toplamAlim || 0,
+        toplamEcka: db.toplamEcka || 0,
+        guncelleme: db.guncelleme,
+        alimlar: db.alimlar || [],
+        evrenler: db.evrenler || {},
+        sahipler: db.sahipler || {}
+      }));
+      return;
+    }
+
+    res.writeHead(405, { Allow: 'GET, POST, HEAD, OPTIONS', 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Method Not Allowed');
+    return;
+  }
+
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.writeHead(405, { Allow: 'GET, HEAD, OPTIONS', 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Method Not Allowed');
     return;
   }
 
@@ -106,16 +284,16 @@ const server = http.createServer((req, res) => {
   let statusCode = 200;
 
   if (!filePath) {
-    const ext = path.extname(safePath).toLowerCase();
-    if (ext && ext !== '.html') {
-      // Static asset missing -> 404
-      const dist404 = path.join(PUBLIC_DIR, 'dist', '404.html');
-      filePath = fs.existsSync(dist404) ? dist404 : path.join(PUBLIC_DIR, 'index.html');
-      statusCode = 404;
-    } else {
-      // SPA Fallback: serve index.html (prefer dist/index.html if available)
+    const cleanRoute = safePath.replace(/^\/+|\/+$/g, '').toLowerCase();
+    const isSpaFallback = cleanRoute === 'sen' || cleanRoute === 'arsiv' || cleanRoute === 'moderasyon';
+    if (isSpaFallback) {
       const distIndex = path.join(PUBLIC_DIR, 'dist', 'index.html');
       filePath = fs.existsSync(distIndex) ? distIndex : path.join(PUBLIC_DIR, 'index.html');
+      statusCode = 200;
+    } else {
+      const dist404 = path.join(PUBLIC_DIR, 'dist', '404.html');
+      filePath = fs.existsSync(dist404) ? dist404 : (fs.existsSync(path.join(PUBLIC_DIR, '404.html')) ? path.join(PUBLIC_DIR, '404.html') : path.join(PUBLIC_DIR, 'index.html'));
+      statusCode = 404;
     }
   }
 
