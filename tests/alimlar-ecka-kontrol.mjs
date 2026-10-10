@@ -1,141 +1,132 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import http from 'node:http';
+import net from 'node:net';
+import { spawn } from 'node:child_process';
+import { setTimeout as wait } from 'node:timers/promises';
+import { JSDOM } from 'jsdom';
 
 const root = process.cwd();
+const read = (name) => fs.readFileSync(path.join(root, name), 'utf8');
+const serverCode = read('server.js');
+const clientCode = read('js/engine/102-icerik-alim.js');
+const walletCode = read('js/core/03-cuzdan.js');
+const planCode = read('js/engine/91-v473-uyelik.js');
+const romanCode = read('js/arsiv/09-medya-harita.js');
+const galleryCode = read('js/arsiv/07-kisilik-ag-galeri.js');
+const packerCode = read('scripts/paketle.mjs');
 
-console.log('🧪 Ekça İçerik Alımları ve Evren Sahibi Gelir Sistemi Doğrulanıyor...');
+console.log('Eçka yerel alım akışı ve premium plan istisnası test ediliyor...');
 
-// 1. Dosya kontrolleri
-const serverCode = fs.readFileSync(path.join(root, 'server.js'), 'utf8');
-const clientCode = fs.readFileSync(path.join(root, 'js/engine/102-icerik-alim.js'), 'utf8');
-const indexCode = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const romanCode = fs.readFileSync(path.join(root, 'js/arsiv/09-medya-harita.js'), 'utf8');
-const galeriCode = fs.readFileSync(path.join(root, 'js/arsiv/07-kisilik-ag-galeri.js'), 'utf8');
-const paketleCode = fs.readFileSync(path.join(root, 'scripts/paketle.mjs'), 'utf8');
+assert.doesNotMatch(serverCode, /\/api\/alim(?:lar)?/, 'sunucuda içerik alım REST endpointi kalmamalı');
+assert.doesNotMatch(serverCode, /ALIMLAR_FILE|getAlimlarDb|saveAlimlarDb/, 'sunucu alım geçmişi dosyasını yönetmemeli');
+assert.doesNotMatch(clientCode, /fetch\s*\(|\/api\//, 'içerik alım modülü API/fetch çağırmamalı');
+assert.match(walletCode, /function birim\(\)\{return"eçka"\}/, 'uygulama içi cüzdan ve kilitlerde para birimi eçka olmalı');
+assert.doesNotMatch(clientCode, /Satış Geliri|Alımlar & Gelir|Son Alımlar Geçmişi/, 'satış ve sunucu gelir panelleri kaldırılmalı');
+assert.doesNotMatch(romanCode, /alimKaydet/, 'roman alımı sunucuya kaydedilmemeli');
+assert.doesNotMatch(galleryCode, /alimKaydet/, 'galeri alımı sunucuya kaydedilmemeli');
+assert.doesNotMatch(packerCode, /alimlar\.json/, 'eski alım geçmişi web/Android paketlerine eklenmemeli');
+assert.match(planCode, /EvrenYazar · 249 TL \/ ay/, 'premium planın TL fiyatı korunmalı');
+assert.match(planCode, /data-uyelik-ode="evrenyazar" disabled/, 'ödeme entegrasyonu olmadığı için premium düğmesi mevcut disabled/Yakında durumunda kalmalı');
+console.log('PASS Alım API/gelir paneli kaldırıldı; premium planın gerçek para fiyatı ve mevcut ödeme durumu korundu.');
 
-// 2. Kod kontratları kontrolleri
-assert.ok(serverCode.includes('/api/alimlar'), 'server.js /api/alimlar endpointini içermeli');
-assert.ok(serverCode.includes('ALIMLAR_FILE'), 'server.js alimlar dosyasını yönetmeli');
-assert.ok(serverCode.includes('POST, HEAD, OPTIONS'), 'server.js POST metoduna izin vermeli');
-console.log('✓ server.js API sözleşmeleri doğrulandı');
+// Tarayıcı ortamında gerçek uygulama cüzdanı işlevlerini taklit et: satın alma yalnızca kilit açıp cihaz bakiyesini düşürür.
+const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://example.test/', runScripts: 'outside-only' });
+const { window } = dom;
+const wallet = { ecka: 50, harcanan: 0, acilan: [] };
+const notices = [];
+let fetchCalls = 0;
+window.cuzdan = wallet;
+window.eckaVar = (amount) => wallet.ecka >= amount;
+window.kilitAcik = (id) => wallet.acilan.includes(id);
+window.kilitAc = (id, amount) => {
+  const price = Math.max(0, Number(amount) || 0);
+  if (wallet.ecka < price) return false;
+  wallet.ecka -= price;
+  wallet.harcanan += price;
+  wallet.acilan.push(id);
+  return true;
+};
+window.eckaBildir = (message) => notices.push(message);
+window.fetch = () => { fetchCalls += 1; return Promise.reject(new Error('fetch kullanılamaz')); };
+window.evrenEkSekmeler = undefined;
+window.evrenEkBolum = undefined;
+window.eval(clientCode);
 
-assert.ok(indexCode.includes('js/engine/102-icerik-alim.js'), 'index.html 102-icerik-alim.js scriptini yüklemeli');
-console.log('✓ index.html script entegrasyonu doğrulandı');
+let callbackCount = 0;
+assert.equal(window.icerikSatinAl({ id: 'roman-1', fiyat: 12, onBasarili: () => { callbackCount += 1; } }), true);
+assert.equal(wallet.ecka, 38, '12 eçka cihaz cüzdanından düşmeli');
+assert.equal(wallet.harcanan, 12);
+assert.ok(window.kilitAcik('roman-1'), 'roman kilidi yerel olarak açılmalı');
+assert.equal(callbackCount, 1);
+assert.match(notices.at(-1), /12 eçka/);
+assert.equal(fetchCalls, 0, 'yerel eçka alımı hiçbir API/fetch çağrısı yapmamalı');
+console.log('PASS Roman içeriği yerel cüzdandan eçka düşerek açılıyor; API çağrısı yok.');
 
-assert.ok(clientCode.includes('tfAlimServisi'), '102-icerik-alim.js tfAlimServisi API taşımalı');
-assert.ok(clientCode.includes('icerikSatinAl'), '102-icerik-alim.js icerikSatinAl metodunu içermeli');
-assert.ok(clientCode.includes('evrenAlimlarHtml'), '102-icerik-alim.js evren sahibi gelir paneli HTML fonksiyonunu içermeli');
-assert.ok(clientCode.includes('evrenRomanHtml'), '102-icerik-alim.js evren roman okuma ve alım arayüzünü içermeli');
-assert.ok(clientCode.includes('evrenCizimlerHtml'), '102-icerik-alim.js evren çizimler galeri ve alım arayüzünü içermeli');
-console.log('✓ 102-icerik-alim.js istemci fonksiyonları doğrulandı');
+assert.equal(window.icerikSatinAl({ id: 'cizim-pahali', fiyat: 100 }), false, 'yetersiz bakiye ile alım başarısız olmalı');
+assert.equal(wallet.ecka, 38, 'başarısız alım bakiyeyi değiştirmemeli');
+assert.ok(!window.kilitAcik('cizim-pahali'));
+assert.equal(window.icerikSatinAl({ id: 'ucretsiz-bolum', fiyat: 0 }), true);
+assert.equal(wallet.ecka, 38, 'ücretsiz içerik bakiyeyi değiştirmemeli');
+assert.ok(window.kilitAcik('ucretsiz-bolum'));
+console.log('PASS Yetersiz bakiye güvenle reddediliyor; ücretsiz içerik eçka harcamadan açılıyor.');
 
-assert.ok(romanCode.includes('alimKaydet'), '09-medya-harita.js roman açıldığında alım kaydetmeli');
-assert.ok(galeriCode.includes('alimKaydet'), '07-kisilik-ag-galeri.js çizim açıldığında alım kaydetmeli');
-console.log('✓ Roman ve çizim arşivleri alım kaydetme çağrıları doğrulandı');
+const sayfa = {
+  eser: {
+    id: 'demo', ad: 'Demo Evren',
+    roman: { baslik: 'Demo Roman', bolumler: [{ id: 'c1', baslik: 'Birinci Bölüm', fiyat: 4, metin: 'Deneme metni' }] },
+    cizimler: [{ id: 'i1', baslik: 'Demo Çizim', fiyat: 3, gorsel: '/demo.png' }]
+  }
+};
+const tabs = window.evrenEkSekmeler(sayfa).map((item) => item[0]);
+assert.ok(tabs.includes('roman') && tabs.includes('cizim'));
+assert.ok(!tabs.includes('alimlar'), 'satıcı gelir sekmesi gösterilmemeli');
+window.EVS = { id: 'demo', sekme: 'roman', seciliBolum: 'c1' };
+assert.match(window.evrenEkBolum(sayfa), /data-evren-bolum-al/);
+window.EVS.sekme = 'cizim';
+assert.match(window.evrenEkBolum(sayfa), /data-evren-cizim-al/);
+assert.equal(fetchCalls, 0);
+window.close();
+console.log('PASS Roman/çizim kilitleri eçka olarak gösteriliyor; satıcı gelir sekmesi yok.');
 
-assert.ok(paketleCode.includes('alimlar.json'), 'scripts/paketle.mjs alimlar.json senkronizasyonunu içermeli');
-console.log('✓ paketle.mjs yapılandırması doğrulandı');
-
-// 3. Server HTTP API doğrudan testleri (Port 3000 üzerinden)
-async function testApiEndpoints() {
-  const testPort = 3000;
-  
-  // GET /api/alimlar testi
-  const getRes = await fetch(`http://127.0.0.1:${testPort}/api/alimlar`);
-  assert.equal(getRes.status, 200, 'GET /api/alimlar 200 dönmeli');
-  const getJson = await getRes.json();
-  assert.equal(getJson.durum, 'ok', 'GET yanıtı durum ok olmalı');
-  assert.ok(typeof getJson.toplamAlim === 'number', 'toplamAlim sayı olmalı');
-  assert.ok(typeof getJson.toplamEcka === 'number', 'toplamEcka sayı olmalı');
-  assert.ok(Array.isArray(getJson.alimlar), 'alimlar dizi olmalı');
-  assert.ok(typeof getJson.evrenler === 'object', 'evrenler nesne olmalı');
-  console.log(`✓ GET /api/alimlar testi başarılı (Kayıtlı alım: ${getJson.toplamAlim}, Toplam eçka: ${getJson.toplamEcka})`);
-
-  // POST /api/alimlar roman satın alma testi
-  const romanAlimVerisi = {
-    icerikTur: 'roman',
-    icerikId: 'evr_test_roman_1',
-    icerikBaslik: '1. Bölüm · Başlangıç',
-    evrenId: 'evr_test_yeni',
-    evrenAd: 'Yıldızlar Evreni',
-    evrenSahip: 'yazar_ahmet',
-    alici: 'okur_mehmet',
-    tutar: 120,
-    birim: 'eçka'
-  };
-
-  const postRes1 = await fetch(`http://127.0.0.1:${testPort}/api/alimlar`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(romanAlimVerisi)
-  });
-  assert.equal(postRes1.status, 200, 'POST roman alımı 200 dönmeli');
-  const postJson1 = await postRes1.json();
-  assert.equal(postJson1.durum, 'ok');
-  assert.equal(postJson1.alim.tutar, 120);
-  assert.equal(postJson1.alim.evrenId, 'evr_test_yeni');
-  console.log('✓ POST /api/alimlar roman alımı başarıyla sunucuya kaydedildi');
-
-  // POST /api/alimlar çizim satın alma testi
-  const cizimAlimVerisi = {
-    icerikTur: 'cizim',
-    icerikId: 'evr_test_cizim_1',
-    icerikBaslik: 'Buz Çölü Manzarası',
-    evrenId: 'evr_test_yeni',
-    evrenAd: 'Yıldızlar Evreni',
-    evrenSahip: 'yazar_ahmet',
-    alici: 'sanatsever_ayse',
-    tutar: 80,
-    birim: 'eçka'
-  };
-
-  const postRes2 = await fetch(`http://127.0.0.1:${testPort}/api/alimlar`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(cizimAlimVerisi)
-  });
-  assert.equal(postRes2.status, 200, 'POST çizim alımı 200 dönmeli');
-  const postJson2 = await postRes2.json();
-  assert.equal(postJson2.durum, 'ok');
-  assert.equal(postJson2.alim.tutar, 80);
-  console.log('✓ POST /api/alimlar çizim alımı başarıyla sunucuya kaydedildi');
-
-  // GET /api/alimlar?evren=evr_test_yeni (Evren sahibinin kendi evrenini sorgulaması)
-  const evrenRes = await fetch(`http://127.0.0.1:${testPort}/api/alimlar?evren=evr_test_yeni`);
-  assert.equal(evrenRes.status, 200);
-  const evrenJson = await evrenRes.json();
-  assert.equal(evrenJson.durum, 'ok');
-  assert.equal(evrenJson.evrenId, 'evr_test_yeni');
-  assert.ok(evrenJson.evrenOzeti.toplamAlim >= 2, 'Evrenin toplam alımı en az 2 olmalı');
-  assert.ok(evrenJson.evrenOzeti.toplamEcka >= 200, 'Evrenin toplam eçka geliri en az 200 olmalı');
-  assert.ok(evrenJson.evrenOzeti.roman.adet >= 1, 'Roman alım adedi en az 1 olmalı');
-  assert.ok(evrenJson.evrenOzeti.cizim.adet >= 1, 'Çizim alım adedi en az 1 olmalı');
-  console.log(`✓ GET /api/alimlar?evren=evr_test_yeni filtreleme başarılı! Sahip geliri: ${evrenJson.evrenOzeti.toplamEcka} eçka (${evrenJson.evrenOzeti.toplamAlim} alım)`);
-
-  // GET /api/alimlar?sahip=yazar_ahmet (Yazarın toplam gelirini sorgulaması)
-  const sahipRes = await fetch(`http://127.0.0.1:${testPort}/api/alimlar?sahip=yazar_ahmet`);
-  assert.equal(sahipRes.status, 200);
-  const sahipJson = await sahipRes.json();
-  assert.equal(sahipJson.durum, 'ok');
-  assert.equal(sahipJson.sahip, 'yazar_ahmet');
-  assert.ok(sahipJson.sahipOzeti.toplamEcka >= 200);
-  console.log(`✓ GET /api/alimlar?sahip=yazar_ahmet filtreleme başarılı! Yazar toplam geliri: ${sahipJson.sahipOzeti.toplamEcka} eçka`);
-
-  // Disk kontrolü: alimlar.json dosyası güncellendi mi?
-  const diskDb = JSON.parse(fs.readFileSync(path.join(root, 'alimlar.json'), 'utf8'));
-  assert.ok(diskDb.alimlar.some((a) => a.id === postJson1.alim.id), 'Disk dosyasında roman alımı bulunmalı');
-  assert.ok(diskDb.alimlar.some((a) => a.id === postJson2.alim.id), 'Disk dosyasında çizim alımı bulunmalı');
-  console.log('✓ alimlar.json disk dosyası verileri doğrulandı');
-}
-
-// Dev server hazır olunca testi tamamla veya port kontrolü yap
+// Sunucu düzeyinde eski uç noktalar 404, POST ise genel 405 almalı; legacy JSON da sunulmamalı.
+const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tentifor-no-alim-api-'));
+const probe = net.createServer();
+await new Promise((resolve, reject) => probe.listen(0, '127.0.0.1', resolve).once('error', reject));
+const port = probe.address().port;
+await new Promise((resolve, reject) => probe.close((error) => error ? reject(error) : resolve()));
+fs.copyFileSync(path.join(root, 'server.js'), path.join(tempDir, 'server.js'));
+fs.copyFileSync(path.join(root, 'index.html'), path.join(tempDir, 'index.html'));
+fs.copyFileSync(path.join(root, 'alimlar.json'), path.join(tempDir, 'alimlar.json'));
+fs.writeFileSync(path.join(tempDir, 'package.json'), JSON.stringify({ type: 'module' }));
+const server = spawn(process.execPath, ['server.js'], { cwd: tempDir, env: { ...process.env, PORT: String(port) }, stdio: ['ignore', 'pipe', 'pipe'] });
+let output = '';
+server.stdout.on('data', (chunk) => { output += chunk; });
+server.stderr.on('data', (chunk) => { output += chunk; });
+const base = `http://127.0.0.1:${port}`;
 try {
-  await testApiEndpoints();
-  console.log('\n🎉 TÜM EÇKA İÇERİK ALIMLARI VE EVREN GELİR TESTLERİ BAŞARIYLA GEÇTİ! (%100 PASS)');
-} catch (err) {
-  // Eğer port 3000 henüz bu ortamda açılmadıysa bağımsız sunucu simülasyonu çalıştır
-  console.log('Canlı sunucu testinde hata veya port bekleme, yerel denetim sürdürülüyor:', err.message);
-  process.exit(1);
+  let ready = false;
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    if (server.exitCode !== null) throw new Error(`Test sunucusu erken kapandı: ${output}`);
+    try { const response = await fetch(`${base}/`); if (response.ok) { ready = true; break; } } catch {}
+    await wait(100);
+  }
+  assert.ok(ready, `Geçici test sunucusu başlamadı: ${output}`);
+  for (const endpoint of ['/api/alimlar', '/api/alim']) {
+    const response = await fetch(base + endpoint);
+    assert.equal(response.status, 404, `${endpoint} artık tanımlı olmamalı`);
+  }
+  const post = await fetch(base + '/api/alimlar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  assert.equal(post.status, 405, 'eski POST endpointi genel yöntem engeline düşmeli');
+  assert.equal((await fetch(base + '/alimlar.json')).status, 404, 'alım geçmişi dosyası HTTP ile sunulmamalı');
+  console.log('PASS Eski alım API uçları ve JSON geçmişi HTTP üzerinden erişilemiyor.');
+} finally {
+  server.kill('SIGTERM');
+  await new Promise((resolve) => {
+    if (server.exitCode !== null) return resolve();
+    server.once('exit', resolve);
+    setTimeout(() => { server.kill('SIGKILL'); resolve(); }, 1000).unref();
+  });
+  fs.rmSync(tempDir, { recursive: true, force: true });
 }

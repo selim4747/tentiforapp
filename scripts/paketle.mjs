@@ -150,7 +150,6 @@ if (fs.existsSync(path.dirname(wwwDir))) {
     'ikon',
     'yazitipi',
     'evrenler',
-    'alimlar.json',
     'veri-degisiklik.json'
   ];
 
@@ -194,7 +193,6 @@ const distDosyalarVeDizinler = [
   'ikon',
   'yazitipi',
   'evrenler',
-  'alimlar.json'
 ];
 
 // APK dağıtımı ve Android App Links de production çıktısına aittir.

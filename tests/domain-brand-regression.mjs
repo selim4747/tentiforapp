@@ -79,6 +79,7 @@ try {
   allFiles = walk('.');
 }
 for (const file of allFiles) {
+  if (!fs.existsSync(file)) continue;
   if (!/\.(?:html|js|mjs|ts|json|xml|md|txt|webmanifest)$/.test(file)) continue;
   assert.doesNotMatch(read(file), /tentifor(?:app)?(?:\\?\.)pages(?:\\?\.)dev/i, `${file} should not use previous site address`);
 }
