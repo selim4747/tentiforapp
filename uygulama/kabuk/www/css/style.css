@@ -588,3 +588,42 @@ html[data-site-tema~=katiller] { --deniz: #ff9aa8; }
 .sira-sozluk{position:fixed;right:1rem;bottom:1rem;z-index:40;max-width:18rem;padding:.8rem 1rem;background:var(--kar,#fff);border:1px solid var(--buz,#d7e3ee)}
 .sira-etiketli{outline:1px dashed var(--deniz,#2d6f9a)}
 .sira-gizle-fan{display:none}
+
+/* Mobil Ambiyans, Üretim & Hızlı Erişim Modülü */
+.ses-ambiyans-btn{font-size:11.5px!important;padding:4px 8px!important;border-radius:3px!important;border:1px solid var(--sig,#b8d6ec)!important;background:var(--beyaz,#fff)!important;color:var(--deniz,#1c5c96)!important;cursor:pointer;white-space:nowrap}
+.ses-ambiyans-btn:hover{background:var(--buz,#dfedf8)!important}
+
+/* Mobil Hızlı Yazım Şeridi */
+.tf-mobil-yaz-bar{position:fixed;bottom:0;left:0;right:0;z-index:95;display:none;align-items:center;gap:6px;padding:8px 12px;background:var(--beyaz,#fff);border-top:1px solid var(--buz,#dfedf8);box-shadow:0 -4px 16px rgba(10,25,40,.08);overflow-x:auto}
+.tf-mobil-yaz-bar.aktif{display:flex}
+.tf-mobil-yaz-bar button{flex-shrink:0;min-height:36px;padding:6px 12px;font-family:var(--mono,monospace);font-size:12.5px;font-weight:600;border:1px solid var(--sig,#b8d6ec);border-radius:4px;background:var(--kar,#f4f9fd);color:var(--murekkep,#0a0f14);cursor:pointer}
+.tf-mobil-yaz-bar button:active{background:var(--deniz,#1c5c96);color:#fff}
+.tf-yaz-sayac{font-family:var(--mono,monospace);font-size:11.5px;color:var(--murekkep-2,#3d4a57);margin-left:auto;white-space:nowrap;padding:0 6px}
+.tf-yaz-kapat{border:none!important;background:transparent!important;color:var(--murekkep-2,#3d4a57)!important;font-size:14px!important;padding:4px 8px!important}
+
+/* Mobil Hızlı Erişim Dock / Çekmece */
+.tf-hizli-dock{position:fixed;bottom:76px;right:14px;z-index:85}
+.tf-dock-tetik{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;min-height:40px;border-radius:999px;border:1px solid var(--sig,#b8d6ec);background:var(--beyaz,#fff);color:var(--deniz,#1c5c96);box-shadow:0 4px 16px rgba(13,53,96,.12);cursor:pointer;font-family:var(--govde,sans-serif);font-size:13px;font-weight:600;transition:.2s}
+.tf-dock-tetik:hover,.tf-dock-tetik:focus-visible{transform:translateY(-2px);background:var(--kar,#f4f9fd);border-color:var(--deniz,#1c5c96)}
+.tf-dock-tetik-ikon{font-size:14px}
+.tf-dock-icerik{position:absolute;bottom:calc(100% + 10px);right:0;width:min(320px,calc(100vw - 28px));background:var(--beyaz,#fff);border:1px solid var(--sig,#b8d6ec);border-radius:14px;padding:14px;box-shadow:0 12px 36px rgba(10,25,40,.18);display:grid;gap:10px}
+.tf-dock-icerik[hidden]{display:none}
+.tf-dock-baslik{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:13.5px;color:var(--deniz,#1c5c96);padding-bottom:6px;border-bottom:1px solid var(--buz,#dfedf8)}
+.tf-dock-kapat{border:none;background:none;color:var(--murekkep-2,#3d4a57);font-size:14px;cursor:pointer;padding:2px 6px}
+.tf-dock-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tf-dock-kart{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:10px 12px;border:1px solid var(--buz,#dfedf8);border-radius:8px;background:var(--kar,#f4f9fd);color:var(--murekkep,#0a0f14);cursor:pointer;transition:.15s}
+.tf-dock-kart:hover,.tf-dock-kart:focus-visible{border-color:var(--deniz,#1c5c96);background:var(--beyaz,#fff)}
+.tf-dock-kart b{font-size:12.5px;margin-top:4px;display:block}
+.tf-dock-kart small{font-size:11px;color:var(--murekkep-2,#3d4a57);margin-top:2px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tf-dock-ikon{font-size:16px}
+
+/* Gece Modu Uyumları */
+html[data-ayar-tema=gece] .ses-ambiyans-btn{background:#15202b!important;color:#9ec7ea!important;border-color:#2a3b4c!important}
+html[data-ayar-tema=gece] .tf-mobil-yaz-bar{background:#0d151e;border-color:#1c2d3d;box-shadow:0 -4px 16px rgba(0,0,0,.4)}
+html[data-ayar-tema=gece] .tf-mobil-yaz-bar button{background:#15202b;border-color:#2a3b4c;color:#e1e9f0}
+html[data-ayar-tema=gece] .tf-dock-tetik{background:#0d151e;border-color:#2a3b4c;color:#9ec7ea;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+html[data-ayar-tema=gece] .tf-dock-icerik{background:#0d151e;border-color:#2a3b4c;box-shadow:0 12px 36px rgba(0,0,0,.6)}
+html[data-ayar-tema=gece] .tf-dock-baslik{color:#9ec7ea;border-color:#1c2d3d}
+html[data-ayar-tema=gece] .tf-dock-kart{background:#15202b;border-color:#223446;color:#e1e9f0}
+html[data-ayar-tema=gece] .tf-dock-kart small{color:#8a9fae}
+
