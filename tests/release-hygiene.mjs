@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { sanitizePublicData } from '../scripts/visibility.mjs';
 
 const root = process.cwd();
 const readJson = (file) => JSON.parse(fs.readFileSync(path.join(root, file), 'utf8'));
@@ -107,9 +108,16 @@ assert.doesNotMatch(sitemap, /\/u\/|okuma-yolu\//, 'static-only build must not i
 const compare = (a, b) => {
   assert.equal(fs.readFileSync(path.join(root, a), 'utf8'), fs.readFileSync(path.join(root, b), 'utf8'), `${a} ve ${b} senkron olmalı`);
 };
-for (const file of ['index.html', 'veri.json', 'surum.json', 'manifest.webmanifest', 'sw.js', 'veri-degisiklik.json']) {
+for (const file of ['index.html', 'surum.json', 'manifest.webmanifest', 'sw.js']) {
   compare(file, path.join('uygulama/kabuk/www', file));
   compare(file, path.join('dist', file));
+}
+// Kaynak veri korunur; web/APK paketleri geçici görünürlük filtresinden geçmiş kopyayı taşır.
+for (const file of ['veri.json', 'veri-degisiklik.json']) {
+  const expected = JSON.stringify(sanitizePublicData(readJson(file)));
+  for (const target of [path.join('uygulama/kabuk/www', file), path.join('dist', file)]) {
+    assert.equal(JSON.stringify(readJson(target)), expected, `${file} yayın filtresiyle senkron olmalı`);
+  }
 }
 assert.ok(fs.readFileSync(path.join(root, 'index.html'), 'utf8').includes('href="/favicon.ico"'), 'index favicon URL must use the root icon');
 assert.equal(fs.readFileSync(path.join(root, 'sw.js'), 'utf8').match(/const ONBELLEK = "tentiforapp-([^"]+)"/)[1], second.paket);

@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { approvedCanonicalUniversePages, fetchPublicSeoPages, renderSeoNotFound, writeSeoRoutes } from './public-seo.mjs';
 import { syncTerminalRoutes } from './sync-terminal-routes.mjs';
+import { copyPublicAsset, isHiddenUniverseAssetPath, stripHiddenUniverseSections } from './visibility.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -159,9 +160,9 @@ if (fs.existsSync(path.dirname(wwwDir))) {
     if (fs.existsSync(kaynak)) {
       const stats = fs.statSync(kaynak);
       if (stats.isDirectory()) {
-        fs.cpSync(kaynak, hedef, { recursive: true });
+        fs.cpSync(kaynak, hedef, { recursive: true, filter: (src) => !isHiddenUniverseAssetPath(path.relative(ROOT_DIR, src)) });
       } else {
-        fs.copyFileSync(kaynak, hedef);
+        copyPublicAsset(kaynak, hedef, oge);
       }
     }
   }
@@ -210,9 +211,9 @@ for (const oge of distDosyalarVeDizinler) {
   if (fs.existsSync(kaynak)) {
     const stats = fs.statSync(kaynak);
     if (stats.isDirectory()) {
-      fs.cpSync(kaynak, hedef, { recursive: true });
+      fs.cpSync(kaynak, hedef, { recursive: true, filter: (src) => !isHiddenUniverseAssetPath(path.relative(ROOT_DIR, src)) });
     } else {
-      fs.copyFileSync(kaynak, hedef);
+      copyPublicAsset(kaynak, hedef, oge);
     }
   }
 }
@@ -241,8 +242,6 @@ const appRoutes = [
   { path: '/araclar/', title: 'Araçlar — TentiFor', description: 'TentiFor isim sistemi, yazılar ve araçlar.' },
   { path: '/proje/', title: 'Proje — TentiFor', description: 'TentiFor proje bilgileri, basın kiti ve moodboard.' },
   { path: '/surumler/', title: 'Değişiklikler — TentiFor', description: 'TentiFor sürüm geçmişi ve değişiklik günlüğü.' },
-  { path: '/claude/', title: 'Claude’un Evreni — TentiFor', description: 'Claude Şomdo evreni.' },
-  { path: '/eterya/', title: 'Eterya — TentiFor', description: 'Eterya test evreni.' }
 ];
 let publicSeoPages = [];
 if (process.env.TF_SEO_STATIC_ONLY !== '1') {
@@ -269,6 +268,18 @@ for (const route of [...staticSeoPages, ...appRoutes]) {
   if (fs.existsSync(distFlat)) {
     fs.copyFileSync(distFlat, rootFlat);
     if (fs.existsSync(wwwDir)) fs.copyFileSync(distFlat, path.join(wwwDir, `${rel}.html`));
+  }
+}
+// SEO ve uygulama sayfalarının sabit HTML'sinde gizli evren başlıkları kalmasın.
+for (const root of [ROOT_DIR, distDir, wwwDir]) {
+  if (!root || !fs.existsSync(root)) continue;
+  for (const file of fs.readdirSync(root, { recursive: true })) {
+    if (typeof file !== 'string' || !file.endsWith('.html')) continue;
+    const full = path.join(root, file);
+    if (!fs.statSync(full).isFile()) continue;
+    const html = fs.readFileSync(full, 'utf8');
+    const cleaned = stripHiddenUniverseSections(html);
+    if (cleaned !== html) fs.writeFileSync(full, cleaned, 'utf8');
   }
 }
 const seo404Content = renderSeoNotFound(seoIndex);

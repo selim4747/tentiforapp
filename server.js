@@ -2,6 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isHiddenUniversePath } from './scripts/visibility.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,6 +52,12 @@ const server = http.createServer((req, res) => {
   // Parse URL
   const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let pathname = decodeURIComponent(reqUrl.pathname);
+  // Claude ve Eterya kaynakları depoda tutulur; yayın katmanında geçici olarak 404'tür.
+  if (isHiddenUniversePath(pathname)) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end('Not Found');
+    return;
+  }
 
   // API endpoints: /api/pano
   if (pathname.startsWith('/api/pano')) {
@@ -118,7 +125,7 @@ const server = http.createServer((req, res) => {
     const knownRoutes = new Set([
       'sen', 'arsiv', 'moderasyon', 'tomye', 'fan', 'oyunlar', 'atolye', 'okuma',
       'baglar', 'dunya', 'belgeler', 'testler', 'araclar', 'proje', 'surumler',
-      'claude', 'eterya', 'basla'
+      'basla'
     ]);
     const isSpaFallback = knownRoutes.has(cleanRoute);
     if (isSpaFallback) {

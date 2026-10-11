@@ -255,7 +255,6 @@
     "surum": "4.6.1",
     "tarih": "2026-09-30",
     "maddeler": [
-      "Model Vitrin Evreni (Eterya: Yıldız Kırıkları): Evren Kurucu'nun tüm özelliklerini (harita, kurallar, kişiler, zaman çizgisi, yapımlar, glif alfabesi ve okuma rehberi) insanlara sergilemek amacıyla test evreni olarak yayına alındı.",
       "Akıllı Güncelleme ve İçerik Bildirimleri: Sonsuz güncelleme döngüsü giderildi; artık yalnızca gerçek sürüm farkında 'Yeni sürüm yayında', yönetici yeni evren/içerik eklediğinde ise 'Yeni içerik eklendi' uyarısı verilir ve kapatılınca tekrarlanmaz.",
       "Uygulama İçi Bildirim Ayarları: Sen sayfasına yeni güncelleme ve içerik bildirimleri açma/kapatma ayarı eklendi.",
       "Mobil Moderasyon Erişimi: Mobil uygulama ve telefon tarayıcılarında tek tıkla moderasyon paneline erişim bağlantısı Sen sayfasına eklendi."
@@ -429,8 +428,7 @@
       "Güvenlik: adlarda ve metinlerde tırnak işareti artık her yerde kaçırılıyor (tırnaklı bir ad sayfayı bozamaz)",
       "Kişi sayfası tırnaklı ya da & içeren adlarda da açılıyor",
       "E25 daha hızlı: Evrengezer konuk havuzu her kart için yeniden hesaplanmıyor, bir çizimde bir kez",
-      "Ana sayfadaki “Evrenini kur” kilidi kod girince, pencere kapanınca ve girişten sonra XP gelince kendiliğinden güncelleniyor",
-      "Geçit haritasında Claude'un Evreni ve örnek fan evrenleri test evreni olarak (kesikli mor) görünüyor, kanon gibi değil"
+      "Ana sayfadaki “Evrenini kur” kilidi kod girince, pencere kapanınca ve girişten sonra XP gelince kendiliğinden güncelleniyor"
     ]
   },
   {
@@ -444,8 +442,7 @@
       "Sürüm geçmişinde karşılaştırma: evreninin eski bir hâliyle şimdiki arasında ne değişti",
       "Haritada zaman: tarih olayına yer yazılır, haritanın üstündeki kaydırıcıyla olaylar yerlerinde yanar",
       "Panel: kanona aday evrenler tek listede (Tömye ölçeği, tutarlılık notları, önizleme, kanona al / fan-made bırak)",
-      "Erişilebilirlik ve telefon: 14 sayfada ve evren sayfalarında adsız düğme, yinelenen kimlik ve yana taşma otomatik denetleniyor",
-      "Düzeltme: Claude'un evreni kanon değil, sitenin özelliklerinin denendiği ve gösterildiği Test evreni; Sis Denizi ve Kül Ormanı örnek (test) fan-made evrenler. Ana sayfada, Atölye'de ve E25 kapılarında ayrı grupta"
+      "Erişilebilirlik ve telefon: 14 sayfada ve evren sayfalarında adsız düğme, yinelenen kimlik ve yana taşma otomatik denetleniyor"
     ],
     "yeniler": []
   },
@@ -531,7 +528,6 @@
     "surum": "2.6.0",
     "tarih": "2026-09-28",
     "maddeler": [
-      "Okuma yolları: bir karakteri ya da Claude evreni kişisini baştan sona sıralı kutularla oku; altta sıradaki kutu, yol bitince rozet",
       "Çevrimdışı okuma: sitedeki bütün fan evrenlerini tek dokunuşla cihaza indir; cihazda ne kadar yer tuttuğunu gör",
       "Ortak yazarlık: kim, ne zaman, hangi sekmede değiştirdi; değişiklik günlüğü; sürüm geçmişinde kimin değişikliğinden önceki hâl",
       "Panel: site sağlığı tek kutuda (kurulum, hatalar, bildirimler, yedek, yayındaki sürüm, çevrimdışı)",
@@ -634,7 +630,6 @@
     "surum": "1.18.0",
     "tarih": "2026-09-27",
     "maddeler": [
-      "Claude'un Evreni'nin ilk romanı: Işık Postası — ulak Hıbır'ın yolculuğu, üç bölüm",
       "İki yeni hikâye (Dünün Ulağı, Tıkırtı), Sıssoz'un İşik'e mektubu, yeni terimler ve bir açık soru",
       "Evrende arama ve okuma ilerlemesi: kaç kutuyu okudun, sıradaki hangisi",
       "Kişi kartlarında geçtiği hikâyeler ve mektuplar; hepsini okuyana rozet",
@@ -668,8 +663,7 @@
     "surum": "1.16.1",
     "tarih": "2026-09-27",
     "maddeler": [
-      "Sonuna kadar okuduğun her kutu 15 XP (hesapta da sayılır)",
-      "Evren maddeleri ve Claude'un Evreni hikâyeleri de okuma kutusu oldu"
+      "Sonuna kadar okuduğun her kutu 15 XP (hesapta da sayılır)"
     ],
     "yeniler": []
   },
@@ -693,9 +687,7 @@
     "tarih": "2026-09-26",
     "maddeler": [
       "Haritalarda adlar artık üst üste binmiyor",
-      "Sitenin haritalarında nehir, yol ve sınır çizgileri ile ölçek; Claude'un Evreni'nde Şafak Yolu, Tanık Ayna zinciri, “10 birim ≈ 1,3 ışık günü”",
       "Sebir'in şehir planı: Aynacılar Loncası, ilk ayna, Sırep'in Sahnesi, şimdi odaları",
-      "İlişki ağı ve zaman çizelgesi: Claude'un Evreni'nde ve bütün fan evrenlerinde (yeni “Bağlar ve zaman” sekmesi)",
       "Canlı yolculuk: evren saatine göre karakter şu an nerede — Hıbır her gün yolda",
       "Yolculuğu Instagram hikâyesi kartı olarak paylaş",
       "Tömye karakterlerinin yolları da gün gün",
@@ -709,9 +701,7 @@
     "tarih": "2026-09-26",
     "maddeler": [
       "Günlük gezi: kişinin yolunu gün gün kur — şehirlerin adlarına sırayla dokun, her dokunuş ertesi gün; “aynı gün”, “bir gün daha kal”",
-      "“Gün gün izle”: kişi haritada gün gün ilerler; kaydırıcıyla istediğin güne git",
-      "Claude'un Evreni: yeni Yolculuklar sekmesi — karakterlerin gün gün yolları; haritada yer kartında “buradan geçenler”",
-      "Claude'un Evreni'ne yeni karakter: Hıbır, her gün başka şehre haber taşıyan ulak; Gırçık'ın altı günlük yolculuğu"
+      "“Gün gün izle”: kişi haritada gün gün ilerler; kaydırıcıyla istediğin güne git"
     ],
     "yeniler": []
   },
@@ -859,7 +849,6 @@
       "Telefonda altta sabit menü: Arşiv, Oku, Oyna, Fan ve bütün sayfaları, aramayı, gece modunu, ortam sesini tek yerde toplayan Menü",
       "Telefona uygulama olarak yüklenebilir; paylaşılan .tentifor.html dosyası doğrudan uygulamada açılır",
       "Yeni bölüm bildirimi: Roman bölümünden \"Yeni bölümde haber ver\"",
-      "Fan eserlerine kapak kartı; sitedeki fanmade eserlere tepki ve kenar notu; aramada fan eserleri ve Claude'un evreni",
       "Gece modunda üst başlık da koyulaşıyor; iPhone'da yazarken sayfa artık yakınlaşmıyor; çevrimdışı uyarısı",
       "Kurulmamış özelliklerde anlaşılır mesaj"
     ],
@@ -869,7 +858,6 @@
     "surum": "1.4.0",
     "tarih": "2026-09-26",
     "maddeler": [
-      "Claude'un evreni artık kendi sayfasında (üst menü → Claude'un Evreni)",
       "Yeni Fan sayfası: fan hikâyesi yaz, kendi evrenini kur — kurallarını, kişilerini, yerlerini ve kendi alanlarını sen tanımla",
       "Eserler telefona tek dosya olarak iner; dosya kendi başına okunur, siteye yüklenince de açılır",
       "Yazara gönderilen eserler sitede fanmade olarak yayımlanabilir"
@@ -894,7 +882,6 @@
     "surum": "1.2.0",
     "tarih": "2026-09-26",
     "maddeler": [
-      "Claude tarafından yapılan evren artık kendi sayfasında ve herkese açık (Dünya → Claude'un evreni)",
       "9 yeni fizik kuralı: ışığı geçmek, renk yürüyüşü, ışığın yorulması, ışık yelkenlileri, kırağı çizgisi, Kor'un hıçkırığı, an, şimdi adaları, geç düşen gölge",
       "6 yeni kişi: Unca, Yılkın, Sırep, Gulgı, Sebeh, Ene",
       "5 yeni hikâye, 2 yeni mektup, sözlük, alıntılar, sorular ve haritada iki yeni yer"
@@ -905,7 +892,6 @@
     "surum": "1.1.0",
     "tarih": "2026-09-26",
     "maddeler": [
-      "Yeni evren: Claude tarafından yapılan evren — ışığın yürüme hızında gittiği Şomdo",
       "16 evren maddesi, 8 karakter, 13 yerli harita, ilişki ağı",
       "3 kısa hikâye, 2 mektup, sözlük, alıntılar, yankılar, bilinmeyenler ve bulmacalar",
       "İkinci (sınırlı) yönetici kodu",

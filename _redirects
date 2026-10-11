@@ -18,8 +18,6 @@
 /proje/       /index.html   200
 /surumler     /index.html   200
 /surumler/    /index.html   200
-/claude       /index.html   200
-/claude/      /index.html   200
-/eterya       /index.html   200
-/eterya/      /index.html   200
 
+/claude*      /404.html   404
+/eterya*      /404.html   404
