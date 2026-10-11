@@ -31,6 +31,7 @@ const ILK = [
   "js/core/54-v54-olgunlastirma.js?v=bf95242e8efe",
   "js/core/100-v60-native.js?v=bf95242e8efe",
   "js/core/110-v62-platform.js?v=bf95242e8efe",
+  "js/core/120-mobil-ambiyans-uretim-aliskanlik.js?v=bf95242e8efe",
   "js/engine/101-v61-universe.js?v=612",
   "js/core/99-v50-mobil.js?v=bf95242e8efe",
   "js/arsiv/34b-model-evreni.js?v=bf95242e8efe",
