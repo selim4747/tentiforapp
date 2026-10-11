@@ -75,7 +75,7 @@ export function stripHiddenUniverseSections(html) {
 }
 
 export function copyPublicAsset(sourcePath, targetPath, relativePath) {
-  if (relativePath === 'veri.json' || relativePath === 'veri-degisiklik.json') {
+  if (relativePath === 'veri.json') {
     writePublicJson(sourcePath, targetPath);
     return;
   }
