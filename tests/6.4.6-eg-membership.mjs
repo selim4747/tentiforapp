@@ -7,6 +7,9 @@ const migration = read('supabase/migrations/20261012_646_evren_gezer_wallet.sql'
 const setup = read('supabase/kurulum.sql');
 const importer = read('supabase/functions/evren-gezer-eg-aktar/index.ts');
 
+const purchaseHandler = ui.match(/async function egPlanSatinAl\(buton, tip\) \{([\s\S]*?)\n  function planPencere/);
+assert.ok(purchaseHandler, 'satın alma handler’ı test edilebilmeli');
+assert.match(purchaseHandler[1], /typeof hesapKullanici === 'undefined' \|\| !hesapKullanici/, 'misafir, anon Supabase RPC çağrısı yapmamalı');
 assert.match(ui, /EvrenGezer · 250 EG \/ 30 gün/);
 assert.match(ui, /EvrenYazar · 750 EG \/ 30 gün/);
 assert.match(ui, /rpc\('evren_gezer_cuzdanim'\)/);
