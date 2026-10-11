@@ -1,0 +1,7 @@
+node_modules
+.git
+.apk-release-output
+uygulama/kabuk/android
+tests
+scripts
+server.js

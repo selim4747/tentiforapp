@@ -1,6 +1,6 @@
 /* TentiforApp servis çalışanı — sayfa ve veri önce ağdan (yavaşsa son kopya), sürümlü dosyalar önbellekten.
    Yeni bir sürüm yayınlanınca sayfalar kendiliğinden yenilenir; eski kopya yalnızca çevrimdışı ya da yavaş ağda kullanılır. */
-const ONBELLEK = "tentiforapp-61e0a5754e32";
+const ONBELLEK = "tentiforapp-bf95242e8efe";
 /* Hesap kütüphanesi burada yok: yalnızca hesabı kullanan indirir (ilk kullanımda önbelleğe girer). */
 const ILK = [
   "./",
@@ -9,34 +9,34 @@ const ILK = [
   "css/style.css?v=edb548e7b697",
   "veri.json",
   "veri-degisiklik.json?v=a1aad374ff",
-  "js/paket-1.js?v=61e0a5754e32",
-  "js/paket-2.js?v=61e0a5754e32",
-  "js/paket-3.js?v=61e0a5754e32",
-  "js/paket-4.js?v=61e0a5754e32",
+  "js/paket-1.js?v=bf95242e8efe",
+  "js/paket-2.js?v=bf95242e8efe",
+  "js/paket-3.js?v=bf95242e8efe",
+  "js/paket-4.js?v=bf95242e8efe",
   "manifest.webmanifest",
   "ikon/ikon-192.png",
   "yazitipi/karla-normal-400-latin.woff2",
-  "js/core/24-arsiv-mantigi.js?v=61e0a5754e32",
+  "js/core/24-arsiv-mantigi.js?v=bf95242e8efe",
   "js/arsiv/34b-model-evreni.js",
-  "js/engine/88-v46-yenilikler.js?v=61e0a5754e32",
-  "js/engine/92-v51-dashboard.js?v=61e0a5754e32",
-  "js/core/93-offline-queue.js?v=61e0a5754e32",
-  "js/core/94-cakisma.js?v=61e0a5754e32",
-  "js/engine/91-v473-uyelik.js?v=61e0a5754e32",
-  "js/engine/evren-harita-zaman-cizelgesi.js?v=61e0a5754e32",
-  "js/engine/seo-meta.js?v=61e0a5754e32",
-  "js/engine/free-universe-cleanup-6313.js?v=61e0a5754e32",
-  "js/engine/profile-sharing-6313.js?v=61e0a5754e32",
-  "js/engine/secure-sharing.js?v=61e0a5754e32",
-  "js/core/54-v54-olgunlastirma.js?v=61e0a5754e32",
-  "js/core/100-v60-native.js?v=61e0a5754e32",
-  "js/core/110-v62-platform.js?v=61e0a5754e32",
+  "js/engine/88-v46-yenilikler.js?v=bf95242e8efe",
+  "js/engine/92-v51-dashboard.js?v=bf95242e8efe",
+  "js/core/93-offline-queue.js?v=bf95242e8efe",
+  "js/core/94-cakisma.js?v=bf95242e8efe",
+  "js/engine/91-v473-uyelik.js?v=bf95242e8efe",
+  "js/engine/evren-harita-zaman-cizelgesi.js?v=bf95242e8efe",
+  "js/engine/seo-meta.js?v=bf95242e8efe",
+  "js/engine/free-universe-cleanup-6313.js?v=bf95242e8efe",
+  "js/engine/profile-sharing-6313.js?v=bf95242e8efe",
+  "js/engine/secure-sharing.js?v=bf95242e8efe",
+  "js/core/54-v54-olgunlastirma.js?v=bf95242e8efe",
+  "js/core/100-v60-native.js?v=bf95242e8efe",
+  "js/core/110-v62-platform.js?v=bf95242e8efe",
   "js/engine/101-v61-universe.js?v=612",
-  "js/core/99-v50-mobil.js?v=61e0a5754e32",
-  "js/arsiv/34b-model-evreni.js?v=61e0a5754e32",
+  "js/core/99-v50-mobil.js?v=bf95242e8efe",
+  "js/arsiv/34b-model-evreni.js?v=bf95242e8efe",
   "evrenler/fornek-eterya.json",
-  "css/terminal.css?v=61e0a5754e32",
-  "js/engine/tentifor-terminal.js?v=61e0a5754e32"
+  "css/terminal.css?v=bf95242e8efe",
+  "js/engine/tentifor-terminal.js?v=bf95242e8efe"
 ];
 
 self.addEventListener("message", function (e) {

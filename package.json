@@ -8,6 +8,7 @@
     "dev": "node server.js",
     "start": "node server.js",
     "build": "node scripts/paketle.mjs",
+    "deploy": "wrangler deploy",
     "paketle": "node scripts/paketle.mjs",
     "test": "node scripts/test.mjs",
     "test:live": "node tests/canli-ortam-simulasyonu.mjs",
