@@ -105,8 +105,8 @@ window.veri = {
     { id: 'ozan', ad: 'Ozan', unvan: 'Gezgin', ozet: 'Buzun altındaki yankıları arar.' }
   ],
   evren: [
-    { id: 'eterya', baslik: 'Eterya', bolum: 'Model Evreni', ozet: 'Kristalize enerji hatları.' },
-    { id: 'somdo', baslik: 'Şomdo', bolum: 'Claude Evreni', ozet: 'Kadim yankılar.' },
+    { id: 'legacy-universe', baslik: 'Eski arşiv içeriği', bolum: 'Model Evreni', ozet: 'Kristalize enerji hatları.' },
+    { id: 'somdo', baslik: 'Şomdo', bolum: 'Eski arşiv içeriği Evreni', ozet: 'Kadim yankılar.' },
     { id: 'e25', baslik: 'E-25 Tömye', bolum: 'Kanon', ozet: 'Ana Tömye evreni.' }
   ]
 };
@@ -179,10 +179,10 @@ out = run('alinti');
 assert.ok(out.length > 10, 'Alıntı komutu metin üretmeli');
 
 out = run('evren list');
-assert.ok(out.includes('Eterya') && out.includes('Şomdo'), 'Evren listesi listelenmeli');
+assert.ok(out.includes('Eski arşiv içeriği') && out.includes('Şomdo'), 'Evren listesi listelenmeli');
 
-out = run('evren bilgi eterya');
-assert.ok(out.includes('Eterya'), 'Evren detay bilgisi dönmeli');
+out = run('evren bilgi legacy-universe');
+assert.ok(out.includes('Eski arşiv içeriği'), 'Evren detay bilgisi dönmeli');
 
 out = run('karakter list');
 assert.ok(out.includes('Necale') && out.includes('Ozan'), 'Karakter listesi dönmeli');

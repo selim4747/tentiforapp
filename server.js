@@ -52,7 +52,6 @@ const server = http.createServer((req, res) => {
   // Parse URL
   const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let pathname = decodeURIComponent(reqUrl.pathname);
-  // Claude ve Eterya kaynakları depoda tutulur; yayın katmanında geçici olarak 404'tür.
   if (isHiddenUniversePath(pathname)) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end('Not Found');

@@ -23,11 +23,11 @@ new vm.Script('let veri = null;').runInContext(context);
 w.bolumErisimi = () => false;
 w.romanAcikMi = (b) => b.fiyat === 0;
 w.kanonSayfaErisimi = () => false;
-w.evrenSeciciListesi = () => ({ site: [{ad:'E25',git:'#/ev/site/e25',kilitli:!w.kanonSayfaErisimi()}], fan: [{ad:'Eterya',git:'#/ev/fan/fornek-eterya'}], benim:[], acilan:[] });
-w.fanBul = () => ({ id:'fornek-eterya',ad:'Eterya',ozet:'CANONICAL FAN SUMMARY' });
+w.evrenSeciciListesi = () => ({ site: [{ad:'E25',git:'#/ev/site/e25',kilitli:!w.kanonSayfaErisimi()}], fan: [{ad:'Eski arşiv içeriği',git:'#/ev/fan/legacy-universe'}], benim:[], acilan:[] });
+w.fanBul = () => ({ id:'legacy-universe',ad:'Eski arşiv içeriği',ozet:'CANONICAL FAN SUMMARY' });
 w.evrenGit = (route) => { w.__lastRoute = route; };
 w.aramaDizini = () => [
-  {tur:'Fan evren',ad:'Eterya',alt:'Fan',metin:'CANONICAL FAN SUMMARY',git:'#/ev/fan/fornek-eterya'},
+  {tur:'Fan evren',ad:'Eski arşiv içeriği',alt:'Fan',metin:'CANONICAL FAN SUMMARY',git:'#/ev/fan/legacy-universe'},
   {tur:'Bölüm',ad:'Gizli Bölüm',alt:'',metin:'LOCKED CHAPTER SECRET',git:'#/roman/42',i:1}
 ];
 new vm.Script(source).runInContext(context);
@@ -46,10 +46,10 @@ check(run('evren list').includes('(0)'), 'Veri hazır değilken sahte katalog ü
 check(w.veri === undefined, 'Fixture gerçek uygulama gibi window.veri tanımlamamalı');
 const fixture = { ...real, roman:{baslik:'FIXTURE ROMAN',giris:'REAL INTRO',bolumler:[{no:7,baslik:'Açık Bölüm',fiyat:0,metin:'OPEN CHAPTER TEXT'},{no:42,baslik:'Gizli Bölüm',fiyat:80,metin:'LOCKED CHAPTER SECRET'}]} };
 new vm.Script(`veri = ${JSON.stringify(fixture)};`).runInContext(context);
-check(run('evren list').includes('fornek-eterya'), 'Lexical veri hazır olunca canonical katalog okunmalı');
-check(run('evren bilgi eterya').includes('CANONICAL FAN SUMMARY'), 'Ad/alias ile gerçek fan özeti bulunmalı');
-run('evren git eterya');
-check(w.__lastRoute === '#/ev/fan/fornek-eterya', 'Fan rota katalogdan aynen alınmalı');
+check(run('evren list').includes('legacy-universe'), 'Lexical veri hazır olunca canonical katalog okunmalı');
+check(run('evren bilgi legacy-universe').includes('CANONICAL FAN SUMMARY'), 'Ad/alias ile gerçek fan özeti bulunmalı');
+run('evren git legacy-universe');
+check(w.__lastRoute === '#/ev/fan/legacy-universe', 'Fan rota katalogdan aynen alınmalı');
 run('evren git e25');
 check(w.__lastRoute === '#/ev/site/e25', 'E25 rota gerçek canonical site rotası olmalı');
 check(run('evren bilgi e25').includes('kilitli'), 'Kilitli kanon içeriği sızmamalı');
@@ -64,7 +64,7 @@ check(run('roman oku 1').includes('bulunamadı'), 'Dizi indeksine fallback ile y
 check(run('roman oku 7x').includes('Kullanım'), 'Geçersiz bölüm numarası sessizce parse edilmemeli');
 check(run('roman oku 42').includes('kilitli') && !run('roman oku 42').includes('LOCKED CHAPTER SECRET'), 'Bölüm kilidi metni korumalı');
 check(!run('roman son').includes('LOCKED CHAPTER SECRET'), 'Son bölüm önizlemesi kilidi bypass etmemeli');
-check(run('ara Eterya').includes('fornek-eterya'), 'Arama canonical dizini ve doğru rotayı kullanmalı');
+check(run('ara Eski arşiv içeriği').includes('legacy-universe'), 'Arama canonical dizini ve doğru rotayı kullanmalı');
 check(!run('ara SECRET').includes('Gizli Bölüm'), 'Kilitli bölüm gövdesi arama sonucuna sızmamalı');
 w.romanAcikMi = () => true;
 check(run('roman oku 42').includes('LOCKED CHAPTER SECRET'), 'Var olan erişim açıldığında bölüm okunmalı');

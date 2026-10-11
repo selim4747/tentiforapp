@@ -1,40 +1,6 @@
 (function () {
   'use strict';
 
-  function evrenGezinmeKur() {
-    if (typeof window.GEZINME !== 'undefined' && Array.isArray(window.GEZINME)) {
-      const varMi = window.GEZINME.some(g => g.id === 'eterya' || g.id === 'modelEvren');
-      if (!varMi) {
-        const claudeIdx = window.GEZINME.findIndex(g => g.id === 'claude');
-        const kayit = {
-          id: 'eterya',
-          ad: 'Eterya (Test)',
-          ikon: '✧',
-          bolumler: [['modelEvren', 'Eterya']]
-        };
-        if (claudeIdx >= 0) window.GEZINME.splice(claudeIdx + 1, 0, kayit);
-        else window.GEZINME.push(kayit);
-      }
-      if (typeof window.SAYFA_BASLIK !== 'undefined') {
-        window.SAYFA_BASLIK['eterya'] = 'Eterya: Yıldız Kırıkları (Test)';
-      }
-    }
-    if (typeof window.GEC_CIZILENLER !== 'undefined') {
-      window.GEC_CIZILENLER['modelEvren'] = 'modelEvrenCiz';
-    }
-    if (typeof cizildi !== 'undefined' && cizildi) delete cizildi.modelEvren;
-    if (typeof gezinmeCiz === 'function') {
-      try { gezinmeCiz(); } catch (e) {}
-    }
-  }
-
-  function eteryaSayfasiniAc() {
-    evrenGezinmeKur();
-    const hash = (location.hash || '').replace(/^#\/?/, '').split('/')[0];
-    if (hash !== 'eterya' && hash !== 'modelEvren') return;
-    if (typeof sayfaYonlendir === 'function') sayfaYonlendir();
-    if (typeof modelEvrenCiz === 'function') modelEvrenCiz();
-  }
 
   function senSayfasiAyarEkle() {
     const ayarAlani = document.querySelector('#ayar25Alan') || document.querySelector('#hesapAlan');
@@ -172,8 +138,6 @@
     if (!perde) return;
     const evrenler = [
       { id: 'tomye', ad: 'Tömye Evreni', kurallar: ['Gökyüzünde ay yoktur'] },
-      { id: 'eterya', ad: 'Eterya', kurallar: ['Eter kırıkları'] },
-      { id: 'claude', ad: "Claude'un Evreni", kurallar: ['Işık yürüme hızında'] },
       { id: 'e25', ad: 'E25 Evreni', kurallar: ['Sis ve boyut çatlağı'] }
     ];
     if (typeof window.fanEserlerim === 'function') {
@@ -204,16 +168,13 @@
   }
 
   function baslat() {
-    evrenGezinmeKur();
     supabaseYukOnleyici();
     v47IcEvrenYukle();
     v472IcSinirYukle();
     setInterval(senSayfasiAyarEkle, 500);
-    setTimeout(eteryaSayfasiniAc, 0);
     window.addEventListener('hashchange', () => {
-      evrenGezinmeKur();
+
       setTimeout(senSayfasiAyarEkle, 100);
-      setTimeout(eteryaSayfasiniAc, 50);
     });
   }
 
