@@ -26,7 +26,7 @@ try {
   process.exit(1);
 }
 const canonicalVersion = String(packageMeta.version || '');
-if (!/^\d+\.\d+\.\d+$/.test(canonicalVersion)) {
+if (!/^\d+\.\d+\.\d+(?:\.\d+)?$/.test(canonicalVersion)) {
   console.error('❌ package.json geçerli bir semver sürümü taşımıyor.');
   process.exit(1);
 }
@@ -284,3 +284,4 @@ console.log(`✓ ${routeCount} public SEO sayfası ve yalnızca açık rotaları
 console.log('✓ dist üretim dizini senkronize edildi (Cloudflare Pages uyumlu)');
 
 console.log('✨ Paketleme başarıyla tamamlandı.');
+process.exit(0);

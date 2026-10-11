@@ -1,6 +1,6 @@
 {
   "name": "tentiforapp",
-  "version": "6.3.16",
+  "version": "6.3.16.1",
   "description": "TentiFor — Tentiforverse Arşivi",
   "type": "module",
   "main": "server.js",
@@ -8,7 +8,7 @@
     "dev": "node server.js",
     "start": "node server.js",
     "build": "node scripts/paketle.mjs",
-    "deploy": "npx --yes wrangler deploy",
+    "deploy": "npx --yes wrangler pages deploy dist --project-name tentiforapp",
     "paketle": "node scripts/paketle.mjs",
     "test": "node scripts/test.mjs",
     "test:live": "node tests/canli-ortam-simulasyonu.mjs",

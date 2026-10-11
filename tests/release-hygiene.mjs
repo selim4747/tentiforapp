@@ -17,11 +17,16 @@ const androidVersionCode = Number(androidGradle.match(/versionCode\s+(\d+)/)?.[1
 const androidVersionName = androidGradle.match(/versionName\s+"([^"]+)"/)?.[1];
 const versionCompare = (left, right) => {
   const a = left.split('.').map(Number); const b = right.split('.').map(Number);
-  for (let i = 0; i < 3; i += 1) if (a[i] !== b[i]) return a[i] - b[i];
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i += 1) {
+    const na = a[i] ?? 0;
+    const nb = b[i] ?? 0;
+    if (na !== nb) return na - nb;
+  }
   return 0;
 };
 
-assert.match(pkg.version, /^\d+\.\d+\.\d+$/);
+assert.match(pkg.version, /^\d+\.\d+\.\d+(?:\.\d+)?$/);
 assert.equal(data.surum, pkg.version, 'veri.json package.json ile aynı sürümü taşımalı');
 assert.equal(manifest.version, pkg.version, 'manifest package.json ile aynı sürümü taşımalı');
 assert.ok(versionCompare(shellPkg.version, pkg.version) <= 0, 'Android kabuğu web sürümünden yeni olamaz; web-only releases APK’yi geride bırakabilir');
@@ -140,3 +145,4 @@ if (veriMeta.__parcalar?.degisiklik) {
 } else {
   console.log('Partition metadata: not configured; optional check skipped');
 }
+process.exit(0);

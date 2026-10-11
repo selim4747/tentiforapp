@@ -26,7 +26,7 @@ const dom = new JSDOM(`<!doctype html><html><body><div id="ana"></div></body></h
 
 const ctx = dom.window;
 ctx.veri = {
-  surum: "6.3.16",
+  surum: "6.3.16.1",
   kanonEvrenleri: {},
   haritalar: []
 };
