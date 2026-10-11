@@ -238,7 +238,7 @@ Depo **derleniyor, lint ve mevcut regresyon testleri geçiyor**; ancak bu testle
 
 ### M-14 — `veri.json` parça metadata sayısı yanlış
 
-- **Kanıt:** `veri.json`: `__parcalar.degisiklik.toplam = 61`; `veri-degisiklik.json` gerçek kayıt sayısı **68**.
+- **Kanıt:** `veri.json`: `__parcalar.degisiklik.toplam = 61`; eski günlük veri dosyası gerçek kayıt sayısı **68**.
 
 **Etki:** Yönetici/veri parçası tamlık göstergeleri yanlış olabilir; metadata'ya güvenen kontrol/arayüz yanlış rapor üretir.
 

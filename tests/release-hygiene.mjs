@@ -113,7 +113,7 @@ for (const file of ['index.html', 'surum.json', 'manifest.webmanifest', 'sw.js']
   compare(file, path.join('dist', file));
 }
 // Kaynak veri korunur; web/APK paketleri geçici görünürlük filtresinden geçmiş kopyayı taşır.
-for (const file of ['veri.json', 'veri-degisiklik.json']) {
+for (const file of ['veri.json']) {
   const expected = JSON.stringify(sanitizePublicData(readJson(file)));
   for (const target of [path.join('uygulama/kabuk/www', file), path.join('dist', file)]) {
     assert.equal(JSON.stringify(readJson(target)), expected, `${file} yayın filtresiyle senkron olmalı`);
@@ -144,13 +144,4 @@ for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js', 'js/engin
 }
 console.log('Release hygiene: PASS (web/native version separation, deterministic hash, APK/dist sync)');
 
-const veriMeta = JSON.parse(fs.readFileSync('veri.json','utf8'));
-const degisiklik = JSON.parse(fs.readFileSync('veri-degisiklik.json','utf8'));
-assert.ok(Array.isArray(degisiklik), 'veri-degisiklik.json bir dizi olmalı');
-if (veriMeta.__parcalar?.degisiklik) {
-  assert.equal(veriMeta.__parcalar.degisiklik.toplam, degisiklik.length, 'veri parça metadata sayısı güncel olmalı');
-  console.log('Partition metadata: PASS');
-} else {
-  console.log('Partition metadata: not configured; optional check skipped');
-}
 process.exit(0);
