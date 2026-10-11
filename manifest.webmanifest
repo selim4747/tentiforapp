@@ -1,7 +1,11 @@
 {
   "name": "TentiFor",
   "short_name": "TentiFor",
+<<<<<<< HEAD
+  "version": "6.4.0.0",
+=======
   "version": "6.3.17.0",
+>>>>>>> origin/main
   "description": "TentiFor: Tentiforverse arşivi, kişisel kütüphane, evrenler ve oyunlar.",
   "lang": "tr",
   "start_url": "./",

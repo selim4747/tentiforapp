@@ -401,7 +401,7 @@
         var paket = {
           olusturuldu: new Date().toISOString(),
           cihaz: 'TentiforApp Android Native',
-          surum: (typeof window.veri !== 'undefined' && window.veri && window.veri.surum) || '6.3.16.1',
+          surum: (typeof window.veri !== 'undefined' && window.veri && window.veri.surum) || '6.4.0.0',
           zenTaslak: localStorage.getItem('tentifor_zen_taslak') || '',
           bolunmusNot: localStorage.getItem('tf_bolunmus_hizli_not') || '',
           okumaIlerleme: localStorage.getItem('tentiforapp_v50_devam') || '',

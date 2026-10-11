@@ -50,7 +50,7 @@ if (veri.surum !== canonicalVersion) {
 syncTerminalRoutes(ROOT_DIR);
 const hashGirdileri = [
   'index.html', 'manifest.webmanifest', 'package.json', 'veri.json',
-  'veri-degisiklik.json', 'paylasim.png', 'favicon.ico', 'css', 'js', 'ikon', 'yazitipi', 'evrenler'
+  'paylasim.png', 'favicon.ico', 'css', 'js', 'ikon', 'yazitipi', 'evrenler'
 ];
 function hashGirdisi(relative) {
   const full = path.join(ROOT_DIR, relative);
@@ -151,7 +151,6 @@ if (fs.existsSync(path.dirname(wwwDir))) {
     'ikon',
     'yazitipi',
     'evrenler',
-    'veri-degisiklik.json'
   ];
 
   for (const oge of dosyalarVeDizinler) {
@@ -178,7 +177,6 @@ fs.mkdirSync(distDir, { recursive: true });
 const distDosyalarVeDizinler = [
   'index.html',
   'veri.json',
-  'veri-degisiklik.json',
   'surum.json',
   'manifest.webmanifest',
   'favicon.ico',
@@ -241,7 +239,6 @@ const appRoutes = [
   { path: '/testler/', title: 'Testler — TentiFor', description: 'TentiFor karakter ve kimlik testleri.' },
   { path: '/araclar/', title: 'Araçlar — TentiFor', description: 'TentiFor isim sistemi, yazılar ve araçlar.' },
   { path: '/proje/', title: 'Proje — TentiFor', description: 'TentiFor proje bilgileri, basın kiti ve moodboard.' },
-  { path: '/surumler/', title: 'Değişiklikler — TentiFor', description: 'TentiFor sürüm geçmişi ve değişiklik günlüğü.' },
 ];
 let publicSeoPages = [];
 if (process.env.TF_SEO_STATIC_ONLY !== '1') {

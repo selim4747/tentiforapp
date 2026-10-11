@@ -1,7 +1,7 @@
 /* 6.2.4 — EvrenGezer / EvrenYazar üyelik politikası */
 (function () {
   'use strict';
-  var SURUM = '6.3.16.1';
+  var SURUM = '6.4.0.0';
   var AYAR = 'tf4_uyelik_kullanimi';
   var PLAN = {
     ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 3, hikaye: 10, gezegen: 1, takim: 0 },
@@ -66,9 +66,10 @@
   function planEtiketi() { return plan() === 'ucretsiz' ? 'Ücretsiz' : PLAN[plan()].ad; }
   function ortakKullanimNotu() { return 'Ortak evrenler Supabase kimlik ve davet kontrolüyle, içerik ise GitHub private deposuyla korunur.'; }
   function planKartHtml() {
-    var p = plan(), aktif = p !== 'ucretsiz';
-    return '<div class="kutu-y pro-kart" data-uyelik-kart><b>' + (aktif ? planEtiketi() + ' üyesisin ✓' : 'Üyelik planları') + '</b>' +
-      '<p class="oyun-not">' + (p === 'evrenyazar' ? 'Sınırsız evren, Evrengezer, fan hikâyesi ve yerel takım paketi üyesi; tüm arayüz ve kod editörleri açık.' : p === 'evrengezer' ? '30 günde bir 5 evren, 12 Evrengezer, 42 fan hikâyesi; yerel co-op paketinde sahibi dahil en fazla 2 kişi ve evren başına 5 gezegen. Arayüz/görünüm/kod editörleri kapalı.' : '30 günde 1 evren, 3 EvrenGezer, 10 fan hikâyesi ve evren başına 1 ek gezegen; evrenle gelen başlangıç gezegeni bu limite dahil değildir. Kanon evrenleri gezme ve okuma ücretsiz.') + '</p>' +
+    var p = plan(), aktif = p !== 'ucretsiz', u = typeof TF4 !== 'undefined' && TF4.uyelik && TF4.uyelik.hediye, sonraki = u && u.sonraki_tip;
+    var hediye = u && u.aktif ? '<p class="tf-hediye-notu"><b>Yeni hesap hediyesi</b> · İlk 2 gün EvrenYazar açık' + (sonraki ? ', ardından 5 gün EvrenGezer otomatik başlayacak.' : '.') + '</p>' : '';
+    return '<div class="kutu-y pro-kart" data-uyelik-kart><b>' + (aktif ? planEtiketi() + ' üyesisin ✓' : 'Üyelik planları') + '</b>' + hediye +
+      '<p class="oyun-not">' + (p === 'evrenyazar' ? 'Sınırsız evren, Evrengezer, fan hikâyesi ve yerel takım paketi üyesi; tüm arayüz ve kod editörleri açık.' : p === 'evrengezer' ? '30 günde bir 5 evren, 12 EvrenGezer, 42 fan hikâyesi; yerel co-op paketinde sahibi dahil en fazla 2 kişi ve evren başına 5 gezegen. Arayüz/görünüm/kod editörleri kapalı.' : '30 günde 1 evren, 3 EvrenGezer, 10 fan hikâyesi ve evren başına 1 ek gezegen; evrenle gelen başlangıç gezegeni bu limite dahil değildir. Kanon evrenleri gezme ve okuma ücretsiz.') + '</p>' +
       '<div class="oyun-sira"><button type="button" class="dugme" data-uyelik-ac>Planları gör</button></div></div>';
   }
   function planPencere() {

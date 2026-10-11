@@ -98,6 +98,8 @@ const port = probe.address().port;
 await new Promise((resolve, reject) => probe.close((error) => error ? reject(error) : resolve()));
 fs.copyFileSync(path.join(root, 'server.js'), path.join(tempDir, 'server.js'));
 fs.copyFileSync(path.join(root, 'index.html'), path.join(tempDir, 'index.html'));
+fs.mkdirSync(path.join(tempDir, 'scripts'), { recursive: true });
+fs.copyFileSync(path.join(root, 'scripts', 'visibility.mjs'), path.join(tempDir, 'scripts', 'visibility.mjs'));
 fs.writeFileSync(path.join(tempDir, 'alimlar.json'), '{}');
 fs.writeFileSync(path.join(tempDir, 'package.json'), JSON.stringify({ type: 'module' }));
 const server = spawn(process.execPath, ['server.js'], { cwd: tempDir, env: { ...process.env, PORT: String(port) }, stdio: ['ignore', 'pipe', 'pipe'] });
