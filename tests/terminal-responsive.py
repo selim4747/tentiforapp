@@ -64,8 +64,8 @@ async def one(browser,engine,width,height):
   check('Çıktı alanı kullanılabilir yükseklikte',layout['output_height']>=40,layout['output_height'])
   for cmd,needle in [('yardim','TENTİFOR'),('takvim','Pzt Sal'),('isim çatlak','Gerdec'),('saat','Tömye'),('kyldo Tentifor','Kyldo'),('rotalar','#/okuma'),('admin durum','YETKİ'),('olmayan-komut','Komut bulunamadı')]:
    text=await command(cmd);check(f'Komut: {cmd}',needle.lower() in text.lower() and not re.search(r'(^|\n)Hata:',text),text[:300])
-  text=await command('evren list');check('Gerçek katalog: Eterya ve canonical id', 'Eterya' in text and 'fornek-eterya' in text,text[:800])
-  text=await command('evren bilgi eterya');check('Listelenen evrenin gerçek detayı bulunuyor','EVREN DETAYI' in text and 'bulunamadı' not in text,text[:800])
+  text=await command('evren list');check('Gerçek katalog: Eski arşiv içeriği ve canonical id', 'Eski arşiv içeriği' in text and 'legacy-universe' in text,text[:800])
+  text=await command('evren bilgi legacy-universe');check('Listelenen evrenin gerçek detayı bulunuyor','EVREN DETAYI' in text and 'bulunamadı' not in text,text[:800])
   text=await command('roman oku 1');allowed=await page.evaluate("bolumErisimi('roman')")
   check('Roman: gerçek veri veya doğru erişim kilidi','Roman kilitli' in text if not allowed else ('BÖLÜM 1' in text or 'kilitli' in text),text[:500])
   text=await command('karakter list');allowed=await page.evaluate("bolumErisimi('arsiv')")
@@ -108,8 +108,8 @@ async def one(browser,engine,width,height):
   await page.evaluate("location.hash='#/oyunlarr'");await page.locator('#term-404-giris').wait_for(state='visible')
   text=await command('kurtar','term-404');check('Yeni 404 adresinin doğru önerisi','#/oyunlar' in text)
   await page.evaluate("location.hash='#/arsiv'");await page.wait_for_timeout(120)
-  await page.locator('#btnTerminalUst').click();text=await command('evren git eterya');await page.wait_for_timeout(180)
-  route=await page.evaluate('rota()');check('Fan evrene gerçek rota ve panel ile gidiliyor',route=='#/ev/fan/fornek-eterya' and await page.locator('#evrenSayfa').count()>0,route)
+  await page.locator('#btnTerminalUst').click();text=await command('evren git legacy-universe');await page.wait_for_timeout(180)
+  route=await page.evaluate('rota()');check('Fan evrene gerçek rota ve panel ile gidiliyor',route=='#/ev/fan/legacy-universe' and await page.locator('#evrenSayfa').count()>0,route)
   check('Yakalanmamış JavaScript hatası yok',not row['page_errors'],row['page_errors'])
  except Exception as e:
   row['error']=str(e);check('Tüm adımlar tamamlandı',False,str(e))

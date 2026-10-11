@@ -38,6 +38,8 @@ const tests = [
   'tests/6.3.8-visual-universe.mjs',
   'tests/6.3.9-public-seo.mjs',
   'tests/6.3.10-secure-sharing.mjs',
+  'tests/6.4.2-universe-indexing.mjs',
+  'tests/6.4.3.0-ux-fixes.mjs',
   'tests/6.2-platform.mjs',
   'tests/termux-library.mjs',
   'tests/tentifor-terminal.mjs',

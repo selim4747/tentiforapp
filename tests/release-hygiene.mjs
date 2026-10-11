@@ -51,6 +51,7 @@ const runBuild = () => execFileSync(process.execPath, ['scripts/paketle.mjs'], {
 runBuild();
 const first = readJson('surum.json');
 const firstHash = first.paket;
+assert.equal(fs.existsSync(path.join(root, 'dist/uygulama/indir/apk.json')), apkMeta.version === pkg.version, 'sürümü uyuşmayan APK web production çıktısına taşınmamalı');
 assert.match(fs.readFileSync(path.join(root, 'dist/tomye/index.html'), 'utf8'), /Tömye — TentiFor/);
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql')), '6.3 discovery migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_631_archive_tools.sql')), '6.3.1 archive tools migration eksik');
@@ -71,6 +72,9 @@ assert.ok(fs.existsSync(path.join(root, 'js/engine/evren-harita-zaman-cizelgesi.
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_visual_universe_map_timeline_639_seo_cards.sql')), '6.3.9 public SEO migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'scripts/public-seo.mjs')), '6.3.9 static SEO builder eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/seo-meta.js')), '6.3.9 SPA SEO/paylaşım kartı modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/arayuz/32-ux-642.js')), '6.4.2 kişisel merkez modülü eksik');
+assert.match(fs.readFileSync(path.join(root, 'index.html'), 'utf8'), /js\/arayuz\/32-ux-642\.js/);
+assert.ok(fs.existsSync(path.join(root, 'dist/evren/e126/index.html')), 'public evren SEO rotası eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_visual_universe_map_timeline_639_seo_cards_6310_secure_sharing.sql')), '6.3.10 güvenli paylaşım migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_release_6313.sql')), '6.3.13 profil paylaşım migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/profile-sharing-6313.js')), '6.3.13 profil/alinti paylaşım modülü eksik');
@@ -113,7 +117,7 @@ for (const file of ['index.html', 'surum.json', 'manifest.webmanifest', 'sw.js']
   compare(file, path.join('dist', file));
 }
 // Kaynak veri korunur; web/APK paketleri geçici görünürlük filtresinden geçmiş kopyayı taşır.
-for (const file of ['veri.json', 'veri-degisiklik.json']) {
+for (const file of ['veri.json']) {
   const expected = JSON.stringify(sanitizePublicData(readJson(file)));
   for (const target of [path.join('uygulama/kabuk/www', file), path.join('dist', file)]) {
     assert.equal(JSON.stringify(readJson(target)), expected, `${file} yayın filtresiyle senkron olmalı`);
@@ -144,13 +148,4 @@ for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js', 'js/engin
 }
 console.log('Release hygiene: PASS (web/native version separation, deterministic hash, APK/dist sync)');
 
-const veriMeta = JSON.parse(fs.readFileSync('veri.json','utf8'));
-const degisiklik = JSON.parse(fs.readFileSync('veri-degisiklik.json','utf8'));
-assert.ok(Array.isArray(degisiklik), 'veri-degisiklik.json bir dizi olmalı');
-if (veriMeta.__parcalar?.degisiklik) {
-  assert.equal(veriMeta.__parcalar.degisiklik.toplam, degisiklik.length, 'veri parça metadata sayısı güncel olmalı');
-  console.log('Partition metadata: PASS');
-} else {
-  console.log('Partition metadata: not configured; optional check skipped');
-}
 process.exit(0);

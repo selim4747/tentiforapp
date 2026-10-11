@@ -592,7 +592,7 @@
       }
 
       case 'somdo': {
-        appendLine(container, 'ŞOMDO: Aynaların arkasındaki sessiz ve kadim Tentifor yankısı (Claude Model Evreni).', 'good');
+        appendLine(container, 'ŞOMDO: Aynaların arkasındaki sessiz ve kadim Tentifor yankısı (Eski arşiv içeriği Model Evreni).', 'good');
         break;
       }
 

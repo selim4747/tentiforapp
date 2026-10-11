@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "surum": "6.4.0.0",
-=======
-  "surum": "6.3.17.0",
->>>>>>> origin/main
+  "surum": "6.4.3.0",
   "guncelleme": "2026-10-01",
   "delilik": {
     "baslik": "Delilik",
@@ -4001,6 +3997,7 @@
     },
     {
       "tur": "sayi",
+      "soru": "Eski arşiv içeriği tarafından yapılan evrende bir gün kaç saattir?",
       "cevap": "40"
     },
     {
@@ -6747,13 +6744,6 @@
     "giris": "Arşivde beş ipucu saklı. Her birinin cevabı sitenin herkese açık bir yerinde duruyor. Beşini bulan, son soruyu görür; son soruyu ilk çözenler tabloya yazılır.",
     "ipuclari": [
       {
-        "ozet": "fb6c144bed58eb58dcebc9e618cee5482790b14948f704a160accd215d718f6a"
-      },
-      {
-        "soru": "Şomdo'da uzaklık zamanla ölçülür. Işığın bir saniyede aldığı, bir buçuk adımlık uzaklığın adı nedir?",
-        "ozet": "1629422d51209e0c01ceadcbc8042070b8ca2c814e0f9c3e3a10d650f007e2f4"
-      },
-      {
         "soru": "Aşağıdaki kelime Kyldo yazısıyla yazıldı. Oku.",
         "yer": "Araçlar → Kyldo yazısı",
         "git": "yazi",
@@ -7261,6 +7251,218 @@
   },
   "iletisim": "BlackstoneSelim@gmail.com",
   "fanEposta": "karatasselim340@gmail.com",
+  "legacyUniversei": {
+    "ad": "Eski arşiv içeriği",
+    "altBaslik": "Yapay zekâ tarafından yapılan test evreni",
+    "test": true,
+    "surum": "4.6.1",
+    "ozet": "Gökyüzünün cam gibi çatladığı ve kırıklardan saf eter ışığının döküldüğü bir dünya. Sözcükler ses telleriyle değil, parmak uçlarıyla havaya çizilen ışık glifleriyle söylenir; yerçekimi merkeze değil, en yakın eter kırığına doğrudur. Tentiforverse kanonuna dahil değildir; Eski arşiv içeriği tarafından yapılan evren gibi, Evren Kurucu\\x27nun tüm yeteneklerini (kurallar, harita, kişiler, ilişki ağı, hikâyeler, mektuplar, sözlük, sorular ve glif alfabesi) insanlara sergilemek amacıyla test evreni olarak hazırlanmıştır.",
+    "kurallar": [
+      {
+        "id": "me-kural-1",
+        "ad": "Eter Kırıkları",
+        "tur": "gökyüzü",
+        "aciklama": "Gökyüzündeki çatlaklardan mavi ve kehribar rengi saf eter ışığı dökülür. Kırığın altına giren nesneler hafifler, zihinler birbirinin düşünce titreşimini duymaya başlar."
+      },
+      {
+        "id": "me-kural-2",
+        "ad": "Çapraz Yerçekimi",
+        "tur": "fizik",
+        "aciklama": "Dağlar yeryüzüne dik değil, en parlak eter kırığına doğru eğik durur. Şehirler dev uçan kayaların ters ve eğik yüzeylerine kurulur."
+      },
+      {
+        "id": "me-kural-3",
+        "ad": "Işık Glifleri",
+        "tur": "dil",
+        "aciklama": "Ses telleri havadaki eteri titreştiremez. Canlılar parmak uçlarındaki ışık bezeleriyle havada saniyelerce asılı kalan parıldayan simgeler çizer."
+      },
+      {
+        "id": "me-kural-4",
+        "ad": "Rezonans Kristalleri",
+        "tur": "madde",
+        "aciklama": "Yere düşen eter damlaları katılaşarak kristale dönüşür. Bu kristaller kendisine fısıldanan veya çizilen glifleri bin yıl boyunca titreşerek saklar."
+      }
+    ],
+    "yerler": [
+      {
+        "id": "me-yer-1",
+        "ad": "Kristal Kule",
+        "tur": "Başkent",
+        "not": "İlk kırığın tam altına inşa edilen, ışık glifleriyle yönetilen başkent.",
+        "x": 38.5,
+        "y": 42
+      },
+      {
+        "id": "me-yer-2",
+        "ad": "Kırık Vadi",
+        "tur": "Bölge",
+        "not": "Yerçekiminin sıfırlandığı, dev kayaların havada süzüldüğü kadim vadi.",
+        "x": 62,
+        "y": 31
+      },
+      {
+        "id": "me-yer-3",
+        "ad": "Fısıltı Mağarası",
+        "tur": "Tapınak / Arşiv",
+        "not": "Rezonans kristallerinin doğal olarak filizlendiği kadim ses tapınağı.",
+        "x": 25,
+        "y": 68
+      },
+      {
+        "id": "me-yer-4",
+        "ad": "Cam Çölü",
+        "tur": "Çöl",
+        "not": "Eter damlalarının kuma dönüşerek ışıltılı dalgalar oluşturduğu ıssız sahra.",
+        "x": 75,
+        "y": 72
+      }
+    ],
+    "kisiler": [
+      {
+        "id": "vaelen",
+        "ad": "Vaelen",
+        "unvan": "Eter Çırağı",
+        "ozet": "Kırıkların fısıltısını duyan ve glifleri havaya dokumadan önce zihninde gören genç gezgin.",
+        "detay": "Kristal Kule\\x27nin alt katında büyüdü. Ustası Kael\\x27in büyük kırığa adım atmasından sonra onun izini sürmek için Fısıltı Mağarası\\x27na doğru tek başına yola çıktı."
+      },
+      {
+        "id": "seris",
+        "ad": "Seris",
+        "unvan": "Kırık Muhafızı",
+        "ozet": "Gökyüzü çatlaklarının daha fazla genişlemesini önlemek için rezonans kılıçlarıyla nöbet tutan savaşçı.",
+        "detay": "Gözleri eter ışığına doğrudan bakmaktan parıldayan bir maviye dönmüştür. Vaelen\\x27i korumakla görevlidir ancak onun gökyüzünü kapatmak yerine daha da açmak istediğinden şüphelenir."
+      },
+      {
+        "id": "kael",
+        "ad": "Kael",
+        "unvan": "Kayıp Glif Ustası",
+        "ozet": "Eski arşiv içeriği\\x27nın ilk yazılı sözlüğünü havaya kazıyan, gökyüzünün ötesine geçtiği söylenen kadim bilge.",
+        "detay": "On yıl önce en derin gökyüzü kırığına doğru adım attı. Geride yalnızca parıldayan bir günlük ve Vaelen\\x27e bıraktığı rezonans taşını bıraktı."
+      },
+      {
+        "id": "yuna",
+        "ad": "Yuna",
+        "unvan": "Kristal Kâşifi",
+        "ozet": "Cam Çölü\\x27ndeki rezonans kristallerini toplayıp haritalandıran cesur göçebe.",
+        "detay": "Kendi tasarladığı hafifleme kayığıyla çapraz yerçekimi akıntılarını kullanarak vadiler arasında hızla süzülebilir."
+      }
+    ],
+    "baglar": [
+      {
+        "a": "vaelen",
+        "b": "kael",
+        "etiket": "Öğrencisi & Ustası"
+      },
+      {
+        "a": "vaelen",
+        "b": "seris",
+        "etiket": "Yol arkadaşı & Muhafızı"
+      },
+      {
+        "a": "seris",
+        "b": "kael",
+        "etiket": "Eski Muhafız yoldaşı"
+      },
+      {
+        "a": "vaelen",
+        "b": "yuna",
+        "etiket": "Çöl rehberi & Müttefik"
+      }
+    ],
+    "hikayeler": [
+      {
+        "id": "me-hikaye-1",
+        "baslik": "İlk Kırığın Şarkısı",
+        "karakterler": [
+          "vaelen",
+          "seris"
+        ],
+        "metin": "Gece çöktüğünde gökyüzündeki çatlaklar kapanmaz; aksine koyulaşan karanlığın içinde kehribar çizgiler daha parlak görünürdü.\\n\\nVaelen parmağını havaya kaldırdı. Ucu hafifçe parıldayan işaret parmağıyla havaya kavisli bir glif çizdi. Simge birkaç saniye boyunca mavi bir ışık yayarak havada asılı kaldı. Seris kılıcının kabzasına dokunarak izledi: \\x27Glifi çok hızlı kapatıyorsun çocuk. Kırık seni dinlemeden önce havanın sakinleşmesini bekle.\\x27\\n\\nVaelen gülümsedi: \\x27Hava hiçbir zaman sakin değil ki muhafız. Gökyüzü nefes alıyor; sadece biz duymuyoruz.\\x27"
+      },
+      {
+        "id": "me-hikaye-2",
+        "baslik": "Havada Kalan Glif",
+        "karakterler": [
+          "kael",
+          "vaelen"
+        ],
+        "metin": "Kael\\x27in kütüphanesinde hiç kâğıt yoktu. Masalar, duvarlar ve tavanlar rezonans kristalleriyle döşenmişti. Bir kere çizilen ışık glifi, kristallerin hafızasında aylarca titreşirdi.\\n\\n\\x27Bir sözcük uçup gitmez,\\x27 demişti Kael o gün. \\x27Eski arşiv içeriği\\x27da söylediğin her şey göğe kazınır. Bu yüzden öfkeliyken havaya elini sürme.\\x27"
+      },
+      {
+        "id": "me-hikaye-3",
+        "baslik": "Cam Çölün Çağrısı",
+        "karakterler": [
+          "yuna",
+          "vaelen"
+        ],
+        "metin": "Cam Çölü\\x27nün kumları bildiğimiz taş tozu değildi; gökyüzünden damlayan eterin kristalleşmiş zerreleriydi. Yuna kayığını bir kırığın hizasına getirip yelkenini açtı. Yerçekimi yatay bir hatta çekmeye başladığında kayık kumların üzerinden sessizce süzülmeye başladı."
+      }
+    ],
+    "mektuplar": [
+      {
+        "id": "me-mektup-1",
+        "kimden": "Kael",
+        "kime": "Vaelen",
+        "not": "Kırığa adım atmadan önceki gece bırakılan kristal tablet.",
+        "metin": "Eğer bu tableti okuyorsan, ben gökyüzünün öbür tarafına geçmişim demektir. Korkma; gök yarılmadı, sadece uyandı. Sana bıraktığım rezonans taşını göğsünde taşı. Kırık Muhafızları kapıları mühürlemeye kalkarsa onlara söyle: Işık hapsedilemez."
+      },
+      {
+        "id": "me-mektup-2",
+        "kimden": "Seris",
+        "kime": "Muhafız Konseyi",
+        "not": "Kristal Kule raporu.",
+        "metin": "Vaelen\\x27in yeteneği düşündüğümüzden daha tehlikeli. Çizdiği glifler kırıkların frekansıyla doğrudan rezonansa giriyor. Onu durdurmak yerine kılavuzluk etmemiz şart; aksi halde Cam Çölü\\x27ndeki tüm çatlaklar aynı anda rezonans yapacak."
+      }
+    ],
+    "sozluk": [
+      {
+        "terim": "Eter",
+        "tanim": "Gökyüzü kırıklarından dökülen, yerçekimini ve maddeyi büken saf ışık enerjisi."
+      },
+      {
+        "terim": "Işık Glifi",
+        "tanim": "Eski arşiv içeriği halkının havada parmak uçlarıyla çizerek iletişim kurduğu ışıklı semboller alfabesi."
+      },
+      {
+        "terim": "Rezonans Kristali",
+        "tanim": "Eter damlalarının toprakta katılaşmasıyla oluşan, ses ve düşünce dalgalarını saklayan taşlar."
+      },
+      {
+        "terim": "Çapraz Yerçekimi",
+        "tanim": "Yerçekiminin gezegen tabanı yerine gökyüzündeki kırıklara doğru yön değiştirmesi doğa olayı."
+      },
+      {
+        "terim": "Kırık Muhafızı",
+        "tanim": "Gökyüzü yarıklarını koruyan ve dengesiz kırıkları rezonans kılıçlarıyla sabitleyen elit birlik."
+      }
+    ],
+    "sorular": [
+      {
+        "soru": "Gökyüzü kırılmadan önce Eski arşiv içeriği nasıl bir dünyaydı?",
+        "not": "Kadim efsanelerde insanların sesle konuştuğu bir altın çağdan bahsedilir ama hiçbir rezonans taşı o döneme ait ses saklamamıştır."
+      },
+      {
+        "soru": "Kael\\x27in geçtiği kırığın ötesinde ne var?",
+        "not": "Gözcüler kırığın arkasında başka dünyaların ışıklarının süzüldüğünü iddia eder."
+      }
+    ],
+    "roman": {
+      "baslik": "Kırıkların Gölgesinde",
+      "ozet": "Vaelen ve Seris\\x27in gökyüzü çatlaklarının kaynağına doğru çıktıkları tehlikeli yolculuk.",
+      "bolumler": [
+        {
+          "id": "bolum-1",
+          "baslik": "Çatlayan Gökyüzü",
+          "metin": "Gökyüzünün ilk kez ne zaman çatladığını kimse tam olarak hatırlamıyordu. Yaşlılar, göğün bir ayna gibi kırıldığını ve o günden sonra güneşin yerini eter ışığına bıraktığını anlatırdı. Vaelen içinse o gökyüzü hep oradaydı; mavi ve amber çizgileriyle nefes alan devasa bir kubbe.\\n\\nSabahın ilk ışıkları kırıklardan döküldüğünde, odasındaki eşyalar hafifçe havalandı. Çapraz yerçekiminin sabah dalgasıydı bu. Parmaklarını kemerine astığı rezonans taşına dokundurdu; taş hafifçe ısınmıştı."
+        },
+        {
+          "id": "bolum-2",
+          "baslik": "İlk Rezonans",
+          "metin": "Fısıltı Mağarası\\x27nın ağzında durduklarında içeriden gelen titreşim Seris\\x27in zırhındaki kılıcı titretiyordu. \\x27Buradan sonrası haritasız,\\x27 dedi Seris. \\x27Eski arşiv içeriği\\x27da haritalar yerinde durmaz, biliyorsun.\\x27\\n\\nVaelen havaya büyük bir üçgen glif çizdi. Simge parıldayarak mağaranın derinliklerine doğru süzüldü; kayalara çarpmadan yolu bir fener gibi aydınlattı. \\x27Artık haritamız var,\\x27 dedi fısıltıyla."
+        }
+      ]
+    }
+  },
   "yasal": {
     "mesafeli": "TentiFor MESAFELİ SATIŞ SÖZLEŞMESİ\n\n1. TARAFLAR\nİşbu sözleşme, TentiFor platformu üzerinden Yaratıcı Pro dijital abonelik hizmeti satın alan kullanıcı (\"Alıcı\") ile TentiFor platform işleticisi (\"Satıcı\") arasında 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği hükümleri uyarınca akdedilmiştir.\n\n2. SÖZLEŞMENİN KONUSU\nİşbu sözleşmenin konusu, Alıcı'nın platform üzerinden elektronik ortamda siparişini verdiği Yaratıcı Pro dijital içerik, sınırsız evren oluşturma ve öncelikli başvuru abonelik hizmetinin satışı, ifası ve bedelinin ödenmesine ilişkin hak ve yükümlülüklerin belirlenmesidir.\n\n3. HİZMET BEDELİ VE ÖDEME\nYaratıcı Pro abonelik bedeli aylık 249 TL olup KDV dahildir. Ödemeler lisanslı ödeme kuruluşu PayTR altyapısı üzerinden güvenli 3D Secure protokolü ile tahsil edilir. Kredi kartı ve banka kartı bilgileri Satıcı sunucularında kesinlikle saklanmaz.\n\n4. DİJİTAL İFA VE KULLANIM\nAbonelik ödemesi PayTR onayından geçtiği anda elektronik ortamda anında ifa edilir ve Alıcı'nın hesabına Yaratıcı Pro yetkileri tanımlanır. Kullanım süresi satın alma anından itibaren 30 (otuz) gündür.\n\n5. YÜRÜRLÜK\nAlıcı, ödeme adımından önce işbu sözleşmenin tüm koşullarını okuduğunu, anladığını ve elektronik ortamda onayladığını gayrikabili rücu kabul, beyan ve taahhüt eder.",
     "iade": "TentiFor İPTAL VE İADE KOŞULLARI\n\n1. CAYMA HAKKI VE İSTİSNALARI\n6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği'nin 15. maddesinin (ğ) bendi uyarınca; \"Elektronik ortamda anında ifa edilen hizmetler veya tüketiciye anında teslim edilen gayrimaddi mallara ilişkin sözleşmeler\" cayma hakkının istisnaları kapsamındadır.\n\n2. İADE PROSEDÜRÜ\nYaratıcı Pro aboneliği dijital ortamda derhal erişime açılan bir hizmet niteliğinde olduğundan, abonelik tanımlandıktan sonra kural olarak cayma hakkı ve ücret iadesi uygulanmaz. Ancak sistem kaynaklı mükerrer ödeme veya hizmetin teknik nedenlerle hiç sunulamaması hallerinde, Alıcı'nın yazılı başvurusu üzerine PayTR kanalıyla tam ücret iadesi gerçekleştirilir.\n\n3. ABONELİK İPTALİ VE YENİLEME\nKullanıcılar diledikleri zaman aboneliklerini yenilememe hakkına sahiptir. Mevcut 30 günlük dönemin sonuna kadar tüm Pro ayrıcalıkları kesintisiz devam eder; dönem bitiminde karttan otomatik veya izinsiz çekim yapılmaz.\n\n4. İLETİŞİM VE DESTEK\nİade ve fatura talepleriniz için platform destek kanalları veya kayıtlı e-posta adresimiz üzerinden bizimle 7/24 iletişime geçebilirsiniz.",

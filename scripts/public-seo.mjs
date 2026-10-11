@@ -36,9 +36,12 @@ export function approvedCanonicalUniversePages(rootDir, sourceData) {
   const seen = new Set();
   const pages = [];
   for (const entry of entries) {
-    if (!entry || entry.tur !== 'evren' || entry.kanon !== true) continue;
-    const id = cleanText(entry.id, 24).toLowerCase();
-    if (!/^e\d{1,6}$/.test(id) || seen.has(id)) continue;
+    // Yerel statik SEO fallback yalnızca açıkça yayınlanmış/kanonik kayıtları
+    // kabul eder. `test` veya yalnızca dosyanın mevcut olması public kabul
+    // edilmez; böylece örnek, taslak ve gizli evrenler indexlenmez.
+    if (!entry || entry.tur !== 'evren' || (entry.kanon !== true && entry.public_mu !== true && entry.yayinda !== true)) continue;
+    const id = safeWorldSlug(entry.id);
+    if (!id || seen.has(id)) continue;
     const relative = `evrenler/${id}.json`;
     if (entry.dosya !== relative) continue;
     const file = path.resolve(root, relative);
@@ -49,7 +52,7 @@ export function approvedCanonicalUniversePages(rootDir, sourceData) {
       realFile = fs.realpathSync(file);
       world = JSON.parse(fs.readFileSync(realFile, 'utf8'));
     } catch { continue; }
-    if (!realFile.startsWith(`${realRoot}${path.sep}`) || !world || world.tur !== 'evren' || String(world.id || '').toLowerCase() !== id) continue;
+    if (!realFile.startsWith(`${realRoot}${path.sep}`) || !world || world.tur !== 'evren' || safeWorldSlug(world.id) !== id) continue;
     const item = {
       tur: 'evren', slug: id,
       baslik: cleanText(world.ad || entry.ad || id.toUpperCase(), 120),

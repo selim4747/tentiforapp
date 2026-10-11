@@ -975,7 +975,7 @@
   <span class="term-vurgu">harita</span> [yerler|ara]          : Tömye kıtaları, şehirleri ve koordinatları.
   <span class="term-vurgu">anomali</span> / <span class="term-vurgu">delilik</span>         : Boyut çatlak stabilitesi ve delilik katsayısı.
   <span class="term-vurgu">kanon</span> [durum|evrenler]       : Kanon evren kilitleri ve yan boyut dengesi.
-  <span class="term-vurgu">somdo</span>                        : Claude tarafından tasarlanan Şomdo model evreni.
+  <span class="term-vurgu">somdo</span>                        : Eski arşiv içeriği tarafından tasarlanan Şomdo model evreni.
   <span class="term-vurgu">yankilar</span>                     : Evrenler arası yankı ve kırılma kayıtları.
 
 <span class="term-parlak">👥 Karakterler & Arşivciler:</span>
@@ -1173,7 +1173,7 @@ ${enIyi ? `En yakın olası rota: <span class="term-basari">#/${enIyi.id}</span>
             gorulen.add(e.git);
             let id = e.git.startsWith('harita:') ? e.git.slice(7) : e.git.split('/').filter(Boolean).pop();
             if (e.git === '#/arsiv') id = (v.haritalar || [])[0]?.id || 'tomye';
-            if (e.git === '#/claude') id = 'claude';
+            if (e.git === '#/legacy-universe') id = 'legacy-universe';
             kayitlar.push({ ...e, id, grup });
           }
         }
@@ -1663,7 +1663,7 @@ ${tumHikayeler.length ? tumHikayeler.map((h, i) => `<span class="term-vurgu">•
     komutKanon(ekran, altKomut) {
       const kanonlar = [
         { id: 'e25', ad: 'E-25 Tömye', tur: 'Ana Evren (Kanon)', durum: 'MUTLAK KORUMA' },
-        { id: 'eterya', ad: 'Eterya', tur: 'Model Evreni', durum: 'KORUMALI' },
+        { id: 'legacy-universe', ad: 'Eski arşiv içeriği', tur: 'Model Evreni', durum: 'KORUMALI' },
         { id: 'somdo', ad: 'Şomdo', tur: 'Kadim Yankı Evreni', durum: 'KORUMALI' },
         { id: 'kul', ad: 'Kül Evreni', tur: 'Gırılar Külliyatı', durum: 'KORUMALI' },
         { id: 'sis', ad: 'Sis Evreni', tur: 'Baloncuk Boyut', durum: 'ESNEK' }
@@ -1943,7 +1943,7 @@ Tentifor Kanon Anahtarı'dır. Gece nöbetlerinde feneriyle donmuş rafları tef
 
     komutSomdo(ekran) {
       this.yaz(ekran, `
-<span class="term-parlak">=== ŞOMDO — MODEL EVRENİ (Claude Katkısı) ===</span>
+<span class="term-parlak">=== ŞOMDO — MODEL EVRENİ (Eski arşiv içeriği Katkısı) ===</span>
 <span class="term-vurgu">Ad          :</span> Şomdo
 <span class="term-vurgu">Köken       :</span> Aynaların arkasındaki sessiz ve kadim Tentifor yankısı.
 <span class="term-vurgu">Kozmoloji   :</span> Işığın kırılmadığı, yalnızca donduğu derin boyut.
