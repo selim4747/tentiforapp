@@ -71,6 +71,9 @@ assert.ok(fs.existsSync(path.join(root, 'js/engine/evren-harita-zaman-cizelgesi.
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_visual_universe_map_timeline_639_seo_cards.sql')), '6.3.9 public SEO migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'scripts/public-seo.mjs')), '6.3.9 static SEO builder eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/seo-meta.js')), '6.3.9 SPA SEO/paylaşım kartı modülü eksik');
+assert.ok(fs.existsSync(path.join(root, 'js/arayuz/32-ux-642.js')), '6.4.2 kişisel merkez modülü eksik');
+assert.match(fs.readFileSync(path.join(root, 'index.html'), 'utf8'), /js\/arayuz\/32-ux-642\.js/);
+assert.ok(fs.existsSync(path.join(root, 'dist/evren/e126/index.html')), 'public evren SEO rotası eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_visual_universe_map_timeline_639_seo_cards_6310_secure_sharing.sql')), '6.3.10 güvenli paylaşım migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261005_release_6313.sql')), '6.3.13 profil paylaşım migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/profile-sharing-6313.js')), '6.3.13 profil/alinti paylaşım modülü eksik');
