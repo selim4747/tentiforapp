@@ -231,7 +231,18 @@ const staticSeoPages = [
   ...approvedCanonicalUniversePages(ROOT_DIR, veri)
 ];
 const appRoutes = [
-  { path: '/moderasyon/', title: 'Moderasyon — TentiFor', description: 'TentiFor moderasyon paneli. Erişim için moderatör kodu gerekir.' }
+  { path: '/sen/', title: 'Sen — TentiFor', description: 'TentiFor kullanıcı alanı, arşivci kartı, defter ve ayarlar.' },
+  { path: '/arsiv/', title: 'Ana sayfa — TentiFor', description: 'Tentiforverse arşiv ana sayfası ve karakterler.' },
+  { path: '/moderasyon/', title: 'Moderasyon — TentiFor', description: 'TentiFor moderasyon paneli. Erişim için moderatör kodu gerekir.' },
+  { path: '/baglar/', title: 'Bağlar — TentiFor', description: 'TentiFor bağlar, aile ağacı ve ilişki ağı.' },
+  { path: '/dunya/', title: 'Dünya — TentiFor', description: 'TentiFor dünya haritası ve zaman çizelgesi.' },
+  { path: '/belgeler/', title: 'Belgeler — TentiFor', description: 'TentiFor mektuplar, alıntılar ve belgeler.' },
+  { path: '/testler/', title: 'Testler — TentiFor', description: 'TentiFor karakter ve kimlik testleri.' },
+  { path: '/araclar/', title: 'Araçlar — TentiFor', description: 'TentiFor isim sistemi, yazılar ve araçlar.' },
+  { path: '/proje/', title: 'Proje — TentiFor', description: 'TentiFor proje bilgileri, basın kiti ve moodboard.' },
+  { path: '/surumler/', title: 'Değişiklikler — TentiFor', description: 'TentiFor sürüm geçmişi ve değişiklik günlüğü.' },
+  { path: '/claude/', title: 'Claude’un Evreni — TentiFor', description: 'Claude Şomdo evreni.' },
+  { path: '/eterya/', title: 'Eterya — TentiFor', description: 'Eterya test evreni.' }
 ];
 let publicSeoPages = [];
 if (process.env.TF_SEO_STATIC_ONLY !== '1') {
@@ -243,6 +254,23 @@ if (process.env.TF_SEO_STATIC_ONLY !== '1') {
   }
 }
 const routeCount = writeSeoRoutes({ indexHtml: seoIndex, distDir, items: publicSeoPages, staticPages: staticSeoPages, appRoutes });
+// Uygulama ve statik sayfaları kök dizin ve www ile senkronize et
+for (const route of [...staticSeoPages, ...appRoutes]) {
+  const rel = (route.path || '').replace(/^\/+|\/+$/g, '');
+  if (!rel) continue;
+  const distRoute = path.join(distDir, rel);
+  const rootRoute = path.join(ROOT_DIR, rel);
+  if (fs.existsSync(distRoute)) {
+    fs.cpSync(distRoute, rootRoute, { recursive: true });
+    if (fs.existsSync(wwwDir)) fs.cpSync(distRoute, path.join(wwwDir, rel), { recursive: true });
+  }
+  const distFlat = path.join(distDir, `${rel}.html`);
+  const rootFlat = path.join(ROOT_DIR, `${rel}.html`);
+  if (fs.existsSync(distFlat)) {
+    fs.copyFileSync(distFlat, rootFlat);
+    if (fs.existsSync(wwwDir)) fs.copyFileSync(distFlat, path.join(wwwDir, `${rel}.html`));
+  }
+}
 const seo404Content = renderSeoNotFound(seoIndex);
 fs.writeFileSync(path.join(distDir, '404.html'), seo404Content, 'utf8');
 fs.writeFileSync(path.join(ROOT_DIR, '404.html'), seo404Content, 'utf8');
