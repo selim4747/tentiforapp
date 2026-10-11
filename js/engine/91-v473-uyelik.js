@@ -126,7 +126,7 @@
   async function egPlanSatinAl(buton, tip) {
     var durum = document.querySelector('#uyelikDurum');
     var bakiyeDurum = document.querySelector('#egCuzdanDurum');
-    if (typeof hesapIstemci === 'undefined' || !hesapIstemci) {
+    if (typeof hesapIstemci === 'undefined' || !hesapIstemci || typeof hesapKullanici === 'undefined' || !hesapKullanici) {
       if (durum) durum.textContent = 'EG ile plan almak için hesabına giriş yap.';
       return;
     }
