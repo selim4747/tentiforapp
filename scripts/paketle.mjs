@@ -194,14 +194,32 @@ const distDosyalarVeDizinler = [
   'evrenler',
 ];
 
-// APK dağıtımı ve Android App Links de production çıktısına aittir.
+// Web-only release, sürümü farklı veya hash'i uyuşmayan eski APK'yı production
+// çıktısına taşımaz. Native artifact ancak aynı canonical sürüm ve metadata
+// doğrulaması birlikte sağlanırsa dağıtılır; aksi halde web build güvenle devam eder.
+const apkDir = path.join(ROOT_DIR, 'uygulama', 'indir');
+let nativeApkReady = false;
+try {
+  const apkMeta = JSON.parse(fs.readFileSync(path.join(apkDir, 'apk.json'), 'utf8'));
+  const apkPath = path.join(apkDir, 'tentiforapp.apk');
+  const apkHash = crypto.createHash('sha256').update(fs.readFileSync(apkPath)).digest('hex');
+  nativeApkReady = apkMeta.version === canonicalVersion
+    && Number(apkMeta.sizeBytes) === fs.statSync(apkPath).size
+    && apkMeta.sha256 === apkHash;
+} catch {}
+if (nativeApkReady) {
+  const kaynak = path.join(ROOT_DIR, 'uygulama/indir');
+  fs.cpSync(kaynak, path.join(distDir, 'uygulama/indir'), { recursive: true });
+  console.log('✓ Sürüm uyumlu APK ve metadata dist içine kopyalandı');
+} else {
+  console.log('⚠ Web-only build: sürümü/hash’i uyuşmayan APK dist içine kopyalanmadı');
+}
 // Native/Termux kaynak kodu ve bundled www production web çıktısına taşınmaz.
-for (const oge of ['uygulama/indir', 'uygulama/ac', '.well-known']) {
+for (const oge of ['uygulama/ac', '.well-known']) {
   const kaynak = path.join(ROOT_DIR, oge);
   const hedef = path.join(distDir, oge);
   if (fs.existsSync(kaynak)) fs.cpSync(kaynak, hedef, { recursive: true });
 }
-console.log('✓ APK, APK metadatası ve Android App Links dist içine kopyalandı');
 
 for (const oge of distDosyalarVeDizinler) {
   const kaynak = path.join(ROOT_DIR, oge);

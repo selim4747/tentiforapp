@@ -1,4 +1,4 @@
-/* TentiFor 6.4.2 — kişisel merkez ve keşif araçları. Yerel, geri alınabilir UX katmanı. */
+/* TentiFor 6.4.2.1 — kişisel merkez ve keşif araçları. Yerel, geri alınabilir UX katmanı. */
 (function () {
   'use strict';
 
@@ -17,9 +17,31 @@
   var panel;
   var searchIndex = null;
 
+  function normalizeState(raw) {
+    raw = raw && typeof raw === 'object' ? raw : {};
+    var result = Object.assign({}, defaults);
+    result.fontScale = Number.isFinite(Number(raw.fontScale)) ? Math.max(.9, Math.min(1.3, Number(raw.fontScale))) : 1;
+    result.contrast = raw.contrast === true;
+    result.reduceMotion = raw.reduceMotion === true;
+    result.dyslexia = raw.dyslexia === true;
+    result.readingTheme = raw.readingTheme === 'sepya' ? 'sepya' : 'normal';
+    result.collection = Array.isArray(raw.collection) ? raw.collection.filter(function (item) {
+      return item && typeof item === 'object' && typeof item.route === 'string' && typeof item.title === 'string';
+    }).map(function (item) {
+      return { route: text(item.route, 240), title: text(item.title, 120), savedAt: text(item.savedAt, 40) };
+    }).filter(function (item) { return item.route && item.title; }).slice(0, 30) : [];
+    result.resume = raw.resume && typeof raw.resume === 'object' && typeof raw.resume.route === 'string' ? {
+      route: text(raw.resume.route, 240), title: text(raw.resume.title, 120), savedAt: text(raw.resume.savedAt, 40)
+    } : null;
+    if (!result.resume || !result.resume.route) result.resume = null;
+    result.daily = raw.daily && typeof raw.daily === 'object' && raw.daily.item && typeof raw.daily.item === 'object' ? {
+      day: text(raw.daily.day, 12), item: { kind: text(raw.daily.item.kind, 40), title: text(raw.daily.item.title, 120), description: text(raw.daily.item.description, 180), route: text(raw.daily.item.route, 240) }
+    } : null;
+    return result;
+  }
   function load() {
-    try { return Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || '{}')); }
-    catch (e) { return Object.assign({}, defaults); }
+    try { return normalizeState(JSON.parse(localStorage.getItem(KEY) || '{}')); }
+    catch (e) { return normalizeState({}); }
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
@@ -29,9 +51,17 @@
     return item && item.tur === 'evren' && /^[\p{L}\p{N}][\p{L}\p{N}-]{2,59}$/u.test(id) ? '/evren/' + encodeURIComponent(id) + '/' : null;
   }
   function makeIndex() {
-    if (searchIndex) return searchIndex;
+    if (searchIndex && searchIndex.length) return searchIndex;
     var out = [];
     var data = window.veri || {};
+    function addList(list, kind, route, titleOf, descriptionOf) {
+      (Array.isArray(list) ? list : []).forEach(function (item) {
+        if (!item || typeof item !== 'object' || item.gizli || item.kilitli || item.kodSifreli) return;
+        var title = text(titleOf(item), 100);
+        if (!title) return;
+        out.push({ kind: kind, title: title, description: text(descriptionOf(item), 180), route: route(item) });
+      });
+    }
     var worlds = (data.fanEserleri && data.fanEserleri.evrenler) || [];
     worlds.forEach(function (item) {
       var route = routeFor(item);
@@ -42,6 +72,14 @@
       var route = routeFor({ tur: 'evren', id: id });
       if (route && !out.some(function (x) { return x.route === route; })) out.push({ kind: 'Kanon evren', title: text(item.ad || id, 100), description: text(item.ozet, 180), route: route });
     });
+    addList(data.karakterler, 'Karakter', function () { return '#/arsiv'; }, function (item) { return item.ad || item.id; }, function (item) { return [item.unvan, item.ozet].filter(Boolean).join(' · '); });
+    addList(data.evren, 'İçerik', function () { return '#/okuma'; }, function (item) { return item.baslik || item.id; }, function (item) { return item.ozet || item.metin; });
+    addList(data.mektuplar, 'Belge', function () { return '#/belgeler'; }, function (item) { return [item.kimden, item.kime].filter(Boolean).join(' → ') || item.id; }, function (item) { return item.not || item.metin; });
+    addList(data.galeri, 'Oyun/görsel', function () { return '#/oyunlar'; }, function (item) { return item.baslik || item.id; }, function (item) { return item.aciklama; });
+    addList(data.yapimlar, 'Yapım', function () { return '#/proje'; }, function (item) { return item.ad; }, function (item) { return [item.tur, item.not].filter(Boolean).join(' · '); });
+    addList(data.sozluk, 'Sözlük', function () { return '#/araclar'; }, function (item) { return item.terim; }, function (item) { return item.tanim; });
+    addList(data.profiller, 'Public profil', function () { return '#/sen'; }, function (item) { return item.ad || item.id; }, function (item) { return item.selamlama; });
+    addList(data.yazarNotlari, 'Yazar notu', function () { return '#/proje'; }, function (item) { return item.baslik; }, function (item) { return item.metin; });
     searchIndex = out;
     return out;
   }
@@ -100,7 +138,7 @@
       '<button class="dugme dugme-sade" data-tf642-reading="sepya">' + (state.readingTheme === 'sepya' ? 'Normal zemin' : 'Sepya zemin') + '</button>' +
       '</div></section>' +
       '<section class="tf642-card"><h3>Koleksiyonum</h3><p class="tf642-muted">Favori rotalarını cihazında tut.</p><div class="tf642-collection">' + (collection.length ? collection.map(function (x) { return '<a class="tf642-result" href="' + esc(x.route) + '"><strong>' + esc(x.title) + '</strong><small>' + esc(x.route) + '</small></a>'; }).join('') : '<p class="tf642-muted">Henüz kayıt yok.</p>') + '</div><button class="dugme dugme-sade" data-tf642-save-current>Bu sayfayı koleksiyona ekle</button></section>' +
-      '<section class="tf642-card tf642-actions"><button class="dugme dugme-sade" data-tf642-share>Bağlantıyı kopyala</button><a class="dugme dugme-sade" href="mailto:destek@tentifor.com?subject=TentiFor%206.4.2%20hata%20bildirimi">Hata bildir</a><span class="tf642-muted">Sürüm 6.4.2.0</span></section>';
+      '<section class="tf642-card tf642-actions"><button class="dugme dugme-sade" data-tf642-share>Bağlantıyı kopyala</button><a class="dugme dugme-sade" href="mailto:destek@tentifor.com?subject=TentiFor%206.4.2.1%20hata%20bildirimi">Hata bildir</a><span class="tf642-muted">Sürüm 6.4.2.1</span></section>';
     panel.querySelector('[data-tf642-search]').addEventListener('input', function (e) { renderSearch(e.target.value); });
     panel.querySelectorAll('[data-tf642-font]').forEach(function (button) { button.addEventListener('click', function () { state.fontScale = Math.max(.9, Math.min(1.3, state.fontScale + (button.dataset.tf642Font === '+' ? .1 : -.1))); save(); applyPrefs(); renderPanel(); }); });
     panel.querySelectorAll('[data-tf642-toggle]').forEach(function (button) { button.addEventListener('click', function () { var key = button.dataset.tf642Toggle; state[key] = !state[key]; save(); applyPrefs(); renderPanel(); }); });
@@ -115,7 +153,7 @@
     button.className = 'tf642-trigger'; button.type = 'button'; button.textContent = 'Kişisel merkez'; button.setAttribute('aria-label', 'Kişisel merkez ve erişilebilirlik araçlarını aç');
     var host = document.querySelector('.ust') || document.body; host.appendChild(button);
     panel = document.createElement('aside'); panel.className = 'tf642-panel'; panel.hidden = true; panel.dataset.tf642Panel = 'true'; panel.setAttribute('aria-label', 'Kişisel merkez');
-    panel.innerHTML = '<div class="tf642-head"><div><span class="etiket">6.4.2</span><h2>Kişisel merkez</h2></div><button class="pencere-kapat" type="button" data-tf642-close aria-label="Kapat">×</button></div><div data-tf642-body></div>';
+    panel.innerHTML = '<div class="tf642-head"><div><span class="etiket">6.4.2.1</span><h2>Kişisel merkez</h2></div><button class="pencere-kapat" type="button" data-tf642-close aria-label="Kapat">×</button></div><div data-tf642-body></div>';
     document.body.appendChild(panel);
     button.addEventListener('click', openPanel); panel.querySelector('[data-tf642-close]').addEventListener('click', closePanel);
     panel.addEventListener('click', function (e) { if (e.target === panel) closePanel(); });
@@ -125,5 +163,5 @@
     setResume();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
-  window.tf642 = { open: openPanel, close: closePanel, resetSearch: function () { searchIndex = null; }, version: '6.4.2.0' };
+  window.tf642 = { open: openPanel, close: closePanel, resetSearch: function () { searchIndex = null; }, version: '6.4.2.1' };
 }());

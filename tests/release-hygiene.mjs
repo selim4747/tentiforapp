@@ -51,6 +51,7 @@ const runBuild = () => execFileSync(process.execPath, ['scripts/paketle.mjs'], {
 runBuild();
 const first = readJson('surum.json');
 const firstHash = first.paket;
+assert.equal(fs.existsSync(path.join(root, 'dist/uygulama/indir/apk.json')), apkMeta.version === pkg.version, 'sürümü uyuşmayan APK web production çıktısına taşınmamalı');
 assert.match(fs.readFileSync(path.join(root, 'dist/tomye/index.html'), 'utf8'), /Tömye — TentiFor/);
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql')), '6.3 discovery migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_631_archive_tools.sql')), '6.3.1 archive tools migration eksik');
