@@ -41,4 +41,4 @@ assert.match(searchFor('Ada'), /Karakter sonucu/);
 assert.match(searchFor('Belge sonucu'), /Belge/);
 assert.match(searchFor('Sözlük terimi'), /Sözlük/);
 assert.match(searchFor('Public profil'), /Public profil/);
-console.log('6.4.3.0 UX fixes: PASS (malformed local state and expanded content search)');
+console.log('6.4.4.0 UX fixes: PASS (malformed local state and expanded content search)');
