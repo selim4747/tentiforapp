@@ -16,6 +16,7 @@ const tests = [
   'tests/offline-yavas.mjs',
   'tests/kullanici-simulasyonu.mjs',
   'tests/release-hygiene.mjs',
+  'tests/6.4.3-retired-universe-removal.mjs',
   'tests/offline-queue.mjs',
   'tests/cakisma.mjs',
   'tests/ortak-evren.mjs',
