@@ -95,11 +95,32 @@ TentiforApp APK’sını yalnızca web sitesini açan bir kabuk olmaktan çıkar
 | Öncelik | Paket | Gerekçe |
 |---|---|---|
 | P0 | Dosya açma, paylaşım hedefi, bildirim aksiyonları | Mevcut dosya ve bildirim altyapısını doğrudan güçlendirir |
+| P0 | İnternetsiz yerel hatırlatıcı & etkileşimli bildirimler | Çevrimdışı okuma ve alışkanlık zincirini korur |
+| P0 | Web'de kapalı, APK'ye özel araçlar (Daktilo, Diff, Hızlı Okuma) | APK'yı web'den ayıran ayrıcalıklı deneyim |
+| P1 | Bölünmüş ekran zekası & yerel klasör senkronizasyonu | Tablet, foldables ve dosya güvenliği için mobil güç |
 | P1 | Widget, uygulama kısayolları, biyometrik kilit | APK’nin web sitesinden farkını görünür kılar |
 | P1 | Yedekleme ve cihaz taşıma | Kullanıcının yerel evrenlerini korur |
 | P2 | Arka plan sesli okuma ve medya kontrolleri | Uzun okuma deneyimini mobil uygulamaya dönüştürür |
 | P2 | QR, NFC ve yakın paylaşım | Evren paylaşımını kolaylaştırır |
 | P3 | Sensör oyunları ve gelişmiş günlük sistem | Deneysel, tematik mobil özellikler |
+
+## 6.3.16.x Sıradaki ve Uygulanan APK Özel Maddeler
+
+1. **İnternetsiz Yerel Hatırlatıcı**:
+   - Cihaz üzerinde yerel alarm/zamanlayıcı (`LocalNotifications`).
+   - İnternet gerektirmeyen günlük okuma saati, kelime hatırlatıcısı ve streak uyarısı.
+2. **Etkileşimli Bildirim Aksiyonları**:
+   - Bildirim üzerinden tek tıkla aksiyonlar (`HEMEN_OKU`, `ERTELE_1S`, `TAMAMLA`).
+   - Uygulama arka plandayken bildirim butonuyla yanıtlayabilme.
+3. **Bölünmüş Ekran Zekası (Split-Screen / Foldables)**:
+   - Android çoklu pencere veya katlanabilir telefon tespit edildiğinde çift bölmeli (dual-pane) çalışma düzeni.
+4. **Yerel Klasör Senkronizasyonu**:
+   - Cihazın yerel depolama alanı (`/Documents/Tentifor/`) ile otomatik taslak, evren ve yedek dosya senkronizasyonu.
+5. **Web'de Kapalı, Yalnızca APK'de Çalışan 3 Araç**:
+   - **Zen Daktilo Modu**: Web Audio mekanik tuş sesleri, Haptics titreşim geri bildirimi, dikkat dağıtmayan tam ekran yazım alanı, yerel anlık kaydetme. (Web'de erişilemez).
+   - **Evren & Taslak Karşılaştırma (Diff) Aracı**: İki yerel evren veya taslak sürümünü yan yana satır satır diff karşılaştırma. (Web'de erişilemez).
+   - **Biyonik & Hızlı Okuma Laboratuvarı**: RSVP tek kelime akışı (200-800 WPM) ve Bionic Reading harf vurgulama. (Web'de erişilemez).
+
 
 ## Teknik sınır
 
