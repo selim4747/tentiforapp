@@ -41,6 +41,8 @@ const tests = [
   'tests/6.3.10-secure-sharing.mjs',
   'tests/6.4.2-universe-indexing.mjs',
   'tests/6.4.3.0-ux-fixes.mjs',
+  'tests/6.4.4-ux.mjs',
+  'tests/6.4.4-ux-runtime.mjs',
   'tests/6.2-platform.mjs',
   'tests/termux-library.mjs',
   'tests/tentifor-terminal.mjs',
