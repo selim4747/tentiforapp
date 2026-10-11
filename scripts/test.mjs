@@ -11,6 +11,7 @@ const tests = [
   'tests/5.3.4-layout-notifications.mjs',
   'tests/5.3.4-gifting.mjs',
   'tests/5.4.0-store.mjs',
+  'tests/6.4.6-eg-membership.mjs',
   'tests/alimlar-ecka-kontrol.mjs',
   'tests/5.4-complete.mjs',
   'tests/offline-yavas.mjs',

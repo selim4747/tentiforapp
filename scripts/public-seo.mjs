@@ -219,8 +219,8 @@ export function renderSeoNotFound(indexHtml) {
   html = replaceMeta(html, 'name', 'description', 'Bu TentiFor sayfası yayında olmayabilir veya adresi değişmiş olabilir.');
   html = replaceMeta(html, 'property', 'og:title', 'Sayfa bulunamadı — TentiFor');
   html = replaceMeta(html, 'property', 'og:description', 'Bu içerik yayında olmayabilir veya adresi değişmiş olabilir.');
-  html = html.replace(/<main\b(?=[^>]*\bid=["']tepe["'])[^>]*>/i, (tag) => tag.replace(/\s+hidden\b/i, '').replace(/\s+data-seo-route-background\b/i, '').replace(/>$/, ' hidden data-seo-route-background>'));
-  return html.replace(/<body([^>]*)>/i, '<body$1 data-seo-not-found><article class="tf639-seo-fallback"><span class="tf639-seo-kind">TentiFor</span><h1>Sayfa bulunamadı</h1><p>Bu içerik yayında olmayabilir veya adres değişmiş olabilir.</p><p><a href="/">TentiFor ana sayfasına dön</a></p></article>');
+  const fallback = '<body data-seo-not-found><article class="tf639-seo-fallback"><span class="tf639-seo-kind">TentiFor</span><h1>Sayfa bulunamadı</h1><p>Bu içerik yayında olmayabilir veya adresi değişmiş olabilir.</p><p><a href="/">TentiFor ana sayfasına dön</a></p></article></body>';
+  return html.replace(/<body\b[^>]*>[\s\S]*?<\/body>/i, fallback);
 }
 
 export function buildSitemap(items, staticPaths = ['/', '/tomye/', '/fan/', '/oyunlar/', '/atolye/', '/okuma/', '/evren/e25/', '/evren/e99/']) {

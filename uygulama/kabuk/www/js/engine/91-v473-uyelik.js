@@ -1,13 +1,15 @@
 /* 6.2.4 — EvrenGezer / EvrenYazar üyelik politikası */
 (function () {
   'use strict';
-  var SURUM = '6.4.5.0';
+  var SURUM = '6.4.6.0';
   var AYAR = 'tf4_uyelik_kullanimi';
   var PLAN = {
     ucretsiz: { ad: 'Ücretsiz', evren: 1, gezgin: 3, hikaye: 10, gezegen: 1, takim: 0 },
     evrengezer: { ad: 'EvrenGezer', evren: 5, gezgin: 12, hikaye: 42, gezegen: 5, takim: 2 },
     evrenyazar: { ad: 'EvrenYazar', evren: Infinity, gezgin: Infinity, hikaye: Infinity, gezegen: Infinity, takim: Infinity }
   };
+  var PLAN_EG_BEDELI = { evrengezer: 250, evrenyazar: 750 };
+  var satinAlmaIstekleri = {};
   function plan() {
     var t = typeof TF4 !== 'undefined' && TF4.uyelik && TF4.uyelik.tip;
     t = String(t || 'ucretsiz').toLocaleLowerCase('tr');
@@ -72,6 +74,117 @@
       '<p class="oyun-not">' + (p === 'evrenyazar' ? 'Sınırsız evren, Evrengezer, fan hikâyesi ve yerel takım paketi üyesi; tüm arayüz ve kod editörleri açık.' : p === 'evrengezer' ? '30 günde bir 5 evren, 12 EvrenGezer, 42 fan hikâyesi; yerel co-op paketinde sahibi dahil en fazla 2 kişi ve evren başına 5 gezegen. Arayüz/görünüm/kod editörleri kapalı.' : '30 günde 1 evren, 3 EvrenGezer, 10 fan hikâyesi ve evren başına 1 ek gezegen; evrenle gelen başlangıç gezegeni bu limite dahil değildir. Kanon evrenleri gezme ve okuma ücretsiz.') + '</p>' +
       '<div class="oyun-sira"><button type="button" class="dugme" data-uyelik-ac>Planları gör</button></div></div>';
   }
+  function egIstekId(tip) {
+    var kullanici = typeof hesapKullanici !== 'undefined' && hesapKullanici && hesapKullanici.id || 'hesap-yok';
+    var anahtar = 'tf4-eg-satin-alma-' + kullanici + '-' + tip;
+    if (satinAlmaIstekleri[anahtar]) return satinAlmaIstekleri[anahtar];
+    try { satinAlmaIstekleri[anahtar] = sessionStorage.getItem(anahtar) || ''; } catch (_) {}
+    if (satinAlmaIstekleri[anahtar]) return satinAlmaIstekleri[anahtar];
+    var cryptoApi = window.crypto;
+    if (!cryptoApi || !cryptoApi.getRandomValues) return '';
+    var bytes = new Uint8Array(16);
+    cryptoApi.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
+    var hex = Array.from(bytes, function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    satinAlmaIstekleri[anahtar] = hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20);
+    try { sessionStorage.setItem(anahtar, satinAlmaIstekleri[anahtar]); } catch (_) {}
+    return satinAlmaIstekleri[anahtar];
+  }
+  function egCuzdanYukle() {
+    var durum = document.querySelector('#egCuzdanDurum');
+    if (!durum) return;
+    if (typeof hesapIstemci === 'undefined' || !hesapIstemci || typeof hesapKullanici === 'undefined' || !hesapKullanici) {
+      durum.textContent = 'EG cüzdanını görmek ve plan almak için hesabına giriş yap.';
+      return;
+    }
+    durum.textContent = 'Bulutta kayıtlı eski EG bakiyesi bir defa güvenli cüzdana aktarılıyor…';
+    hesapIstemci.functions.invoke('evren-gezer-eg-aktar').then(function (aktarim) {
+      if (aktarim && aktarim.error) throw new Error('aktarim_hatasi');
+      var aktarimSonucu = aktarim && aktarim.data || {};
+      if (aktarimSonucu.durum === 'senkron_bekleniyor') {
+        var senkronHatasi = new Error('senkron_bekleniyor');
+        senkronHatasi.kod = 'senkron_bekleniyor';
+        throw senkronHatasi;
+      }
+      if (aktarimSonucu.durum !== 'aktarildi' && aktarimSonucu.durum !== 'zaten_aktarildi') throw new Error('aktarim_hatasi');
+      return hesapIstemci.rpc('evren_gezer_cuzdanim');
+    }).then(function (r) {
+      if (!r) return;
+      if (r && r.error) throw r.error;
+      var sonuc = r && r.data || {};
+      if (sonuc.durum === 'giris') { durum.textContent = 'Plan almak için hesabına giriş yap.'; return; }
+      if (sonuc.durum !== 'tamam') throw new Error('EG bakiyesi alınamadı.');
+      durum.dataset.bakiye = String(Number(sonuc.bakiye) || 0);
+      durum.textContent = 'Sunucu bakiyesi: ' + (Number(sonuc.bakiye) || 0) + ' EG';
+    }).catch(function (hata) {
+      durum.textContent = hata && hata.kod === 'senkron_bekleniyor'
+        ? 'Eski EG bakiyen bulutta bulunamadı. Önce hesabını eşitle; sonra plan penceresini yeniden aç.'
+        : 'Eski EG aktarımı ya da güvenli cüzdan okunamadı. Supabase 6.4.6 kurulumu ve evren-gezer-eg-aktar Edge Function’ı hazır olunca tekrar dene.';
+    });
+  }
+  async function egPlanSatinAl(buton, tip) {
+    var durum = document.querySelector('#uyelikDurum');
+    var bakiyeDurum = document.querySelector('#egCuzdanDurum');
+    if (typeof hesapIstemci === 'undefined' || !hesapIstemci) {
+      if (durum) durum.textContent = 'EG ile plan almak için hesabına giriş yap.';
+      return;
+    }
+    var istekId = egIstekId(tip);
+    if (!istekId) {
+      if (durum) durum.textContent = 'Güvenli satın alma isteği oluşturulamadı; bu tarayıcıda kriptografik rastgelelik desteklenmiyor.';
+      return;
+    }
+    buton.disabled = true;
+    if (durum) durum.textContent = 'Satın alma sunucuda güvenli biçimde doğrulanıyor…';
+    try {
+      var r = await hesapIstemci.rpc('evren_gezer_plan_satin_al', { p_plan: tip, p_istek_id: istekId });
+      if (r && r.error) throw r.error;
+      var sonuc = r && r.data || {};
+      var mesaj = {
+        giris: 'Plan almak için hesabına giriş yap.',
+        gecersiz: 'Geçersiz plan veya satın alma isteği.',
+        bakiye_yetersiz: 'Yetersiz EG bakiyesi. Gerekli: ' + (sonuc.gerekli || PLAN_EG_BEDELI[tip]) + ' EG · mevcut: ' + (sonuc.bakiye || 0) + ' EG.',
+        dusurme_yok: 'Aktif EvrenYazar planı EvrenGezer planına düşürülemez; bakiyenden EG alınmadı.',
+        zaten_aktif: 'EvrenYazar erişimin zaten etkin; bakiyenden EG alınmadı.',
+        istek_cakismasi: 'Satın alma isteği kimliği daha önce farklı bir işlemde kullanılmış; yeniden dene.'
+      }[sonuc.durum];
+      if (sonuc.durum !== 'tamam') {
+        if (durum) durum.textContent = mesaj || 'Satın alma tamamlanamadı; bakiyenden EG alınmadı.';
+        try {
+          var kullanici = typeof hesapKullanici !== 'undefined' && hesapKullanici && hesapKullanici.id || 'hesap-yok';
+          sessionStorage.removeItem('tf4-eg-satin-alma-' + kullanici + '-' + tip);
+        } catch (_) {}
+        delete satinAlmaIstekleri['tf4-eg-satin-alma-' + (typeof hesapKullanici !== 'undefined' && hesapKullanici && hesapKullanici.id || 'hesap-yok') + '-' + tip];
+        return;
+      }
+      try {
+        var kullaniciId = typeof hesapKullanici !== 'undefined' && hesapKullanici && hesapKullanici.id || 'hesap-yok';
+        sessionStorage.removeItem('tf4-eg-satin-alma-' + kullaniciId + '-' + tip);
+      } catch (_) {}
+      delete satinAlmaIstekleri['tf4-eg-satin-alma-' + (typeof hesapKullanici !== 'undefined' && hesapKullanici && hesapKullanici.id || 'hesap-yok') + '-' + tip];
+      if (bakiyeDurum) { bakiyeDurum.dataset.bakiye = String(sonuc.bakiye); bakiyeDurum.textContent = 'Sunucu bakiyesi: ' + sonuc.bakiye + ' EG'; }
+      if (durum) durum.textContent = (sonuc.plan === 'evrenyazar' ? 'EvrenYazar' : 'EvrenGezer') + ' planın etkinleştirildi: 30 gün · bitiş ' + new Date(sonuc.bitis).toLocaleDateString('tr-TR') + '. Kalan: ' + sonuc.bakiye + ' EG.';
+      try {
+        if (typeof TF4 !== 'undefined' && TF4) {
+          TF4.uyelik = TF4.uyelik || {};
+          TF4.uyelik.tip = sonuc.plan;
+          TF4.uyelik.bitis = sonuc.bitis;
+          TF4.uyelik.baslangic = new Date().toISOString();
+        }
+        document.dispatchEvent(new Event('tf4-uyelik'));
+      } catch (_) {}
+      hesapIstemci.rpc('abonelik_durumum').then(function (guncel) {
+        if (!guncel || guncel.error || !guncel.data || typeof TF4 === 'undefined' || !TF4) return;
+        TF4.uyelik = Object.assign({}, TF4.uyelik || {}, guncel.data);
+        document.dispatchEvent(new Event('tf4-uyelik'));
+      }).catch(function () {});
+    } catch (hata) {
+      if (durum) durum.textContent = 'Satın alma yanıtı alınamadı. Güvenli tekrar denemede aynı işlem kimliği kullanılır; destek için oturum durumunu kontrol et.';
+    } finally {
+      buton.disabled = false;
+    }
+  }
   function planPencere() {
     var p = plan();
     var rozet = function (id) { return p === id ? '<span class="plan-aktif">Şu an sende</span>' : ''; };
@@ -81,16 +194,16 @@
       '<div class="pro-katmanlar plan-karsilastirma">' +
       '<div class="pro-katman ' + (p === 'ucretsiz' ? 'plan-secili' : '') + '"><b>Ücretsiz</b>' + rozet('ucretsiz') +
         '<ul><li>1 evren taslağı</li><li>Evren başına 1 ek gezegen (evrenle gelen başlangıç gezegeni sayılmaz)</li><li>Kanon evrenleri gezme ve okuma</li><li>Temel arşiv, oyun ve hikâye deneyimi</li><li>Ortak evren başlatma ve davet sistemi kapalı</li><li>Evren düzenleyicisi ve gelişmiş editörler kapalı</li></ul></div>' +
-      '<div class="pro-katman ' + (p === 'evrengezer' ? 'plan-secili' : '') + '"><b>EvrenGezer</b>' + rozet('evrengezer') +
+      '<div class="pro-katman ' + (p === 'evrengezer' ? 'plan-secili' : '') + '"><b>EvrenGezer · 250 EG / 30 gün</b>' + rozet('evrengezer') +
         '<p><strong>Ayda 5 evren · 12 Evrengezer · 42 fan hikâyesi</strong></p>' +
         '<ul><li>Co-op evren: sahibi dahil en fazla 2 kişi</li><li>GitHub private evreninde ortak çalışma; sahip dahil en fazla 2 kişi</li><li>Her evrende en fazla 5 gezegen</li><li>Yalnızca 1 baloncuk evren</li><li>Çoklu ve iç içe evren kullanılamaz</li><li>Arayüz, görünüm ve kod editörleri kapalı</li><li>Gezme, okuma ve kendi evrenlerini temel düzeyde oluşturma</li></ul>' +
-        '<button type="button" class="dugme dugme-sade" data-uyelik-ode="evrengezer" disabled>Yakında</button></div>' +
-      '<div class="pro-katman pro-one ' + (p === 'evrenyazar' ? 'plan-secili' : '') + '"><b>EvrenYazar · 249 TL / ay</b>' + rozet('evrenyazar') +
+        '<button type="button" class="dugme dugme-sade" data-uyelik-ode="evrengezer">250 EG ile 30 gün al</button></div>' +
+      '<div class="pro-katman pro-one ' + (p === 'evrenyazar' ? 'plan-secili' : '') + '"><b>EvrenYazar · 750 EG / 30 gün</b>' + rozet('evrenyazar') +
         '<ul><li>Evren, Evrengezer, fan hikâyesi ve takım üyesi sınırı yok</li><li>GitHub private evreninde sınırsız ortak çalışma</li><li>Gezegen, baloncuk, çoklu ve iç içe evren sınırı yok</li><li>Arayüz, görünüm ve kod editörleri açık</li><li>Tam evren özelleştirme ve gelişmiş üretim araçları</li></ul>' +
-        '<button type="button" class="dugme" data-uyelik-ode="evrenyazar" disabled>Yakında</button></div>' +
-      '</div><p class="oyun-not">Yönetici, kullanıcı adını kullanarak EvrenGezer veya EvrenYazar planını ücretsiz hediye edebilir.</p><p class="pencere-durum" id="uyelikDurum" role="status"></p></div>';
+        '<button type="button" class="dugme" data-uyelik-ode="evrenyazar">750 EG ile 30 gün al</button></div>' +
+      '</div><p class="oyun-not">Gerçek parayla EG yüklemesi ayrı bir entegrasyondur ve şu an bu satın alma akışında tahsilat yapılmaz. Yönetici, kullanıcı adını kullanarak planı ücretsiz hediye edebilir.</p><p id="egCuzdanDurum" class="oyun-not" role="status">Güvenli sunucu EG bakiyesi yükleniyor…</p><p class="pencere-durum" id="uyelikDurum" role="status"></p></div>';
   }
-  function ac() { var e = document.querySelector('#perde'); if (!e) return; e.innerHTML = planPencere(); e.hidden = false; }
+  function ac() { var e = document.querySelector('#perde'); if (!e) return; e.innerHTML = planPencere(); e.hidden = false; egCuzdanYukle(); }
   function editorKapali() { return sinirliPlan(); }
   function engelle(n) {
     if (!editorKapali()) return false;
@@ -112,12 +225,7 @@
     var u = e.target.closest && e.target.closest('[data-uyelik-ac], [data-pro-ac]');
     if (u) { e.preventDefault(); ac(); return; }
     var o = e.target.closest && e.target.closest('[data-uyelik-ode]');
-    if (o) {
-      e.preventDefault();
-      var d = document.querySelector('#uyelikDurum');
-      if (d) d.textContent = 'Ödeme yakında. Bu plan henüz satın alınamıyor.';
-      return;
-    }
+    if (o) { e.preventDefault(); egPlanSatinAl(o, o.getAttribute('data-uyelik-ode')); return; }
     var h = e.target.closest && e.target.closest('[data-pro-ver]');
     if (h && h.closest('.mod-yonetici')) { e.preventDefault(); e.stopImmediatePropagation(); var kutu = h.closest('.mod-yonetici'); var tip = (kutu.querySelector('[data-uyelik-tip]') || {}).value || 'evrengezer'; var kadi = String((kutu.querySelector('#proKadi') || {}).value || '').trim(); var gun = Math.max(1, Math.min(3650, Number((kutu.querySelector('#proGun') || {}).value) || 30)); var d = kutu.querySelector('#modKodDurum'); var yazDurum = function (metin, iyi) { if (d) { d.className = 'pencere-durum ' + (iyi ? 'iyi' : 'kotu'); d.textContent = metin; } }; if (!kadi) { yazDurum('Hediye edilecek kullanıcı adını yaz.', false); return; } if (typeof hesapIstemci === 'undefined' || !hesapIstemci) { yazDurum('Hesap bağlantısı hazır değil; yönetici hesabınla giriş yapıp tekrar dene.', false); return; } h.disabled = true; yazDurum('@' + kadi + ' için yönetici yetkisi kontrol ediliyor…', true); Promise.resolve().then(function () { return hesapIstemci.rpc('tam_yonetici_mi'); }).then(function (yetki) { if (yetki && yetki.error) throw yetki.error; if (!yetki || yetki.data !== true) { throw new Error('Bu oturum Supabase’de tam yönetici olarak tanınmıyor. Çıkış yapıp yönetici hesabıyla yeniden giriş yapın.'); } yazDurum('@' + kadi + ' için hediye kontrol ediliyor…', true); return hesapIstemci.rpc('abonelik_hediye', { p_kullanici_adi: kadi, p_tip: tip, p_gun: gun }); }).then(function (r) { var sonuc = r && r.data || {}; if (r && r.error) { var er = r.error; yazDurum('Hediye verilemedi: ' + (er.message || 'Supabase RPC hatası') + (er.code ? ' [' + er.code + ']' : '') + (er.details ? ' · ' + er.details : ''), false); return; } var mesaj = { yok: 'Bu kullanıcı adıyla kayıtlı hesap bulunamadı.', yetki: 'Bu işlem için tam yönetici yetkisi gerekli.', baslik_yok: 'Plan bilgisi eksik.', gecersiz: 'Geçersiz hediye bilgisi.', dusurme_yok: 'EvrenYazar planı EvrenGezer’e düşürülemez.' }[sonuc.durum]; if (sonuc.durum === 'tamam') { var tarih = sonuc.bitis ? new Date(sonuc.bitis).toLocaleDateString('tr-TR') : ''; yazDurum('@' + kadi + ' hesabına ' + (sonuc.tip === 'evrenyazar' ? 'EvrenYazar' : 'EvrenGezer') + ' başarıyla hediye edildi' + (tarih ? ' · bitiş: ' + tarih : '') + '.', true); } else yazDurum('Hediye verilemedi: ' + (mesaj || sonuc.durum || 'bilinmeyen hata'), false); }).catch(function (x) { yazDurum('Hediye isteği başarısız: ' + (x && x.message || x || 'ağ hatası'), false); }).finally(function () { h.disabled = false; }); }
   }, true);
