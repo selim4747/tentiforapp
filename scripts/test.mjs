@@ -13,7 +13,6 @@ const tests = [
   'tests/5.4.0-store.mjs',
   'tests/alimlar-ecka-kontrol.mjs',
   'tests/5.4-complete.mjs',
-  'tests/5.4-complete.mjs',
   'tests/offline-yavas.mjs',
   'tests/kullanici-simulasyonu.mjs',
   'tests/release-hygiene.mjs',
