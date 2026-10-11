@@ -243,7 +243,12 @@ if (process.env.TF_SEO_STATIC_ONLY !== '1') {
   }
 }
 const routeCount = writeSeoRoutes({ indexHtml: seoIndex, distDir, items: publicSeoPages, staticPages: staticSeoPages, appRoutes });
-fs.writeFileSync(path.join(distDir, '404.html'), renderSeoNotFound(seoIndex), 'utf8');
+const seo404Content = renderSeoNotFound(seoIndex);
+fs.writeFileSync(path.join(distDir, '404.html'), seo404Content, 'utf8');
+fs.writeFileSync(path.join(ROOT_DIR, '404.html'), seo404Content, 'utf8');
+if (fs.existsSync(wwwDir)) {
+  fs.writeFileSync(path.join(wwwDir, '404.html'), seo404Content, 'utf8');
+}
 if (fs.existsSync(path.join(distDir, 'sitemap.xml'))) {
   fs.copyFileSync(path.join(distDir, 'sitemap.xml'), path.join(ROOT_DIR, 'sitemap.xml'));
 }
