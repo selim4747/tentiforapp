@@ -191,8 +191,13 @@
     return true;
   }
   function unhideApp() {
-    var main = document.querySelector('main#tepe[data-seo-route-background]');
-    if (main) main.hidden = false;
+    var main = document.querySelector('main#tepe');
+    if (main) {
+      main.hidden = false;
+      main.removeAttribute('data-seo-route-background');
+    }
+    if (document.body) document.body.removeAttribute('data-seo-not-found');
+    document.querySelectorAll('.tf639-seo-fallback').forEach(function (el) { el.remove(); });
   }
   async function handleRoute() {
     if (cardMaintenanceObserver) { cardMaintenanceObserver.disconnect(); cardMaintenanceObserver = null; }
