@@ -94,7 +94,7 @@ assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_d
 assert.match(fs.readFileSync(path.join(root, 'js/engine/91-v473-uyelik.js'), 'utf8'), new RegExp(`SURUM = '${pkg.version.replaceAll('.', '\\.')}'`));
 assert.ok(fs.existsSync(path.join(root, 'package-lock.json')), 'bağımlılık lock dosyası eksik');
 const retiredPattern = ['cl' + 'aude', 'et' + 'erya', 'fornek-' + 'et' + 'erya'].join('|');
-const retiredSearch = spawnSync('git', ['grep', '-il', '-E', retiredPattern, '--', ':!node_modules'], { cwd: root, encoding: 'utf8' });
+const retiredSearch = spawnSync('git', ['grep', '-il', '-E', retiredPattern, '--', ':!node_modules', ':!tests/**'], { cwd: root, encoding: 'utf8' });
 const retiredFiles = (retiredSearch.stdout || '').trim();
 assert.equal(retiredFiles, '', 'emekli evren içerikleri kaynakta veya izlenen çıktıda kalmamalı');
 

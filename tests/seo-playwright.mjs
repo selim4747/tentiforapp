@@ -128,6 +128,9 @@ try {
   const missing = await page.goto(`${origin}/private-draft-not-published/`, { waitUntil: 'domcontentloaded' });
   assert.equal(missing.status(), 404);
   assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'), 'noindex, follow');
+  assert.equal(await page.locator('body').getAttribute('data-seo-not-found'), '');
+  assert.equal(await page.locator('#tepe').count(), 0, '404 çıktısı ana uygulama gövdesini taşımamalı');
+  assert.equal(await page.locator('.tf639-seo-fallback').isVisible(), true, '404 fallback kullanıcıya görünür olmalı');
   assert.match(await page.locator('h1').first().textContent(), /Sayfa bulunamadı/);
   await context.close();
   console.log('Playwright SEO/share smoke: PASS (JS-off crawler metadata, E126 direct/legacy routes, noindex moderation app shell, no persistent 404, SPA canonical, PNG card, share, mobile width, noindex 404)');

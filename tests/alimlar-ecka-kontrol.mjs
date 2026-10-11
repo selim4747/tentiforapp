@@ -27,9 +27,12 @@ assert.doesNotMatch(clientCode, /Satış Geliri|Alımlar & Gelir|Son Alımlar Ge
 assert.doesNotMatch(romanCode, /alimKaydet/, 'roman alımı sunucuya kaydedilmemeli');
 assert.doesNotMatch(galleryCode, /alimKaydet/, 'galeri alımı sunucuya kaydedilmemeli');
 assert.doesNotMatch(packerCode, /alimlar\.json/, 'eski alım geçmişi web/Android paketlerine eklenmemeli');
-assert.match(planCode, /EvrenYazar · 249 TL \/ ay/, 'premium planın TL fiyatı korunmalı');
-assert.match(planCode, /data-uyelik-ode="evrenyazar" disabled/, 'ödeme entegrasyonu olmadığı için premium düğmesi mevcut disabled/Yakında durumunda kalmalı');
-console.log('PASS Alım API/gelir paneli kaldırıldı; premium planın gerçek para fiyatı ve mevcut ödeme durumu korundu.');
+assert.match(planCode, /EvrenGezer · 250 EG \/ 30 gün/, 'EvrenGezer planı 250 EG/30 gün olmalı');
+assert.match(planCode, /EvrenYazar · 750 EG \/ 30 gün/, 'EvrenYazar planı 750 EG/30 gün olmalı');
+assert.match(planCode, /evren_gezer_plan_satin_al/, 'plan ödemesi sunucu RPC’si ile yapılmalı');
+assert.doesNotMatch(planCode, /data-uyelik-ode="evrenyazar" disabled/, 'EG planı satın alma düğmesi etkin olmalı');
+assert.match(planCode, /Gerçek parayla EG yüklemesi ayrı bir entegrasyondur/, 'gerçek-para tahsilatı EG plan satın alımından ayrı kalmalı');
+console.log('PASS Eçka yerel cüzdanı ayrıdır; 250/750 EG planları güvenli sunucu RPC’sini kullanır.');
 
 // Tarayıcı ortamında gerçek uygulama cüzdanı işlevlerini taklit et: satın alma yalnızca kilit açıp cihaz bakiyesini düşürür.
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://example.test/', runScripts: 'outside-only' });
