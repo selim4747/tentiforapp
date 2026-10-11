@@ -11,7 +11,10 @@ const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const gradle = fs.readFileSync('uygulama/kabuk/android/app/build.gradle', 'utf8');
 const nativeWrapper = fs.readFileSync('js/admin/74-yonetim-kurulum.js', 'utf8');
 const androidPackage = JSON.parse(fs.readFileSync('uygulama/kabuk/package.json', 'utf8'));
-const apkMeta = JSON.parse(fs.readFileSync('uygulama/indir/apk.json', 'utf8'));
+const apkMetaPath = 'uygulama/indir/apk.json';
+const apkMeta = fs.existsSync(apkMetaPath)
+  ? JSON.parse(fs.readFileSync(apkMetaPath, 'utf8'))
+  : { version: androidPackage.version, versionCode: Number(gradle.match(/versionCode\s+(\d+)/)?.[1]) };
 
 for (const table of ['paylasim_baglantilari', 'paylasim_olay_ozetleri']) {
   assert.match(migration, new RegExp(`create table if not exists public\\.${table}\\b`), `${table} table is required`);

@@ -24,7 +24,7 @@ assert.match(source33, /tf644-progress/);
 assert.match(source33, /wizardDraft/);
 assert.match(source33, /data-tf644-read-all/);
 for (const selector of ['.tf644-reading-toolbar', '.tf644-breadcrumb', '.tf644-progress', '.tf644-notification-actions']) assert.match(css, new RegExp(selector.replace(/[.]/g, '\\.') + '[{,]'));
-for (const file of ['package.json', 'manifest.webmanifest', 'surum.json', 'veri.json', 'README.md']) assert.match(read(file), /6\.4\.4\.0/);
-assert.match(source32, /6\.4\.4\.0/);
+for (const file of ['package.json', 'manifest.webmanifest', 'surum.json', 'veri.json', 'README.md']) assert.match(read(file), /6\.4\.5\.0/);
+assert.match(source32, /6\.4\.5\.0/);
 
 console.log('6.4.4 UX contracts: PASS (handler adları, script bağlantısı, onboarding, okuma araçları, breadcrumb, bildirim araçları ve sürüm)');

@@ -29,17 +29,17 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: uygulama/kabuk/package.json
+          cache-dependency-path: uygulama/kabuk/package-lock.json
 
       - name: Web paketini oluştur
         run: |
-          npm install --no-audit --no-fund
+          npm ci --no-audit --no-fund
           npm run build
 
       - name: Capacitor kabuğunu kur
         working-directory: uygulama/kabuk
         run: |
-          npm install --no-audit --no-fund
+          npm ci --no-audit --no-fund
           npx cap add android
           npx cap sync android
 
