@@ -1,11 +1,16 @@
 /* TentiforApp servis çalışanı — sayfa ve veri önce ağdan (yavaşsa son kopya), sürümlü dosyalar önbellekten.
    Yeni bir sürüm yayınlanınca sayfalar kendiliğinden yenilenir; eski kopya yalnızca çevrimdışı ya da yavaş ağda kullanılır. */
+<<<<<<< HEAD
 const ONBELLEK = "tentiforapp-b18319ec5d53";
+=======
+const ONBELLEK = "tentiforapp-88c93beb144b";
+>>>>>>> origin/main
 /* Hesap kütüphanesi burada yok: yalnızca hesabı kullanan indirir (ilk kullanımda önbelleğe girer). */
 const ILK = [
   "./",
   "index.html",
   "favicon.ico",
+<<<<<<< HEAD
   "css/style.css?v=b36ce4eb9186",
   "veri.json",
   "js/paket-1.js?v=b18319ec5d53",
@@ -36,6 +41,39 @@ const ILK = [
   "js/arsiv/34b-model-evreni.js?v=b18319ec5d53",
   "css/terminal.css?v=b18319ec5d53",
   "js/engine/tentifor-terminal.js?v=b18319ec5d53"
+=======
+  "css/style.css?v=fc17e7c88658",
+  "veri.json",
+  "veri-degisiklik.json?v=a1aad374ff",
+  "js/paket-1.js?v=88c93beb144b",
+  "js/paket-2.js?v=88c93beb144b",
+  "js/paket-3.js?v=88c93beb144b",
+  "js/paket-4.js?v=88c93beb144b",
+  "manifest.webmanifest",
+  "ikon/ikon-192.png",
+  "yazitipi/karla-normal-400-latin.woff2",
+  "js/core/24-arsiv-mantigi.js?v=88c93beb144b",
+  "js/arsiv/34b-model-evreni.js",
+  "js/engine/88-v46-yenilikler.js?v=88c93beb144b",
+  "js/engine/92-v51-dashboard.js?v=88c93beb144b",
+  "js/core/93-offline-queue.js?v=88c93beb144b",
+  "js/core/94-cakisma.js?v=88c93beb144b",
+  "js/engine/91-v473-uyelik.js?v=88c93beb144b",
+  "js/engine/evren-harita-zaman-cizelgesi.js?v=88c93beb144b",
+  "js/engine/seo-meta.js?v=88c93beb144b",
+  "js/engine/free-universe-cleanup-6313.js?v=88c93beb144b",
+  "js/engine/profile-sharing-6313.js?v=88c93beb144b",
+  "js/engine/secure-sharing.js?v=88c93beb144b",
+  "js/core/54-v54-olgunlastirma.js?v=88c93beb144b",
+  "js/core/100-v60-native.js?v=88c93beb144b",
+  "js/core/110-v62-platform.js?v=88c93beb144b",
+  "js/core/120-mobil-ambiyans-uretim-aliskanlik.js?v=88c93beb144b",
+  "js/engine/101-v61-universe.js?v=612",
+  "js/core/99-v50-mobil.js?v=88c93beb144b",
+  "js/arsiv/34b-model-evreni.js?v=88c93beb144b",
+  "css/terminal.css?v=88c93beb144b",
+  "js/engine/tentifor-terminal.js?v=88c93beb144b"
+>>>>>>> origin/main
 ];
 
 self.addEventListener("message", function (e) {

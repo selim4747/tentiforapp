@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "surum": "6.4.0.0",
+=======
+  "surum": "6.3.17.0",
+>>>>>>> origin/main
   "guncelleme": "2026-10-01",
   "delilik": {
     "baslik": "Delilik",
