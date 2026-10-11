@@ -4897,7 +4897,7 @@ begin
   if uid is null then return jsonb_build_object('durum','giris'); end if;
   if temiz !~ '^[a-zA-Z0-9_-]{3,120}$' then return jsonb_build_object('durum','gecersiz'); end if;
   insert into public.hesap_cihazlari(kullanici,cihaz,ad,platform,son_gorulme)
-    values(uid,temiz,left(btrim(coalesce(p_ad,'Cihaz')),120),left(coalesce(p_platform,''),120),now())
+    values(uid,temiz,left(coalesce(nullif(btrim(coalesce(p_ad,'')), ''), 'Cihaz'),120),left(btrim(coalesce(p_platform,'')),120),now())
     on conflict(kullanici,cihaz) do update set ad=excluded.ad,platform=excluded.platform,son_gorulme=now();
   delete from public.hesap_cihazlari where kullanici=uid and son_gorulme < now() - interval '90 days';
   select count(*)::int into n from public.hesap_cihazlari where kullanici=uid and son_gorulme >= now() - interval '15 minutes';

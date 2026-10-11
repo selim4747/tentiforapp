@@ -124,6 +124,8 @@ if (fs.existsSync(indexPath)) {
   indexIcerik = indexIcerik.replace(/((?:js|css)\/(?!style\.css\?v=|engine\/101-v61-universe\.js\?v=)[^"'\s?]+\?v=)[^"'&\s]+/g, `$1${karma}`);
   indexIcerik = indexIcerik.replace(/js\/engine\/101-v61-universe\.js\?v=[^"']+/g, 'js/engine/101-v61-universe.js?v=612');
   indexIcerik = indexIcerik.replace(/css\/style\.css\?v=[^"']+/g, `css/style.css?v=${cssHash}`);
+  indexIcerik = indexIcerik.replace(/js\/arayuz\/33-ux-644\.js(?:\?v=[^"']+)?/g, `js/arayuz/33-ux-644.js?v=${karma}`);
+  indexIcerik = indexIcerik.replace(/js\/arayuz\/34-ux-645\.js(?:\?v=[^"']+)?/g, `js/arayuz/34-ux-645.js?v=${karma}`);
   fs.writeFileSync(indexPath, indexIcerik, 'utf-8');
   console.log(`✓ index.html meta paketi güncellendi (${karma})`);
 }

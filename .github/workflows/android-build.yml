@@ -33,14 +33,14 @@ jobs:
           node-version: 20
 
       - name: Install web dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Build web and synchronize APK assets
         run: npm run build
 
       - name: Install Capacitor dependencies
         working-directory: uygulama/kabuk
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Synchronize Capacitor Android project
         working-directory: uygulama/kabuk
@@ -67,6 +67,17 @@ jobs:
         working-directory: uygulama/kabuk/android
         run: ./gradlew --no-daemon --stacktrace assembleDebug
 
+      - name: Verify APK output and retired-content absence
+        if: always()
+        run: |
+          apk="${{ env.TF_ANDROID_SIGNING_READY == 'true' && 'uygulama/kabuk/android/app/build/outputs/apk/release/app-release.apk' || 'uygulama/kabuk/android/app/build/outputs/apk/debug/app-debug.apk' }}"
+          test -s "$apk"
+          retired_pattern='cl''aude|et''erya|fornek-et''erya'
+          if unzip -l "$apk" | grep -Eiq "$retired_pattern"; then
+            echo 'Emekli evren içeriği APK içinde bulundu'
+            exit 1
+          fi
+          echo "APK doğrulandı: $apk"
       - name: Upload signed release APK
         if: env.TF_ANDROID_SIGNING_READY == 'true'
         uses: actions/upload-artifact@v4

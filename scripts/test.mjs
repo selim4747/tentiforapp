@@ -55,6 +55,7 @@ const server = spawn(process.execPath, ['server.js'], { stdio: ['ignore', 'pipe'
 let serverOutput = '';
 server.stdout.on('data', (chunk) => { serverOutput += chunk; });
 server.stderr.on('data', (chunk) => { serverOutput += chunk; });
+const TEST_TIMEOUT_MS = Number(process.env.TF_TEST_TIMEOUT_MS) || 120000;
 
 async function serverReady() {
   for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -70,8 +71,24 @@ async function serverReady() {
 function run(file) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [file], { stdio: 'inherit' });
-    child.on('error', reject);
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      child.kill('SIGTERM');
+      setTimeout(() => { try { child.kill('SIGKILL'); } catch {} }, 2000).unref();
+      reject(new Error(`${file} zaman aşımına uğradı (${TEST_TIMEOUT_MS} ms)`));
+    }, TEST_TIMEOUT_MS);
+    child.on('error', (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(error);
+    });
     child.on('exit', (code, signal) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
       if (code === 0) resolve();
       else reject(new Error(`${file} başarısız oldu (code=${code}, signal=${signal || 'yok'})`));
     });

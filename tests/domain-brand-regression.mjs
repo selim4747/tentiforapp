@@ -49,7 +49,8 @@ assert.match(read('uygulama/kabuk/android/app/src/main/res/layout/tentifor_widge
 assert.ok(!fs.existsSync('dist/uygulama/kabuk'),'native source must not be part of production web output');
 const webVersion=JSON.parse(read('package.json')).version;
 const distApkMeta=fs.existsSync('dist/uygulama/indir/apk.json');
-assert.equal(distApkMeta, JSON.parse(read('uygulama/indir/apk.json')).version === webVersion, 'stale APK metadata must not enter a web-only production output');
+const sourceApkMeta=fs.existsSync('uygulama/indir/apk.json') ? JSON.parse(read('uygulama/indir/apk.json')) : null;
+assert.equal(distApkMeta, Boolean(sourceApkMeta && sourceApkMeta.version === webVersion), 'stale APK metadata must not enter a web-only production output');
 assert.ok(fs.existsSync('dist/uygulama/ac/index.html'),'public native auth bridge must remain available');
 const authFunction=read('js/core/28-hesap.js').match(/function hesapDonusAdresi\(e\)\{([^}]+)\}/)[1];
 const callback=new Function('e','location','kabukMu',authFunction);

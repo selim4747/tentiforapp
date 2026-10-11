@@ -7,6 +7,8 @@ const migration = fs.readFileSync(new URL('../supabase/migrations/20261012_645_d
 assert.match(migration, /create table if not exists public\.hesap_cihazlari/);
 assert.match(migration, /cihaz_heartbeat/);
 assert.match(migration, /cihazlarim/);
+assert.match(migration, /nullif\(btrim\(coalesce\(p_ad,''\)\), ''\)/);
+assert.match(migration, /coalesce\(p_platform,''\)/);
 assert.match(source, /cihaz_heartbeat/);
 assert.match(source, /son 15 dakikadaki gerçek kalp atışlarından/);
 
@@ -15,6 +17,7 @@ const dom = new JSDOM('<!doctype html><body><main><div id="evrenSayfa"><div clas
 });
 const { window } = dom;
 window.hesapKullanici = { id: 'user-1' };
+window.scrollTo = () => {};
 window.hesapIstemci = { rpc: async (name) => name === 'cihaz_heartbeat' ? { data: { durum: 'tamam', aktif: 2 }, error: null } : { data: { aktif: 2, cihazlar: [{ ad: 'Android · Chrome', son_gorulme: '2026-10-11T21:00:00Z', bu_mu: true }] }, error: null } };
 window.eval(source);
 window.document.dispatchEvent(new window.Event('DOMContentLoaded'));

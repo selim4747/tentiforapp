@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { sanitizePublicData } from '../scripts/visibility.mjs';
 
 const root = process.cwd();
@@ -11,8 +11,9 @@ const pkg = readJson('package.json');
 const data = readJson('veri.json');
 const manifest = readJson('manifest.webmanifest');
 const shellPkg = readJson('uygulama/kabuk/package.json');
-const apkMeta = readJson('uygulama/indir/apk.json');
 const apkPath = path.join(root, 'uygulama/indir/tentiforapp.apk');
+const apkMetaPath = path.join(root, 'uygulama/indir/apk.json');
+const apkMeta = fs.existsSync(apkMetaPath) && fs.existsSync(apkPath) ? readJson('uygulama/indir/apk.json') : null;
 const androidGradle = fs.readFileSync(path.join(root, 'uygulama/kabuk/android/app/build.gradle'), 'utf8');
 const androidVersionCode = Number(androidGradle.match(/versionCode\s+(\d+)/)?.[1]);
 const androidVersionName = androidGradle.match(/versionName\s+"([^"]+)"/)?.[1];
@@ -30,13 +31,15 @@ const versionCompare = (left, right) => {
 assert.match(pkg.version, /^\d+\.\d+\.\d+(?:\.\d+)?$/);
 assert.equal(data.surum, pkg.version, 'veri.json package.json ile aynı sürümü taşımalı');
 assert.equal(manifest.version, pkg.version, 'manifest package.json ile aynı sürümü taşımalı');
-assert.ok(versionCompare(shellPkg.version, pkg.version) <= 0, 'Android kabuğu web sürümünden yeni olamaz; web-only releases APK’yi geride bırakabilir');
-assert.ok(versionCompare(apkMeta.version, pkg.version) <= 0, 'Android APK’si web sürümünden yeni olamaz; önemli APK sürümleri arasında web güncellenebilir');
+assert.equal(versionCompare(shellPkg.version, pkg.version), 0, 'Android kabuğu web sürümüyle aynı olmalı');
+if (apkMeta) assert.equal(versionCompare(apkMeta.version, pkg.version), 0, 'Android APK’si web sürümüyle aynı olmalı');
 assert.equal(shellPkg.version, androidVersionName, 'Android package sürümü Gradle native sürümüyle eşleşmeli');
-assert.equal(apkMeta.version, androidVersionName, 'APK metadata sürümü Android native sürümüyle eşleşmeli');
-assert.equal(apkMeta.versionCode, androidVersionCode, 'APK metadata versionCode’u Gradle native versionCode ile eşleşmeli');
-assert.equal(apkMeta.sizeBytes, fs.statSync(apkPath).size, 'APK metadata boyutu binary ile aynı olmalı');
-assert.equal(apkMeta.sha256, crypto.createHash('sha256').update(fs.readFileSync(apkPath)).digest('hex'), 'APK metadata hash’i binary ile aynı olmalı');
+if (apkMeta) {
+  assert.equal(apkMeta.version, androidVersionName, 'APK metadata sürümü Android native sürümüyle eşleşmeli');
+  assert.equal(apkMeta.versionCode, androidVersionCode, 'APK metadata versionCode’u Gradle native versionCode ile eşleşmeli');
+  assert.equal(apkMeta.sizeBytes, fs.statSync(apkPath).size, 'APK metadata boyutu binary ile aynı olmalı');
+  assert.equal(apkMeta.sha256, crypto.createHash('sha256').update(fs.readFileSync(apkPath)).digest('hex'), 'APK metadata hash’i binary ile aynı olmalı');
+}
 const assetLinks = readJson('.well-known/assetlinks.json');
 assert.ok(assetLinks.some((entry) => entry.target?.sha256_cert_fingerprints?.some((fp) => fp.replaceAll(':', '').toLowerCase() === '7dde5a8e4ab8e285fc5fae67987279c0da81f842ef6b37c9c9346c09991512de')), 'yeni release APK fingerprint’i App Links allowlistesinde olmalı');
 assert.equal(manifest.name, 'TentiFor', 'PWA görünen adı TentiFor olmalı; sürüm version alanında korunur');
@@ -51,7 +54,7 @@ const runBuild = () => execFileSync(process.execPath, ['scripts/paketle.mjs'], {
 runBuild();
 const first = readJson('surum.json');
 const firstHash = first.paket;
-assert.equal(fs.existsSync(path.join(root, 'dist/uygulama/indir/apk.json')), apkMeta.version === pkg.version, 'sürümü uyuşmayan APK web production çıktısına taşınmamalı');
+assert.equal(fs.existsSync(path.join(root, 'dist/uygulama/indir/apk.json')), Boolean(apkMeta), 'sürümü doğrulanmamış APK web production çıktısına taşınmamalı');
 assert.match(fs.readFileSync(path.join(root, 'dist/tomye/index.html'), 'utf8'), /Tömye — TentiFor/);
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql')), '6.3 discovery migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_631_archive_tools.sql')), '6.3.1 archive tools migration eksik');
@@ -89,6 +92,11 @@ assert.ok(fs.existsSync(path.join(root, 'js/engine/kesif-kullanici-profili.js'))
 assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql'), 'utf8'), /public_kullanici_profili/);
 
 assert.match(fs.readFileSync(path.join(root, 'js/engine/91-v473-uyelik.js'), 'utf8'), new RegExp(`SURUM = '${pkg.version.replaceAll('.', '\\.')}'`));
+assert.ok(fs.existsSync(path.join(root, 'package-lock.json')), 'bağımlılık lock dosyası eksik');
+const retiredPattern = ['cl' + 'aude', 'et' + 'erya', 'fornek-' + 'et' + 'erya'].join('|');
+const retiredSearch = spawnSync('git', ['grep', '-il', '-E', retiredPattern, '--', ':!node_modules'], { cwd: root, encoding: 'utf8' });
+const retiredFiles = (retiredSearch.stdout || '').trim();
+assert.equal(retiredFiles, '', 'emekli evren içerikleri kaynakta veya izlenen çıktıda kalmamalı');
 
 runBuild();
 const second = readJson('surum.json');
@@ -132,6 +140,12 @@ for (const [name, text] of [['index.html', indexText], ['sw.js', swText]]) {
   assert.ok(text.includes(`css/style.css?v=${cssHash}`), `${name} CSS cache-buster must match the current stylesheet`);
 }
 assert.ok(swText.includes('"favicon.ico"'), 'service worker must precache the favicon');
+assert.match(indexText, new RegExp(`js/arayuz/34-ux-645\\.js\\?v=${second.paket}`), '6.4.5 UX script cache sürümü güncel olmalı');
+assert.match(swText, new RegExp(`js/arayuz/33-ux-644\\.js\\?v=${second.paket}`), '6.4.4 UX script Service Worker’da sürümlü olmalı');
+assert.match(swText, new RegExp(`js/arayuz/34-ux-645\\.js\\?v=${second.paket}`), '6.4.5 UX script Service Worker’da sürümlü olmalı');
+const headersText = fs.readFileSync(path.join(root, '_headers'), 'utf8');
+assert.doesNotMatch(headersText, /Access-Control-Allow-Origin:\s*\*/i, 'global wildcard CORS başlığı bulunmamalı');
+assert.match(headersText, /Content-Security-Policy-Report-Only:/, 'CSP raporlama politikası bulunmalı');
 const setupSql = fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8');
 for (const fn of ['kurulum_surumu', 'abonelik_hediye', 'kullaniciya_bildir', 'bildirimlerim']) {
   const count = (setupSql.match(new RegExp(`create or replace function public\\.${fn}\\b`, 'g')) || []).length;
@@ -141,6 +155,8 @@ assert.match(swText, /yedekKopya\(istek, true\)/, 'sürümlü asset eski query k
 assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), /where endpoint = p_endpoint and kullanici = auth\.uid\(\)/, 'push unsubscribe must be owner-scoped');
 assert.match(fs.readFileSync(path.join(root, 'js/topluluk/41-bildirim.js'), 'utf8'), /bildirimYerelMi\(\).*bildirimYerelAcikMi/, 'APK notifications must not depend on VAPID');
 assert.match(fs.readFileSync(path.join(root, 'js/core/46-guncelleme.js'), 'utf8'), /getRegistration\("\/"\)/, 'güncelleme worker kaydını kökten almalı');
+assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261012_645_device_sessions.sql')), '6.4.5 cihaz oturum migration’ı eksik');
+assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261012_645_device_sessions.sql'), 'utf8'), /nullif\(btrim\(coalesce\(p_ad,''\)\), ''\)/, 'boş cihaz adı normalize edilmeli');
 for (const asset of ['js/paket-2.js', 'js/engine/92-v51-dashboard.js', 'js/engine/evren-harita-zaman-cizelgesi.js', 'js/engine/seo-meta.js', 'js/engine/secure-sharing.js', 'js/engine/profile-sharing-6313.js', 'js/engine/free-universe-cleanup-6313.js']) {
   const escaped = asset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   assert.match(indexText, new RegExp(`${escaped}\\?v=${second.paket}`), `${asset} index cache sürümü güncel olmalı`);
