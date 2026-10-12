@@ -44,7 +44,7 @@
     var ic = eser.icEvren;
     if (!ic || typeof ic !== 'object') return null;
     var eskiKisiler = Array.isArray(ic.kisiler) ? ic.kisiler : (Array.isArray(ic.bedenler) ? ic.bedenler : []);
-    return {
+    var normalized = {
       acik: ic.acik !== false,
       ad: String(ic.ad || '').slice(0, 80),
       ozet: String(ic.ozet || '').slice(0, 800),
@@ -62,16 +62,21 @@
         }) : []);
         return {
           id: localId,
+          rozetId: String((k && k.rozetId) || ('ic-' + String(eser.id || 'evren') + '-' + localId)).slice(0, 160),
           kaynakKisiId: String(k && Object.prototype.hasOwnProperty.call(k, 'kaynakKisiId') ? (k.kaynakKisiId || '') : ((k && (k.kisiId || legacyId)) || '')).slice(0, 60),
+          gizliKimlikAnaId: String(k && k.gizliKimlikAnaId || '').slice(0, 60),
+          gizliKimlikSira: Math.max(1, Math.min(12, Number(k && k.gizliKimlikSira) || 1)),
           ad: String((k && (k.ad || k.kisiAd)) || '').slice(0, 80),
           unvan: String((k && k.unvan) || '').slice(0, 80),
+          detay: String((k && k.detay) || '').slice(0, 800),
           kisilik: iceKisilikleriTemizle(k && k.kisilik),
           gizliKimlikler: iceGizliKimlikleriTemizle(k && k.gizliKimlikler),
           yanKisi: iceYanKisiTemizle(k && k.yanKisi),
           olaylar: iceOlaylariTemizle(eskiOlaylar)
         };
-      }).filter(function (k) { return k.ad; })
+      }).filter(function (k) { return k.gizliKimlikAnaId || k.ad; })
     };
+    return iceKimlikKayitlariniGenislet(normalized, eser.id);
   }
 
   function iceYaz(degistir) {
@@ -96,7 +101,7 @@
   function iceKisiler(eser) {
     var liste = [];
     (eser && eser.kisiler || []).forEach(function (k) {
-      if (!k || k.kutu) return;
+      if (!k || k.kutu || k.gizliKimlikAnaId) return;
       liste.push({
         id: String(k.id || k.ad || '').slice(0, 40),
         ad: String(k.ad || 'Adsız').slice(0, 80),
@@ -113,6 +118,29 @@
         aciklama: String(item && item.aciklama || '').trim().slice(0, 800)
       };
     }).filter(function (item) { return item.ad || item.aciklama; });
+  }
+
+  function iceKimlikKayitlariniGenislet(ic, eserId) {
+    var identities = [];
+    (ic.kisiler || []).forEach(function (person) {
+      if (!person || person.gizliKimlikAnaId) return;
+      var legacy = iceGizliKimlikleriTemizle(person.gizliKimlikler);
+      person.gizliKimlikler = [];
+      legacy.forEach(function (item, index) {
+        identities.push({
+          id: String(person.id + '-kimlik-' + (index + 1)).slice(0, 60),
+          rozetId: String('ic-' + String(eserId || 'evren') + '-' + person.id + '-kimlik-' + (index + 1)).slice(0, 160),
+          kaynakKisiId: '', gizliKimlikAnaId: person.id, gizliKimlikSira: index + 1,
+          ad: item.ad || '', unvan: 'Gizli kimlik', detay: item.aciklama || '',
+          kisilik: [], gizliKimlikler: [], yanKisi: null, olaylar: []
+        });
+      });
+    });
+    if (identities.length) ic.kisiler = (ic.kisiler || []).concat(identities);
+    (ic.kisiler || []).forEach(function (person) {
+      if (person && !person.rozetId) person.rozetId = String('ic-' + String(eserId || 'evren') + '-' + person.id).slice(0, 160);
+    });
+    return ic;
   }
 
 
@@ -267,6 +295,58 @@
       }).join('') + '</dl></details>';
   }
 
+  function iceKimlikCocuklari(ic, parentId) {
+    return (ic && ic.kisiler || []).filter(function (person) {
+      return person && person.gizliKimlikAnaId === parentId;
+    }).sort(function (a, b) { return Number(a.gizliKimlikSira || 0) - Number(b.gizliKimlikSira || 0); }).slice(0, 12);
+  }
+
+  function iceAltinRozetAcik(id) {
+    if (typeof window.tfUserIdentityGoldBadge === 'function') return window.tfUserIdentityGoldBadge(id);
+    return typeof window.kilitAcik === 'function' && !!window.kilitAcik('rozet_altin_' + id);
+  }
+
+  function iceKimlikPanelleriHtml(ic, parent, depth) {
+    depth = depth || 0;
+    if (depth > 8) return '';
+    var identities = iceKimlikCocuklari(ic, parent.id);
+    if (!identities.length) return '';
+    var parentBadgeId = parent.rozetId || parent.id;
+    var parentUnlocked = iceAltinRozetAcik(parentBadgeId);
+    var rows = identities.map(function (identity, index) {
+      var canOpen = parentUnlocked && (typeof window.tfUserIdentityUnlocked === 'function'
+        ? window.tfUserIdentityUnlocked(identities, index, parentBadgeId)
+        : index === 0 || iceAltinRozetAcik(identities[index - 1].rozetId || identities[index - 1].id));
+      if (!canOpen) return parentUnlocked
+        ? '<p class="ice-kimlik-kilit">🔒 ' + (index + 1) + '. ' + iceKacir(identity.ad) + ' · önceki kimliğin altın rozeti gerekir</p>'
+        : '';
+      return '<details class="ice-kimlik-karti"><summary>' + (index + 1) + '. ' + iceKacir(identity.ad || 'Adsız kimlik') + ' · gizli kimlik</summary>' +
+        (identity.unvan ? '<p class="oyun-not">' + iceKacir(identity.unvan) + '</p>' : '') +
+        (identity.detay ? '<p>' + iceKacir(identity.detay).replace(/\n/g, '<br>') + '</p>' : '') +
+        (typeof window.tfUserIdentityReadButton === 'function' ? window.tfUserIdentityReadButton(identity) : '') +
+        iceKimlikPanelleriHtml(ic, identity, depth + 1) + '</details>';
+    }).join('');
+    return '<section class="ice-kimlik-zinciri"><h5>Gizli kimlikler · spoiler</h5><p class="oyun-not">' +
+      (parentUnlocked ? 'Kimlikler sırayla açılır. Her kimliğin altın rozeti sıradakini açar.' : 'Ana karakterin altın rozeti kazanılınca ilk kimlik açılır.') +
+      '</p>' + (parentUnlocked ? rows : '') + '</section>';
+  }
+
+  function iceKimlikDuzenHtml(ic, parent, depth) {
+    depth = depth || 0;
+    if (depth > 8) return '';
+    var identities = iceKimlikCocuklari(ic, parent.id);
+    return '<section class="ice-kimlik-duzen"><h5>Gizli kimlik panelleri · sıra ile açılır</h5>' +
+      '<p class="oyun-not">Her kimlik ayrı kişi kaydıdır. Ana karakterin altın rozeti ilkini; her kimliğin altın rozeti sıradakini açar.</p>' +
+      identities.map(function (identity, index) {
+        return '<div class="ice-kimlik-duzen-karti"><b>' + (index + 1) + '. kimlik karakteri</b>' +
+          '<label>Kimliğin adı</label><input class="kod-giris arac-giris" data-ice-kisi-ad="' + iceKacir(identity.id) + '" maxlength="80" value="' + iceKacir(identity.ad) + '" placeholder="Örn. Yıldız Bekçisi">' +
+          '<label>Açıklaması</label><textarea class="kod-giris arac-giris" data-ice-kisi-detay="' + iceKacir(identity.id) + '" rows="2" maxlength="800" placeholder="Bu kimliğin rolü ve hikâyesi">' + iceKacir(identity.detay || '') + '</textarea>' +
+          '<div class="oyun-sira"><button type="button" class="dugme dugme-sade" data-ice-kisi-kaydet="' + iceKacir(identity.id) + '">Kimlik kartını kaydet</button>' +
+          '<button type="button" class="dugme dugme-sade y-sil" data-ice-kimlik-sil="' + iceKacir(identity.id) + '">Kimliği kaldır</button></div>' +
+          iceKimlikDuzenHtml(ic, identity, depth + 1) + '</div>';
+      }).join('') + (identities.length < 12 ? '<button type="button" class="dugme dugme-sade" data-ice-kimlik-ekle="' + iceKacir(parent.id) + '">+ Sıradaki kimliği ekle</button>' : '') + '</section>';
+  }
+
   function iceKisiBul(ic, id) {
     return (ic.kisiler || []).find(function (k) { return k.id === id; }) || null;
   }
@@ -337,11 +417,12 @@
     var fizik = (ic.fizik || []).map(function (k) {
       return '<li><b>' + iceKacir(k.ad || 'Kural') + '</b>' + (k.aciklama ? ' — ' + iceKacir(k.aciklama) : '') + '</li>';
     }).join('');
-    var kisiler = (ic.kisiler || []).map(function (kisi) {
+    var kisiler = (ic.kisiler || []).filter(function (kisi) { return !kisi.gizliKimlikAnaId; }).map(function (kisi) {
       return '<article class="ice-beden ice-kisi-karti"><h4>' + iceKacir(kisi.ad || 'Adsız') + '</h4>' +
         (kisi.unvan ? '<p class="oyun-not">' + iceKacir(kisi.unvan) + '</p>' : '') +
         iceKaynakKisiHtml(eser, kisi) + iceYanBaglantisiHtml(eser, kisi) +
-        iceKisilikHtml(kisi.kisilik) + iceGizliKimlikHtml(kisi.gizliKimlikler) + iceOlaylarHtml(kisi.olaylar) +
+        iceKisilikHtml(kisi.kisilik) + iceKimlikPanelleriHtml(ic, kisi) + iceOlaylarHtml(kisi.olaylar) +
+        (typeof window.tfUserIdentityReadButton === 'function' ? window.tfUserIdentityReadButton(kisi) : '') +
         '</article>';
     }).join('');
     return (
@@ -372,7 +453,7 @@
         '<input class="kod-giris arac-giris" data-ice-fizik-acik="' + i + '" maxlength="400" value="' + iceKacir(k.aciklama || '') + '" placeholder="Bu evrende nasıl işler?">' +
       '</div>';
     }).join('');
-    var kisiKartlari = (ic.kisiler || []).map(function (kisi) {
+    var kisiKartlari = (ic.kisiler || []).filter(function (kisi) { return !kisi.gizliKimlikAnaId; }).map(function (kisi) {
       var id = iceKacir(kisi.id);
       var links = iceYanKisiSecenekleri(eser, kisi);
       var currentLink = iceYanKisiTemizle(kisi.yanKisi);
@@ -386,8 +467,8 @@
         '<label>Bu iç evrendeki adı</label><input class="kod-giris arac-giris" data-ice-kisi-ad="' + id + '" maxlength="80" value="' + iceKacir(kisi.ad) + '">' +
         '<label>Unvanı</label><input class="kod-giris arac-giris" data-ice-kisi-unvan="' + id + '" maxlength="80" value="' + iceKacir(kisi.unvan) + '" placeholder="Bu evrendeki rolü, unvanı…">' +
         '<label>Kişilik halleri · satır başına “Hal: açıklama”</label><textarea class="kod-giris arac-giris" data-ice-kisilik="' + id + '" maxlength="10600" rows="3" placeholder="Sakin: Burada kimseye güvenmez.">' + iceKacir(iceKisilikMetni(kisi.kisilik)) + '</textarea>' +
-        '<label>Gizli kimlikler · spoiler · satır başına “Kimlik: açıklama”</label><textarea class="kod-giris arac-giris" data-ice-gizli-kimlikler="' + id + '" maxlength="7080" rows="3" placeholder="Kod adı: bu iç evrendeki karşılığı">' + iceKacir(iceGizliKimlikMetni(kisi.gizliKimlikler)) + '</textarea>' +
-        '<p class="oyun-not">Kişilik ve kimlik bu iç evrene özeldir; bağlı başka kişi kartlarından kopyalanmaz. Spoiler metni yayınlanan evren verisinde düz metindir.</p>' +
+        iceKimlikDuzenHtml(ic, kisi) +
+        '<p class="oyun-not">Kişilik ve kimlik bu iç evrene özeldir; bağlı başka kişi kartlarından kopyalanmaz.</p>' +
         '<div class="oyun-sira"><button type="button" class="dugme" data-ice-kisi-kaydet="' + id + '">Kişi kartını kaydet</button>' +
           '<button type="button" class="dugme dugme-sade y-sil y-kucuk" data-ice-kisi-sil="' + id + '">Bu evrenden çıkar</button></div>' +
         '<label>Yan evrendeki karşılığı · yalnızca bağlantı</label><select class="kod-giris arac-giris" data-ice-yan-kisi="' + id + '">' + options + '</select>' +
@@ -484,7 +565,7 @@
 
   document.addEventListener('click', function (ev) {
     var n = ev.target && ev.target.closest && ev.target.closest(
-      '[data-ice-kaydet], [data-ice-kapat], [data-ice-fizik-ekle], [data-ice-kisi-ekle], [data-ice-yerel-kisi-ekle], [data-ice-kisi-sil], [data-ice-kisi-kaydet], [data-ice-yan-kisi-kaydet], [data-ice-olaylar-kaydet]'
+      '[data-ice-kaydet], [data-ice-kapat], [data-ice-fizik-ekle], [data-ice-kisi-ekle], [data-ice-yerel-kisi-ekle], [data-ice-kisi-sil], [data-ice-kisi-kaydet], [data-ice-kimlik-ekle], [data-ice-kimlik-sil], [data-ice-yan-kisi-kaydet], [data-ice-olaylar-kaydet]'
     );
     if (!n) return;
     if (typeof EVS === 'undefined' || !EVS || EVS.kaynak !== 'benim') return;
@@ -551,7 +632,51 @@
 
     if (n.hasAttribute('data-ice-kisi-sil')) {
       var silId = n.getAttribute('data-ice-kisi-sil');
-      iceYaz(function (ic) { ic.kisiler = (ic.kisiler || []).filter(function (k) { return k.id !== silId; }); });
+      iceYaz(function (ic) {
+        var silinecek = [silId], changed = true;
+        while (changed) {
+          changed = false;
+          (ic.kisiler || []).forEach(function (k) {
+            if (k.gizliKimlikAnaId && silinecek.indexOf(k.gizliKimlikAnaId) !== -1 && silinecek.indexOf(k.id) === -1) { silinecek.push(k.id); changed = true; }
+          });
+        }
+        ic.kisiler = (ic.kisiler || []).filter(function (k) { return silinecek.indexOf(k.id) === -1; });
+      });
+      if (typeof evrenSayfaCiz === 'function') evrenSayfaCiz();
+      return;
+    }
+
+    if (n.hasAttribute('data-ice-kimlik-ekle')) {
+      var kimlikParentId = n.getAttribute('data-ice-kimlik-ekle');
+      iceYaz(function (ic) {
+        var parent = iceKisiBul(ic, kimlikParentId);
+        if (!parent || parent.gizliKimlikAnaId) return;
+        var children = iceKimlikCocuklari(ic, kimlikParentId);
+        if (children.length >= 12) return;
+        ic.kisiler.push({ id: iceKisiYeniId(), kaynakKisiId: '', gizliKimlikAnaId: kimlikParentId,
+          gizliKimlikSira: children.length + 1, ad: '', unvan: 'Gizli kimlik', detay: '', kisilik: [],
+          gizliKimlikler: [], yanKisi: null, olaylar: [] });
+      });
+      iceBildir('Ayrı gizli kimlik kartı eklendi. Sırası rozet zincirinde korunur.');
+      if (typeof evrenSayfaCiz === 'function') evrenSayfaCiz();
+      return;
+    }
+
+    if (n.hasAttribute('data-ice-kimlik-sil')) {
+      var identityId = n.getAttribute('data-ice-kimlik-sil');
+      iceYaz(function (ic) {
+        var silinecek = [identityId], changed = true;
+        while (changed) {
+          changed = false;
+          (ic.kisiler || []).forEach(function (k) {
+            if (k.gizliKimlikAnaId && silinecek.indexOf(k.gizliKimlikAnaId) !== -1 && silinecek.indexOf(k.id) === -1) { silinecek.push(k.id); changed = true; }
+          });
+        }
+        var parentId = (ic.kisiler || []).find(function (k) { return k.id === identityId; });
+        parentId = parentId && parentId.gizliKimlikAnaId;
+        ic.kisiler = (ic.kisiler || []).filter(function (k) { return silinecek.indexOf(k.id) === -1; });
+        iceKimlikCocuklari(ic, parentId).forEach(function (k, index) { k.gizliKimlikSira = index + 1; });
+      });
       if (typeof evrenSayfaCiz === 'function') evrenSayfaCiz();
       return;
     }
@@ -566,16 +691,17 @@
       var nameField = readField('data-ice-kisi-ad');
       var titleField = readField('data-ice-kisi-unvan');
       var personalityField = readField('data-ice-kisilik');
-      var identityField = readField('data-ice-gizli-kimlikler');
+      var detailField = readField('data-ice-kisi-detay');
       var name = String(nameField && nameField.value || '').trim().slice(0, 80);
       if (!name) { iceBildir('Bu iç evrenin kişi kartında ad gerekli.'); return; }
       iceYaz(function (ic) {
         var person = iceKisiBul(ic, kisiId);
         if (!person) return;
         person.ad = name;
-        person.unvan = String(titleField && titleField.value || '').trim().slice(0, 80);
+        if (!person.gizliKimlikAnaId) person.unvan = String(titleField && titleField.value || '').trim().slice(0, 80);
         person.kisilik = iceKisilikleriAyir(personalityField && personalityField.value);
-        person.gizliKimlikler = iceGizliKimlikleriAyir(identityField && identityField.value);
+        person.detay = String(detailField && detailField.value || person.detay || '').trim().slice(0, 800);
+        if (!person.gizliKimlikAnaId) person.gizliKimlikler = [];
       });
       iceBildir('Bu evrenin kişi kartı kaydedildi.');
       if (typeof evrenSayfaCiz === 'function') evrenSayfaCiz();

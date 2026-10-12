@@ -89,6 +89,7 @@ const worldDom = new JSDOM('<!doctype html><html><head></head><body></body></htm
   runScripts: 'outside-only',
 });
 const worldWindow = worldDom.window;
+worldWindow.kilitAcik = (key) => key === 'rozet_altin_l25';
 const world = {
   tur: 'evren',
   id: 'test-evren',
@@ -98,6 +99,7 @@ const world = {
   icEvren: { acik: true, ad: 'İç Rüya', bedenler: [{
     id: 'l25', ad: 'L25', ustHal: 'Uyuyor', icHal: 'Uyanık',
     kisilik: [{ ad: 'Eski hâl', aciklama: 'Bu kayda özgüdür.' }],
+    gizliKimlikler: [{ ad: 'Gölge', aciklama: 'Sadece ilk iç evrendeki kimlik.' }],
     izler: [{ yer: 'Eski olay', metin: 'Bu evrende yaşandı.' }],
   }] },
 };
@@ -128,20 +130,27 @@ function click(selector) {
 }
 
 renderInner();
-const migratedIdentityField = worldWindow.document.querySelector('[data-ice-gizli-kimlikler="l25"]');
-assert.ok(migratedIdentityField, 'Eski iç kayıt ayrı bir kişi kimlik kartına taşınmalı');
+const migratedIdentityField = worldWindow.document.querySelector('[data-ice-kisi-ad="l25-kimlik-1"]');
+assert.ok(migratedIdentityField, 'Eski kimlik spoiler metni ayrı kimlik karakter kaydına taşınmalı');
+assert.equal(migratedIdentityField.value, 'Gölge');
+assert.equal(worldWindow.document.querySelector('[data-ice-gizli-kimlikler="l25"]'), null, 'Düzenleyicide satır başına kimlik metin alanı kalmamalı');
+assert.ok(worldWindow.document.querySelector('[data-ice-kimlik-ekle="l25"]'), 'Ana karaktere ayrı kimlik paneli eklenebilmeli');
 assert.ok(worldWindow.document.querySelector('[data-ice-kisilik="l25"]'), 'İç evren kişiliği kartta düzenlenebilmeli');
 const sameWorldLink = worldWindow.document.querySelector('[data-ice-yan-kisi="l25"]');
 assert.ok(sameWorldLink, 'Kişi kartında isteğe bağlı yan-evren bağlantı alanı olmalı');
 assert.equal([...sameWorldLink.options].some((option) => option.value === JSON.stringify({ evrenId: world.id, kisiId: 'l25' })), false, 'Kişi kendi iç evrenindeki kartına bağlanmamalı');
-migratedIdentityField.value = 'Gölge: Sadece ilk iç evrendeki kimlik.';
+migratedIdentityField.value = 'Gölge';
+worldWindow.document.querySelector('[data-ice-kisi-detay="l25-kimlik-1"]').value = 'Sadece ilk iç evrendeki kimlik.';
+click('[data-ice-kisi-kaydet="l25-kimlik-1"]');
 worldWindow.document.querySelector('[data-ice-kisilik="l25"]').value = 'Yalnız: İlk evrende içine kapanıktır.';
 click('[data-ice-kisi-kaydet="l25"]');
 assert.equal(world.icEvren.bedenler, undefined, 'İlk kayıt sonrası eski beden birleşimi alanı kaldırılmalı');
 assert.equal(world.icEvren.kisiler[0].kaynakKisiId, 'l25', 'Ana evren kişi çapası tutulmalı');
-assert.deepEqual(JSON.parse(JSON.stringify(world.icEvren.kisiler[0].gizliKimlikler)), [
-  { ad: 'Gölge', aciklama: 'Sadece ilk iç evrendeki kimlik.' },
-]);
+assert.deepEqual(JSON.parse(JSON.stringify(world.icEvren.kisiler[0].gizliKimlikler)), []);
+const savedIdentity = world.icEvren.kisiler.find((person) => person.gizliKimlikAnaId === 'l25');
+assert.equal(savedIdentity.ad, 'Gölge');
+assert.equal(savedIdentity.detay, 'Sadece ilk iç evrendeki kimlik.');
+assert.equal(savedIdentity.gizliKimlikSira, 1);
 assert.deepEqual(JSON.parse(JSON.stringify(world.icEvren.kisiler[0].kisilik)), [
   { ad: 'Yalnız', aciklama: 'İlk evrende içine kapanıktır.' },
 ]);
@@ -167,8 +176,13 @@ assert.deepEqual(JSON.parse(JSON.stringify(secondWorld.icEvren.kisiler[0].gizliK
 renderInner(secondWorld);
 const secondPersonality = worldWindow.document.querySelector(`[data-ice-kisilik="${secondId}"]`);
 secondPersonality.value = 'Cesur: İkinci evrende öne atılır.';
-worldWindow.document.querySelector(`[data-ice-gizli-kimlikler="${secondId}"]`).value = 'Kutup: İkinci evrenin saklı adı.';
 click(`[data-ice-kisi-kaydet="${secondId}"]`);
+click(`[data-ice-kimlik-ekle="${secondId}"]`);
+renderInner(secondWorld);
+const secondIdentity = worldWindow.document.querySelector('.ice-kimlik-duzen-karti [data-ice-kisi-ad]');
+assert.ok(secondIdentity, 'İkinci iç evrendeki kişi için ayrı kimlik karakteri oluşturulmalı');
+secondIdentity.value = 'Kutup';
+click(`[data-ice-kisi-kaydet="${secondIdentity.getAttribute('data-ice-kisi-ad')}"]`);
 worldWindow.document.querySelector(`[data-ice-olaylar="${secondId}"]`).value = 'İkinci olay: Başka bir tarihte başladı.';
 click(`[data-ice-olaylar-kaydet="${secondId}"]`);
 assert.equal(world.icEvren.kisiler[0].kisilik[0].ad, 'Yalnız', 'İkinci evren düzenlemesi ilk evrenin kişiliğini değiştirmemeli');
@@ -187,10 +201,10 @@ assert.equal(world.icEvren.kisiler[0].kisilik[0].ad, 'Yalnız', 'Karşılık ba�
 
 worldWindow.EVS.kaynak = 'site';
 renderInner(secondWorld);
-const innerReveal = worldWindow.document.querySelector('.ice-gizli-kimlik');
-assert.ok(innerReveal, 'Okur iç evrendeki gizli kimlikleri görebilmeli');
-assert.equal(innerReveal.hasAttribute('open'), false, 'İç evren kimlikleri ilk açılışta spoiler olarak kapalı kalmalı');
-assert.match(innerReveal.textContent, /Gizli kimlik · spoiler/, 'Okur spoiler alanını açığa çıkmadan tanıyabilmeli');
+const innerReveal = worldWindow.document.querySelector('.ice-kimlik-zinciri');
+assert.ok(innerReveal, 'Okur iç evrendeki rozet kapılı kimlik panelini görebilmeli');
+assert.doesNotMatch(innerReveal.textContent, /Kutup/, 'Ana karakterin altın rozeti kazanılana kadar kimlik adı gizli kalmalı');
+assert.match(innerReveal.textContent, /Ana karakterin altın rozeti kazanılınca ilk kimlik açılır/i, 'Açılma koşulu spoiler vermeden açıklanmalı');
 assert.match(worldWindow.document.body.textContent, /Yan evrendeki karşılığı/, 'Okur kişi kartındaki karşılık bağlantısını görebilmeli');
 worldDom.window.close();
 
