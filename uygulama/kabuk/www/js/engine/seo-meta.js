@@ -21,6 +21,14 @@
     if (type === 'okuma' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)) return '/okuma-yolu/' + value + '/';
     return null;
   }
+  function localTestUniverseFrom(value) {
+    var entries = typeof veri !== 'undefined' && veri && veri.fanEserleri && veri.fanEserleri.evrenler;
+    if (!Array.isArray(entries)) return null;
+    var key = String(value || '').normalize('NFC').toLocaleLowerCase('tr-TR');
+    return entries.find(function (item) {
+      return item && item.tur === 'evren' && item.test === true && String(item.id || '').normalize('NFC').toLocaleLowerCase('tr-TR') === key;
+    }) || null;
+  }
   function canonicalUniverseFrom(data, value) {
     var entries = data && data.fanEserleri && data.fanEserleri.evrenler;
     if (!Array.isArray(entries)) return null;
@@ -224,6 +232,14 @@
       return;
     } else return;
     if (!path) return;
+    if (type === 'evren') {
+      var localTest = localTestUniverseFrom(id);
+      if (localTest) {
+        var sampleTitle = safeText(localTest.ad || id.toUpperCase(), 60);
+        setMeta({ path: '/', title: sampleTitle + ' · Örnek evren — TentiFor', description: safeText(localTest.ozet, 155) || 'TentiFor örnek evreni.', public: false });
+        return;
+      }
+    }
     var current = ++requestNo; lastKey = type + ':' + id;
     setMeta({ path: path, title: 'TentiFor — herkese açık içerik', description: 'Yayınlanabilir içerik doğrulanıyor.', public: false });
     try {
