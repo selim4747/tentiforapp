@@ -1,6 +1,5 @@
 (function () {
   'use strict';
-
   var FLAG = '__TENTIFOR_GIZLI_KISILIK_6314__';
   if (window[FLAG]) return;
   window[FLAG] = true;
@@ -11,40 +10,23 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
     });
   }
-
-  function cleanIdentities(value) {
-    var seen = {};
-    return (Array.isArray(value) ? value : []).slice(0, 12).map(function (item) {
-      return {
-        ad: String(item && item.ad || '').trim().slice(0, 80),
-        aciklama: String(item && item.aciklama || '').trim().slice(0, 1000)
-      };
-    }).filter(function (item) {
-      if (!item.ad && !item.aciklama) return false;
-      var key = item.ad.toLocaleLowerCase('tr');
-      if (key && seen[key]) return false;
-      if (key) seen[key] = true;
+  function cleanIds(value, parentId) {
+    var source = Array.isArray(value) ? value : [];
+    var seen = Object.create(null);
+    var available = typeof veri !== 'undefined' && veri && Array.isArray(veri.karakterler) ? veri.karakterler : [];
+    return source.map(function (item) {
+      return typeof item === 'string' ? item.trim().slice(0, 80) : '';
+    }).filter(function (id) {
+      if (!/^[A-Za-z0-9_-]+$/.test(id) || seen[id]) return false;
+      var identity = available.find(function (person) { return person && person.id === id; });
+      if (!identity || identity.gizliKimlikAnaId !== parentId) return false;
+      seen[id] = true;
       return true;
-    });
+    }).slice(0, 12);
   }
-
-  function parseLines(value) {
-    return cleanIdentities(String(value || '').split(/\n+/).map(function (line) {
-      line = line.trim();
-      if (!line) return null;
-      var colon = line.indexOf(':');
-      return colon < 0
-        ? { ad: line, aciklama: '' }
-        : { ad: line.slice(0, colon).trim(), aciklama: line.slice(colon + 1).trim() };
-    }).filter(Boolean));
+  function parseLines(value, parentId) {
+    return cleanIds(String(value || '').split(/\n+/), parentId);
   }
-
-  function serialize(value) {
-    return cleanIdentities(value).map(function (item) {
-      return item.ad + (item.aciklama ? ': ' + item.aciklama : '');
-    }).join('\n');
-  }
-
   function currentRecord() {
     if (typeof yoneticiSekme === 'undefined' || yoneticiSekme !== 'karakterler' ||
         typeof yoneticiKayitlar !== 'function' || typeof yoneticiSecili === 'undefined' || yoneticiSecili === null) return null;
@@ -52,25 +34,25 @@
     if (!Number.isInteger(index)) return null;
     return (yoneticiKayitlar() || [])[index] || null;
   }
-
   function renderEditor() {
     var root = document.querySelector('#yoneticiAlan');
     var target = root && root.querySelector('#yDurum');
-    var title = root && root.querySelector('#yMetin');
     var record = currentRecord();
-    if (!root || !target || !title || !record || root.querySelector('#yGizliKisilikler')) return;
-
+    if (!root || !target || !record || root.querySelector('#yGizliKisilikler')) return;
+    var ids = cleanIds(record.gizliKimlikler, record.id);
+    var available = (typeof veri !== 'undefined' && veri && Array.isArray(veri.karakterler) ? veri.karakterler : [])
+      .filter(function (person) { return person && person.gizliKimlikAnaId === record.id; });
+    var listing = available.map(function (person) { return person.id + ' — ' + person.ad; }).join('\n') || 'Bu karaktere bağlı kimlik kaydı yok.';
     var html = '<section class="kutu-y y-gizli-kimlik-editor" aria-labelledby="yGizliKisilikBaslik">' +
-      '<h3 id="yGizliKisilikBaslik">Gizli kimlikler ve kişilikler · spoiler</h3>' +
-      '<label for="yGizliKisilikler">Her satır: kimlik veya kişilik: açıklama</label>' +
-      '<textarea class="kod-giris arac-giris" id="yGizliKisilikler" rows="4" maxlength="13000" ' +
-      'placeholder="Star Saver: L25’in gerçek kimliği.&#10;Yaşam: Feil’in diğer kimliği.&#10;Bilim insanı: L25 ile birlikte çalışır.">' +
-      escapeHtml(serialize(record.gizliKimlikler)) + '</textarea>' +
-      '<p class="oyun-not">Kaydedilenler karakter kartında kapalı spoiler olarak görünür. Bunlar gizli/şifreli erişim bilgisi değildir: veri.json içinde düz metin olarak bulunur.</p>' +
+      '<h3 id="yGizliKisilikBaslik">Gizli kimlik panelleri · rozet sırası</h3>' +
+      '<label for="yGizliKisilikler">Her satıra ayrı karakter kaydının ID’si yazılır; satır sırası kilit sırasıdır.</label>' +
+      '<textarea class="kod-giris arac-giris" id="yGizliKisilikler" rows="4" maxlength="1000" placeholder="feil-yasam&#10;feil-kutuphane&#10;feil-bilim-insani">' +
+      escapeHtml(ids.join('\n')) + '</textarea>' +
+      '<p class="oyun-not"><b>Bu karakterin kimlik kayıtları:</b><br>' + escapeHtml(listing).replace(/\n/g, '<br>') +
+      '<br>Önce ana karakterin altın rozeti, sonra listedeki her kimliğin altın rozeti sıradaki paneli açar. Kimlik kayıtları veri.json’da düz metindir; bu arayüz şifreleme sağlamaz.</p>' +
       '</section>';
     target.insertAdjacentHTML('beforebegin', html);
   }
-
   var originalRender = window.yoneticiTemelCiz;
   if (typeof originalRender === 'function') {
     window.yoneticiTemelCiz = function () {
@@ -79,14 +61,12 @@
       return result;
     };
   }
-
   document.addEventListener('click', function (event) {
     var button = event.target && event.target.closest && event.target.closest('#yoneticiAlan [data-yonetici="kaydet"]');
     if (!button) return;
     var field = document.querySelector('#yGizliKisilikler');
     var record = currentRecord();
-    if (field && record) record.gizliKimlikler = parseLines(field.value);
+    if (field && record) record.gizliKimlikler = parseLines(field.value, record.id);
   }, true);
-
   window.yoneticiGizliKisilikHazir = function () { return true; };
 }());

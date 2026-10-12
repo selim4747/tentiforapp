@@ -395,6 +395,7 @@
         var sonuclar = [];
         if (typeof veri !== 'undefined' && veri) {
           (veri.karakterler || []).forEach(function (cItem) {
+            if (typeof kanonKimlikListedeGorunur === 'function' && !kanonKimlikListedeGorunur(cItem)) return;
             if (String(cItem.ad).toLowerCase().indexOf(q) !== -1 || String(cItem.tanim || '').toLowerCase().indexOf(q) !== -1) {
               sonuclar.push({ tur: 'Karakter', ad: cItem.ad, id: cItem.id, ozet: cItem.tanim });
             }
@@ -433,7 +434,7 @@
         var foundChar = null;
         if (typeof veri !== 'undefined' && veri && veri.karakterler) {
           foundChar = veri.karakterler.find(function (x) {
-            return x.id.toLowerCase() === cQuery || String(x.ad).toLowerCase() === cQuery || String(x.ad).toLowerCase().indexOf(cQuery) !== -1;
+            return (!x.gizliKimlikAnaId || typeof kanonKimlikListedeGorunur !== 'function' || kanonKimlikListedeGorunur(x)) && (x.id.toLowerCase() === cQuery || String(x.ad).toLowerCase() === cQuery || String(x.ad).toLowerCase().indexOf(cQuery) !== -1);
           });
         }
         if (!foundChar) {

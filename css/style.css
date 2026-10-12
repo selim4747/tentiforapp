@@ -660,3 +660,12 @@ html[data-tf644-sepya] .okuma-metin p,html[data-tf644-sepya] .uzun-metin p,html[
 @media(max-width:640px){.tf644-reading-toolbar{top:4px}.tf644-reading-label{width:100%;margin-right:0}.tf644-reading-toolbar button{flex:1}.tf644-reading-status{width:100%}.tf644-breadcrumb{margin-left:2px}}
 @media(prefers-reduced-motion:reduce){.tf644-progress:before{transition:none}}
 .tf645-search-filters{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.tf645-search-filters .secili{background:var(--deniz);color:var(--beyaz)}.tf645-conflict-dialog{max-width:900px;width:min(94vw,900px)}.tf645-conflict-grid{display:grid;grid-template-columns:minmax(120px,.7fr) minmax(0,1fr) minmax(0,1fr);gap:1px;margin:14px 0;border:1px solid var(--buz);border-radius:10px;overflow:auto;background:var(--buz)}.tf645-conflict-grid>*{padding:9px;background:var(--beyaz);min-width:0}.tf645-conflict-grid code{font:11px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}.cihazlarim summary{cursor:pointer}.cihazlarim li{margin:7px 0}.tf644-reading-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:7px}.tf644-reading-toolbar .ic-bag{min-height:36px;padding:7px 10px;border:1px solid var(--buz);border-radius:7px;background:var(--beyaz);color:var(--murekkep);cursor:pointer;font:12px var(--govde)}@media(max-width:640px){.tf645-conflict-grid{grid-template-columns:1fr}.tf645-conflict-grid b{display:none}.tf645-conflict-grid span{font-weight:700}.tf645-conflict-grid code{min-height:30px}}
+
+
+/* Kanon karakterlerinin sıralı gizli kimlik panelleri */
+.kanon-gizli-kimlikler{margin:1.25rem 0 0;padding:1rem;border:1px solid var(--buz);border-radius:1rem;background:var(--beyaz)}
+.kanon-gizli-kimlikler h4{margin:0 0 .55rem;font-size:1rem}
+.kanon-gizli-kimlik-dugmeleri{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:.7rem}
+.kanon-gizli-kimlik-dugmeleri .dugme{text-align:left;white-space:normal}
+.kanon-gizli-kimlik-dugmeleri .dugme:disabled{opacity:.68;cursor:not-allowed}
+@media(max-width:640px){.kanon-gizli-kimlikler{padding:.8rem}.kanon-gizli-kimlik-dugmeleri{display:grid;grid-template-columns:1fr}.kanon-gizli-kimlik-dugmeleri .dugme{width:100%}}

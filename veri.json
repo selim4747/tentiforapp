@@ -75,43 +75,19 @@
     {
       "id": "feil",
       "ad": "Feil Luyot",
-      "unvan": "Kurucu · Beyaz",
+      "unvan": "Kurucu",
       "grup": "Luyot",
       "ozet": "Kurucu. Kütüphanenin başında klon bedenleriyle 624 yıl kaldı; her yeni bedeni kendi oğlu diye tanıttı.",
       "detay": "Tömye Kütüphanesi'nin mimarisini kendisi tasarladı ve binayı sır barındıracak biçimde kurdu. Kurucu olarak klon bedenleriyle 624 yıl kütüphanenin başında kaldı; her yeni bedenini kendi oğlu diye tanıttı. Feil resmî görevli numarası almaz. Bu dönemin sonunda Külaf ilk resmî görevli oldu ve 95 yıl kaldı. Gize 6. görevli, Tarı 7., Necale 8., Afor 9. görevlidir.\n\nSaek'in kardeşidir; ikisi de Kaelan'ın kuzenidir ve kuzenlik baba tarafındandır. Deneylere 24 gün kala kütüphaneyi ve mülkü Necale'ye devretti; ardından kalan varlığını sattı ve kendisiyle Kaelan için burs ayırdı. Bursu 'ders başarıları' ve 'deney parası' adıyla verdiği için kimse kaynağını sorgulamadı.\n\nEn normal konuşan ruh virüsüdür: sıradan, esprili, muhabbet eden bir adam. Kafası karışıktır — çok düşünür ama bazen bir yere varamaz. Bunu asla belli etmez.",
-      "gizli": [
-        {
-          "katman": "kimlik",
-          "katmanAd": "Kimlik",
-          "baslik": "1150 Yıl",
-          "dogrulama": "36720be1f24ecb050fc306057bffe740ee96dc96f3ae7196d0d4d774935c767d",
-          "metin": "Feil'in ikinci adı Yaşam'dır. Kaelan'ın 25. denemesinde ruhu bedeninden çıktı, dengesini kaybetti ve taşının içine girdi — taş o anda görünmez, duvarlardan geçebilen bir araca dönüştü. Bedendeki boşluk on saniye sürdü; o on saniyede Feil 1150 yıl yaşadı. Kaelan bunu asla öğrenmedi.\n\nYüz yıl boyunca taşıyla boyutlar arasında gezdi; zamanın tersine aktığı boyutlardan geçti ve \"Yaşam\" adını orada aldı. Bir Evrengezerdir; kendi deney evreninde baloncuk evrenler yaratıp onlara kurallar koyar — yani fiilen Tanrı'nın işini küçük ölçekte tekrar eder.\n\nO 1150 yılı unutmayı KENDİSİ seçti — ağırlığından değil, anlamsızlığından kaçtı. Üstüne düşününce kafası karışır, bir yere varamaz. Ama hafızası eksiksizdir: istese hatırlayabilir; anıları silinmedi, sadece onlara bakmıyor. Yine de istemeden, rastgele anlarda hatırladığı olur.\n\nBunu kimseyle paylaşmaz — Yejen dışında. Dünyada bu iç yükü bilen tek kişi karısıdır. Kanonik bir motto vardır: \"24 başarısızlık, bir Yaşam getirdi.\""
-        },
-        {
-          "katman": "kenar",
-          "katmanAd": "Kenar",
-          "baslik": "Beyaz Adının Kaynağı",
-          "dogrulama": "19cf232f649ebb5644d56033e601de28caf6fb1126fa1016ea800b6b7583b416",
-          "metin": "\"Beyaz\" adı bir giysi seçimi değildir. Başka evrenlerin ona taktığı isimdir ve onu kendi kardeşinin gelecekteki hâlinden öğrenir. Saek ona şöyle der: \"Bana burada Kırmızı derler. Sana da Beyaz diyorlar.\"\n\nKitabı \"Yaşam\" adıyla yayımlandığında yaşı sıfır sayılır. Basım, zamanda geriye dönülerek kütüphanecilere dağıtılır."
-        }
-      ],
+      "gizli": [],
       "evrenler": [
         "tomye",
         "e25"
       ],
       "gizliKimlikler": [
-        {
-          "ad": "Yaşam",
-          "aciklama": "Feil’in diğer kimliği."
-        },
-        {
-          "ad": "Kütüphaneci",
-          "aciklama": "Feil’in kütüphaneci kimliği."
-        },
-        {
-          "ad": "Bilim insanı",
-          "aciklama": "L25 ile birlikte çalışır."
-        }
+        "feil-yasam",
+        "feil-kutuphane",
+        "feil-bilim-insani"
       ]
     },
     {
@@ -135,7 +111,8 @@
         "e25"
       ],
       "ozellikler": {
-        "sehir": "Yegim"
+        "sehir": "Yegim",
+        "luyotRengi": "Kırmızı — her zaman kırmızı giyer."
       }
     },
     {
@@ -157,7 +134,10 @@
       "evrenler": [
         "tomye",
         "e25"
-      ]
+      ],
+      "ozellikler": {
+        "luyotRengi": "Siyah — her zaman siyah giyer."
+      }
     },
     {
       "id": "dorduncu",
@@ -241,20 +221,6 @@
           "baslik": "Yükseliş ve Hayal Kırıklığı",
           "dogrulama": "e67b79fb1f275263acf536d1a9bf8c9874f7a7b7eea413ecc455b4b1bf69cfd4",
           "metin": "L25 yükselip Tanrı'yla konuştu. Ama karşısındakinin gerçek TANRI değil, bu evrendeki yansıması olduğunu ona söyleyen Tanrı olmadı — bunu Yaşam'dan öğrendi.\n\nBu ayrıntı L25'in hayal kırıklığının çekirdeğidir: cevabı buldu sandığı yerde, cevabın kendisinin de bir başkasının gölgesi olduğunu öğrenir.\n\nSonrasında yeni bir evren yarattı ve ara evrende mahsur kaldı — kendi öznel deneyiminde dört ay, dışarıda (asıl evrende) dört yıl geçti. Sıkıntıdan dışarıya mesajlar gönderdi; mesajlar tesadüfen Tömye Kütüphanesi'ne düştü ama Tarı onları hiçbir zaman görmedi. Afor onu kurtardı."
-        },
-        {
-          "katman": "kimlik",
-          "katmanAd": "Kimlik",
-          "baslik": "StarSaver",
-          "dogrulama": "36720be1f24ecb050fc306057bffe740ee96dc96f3ae7196d0d4d774935c767d",
-          "metin": "Kendisinin başarısızlıktan başka bir şey olmadığını düşünür ve kendine ısı geçirmeyen bir zırh üretip, hafızasını sıfırlar. Ardından uzak bir uyduya yerleşip Star Saver adıyla hayatını yaşamaya başlar. Artık farklı bir amacı vardır. Yıldızların hidrojenini çalan bir organizasyonu durdurmak. "
-        },
-        {
-          "katman": "tas",
-          "katmanAd": "Taş",
-          "baslik": "StarSaver Sonu",
-          "dogrulama": "e67b79fb1f275263acf536d1a9bf8c9874f7a7b7eea413ecc455b4b1bf69cfd4",
-          "metin": "Yaşam adlı biri onu bulup yavaş yavaş hafızasını geri yükler. Bu süreçte L projesinin ve kendisinin amacının bırakmaya değmeyeceğini ve çok önemli bir şey olduğunun farkına varır. Hafızası tamamen geri yüklenince laboratuvarına geri döner ve her zamankinden daha eforlu şekilde çalışmaya başlar"
         }
       ],
       "ozellikler": {
@@ -262,10 +228,7 @@
         "aile": "L Projesi"
       },
       "gizliKimlikler": [
-        {
-          "ad": "Star Saver",
-          "aciklama": "L25’in gerçek kimliği."
-        }
+        "l25-star-saver"
       ]
     },
     {
@@ -424,6 +387,94 @@
       "grup": "E26",
       "ozet": "Topunu önüne alıp kendi kendine konuşan, asosyal biri.",
       "detay": "E26'da yaşar. Asosyaldır; konuşma topunu önüne alıp kendi kendine konuşur.\n\nRastgele birini kaçırır ve konuşma toplarının işleyişini değiştirmek için üzerinde deneyler yapar. Sonunda onun zihnini kontrol eder; kendi konuşma topunun uzayabildiği kısmı artırır ve konuşma topu sayısını çoğaltır."
+    },
+    {
+      "id": "l25-star-saver",
+      "ad": "Star Saver",
+      "unvan": "L25’in gizli kimliği",
+      "grup": "Dışarısı",
+      "ozet": "L25’in gerçek kimliği.",
+      "detay": "",
+      "gizliKimlikAnaId": "l25",
+      "evrenler": [
+        "tomye"
+      ],
+      "gizli": [
+        {
+          "katman": "kimlik",
+          "katmanAd": "Kimlik",
+          "baslik": "StarSaver",
+          "dogrulama": "36720be1f24ecb050fc306057bffe740ee96dc96f3ae7196d0d4d774935c767d",
+          "metin": "Kendisinin başarısızlıktan başka bir şey olmadığını düşünür ve kendine ısı geçirmeyen bir zırh üretip, hafızasını sıfırlar. Ardından uzak bir uyduya yerleşip Star Saver adıyla hayatını yaşamaya başlar. Artık farklı bir amacı vardır. Yıldızların hidrojenini çalan bir organizasyonu durdurmak. "
+        },
+        {
+          "katman": "tas",
+          "katmanAd": "Taş",
+          "baslik": "StarSaver Sonu",
+          "dogrulama": "e67b79fb1f275263acf536d1a9bf8c9874f7a7b7eea413ecc455b4b1bf69cfd4",
+          "metin": "Yaşam adlı biri onu bulup yavaş yavaş hafızasını geri yükler. Bu süreçte L projesinin ve kendisinin amacının bırakmaya değmeyeceğini ve çok önemli bir şey olduğunun farkına varır. Hafızası tamamen geri yüklenince laboratuvarına geri döner ve her zamankinden daha eforlu şekilde çalışmaya başlar"
+        }
+      ]
+    },
+    {
+      "id": "feil-yasam",
+      "ad": "Yaşam",
+      "unvan": "Luyot · Beyaz",
+      "grup": "Luyot",
+      "ozet": "Feil’in diğer kimliği.",
+      "detay": "Feil Luyot’un diğer kimliği Yaşam’dır. Beyaz, Feil/Yaşam’ın Luyot rengidir; bu üç Luyot akrabası kendi rengini sürekli giyer.",
+      "gizliKimlikAnaId": "feil",
+      "evrenler": [
+        "tomye",
+        "e25"
+      ],
+      "gizli": [
+        {
+          "katman": "kimlik",
+          "katmanAd": "Kimlik",
+          "baslik": "1150 Yıl",
+          "dogrulama": "36720be1f24ecb050fc306057bffe740ee96dc96f3ae7196d0d4d774935c767d",
+          "metin": "Feil'in ikinci adı Yaşam'dır. Kaelan'ın 25. denemesinde ruhu bedeninden çıktı, dengesini kaybetti ve taşının içine girdi — taş o anda görünmez, duvarlardan geçebilen bir araca dönüştü. Bedendeki boşluk on saniye sürdü; o on saniyede Feil 1150 yıl yaşadı. Kaelan bunu asla öğrenmedi.\n\nYüz yıl boyunca taşıyla boyutlar arasında gezdi; zamanın tersine aktığı boyutlardan geçti ve \"Yaşam\" adını orada aldı. Bir Evrengezerdir; kendi deney evreninde baloncuk evrenler yaratıp onlara kurallar koyar — yani fiilen Tanrı'nın işini küçük ölçekte tekrar eder.\n\nO 1150 yılı unutmayı KENDİSİ seçti — ağırlığından değil, anlamsızlığından kaçtı. Üstüne düşününce kafası karışır, bir yere varamaz. Ama hafızası eksiksizdir: istese hatırlayabilir; anıları silinmedi, sadece onlara bakmıyor. Yine de istemeden, rastgele anlarda hatırladığı olur.\n\nBunu kimseyle paylaşmaz — Yejen dışında. Dünyada bu iç yükü bilen tek kişi karısıdır. Kanonik bir motto vardır: \"24 başarısızlık, bir Yaşam getirdi.\""
+        },
+        {
+          "katman": "kenar",
+          "katmanAd": "Kenar",
+          "baslik": "Beyaz Adının Kaynağı",
+          "dogrulama": "19cf232f649ebb5644d56033e601de28caf6fb1126fa1016ea800b6b7583b416",
+          "metin": "\"Beyaz\" adı bir giysi seçimi değildir. Başka evrenlerin ona taktığı isimdir ve onu kendi kardeşinin gelecekteki hâlinden öğrenir. Saek ona şöyle der: \"Bana burada Kırmızı derler. Sana da Beyaz diyorlar.\"\n\nKitabı \"Yaşam\" adıyla yayımlandığında yaşı sıfır sayılır. Basım, zamanda geriye dönülerek kütüphanecilere dağıtılır."
+        }
+      ],
+      "ozellikler": {
+        "luyotRengi": "Beyaz — her zaman beyaz giyer."
+      }
+    },
+    {
+      "id": "feil-kutuphane",
+      "ad": "Kütüphaneci",
+      "unvan": "Feil Luyot · Kütüphaneci kimliği",
+      "grup": "Luyot",
+      "ozet": "Feil’in kütüphaneci kimliği.",
+      "detay": "",
+      "gizliKimlikAnaId": "feil",
+      "evrenler": [
+        "tomye",
+        "e25"
+      ],
+      "gizli": []
+    },
+    {
+      "id": "feil-bilim-insani",
+      "ad": "Bilim insanı",
+      "unvan": "Feil Luyot · Bilim insanı kimliği",
+      "grup": "Luyot",
+      "ozet": "L25 ile birlikte çalışır.",
+      "detay": "",
+      "gizliKimlikAnaId": "feil",
+      "evrenler": [
+        "tomye",
+        "e25"
+      ],
+      "gizli": []
     }
   ],
   "evren": [
