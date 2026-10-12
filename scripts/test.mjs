@@ -3,6 +3,7 @@ import { setTimeout as wait } from 'node:timers/promises';
 
 const tests = [
   'tests/calistir.mjs',
+  'tests/kanon-takvim.mjs',
   'tests/5.1-dashboard.mjs',
   'tests/5.2-membership.mjs',
   'tests/5.3-regressions.mjs',

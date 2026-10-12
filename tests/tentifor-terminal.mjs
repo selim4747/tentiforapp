@@ -98,8 +98,10 @@ window.AudioContext = class MockAudioContext {
 };
 
 // Veri Nesnesi Mock
+const anaKanonVerisi = JSON.parse(fs.readFileSync(path.join(root, 'veri.json'), 'utf8'));
 window.veri = {
   surum: '6.3.15',
+  takvim: anaKanonVerisi.takvim,
   karakterler: [
     { id: 'necale', ad: 'Necale', unvan: 'Baş Arşivci', ozet: 'Kütüphane bekçisi.' },
     { id: 'ozan', ad: 'Ozan', unvan: 'Gezgin', ozet: 'Buzun altındaki yankıları arar.' }
@@ -119,6 +121,11 @@ window.romanAcikMi = (b) => b.fiyat === 0;
 window.kanonSayfaErisimi = () => true;
 window.evrenSeciciListesi = () => ({ site: [], fan: window.veri.evren.map((e) => ({ ad: e.baslik, git: `#/ev/fan/${e.id}` })), benim: [], acilan: [] });
 window.fanBul = (_kaynak, _tur, id) => window.veri.evren.find((e) => e.id === id);
+const NativeDate = window.Date;
+window.Date = class extends NativeDate {
+  constructor(...args) { super(...(args.length ? args : ['2000-01-02T00:00:00.000Z'])); }
+  static now() { return NativeDate.parse('2000-01-02T00:00:00.000Z'); }
+};
 window.eval(jsContent);
 
 assert.ok(window.TentiforTerminal, 'window.TentiforTerminal global nesnesi tanımlanmalı');
@@ -168,7 +175,8 @@ let out = '';
 // 6. Tömye Kozmolojisi ve Evren Motoru Komutları
 out = run('tarih');
 assert.ok(out.includes('Tömye Yılı') && out.includes('25 saat'), 'Tömye takvim koordinatları hesaplanmalı');
-
+out = run('saat');
+assert.ok(out.includes('24:00') && out.includes('%96'), '25 saatlik gün ilerlemesi 24. saatte %96 olmalı; saat uzunluğu sabit kodlanmamalı');
 out = run('takvim');
 assert.ok(out.includes('Neo Vot Rit') && out.includes('28 gün') || out.includes('29 gün'), 'Aylık Tömye takvim matrisi gerçek 6 günlük haftayla çizilmeli');
 
