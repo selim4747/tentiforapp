@@ -129,26 +129,18 @@ export const isim = {
    2. TÖMYE TAKVİMİ VE ZAMAN HESAPLAYICI
    ========================================================================== */
 export const TAKVIM_VARSAYILAN = {
-  epokDunya: '2025-01-01',
-  epokYil: 1,
-  gunSaat: 25,
-  haftaGun: 6,
-  gunler: ['Yen', 'Tan', 'Gün', 'Dün', 'Tün', 'Son'],
+  epokDunya: '2000-01-01', // geçici; site yöneticisi değiştirebilir
+  epokYil: 1, gunSaat: 25, haftaGun: 6,
+  gunler: ['Neo', 'Vot', 'Rit', 'Rof', 'Yaf', 'Ilat'],
   aylar: [
-    { ad: 'Afor', koken: 'Buz', gun: 28 },
-    { ad: 'Bero', koken: 'Geçit', gun: 28 },
-    { ad: 'Cora', koken: 'Gölge', gun: 28 },
-    { ad: 'Dala', koken: 'Yarık', gun: 28 },
-    { ad: 'Etem', koken: 'Rüzgâr', gun: 28 },
-    { ad: 'Firo', koken: 'Kıvılcım', gun: 28 },
-    { ad: 'Gora', koken: 'Taş', gun: 28 },
-    { ad: 'Hane', koken: 'Sığınak', gun: 28 },
-    { ad: 'İlen', koken: 'Derinlik', gun: 28 },
-    { ad: 'Jora', koken: 'Ayaz', gun: 28 },
-    { ad: 'Kyldo', koken: 'Ateş', gun: 30 }
+    { ad: 'Leg', koken: 'kar', gun: 28 }, { ad: 'Sop', koken: 'buz', gun: 28 },
+    { ad: 'Mut', koken: 'don', gun: 28 }, { ad: 'Gerdec', koken: 'çatlak', gun: 29 },
+    { ad: 'Talım', koken: 'derin', gun: 28 }, { ad: 'Geso', koken: 'uzak', gun: 28 },
+    { ad: 'Giji', koken: 'ışık', gun: 29 }, { ad: 'Sitriy', koken: 'yıldız', gun: 28 },
+    { ad: 'Lipez', koken: 'sabır', gun: 28 }, { ad: 'Açak', koken: 'gece', gun: 28 },
+    { ad: 'Dezeh', koken: 'hasat', gun: 28 }
   ]
 };
-
 function getTakvimAyar() {
   return (cachedVeri && cachedVeri.takvim) || TAKVIM_VARSAYILAN;
 }

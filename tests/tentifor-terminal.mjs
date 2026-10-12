@@ -167,10 +167,10 @@ console.log('✓ Termux ve site dışı komutlar terminal yüzeyinden kaldırıl
 let out = '';
 // 6. Tömye Kozmolojisi ve Evren Motoru Komutları
 out = run('tarih');
-assert.ok(out.includes('Tömye Yılı') && out.includes('28 günlük döngü'), 'Tömye takvim koordinatları hesaplanmalı');
+assert.ok(out.includes('Tömye Yılı') && out.includes('25 saat'), 'Tömye takvim koordinatları hesaplanmalı');
 
 out = run('takvim');
-assert.ok(out.includes('Pzt Sal Çar Per Cum Cmt Paz'), 'Aylık Tömye takvim matrisi çizilmeli');
+assert.ok(out.includes('Neo Vot Rit') && out.includes('28 gün') || out.includes('29 gün'), 'Aylık Tömye takvim matrisi gerçek 6 günlük haftayla çizilmeli');
 
 out = run('isim çatlak');
 assert.ok(out.includes('Gerdec') || out.includes('Kyldo İsim Üretim Matrisi'), 'Kyldo isim algoritması çalışmalı');
