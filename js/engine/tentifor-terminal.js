@@ -1747,7 +1747,9 @@ ${gorevler.map((g) => {
 
     komutSaat(ekran) {
       const tomye = tomyeZamani();
-      const gunOrani = (tomye.saat * 60 + tomye.dakika) / (26 * 60);
+      const ayar = terminalTakvimAyar();
+      const gunDakika = Math.max(1, Number(ayar.gunSaat) || 25) * 60;
+      const gunOrani = Math.min(1, (tomye.saat * 60 + tomye.dakika) / gunDakika);
       const barLen = 24;
       const dolgu = Math.round(gunOrani * barLen);
       const bar = '█'.repeat(dolgu) + '░'.repeat(Math.max(0, barLen - dolgu));
