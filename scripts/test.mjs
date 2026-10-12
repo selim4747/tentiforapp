@@ -32,6 +32,7 @@ const tests = [
   'tests/6.3.3-builder.mjs',
   'tests/secret-identities.mjs',
   'tests/secret-identities-6314.mjs',
+  'tests/user-universe-secret-identities.mjs',
   'tests/native-content-sync.mjs',
   'tests/sira-6316-runtime.mjs',
   'tests/6.3.4-discovery-feed.mjs',
