@@ -167,20 +167,24 @@
     return dp[m][n];
   }
   // Tömye takvim hesaplayıcısı
-  function tomyeZamani() {
-    const simdi = new Date();
-    const baslangic = new Date(Date.UTC(2024, 0, 1));
-    const gecenGun = Math.floor((simdi - baslangic) / 86400000);
-    const aylar = ['Buz', 'Çatlak', 'Akıntı', 'Kırağı', 'Yankı', 'Gece', 'Güneş', 'Kül', 'Fırtına', 'Sessizlik', 'Işık', 'Dönüş'];
-    const dunyaDakika = simdi.getHours() * 60 + simdi.getMinutes();
-    const tomyeDakikaTop = Math.floor((dunyaDakika / 1440) * (26 * 60));
-    return {
-      yil: 744 + Math.floor(gecenGun / 336),
-      ay: aylar[Math.floor((gecenGun % 336) / 28)] || 'Buz',
-      gun: (gecenGun % 28) + 1,
-      saat: Math.floor(tomyeDakikaTop / 60),
-      dakika: tomyeDakikaTop % 60
+  function terminalTakvimAyar() {
+    return (typeof veri !== 'undefined' && veri && veri.takvim) || {
+      epokDunya: '2000-01-01', epokYil: 1, gunSaat: 25,
+      gunler: ['Neo', 'Vot', 'Rit', 'Rof', 'Yaf', 'Ilat'],
+      aylar: [{ad:'Leg',gun:28},{ad:'Sop',gun:28},{ad:'Mut',gun:28},{ad:'Gerdec',gun:29},{ad:'Talım',gun:28},{ad:'Geso',gun:28},{ad:'Giji',gun:29},{ad:'Sitriy',gun:28},{ad:'Lipez',gun:28},{ad:'Açak',gun:28},{ad:'Dezeh',gun:28}]
     };
+  }
+  function tomyeZamani() {
+    const ayar = terminalTakvimAyar(), simdi = new Date();
+    const gecenSaat = (simdi.getTime() - new Date(ayar.epokDunya + 'T00:00:00Z').getTime()) / 3600000;
+    if (gecenSaat < 0) return { yil: ayar.epokYil, ay: '—', gun: 0, saat: 0, dakika: 0 };
+    const toplamSaat = Math.floor(gecenSaat), gecenGun = Math.floor(toplamSaat / ayar.gunSaat);
+    const yilGun = ayar.aylar.reduce((n, ay) => n + ay.gun, 0);
+    const yil = ayar.epokYil + Math.floor(gecenGun / yilGun);
+    let kalan = gecenGun % yilGun, ayIndeks = 0;
+    while (ayIndeks < ayar.aylar.length - 1 && kalan >= ayar.aylar[ayIndeks].gun) { kalan -= ayar.aylar[ayIndeks].gun; ayIndeks++; }
+    return { yil, ay: ayar.aylar[ayIndeks].ad, gun: kalan + 1, saat: toplamSaat % ayar.gunSaat,
+      dakika: Math.floor((gecenSaat - toplamSaat) * 60), haftaGunu: ayar.gunler[gecenGun % ayar.gunler.length], toplamGun: gecenGun };
   }
   // Kanon Ses Çiftleri
   const SES_CIFTI = {
@@ -949,8 +953,8 @@
 ║   Tömye Kozmolojisi & Siber Kurtarma Konsolu            ║
 ╚══════════════════════════════════════════════════════════╝</span>
 <span class="term-parlak">⏳ Zaman, Takvim & Yaş:</span>
-  <span class="term-vurgu">saat</span>                         : Tömye güncel 26 saatini ve gün ilerlemesini verir.
-  <span class="term-vurgu">takvim</span>                       : 28 günlük aylık takvim matrisini çizer.
+  <span class="term-vurgu">saat</span>                         : Tömye güncel 25 saatini ve gün ilerlemesini verir.
+  <span class="term-vurgu">takvim</span>                       : 11 aylı takvim matrisini çizer.
   <span class="term-vurgu">tarih</span>                        : Dünya ve Tömye döngü koordinatlarını karşılaştırır.
   <span class="term-vurgu">cevir &lt;YYYY-AA-GG&gt;</span>           : Dünya tarihini Tömye gün/ay/yılına çevirir.
   <span class="term-vurgu">yas &lt;sayi&gt; [-tomyeden]</span>       : Dünya ile Tömye arasındaki yaş hesabını yapar.
@@ -1024,8 +1028,8 @@
 <span class="term-parlak">--- ZAMAN DÖNGÜSÜ KOORDİNATLARI ---</span>
 <span class="term-vurgu">Dünya (UTC/TR):</span> ${simdi.toISOString().replace('T', ' ').slice(0, 19)}
 <span class="term-vurgu">Tömye Yılı    :</span> ${tomye.yil}
-<span class="term-vurgu">Tömye Ayı     :</span> ${tomye.gun}. ${tomye.ay} (28 günlük döngü)
-<span class="term-vurgu">Tömye Saati   :</span> ${String(tomye.saat).padStart(2, '0')}:${String(tomye.dakika).padStart(2, '0')} (Günde 26 saat)
+<span class="term-vurgu">Tömye Ayı     :</span> ${tomye.gun}. ${tomye.ay} (takvim ayı)
+<span class="term-vurgu">Tömye Saati   :</span> ${String(tomye.saat).padStart(2, '0')}:${String(tomye.dakika).padStart(2, '0')} (Günde 25 saat)
 <span class="term-soluk">Kozmolojik Not: Tömye'nin gökyüzünde ay yoktur, aylar buzul erime periyoduna göre çekilir.</span>
       `);
     }
@@ -1253,22 +1257,20 @@ ${enIyi ? `En yakın olası rota: <span class="term-basari">#/${enIyi.id}</span>
     }
 
     komutTakvim(ekran) {
-      const tomye = tomyeZamani();
-      let cikti = `<span class="term-parlak">TÖMYE TAKVİMİ — Yıl ${tomye.yil}, ${tomye.ay} Ayı</span>\n`;
-      cikti += '<span class="term-soluk">Pzt Sal Çar Per Cum Cmt Paz</span>\n';
-
-      for (let g = 1; g <= 28; g++) {
-        const isToday = g === tomye.gun;
-        const pad = g.toString().padStart(3, ' ');
-        if (isToday) {
-          cikti += `<span class="term-vurgu">[${g < 10 ? ' ' + g : g}]</span>`;
-        } else {
-          cikti += `${pad} `;
-        }
-        if (g % 7 === 0) cikti += '\n';
+      const ayar = terminalTakvimAyar(), tomye = tomyeZamani();
+      const ayIndeks = Math.max(0, ayar.aylar.findIndex(x => x.ad === tomye.ay));
+      const gunSayisi = ayar.aylar[ayIndeks].gun;
+      const haftaBoyu = ayar.gunler.length;
+      const baslangicHafta = ((tomye.toplamGun - (tomye.gun - 1)) % haftaBoyu + haftaBoyu) % haftaBoyu;
+      let cikti = `<span class="term-parlak">TÖMYE TAKVİMİ — Yıl ${tomye.yil}, ${tomye.ay} Ayı (${gunSayisi} gün)</span>\n`;
+      cikti += `<span class="term-soluk">${ayar.gunler.map(x => this.kacir(x)).join(' ')}</span>\n`;
+      cikti += '   '.repeat(baslangicHafta);
+      for (let g = 1; g <= gunSayisi; g++) {
+        const val = String(g).padStart(2, ' ');
+        cikti += g === tomye.gun ? `<span class="term-vurgu">[${val}]</span>` : ` ${val} `;
+        if ((baslangicHafta + g) % haftaBoyu === 0) cikti += '\n';
       }
-
-      cikti += `\n<span class="term-soluk">Bugün döngünün ${tomye.gun}. günüdür. Gün 26 saattir.</span>`;
+      cikti += `\n<span class="term-soluk">Bugün ${tomye.gun}. gündür; Tömye günü ${ayar.gunSaat} saattir.</span>`;
       this.yaz(ekran, cikti);
     }
 
@@ -1290,7 +1292,7 @@ ${sonuclar.map((s) => `<span class="term-vurgu">• ${s.yol.padEnd(24, ' ')}:</s
         '“Gökyüzünde ay yoksa, yönünü denizin üzerinde donan buz çatlaklarına bakarak bulursun.” — Ozan',
         '“Tömye unutmaz. Sadece bazen hatırlamak için kışın bitmesini bekler.”',
         '“Gırılar her şeyi yaktığını sandı; oysa küller en sağlam şifreleme yöntemidir.”',
-        '“26 saatlik bir günde 2 saat fazlan vardır. O iki saatte ne yaptığın evrenini belirler.”'
+        '“25 saatlik bir günde bir saat fazlan vardır. O iki saatte ne yaptığın evrenini belirler.”'
       ];
       const secilen = alintilar[Math.floor(Math.random() * alintilar.length)];
       this.yaz(ekran, `<span class="term-uyari" style="font-style:italic;">${this.kacir(secilen)}</span>`);
@@ -1540,7 +1542,7 @@ ${rozetler.map((r) => {
       const yankilar = (veri && Array.isArray(veri.yankilar)) ? veri.yankilar : [
         { no: 'Y-01', baslik: 'Kırağı Yankısı', metin: 'Buzun altından gelen düzenli vuruş sesleri.' },
         { no: 'Y-02', baslik: 'Yanmış Sayfa Yankısı', metin: 'Kütüphanenin 5. katmanından yükselen kül kokusu.' },
-        { no: 'Y-03', baslik: 'Dördüncü Çatlak', metin: 'Zamanın 26 saatlik düzlemde 2 saat kayması.' }
+        { no: 'Y-03', baslik: 'Dördüncü Çatlak', metin: 'Zamanın 25 saatlik düzlemde 1 saat kayması.' }
       ];
 
       this.yaz(ekran, `
@@ -1756,65 +1758,38 @@ ${gorevler.map((g) => {
 <span class="term-parlak">║                     TÖMYE GÜNEŞ ZAMANI                       ║</span>
 <span class="term-parlak">╚══════════════════════════════════════════════════════════════╝</span>
 <span class="term-vurgu">Tarih        :</span> <b>${tomye.gun}. ${tomye.ay} ${tomye.yil}</b> (Aysız Gezegen Takvimi)
-<span class="term-vurgu">Saat         :</span> <b>${String(tomye.saat).padStart(2, '0')}:${String(tomye.dakika).padStart(2, '0')}</b> (Günün ${tomye.saat}. Saati / Gün 26 saattir)
-<span class="term-vurgu">Döngü        :</span> 28 günlük ay döngüsünün ${tomye.gun}. günü
+<span class="term-vurgu">Saat         :</span> <b>${String(tomye.saat).padStart(2, '0')}:${String(tomye.dakika).padStart(2, '0')}</b> (Günün ${tomye.saat}. saati / Gün 25 saattir)
+<span class="term-vurgu">Döngü        :</span> takvim yılının ${tomye.gun}. günü
 <span class="term-vurgu">Gün İlerleme :</span> [${bar}] %${yuzde}
 <span class="term-soluk">Kozmoloji Notu: Tömye semalarında ay yoktur; zaman akışı deniz üzerindeki buzul katmanları ve yıldız çarkıyla ölçülür.</span>
       `);
     }
 
     komutCevir(ekran, tarihStr) {
-      if (!tarihStr) {
-        this.yaz(ekran, '<span class="term-soluk">Kullanım: cevir YYYY-AA-GG (örn: cevir 2026-10-06)</span>');
-        return;
-      }
-      const dt = new Date(tarihStr);
-      if (isNaN(dt.getTime())) {
-        this.yaz(ekran, '<span class="term-hata">Geçersiz tarih formatı. Örnek: cevir 2026-10-06</span>');
-        return;
-      }
-      const baslangic = new Date(Date.UTC(2024, 0, 1));
-      const gecenGun = Math.floor((dt - baslangic) / 86400000);
-      const tomyeYili = 744 + Math.floor(gecenGun / 336);
-      const aylar = ['Buz', 'Çatlak', 'Akıntı', 'Kırağı', 'Yankı', 'Gece', 'Güneş', 'Kül', 'Fırtına', 'Sessizlik', 'Işık', 'Dönüş'];
-      const ayIndeks = ((Math.floor(gecenGun / 28) % 12) + 12) % 12;
-      const ayGunu = ((gecenGun % 28) + 28) % 28 + 1;
-      const gunler = ['Yen', 'Tan', 'Gün', 'Dün', 'Tün', 'Son'];
-      const haftaGunu = gunler[((gecenGun % 6) + 6) % 6];
-
-      this.yaz(ekran, `
-<span class="term-basari">✓ TÖMYE TAKVİM ÇEVİRİSİ:</span>
+      if (!tarihStr || !/^\d{4}-\d{2}-\d{2}$/.test(tarihStr)) { this.yaz(ekran, '<span class="term-hata">Kullanım: cevir YYYY-AA-GG</span>'); return; }
+      const tarih = new Date(tarihStr + 'T00:00:00Z');
+      if (Number.isNaN(tarih.getTime()) || tarih.toISOString().slice(0, 10) !== tarihStr) { this.yaz(ekran, '<span class="term-hata">Geçersiz Dünya tarihi.</span>'); return; }
+      const ayar = terminalTakvimAyar(), gecenSaat = (tarih.getTime() - new Date(ayar.epokDunya + 'T00:00:00Z').getTime()) / 3600000;
+      if (gecenSaat < 0) { this.yaz(ekran, '<span class="term-hata">Tarih, takvim başlangıcından önce.</span>'); return; }
+      const toplamSaat = Math.floor(gecenSaat), gecenGun = Math.floor(toplamSaat / ayar.gunSaat);
+      const yilGun = ayar.aylar.reduce((n, ay) => n + ay.gun, 0), yil = ayar.epokYil + Math.floor(gecenGun / yilGun);
+      let kalan = gecenGun % yilGun, ayIndeks = 0;
+      while (ayIndeks < ayar.aylar.length - 1 && kalan >= ayar.aylar[ayIndeks].gun) { kalan -= ayar.aylar[ayIndeks].gun; ayIndeks++; }
+      this.yaz(ekran, `<span class="term-basari">✓ TÖMYE TAKVİM ÇEVİRİSİ:</span>
 <span class="term-vurgu">Dünya Tarihi :</span> ${tarihStr}
-<span class="term-vurgu">Tömye Tarihi :</span> <b>${ayGunu} ${aylar[ayIndeks]} ${tomyeYili}</b> (${haftaGunu} günü)
-<span class="term-soluk">Tömye'de aylar 28 gün çeker ve hafta 6 gündür (Yen, Tan, Gün, Dün, Tün, Son).</span>
-      `);
+<span class="term-vurgu">Tömye Tarihi :</span> <b>${kalan+1} ${ayar.aylar[ayIndeks].ad} ${yil}</b> (${ayar.gunler[gecenGun % ayar.gunler.length]} günü)
+<span class="term-soluk">${ayar.aylar.length} ay · ${yilGun} gün/yıl · ${ayar.gunSaat} saat/gün</span>`);
     }
 
     komutYas(ekran, argumanlar) {
       const sayi = parseFloat(argumanlar[0]);
-      if (isNaN(sayi)) {
-        this.yaz(ekran, '<span class="term-soluk">Kullanım: yas &lt;sayı&gt; [-tomyeden] (örn: yas 25 veya yas 120 -tomyeden)</span>');
-        return;
-      }
-      const tomyeden = argumanlar.includes('-tomyeden') || argumanlar.includes('--tomyeden');
-      const tomyeYilSaat = 336 * 26;
-      const dunyaYilSaat = 365.2425 * 24;
-
-      if (tomyeden) {
-        const dunya = (sayi * tomyeYilSaat) / dunyaYilSaat;
-        this.yaz(ekran, `
-<span class="term-basari">✓ YAŞ ÇEVİRİSİ:</span>
-<b>${sayi} Tömye yılı</b> ≈ <span class="term-parlak">${dunya.toFixed(1)} Dünya yılı</span>
-<span class="term-soluk">(Kyldo ortalama insan ömrü: 250 Tömye yılı ≈ 248 Dünya yılı)</span>
-        `);
-      } else {
-        const tomye = (sayi * dunyaYilSaat) / tomyeYilSaat;
-        this.yaz(ekran, `
-<span class="term-basari">✓ YAŞ ÇEVİRİSİ:</span>
-<b>${sayi} Dünya yılı</b> ≈ <span class="term-parlak">${tomye.toFixed(1)} Tömye yılı</span>
-<span class="term-soluk">(Tömye takvimi: 336 gün, her gün 26 saat)</span>
-        `);
-      }
+      if (isNaN(sayi)) { this.yaz(ekran, '<span class="term-soluk">Kullanım: yas &lt;sayı&gt; [-tomyeden]</span>'); return; }
+      const ayar = terminalTakvimAyar(), tomyeden = argumanlar.includes('-tomyeden') || argumanlar.includes('--tomyeden');
+      const yilSaat = ayar.aylar.reduce((n, ay) => n + ay.gun, 0) * ayar.gunSaat, dunyaYilSaat = 365.2425 * 24;
+      const dunya = sayi * yilSaat / dunyaYilSaat, tomye = sayi * dunyaYilSaat / yilSaat;
+      this.yaz(ekran, `<span class="term-basari">✓ YAŞ ÇEVİRİSİ:</span>
+${tomyeden ? `<b>${sayi} Tömye yılı</b> ≈ <span class="term-parlak">${dunya.toFixed(1)} Dünya yılı</span>` : `<b>${sayi} Dünya yılı</b> ≈ <span class="term-parlak">${tomye.toFixed(1)} Tömye yılı</span>`}
+<span class="term-soluk">Tömye takvimi: ${yilSaat / ayar.gunSaat} gün/yıl, ${ayar.gunSaat} saat/gün.</span>`);
     }
 
     komutSesler(ekran) {
@@ -1920,7 +1895,7 @@ Tentifor Kanon Anahtarı'dır. Gece nöbetlerinde feneriyle donmuş rafları tef
 <span class="term-parlak">=== EYLÜL — KYLDO YAZIT ÇÖZÜCÜSÜ ===</span>
 <span class="term-vurgu">Başarısı    :</span> Tömye'nin ayna alfabesini ve ses çifti matrisini ilk deşifre eden arşivci.
 <span class="term-vurgu">İlkesi      :</span> <i>"Bir kelimeyi tersten okuduğunda duyduğun ses, onun gerçek kökenidir."</i>
-<span class="term-vurgu">Çalışması   :</span> Ses çiftleri tablosunu ve 28 günlük ay takvimini belgeledi.
+<span class="term-vurgu">Çalışması   :</span> Ses çiftleri tablosunu ve 310 günlük Tömye takvimini belgeledi.
 <span class="term-soluk">Detay için: <b>eylul</b> veya <b>sesler</b></span>
       `);
     }
@@ -1957,7 +1932,7 @@ Tentifor Kanon Anahtarı'dır. Gece nöbetlerinde feneriyle donmuş rafları tef
       const atis = Math.floor(Math.random() * yuz) + 1;
       this.yaz(ekran, `
 <span class="term-basari">🎲 TÖMYE ZARI ATILDI (d${yuz}): <b>${atis}</b></span>
-<span class="term-soluk">(Tömye'de bir gün 25/26 saat olduğundan, geleneksel arşiv zarı 25 yüzlüdür.)</span>
+<span class="term-soluk">(Tömye'de bir gün 25 saat olduğundan, geleneksel arşiv zarı 25 yüzlüdür.)</span>
       `);
     }
 
