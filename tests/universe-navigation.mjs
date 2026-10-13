@@ -10,6 +10,10 @@ const multiUniverseSource = read('js/engine/68-coklu-evren.js');
 const selectorBundle = read('js/paket-2.js');
 const multiUniverseBundle = read('js/paket-3.js');
 const styleSource = read('css/style.css');
+const indexSource = read('index.html');
+const navigationSource = read('js/arayuz/18-gezinme.js');
+const routeNavigationSource = read('js/engine/44-evrenler.js');
+const mapSource = read('js/paket-1.js');
 const baseHtml = '<!doctype html><html><head><meta name="robots" content="index, follow"></head><body><button id="evrenSecBtn">Evren seç</button><main id="tepe"><section id="evrenSayfa"><div class="evs-govde"></div></section></main></body></html>';
 
 function routeWindow(registry = { fanEserleri: { evrenler: [] } }) {
@@ -18,6 +22,18 @@ function routeWindow(registry = { fanEserleri: { evrenler: [] } }) {
   dom.window.eval(routeSource);
   return dom;
 }
+
+assert.match(indexSource, /data-evren-git="harita:tomye"/);
+assert.match(indexSource, />24\. Evreni keşfet · Tömye’ye git</);
+assert.match(indexSource, /href="#\/tomye">Tömye arşivi</);
+assert.match(routeNavigationSource, /function evrenGit\(e\)/);
+assert.match(routeNavigationSource, /e\.indexOf\("harita:"\)===0/);
+assert.match(mapSource, /data-harita-sec/);
+assert.match(navigationSource, /Tentiforverse · 24\. Evren ›/);
+assert.match(navigationSource, /Tömye arşivi/);
+assert.match(navigationSource, /Ax-24/);
+assert.match(navigationSource, /E25 · kanon evren/);
+assert.match(navigationSource, /E26 · kanon evren/);
 
 const privateRoute = routeWindow();
 privateRoute.window.location.hash = '#/ev/benim/my-world-1';
