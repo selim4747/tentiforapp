@@ -35,8 +35,10 @@ assert.match(migration, /least\(coalesce\(p_offset,0\),1000000\)/, 'manifest off
 const canonicalDefinitions = migration.split('-- This is the current-installation marker;')[0].trim();
 assert.ok(setup.includes(canonicalDefinitions), 'canonical setup must contain the exact 6.3.9 public SEO RPC definitions');
 assert.equal((setup.match(/create or replace function public\.kurulum_surumu\b/g) || []).length, 1, 'canonical setup keeps a single install-version marker');
-const webVersionPattern = packageJson.version.replaceAll('.', '\\.');
-assert.match(setup, new RegExp(`select '${webVersionPattern}'::text`));
+const setupVersion = setup.match(/create or replace function public\.kurulum_surumu\b[\s\S]*?select '([^']+)'::text/)?.[1];
+const setupTarget = read('js/paket-4.js').match(/const KURULUM_BEKLENEN="([^"]+)"/)?.[1];
+assert.ok(setupVersion && setupTarget, 'backend schema sürümü okunabilmeli');
+assert.equal(setupTarget, setupVersion, 'admin beklenen schema sürümü Supabase kurulum sürümüyle eşleşmeli');
 assert.match(migration, /select '6\.3\.9'::text/);
 
 assert.match(client, /addEventListener\('hashchange', handleRoute\)/);
