@@ -30,5 +30,13 @@
       "splashFullScreen": false,
       "splashImmersive": false
     }
+  },
+  "server": {
+    "url": "https://tentifor.com/",
+    "cleartext": false,
+    "allowNavigation": [
+      "tentifor.com",
+      "www.tentifor.com"
+    ]
   }
 }

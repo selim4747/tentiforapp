@@ -34,7 +34,7 @@ async function openMap(page) {
     assert.equal(await tour.isVisible(), true, 'first-visit tour is visible');
     assert.equal(await tour.evaluate((node) => node.matches(':modal')), false, 'first-visit tour must not block the page');
   }
-  await page.getByRole('button', { name: '24. Evreni keşfet · Tömye’ye git' }).click();
+  await page.getByRole('button', { name: 'Tömye haritasını keşfet' }).click();
   await page.waitForFunction(() => location.pathname === '/harita/' && typeof haritaCiz === 'function');
   await page.waitForFunction(() => !document.querySelector('#harita').classList.contains('gizli'));
   await page.waitForFunction(() => document.querySelector('#haritaAlan [data-harita-sec="tomye"]'));
@@ -68,6 +68,9 @@ try {
   await page.waitForFunction(() => new URLSearchParams(location.search).get('harita') === 'ax24');
   await page.waitForFunction(() => document.querySelector('#aktifBolum')?.textContent.includes('Ax-24 · Harita'));
   assert.equal(await page.locator('#haritaAlan [data-harita-sec="ax24"].secili').count(), 1);
+  assert.match(await page.locator('#haritaAlan').innerText(), /Ax-24 haritasında henüz yer yok/);
+  assert.equal(await page.locator('#haritaAlan .harita-onizleme').count(), 0, 'an empty map must not open a misleading full-screen globe');
+  assert.equal(await page.locator('.harita-bosdurum [data-harita-sec="tomye"]').count(), 1, 'empty state offers a useful return to the populated map');
 
   // Browser back/forward restore map state, then return to the home route.
   await page.goBack();
@@ -96,10 +99,29 @@ try {
   const archive = await browser.newPage();
   await archive.goto(`${baseURL}/`, { waitUntil: 'domcontentloaded' });
   await waitForApp(archive);
+  await archive.locator('.hero-diger-yollar summary').click();
   await archive.getByRole('link', { name: 'Tömye arşivi' }).click();
   await archive.waitForFunction(() => location.pathname === '/tomye/');
   await archive.waitForFunction(() => document.querySelector('#aktifBolum')?.textContent.includes('Tömye · Arşiv'));
   assert.equal(await archive.locator('#harita').evaluate((node) => getComputedStyle(node).display === 'none'), true);
+
+  const sectionJump = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await sectionJump.goto(`${baseURL}/`, { waitUntil: 'domcontentloaded' });
+  await waitForApp(sectionJump);
+  await sectionJump.locator('.hero-diger-yollar summary').click();
+  const jumps = sectionJump.getByRole('navigation', { name: 'Ana sayfa bölümlerine atla' });
+  assert.equal(await jumps.count(), 1);
+  await jumps.getByRole('link', { name: 'Harita' }).click();
+  await sectionJump.waitForFunction(() => location.pathname === '/harita/');
+  await sectionJump.waitForFunction(() => document.querySelector('#harita')?.classList.contains('gizli') === false);
+  await sectionJump.locator('#haritaAlan [data-harita-sec="ax24"]').click();
+  await sectionJump.waitForFunction(() => document.querySelector('#haritaAlan .harita-bosdurum'));
+  const mobileEmptyLayout = await sectionJump.evaluate(() => {
+    const button = document.querySelector('.harita-bosdurum > .dugme').getBoundingClientRect();
+    const dock = document.querySelector('#tfDockTetik').getBoundingClientRect();
+    return { buttonRight: button.right, dockLeft: dock.left, overlap: button.left < dock.right && button.right > dock.left && button.top < dock.bottom && button.bottom > dock.top };
+  });
+  assert.equal(mobileEmptyLayout.overlap, false, `mobile Ax-24 return action overlaps quick access: ${JSON.stringify(mobileEmptyLayout)}`);
 
   // Direct clean URL, refresh, and direct legacy hash all enter the same default Tömye map.
   const direct = await browser.newPage();
@@ -116,6 +138,11 @@ try {
   await waitForApp(direct);
   await direct.waitForFunction(() => location.pathname === '/harita/');
   await direct.waitForFunction(() => document.querySelector('#aktifBolum')?.textContent.includes('Tömye · Harita'));
+  const ax24Response = await direct.goto(`${baseURL}/harita/?harita=ax24`, { waitUntil: 'domcontentloaded' });
+  assert.equal(ax24Response.status(), 200, 'direct clean URL with map selection query is served');
+  await waitForApp(direct);
+  await direct.waitForFunction(() => document.querySelector('#haritaAlan [data-harita-sec="ax24"].secili'));
+  assert.match(await direct.locator('#haritaAlan').innerText(), /Ax-24 haritasında henüz yer yok/);
 
   // Keyboard-only reachability of the primary CTA and its Enter action.
   const keyboard = await browser.newPage();
@@ -179,15 +206,16 @@ try {
   assert.ok(mobileLayout.scrollWidth <= mobileLayout.clientWidth + 1, `mobile toolbar scrolls horizontally: ${JSON.stringify(mobileLayout)}`);
   assert.ok(mobileLayout.left >= -1 && mobileLayout.right <= mobileLayout.viewportWidth + 1, `toolbar controls overflow viewport: ${JSON.stringify(mobileLayout)}`);
   assert.ok(mobileLayout.activeWidth > 0);
-  assert.equal(await mobile.getByRole('button', { name: '24. Evreni keşfet · Tömye’ye git' }).isVisible(), true);
+  assert.equal(await mobile.getByRole('button', { name: 'Tömye haritasını keşfet' }).isVisible(), true);
 
   await page.close();
   await archive.close();
+  await sectionJump.close();
   await direct.close();
   await keyboard.close();
   await guide.close();
   await mobile.close();
-  console.log('map route Playwright UX: PASS (CTA/focus, archive separation, clean/hash/reload/back-forward, Ax-24 keyboard selection, onboarding, fallback and 360px layout)');
+  console.log('map route Playwright UX: PASS (clear CTA, archive separation, clean/query/hash/reload/back-forward, Ax-24 empty state, onboarding, fallback and 360px layout)');
 } finally {
   if (browser) await browser.close();
   if (server) server.kill('SIGKILL');

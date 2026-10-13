@@ -565,7 +565,7 @@
         '    </button>',
         '  </div>',
         '</div>',
-        '<button type="button" class="tf-dock-tetik" id="tfDockTetik" aria-expanded="false" title="Hızlı Erişim">',
+        '<button type="button" class="tf-dock-tetik" id="tfDockTetik" aria-label="Hızlı Erişim seçeneklerini aç veya kapat" aria-expanded="false" title="Hızlı Erişim">',
         '  <span class="tf-dock-tetik-ikon">⚡</span>',
         '  <span class="tf-dock-tetik-yazi">Hızlı Erişim</span>',
         '</button>'

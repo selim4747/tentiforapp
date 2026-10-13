@@ -255,6 +255,7 @@ const appRoutes = [
   { path: '/moderasyon/', title: 'Moderasyon — TentiFor', description: 'TentiFor moderasyon paneli. Erişim için moderatör kodu gerekir.' },
   { path: '/baglar/', title: 'Bağlar — TentiFor', description: 'TentiFor bağlar, aile ağacı ve ilişki ağı.' },
   { path: '/dunya/', title: 'Dünya — TentiFor', description: 'TentiFor dünya haritası ve zaman çizelgesi.' },
+  { path: '/harita/', title: 'Harita — TentiFor', description: 'Tömye ve Ax-24 gezegen haritalarını keşfet.' },
   { path: '/belgeler/', title: 'Belgeler — TentiFor', description: 'TentiFor mektuplar, alıntılar ve belgeler.' },
   { path: '/testler/', title: 'Testler — TentiFor', description: 'TentiFor karakter ve kimlik testleri.' },
   { path: '/araclar/', title: 'Araçlar — TentiFor', description: 'TentiFor isim sistemi, yazılar ve araçlar.' },

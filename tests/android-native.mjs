@@ -11,6 +11,7 @@ const plugin = read('uygulama/kabuk/android/app/src/main/java/dev/pages/tentifor
 const widget = read('uygulama/kabuk/android/app/src/main/java/dev/pages/tentiforapp/TentiforWidgetProvider.java');
 const workflow = read('.github/workflows/android-build.yml');
 const nativeBridge = read('js/core/100-v60-native.js');
+const capacitor = JSON.parse(read('uygulama/kabuk/capacitor.config.json'));
 
 assert.match(manifest, /android\.permission\.USE_BIOMETRIC/);
 assert.match(manifest, /android\.intent\.action\.SEND/);
@@ -32,4 +33,8 @@ assert.match(widget, /AppWidgetProvider/);
 assert.match(nativeBridge, /TentiforNative6/);
 assert.match(workflow, /assembleDebug/);
 assert.match(workflow, /upload-artifact@v4/);
-console.log('Android native contracts: PASS (Capacitor plugin, biometric, widget, intents and CI)');
+assert.equal(capacitor.server.url, 'https://tentifor.com/', 'APK canlı siteyi açmalı; yeni web sürümü için tekrar paket gerekmemeli');
+assert.equal(capacitor.server.cleartext, false, 'uzak site yalnızca HTTPS kullanmalı');
+assert.ok(capacitor.server.allowNavigation.includes('tentifor.com'));
+assert.ok(capacitor.server.allowNavigation.includes('www.tentifor.com'));
+console.log('Android native contracts: PASS (live HTTPS web source, Capacitor plugin, biometric, widget, intents and CI)');
