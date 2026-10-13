@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.webkit.WebView;
 
 import com.getcapacitor.BridgeActivity;
 
@@ -38,6 +39,14 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        WebView webView = getBridge() == null ? null : getBridge().getWebView();
+        if (webView != null) webView.postDelayed(() -> webView.evaluateJavascript(
+                "window.dispatchEvent(new Event('capacitorResume'));", null), 120);
+    }
+
+    @Override
     public void onBackPressed() {
         if (getBridge() == null || getBridge().getWebView() == null) {
             super.onBackPressed();
@@ -66,12 +75,14 @@ public class MainActivity extends BridgeActivity {
         final String sharedText = text == null ? "" : text;
         final String sharedMime = mime == null ? "" : mime;
         final String sharedUri = uri == null ? "" : uri;
-        getBridge().getWebView().post(() -> getBridge().getWebView().evaluateJavascript(
-                "window.dispatchEvent(new CustomEvent('tentifor-native-route',{detail:{route:"
-                        + org.json.JSONObject.quote(targetRoute) + ",title:"
-                        + org.json.JSONObject.quote(sharedTitle) + ",text:"
-                        + org.json.JSONObject.quote(sharedText) + ",mime:"
-                        + org.json.JSONObject.quote(sharedMime) + ",uri:"
-                        + org.json.JSONObject.quote(sharedUri) + "}}));", null));
+        WebView webView = getBridge() == null ? null : getBridge().getWebView();
+        if (webView == null) return;
+        String detail = "{route:" + org.json.JSONObject.quote(targetRoute)
+                + ",title:" + org.json.JSONObject.quote(sharedTitle)
+                + ",text:" + org.json.JSONObject.quote(sharedText)
+                + ",mime:" + org.json.JSONObject.quote(sharedMime)
+                + ",uri:" + org.json.JSONObject.quote(sharedUri) + "}";
+        String script = "(function(d){if(window.__tfQueueNativeRoute)window.__tfQueueNativeRoute(d);else{window.__tfPendingNativeRoutes=window.__tfPendingNativeRoutes||[];window.__tfPendingNativeRoutes.push(d);}})(" + detail + ");";
+        webView.postDelayed(() -> webView.evaluateJavascript(script, null), 350);
     }
 }

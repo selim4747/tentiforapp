@@ -13,8 +13,8 @@ android {
         applicationId "dev.pages.tentiforapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 649
-        versionName "6.4.9"
+        versionCode 6410
+        versionName "6.4.10"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
