@@ -6,6 +6,7 @@ const read = (file) => fs.readFileSync(file, 'utf8');
 const routeSource = read('js/core/00-rota.js');
 const navSource = read('js/arayuz/18-gezinme.js');
 const mapSource = read('js/arsiv/09-medya-harita.js');
+const bundleMapSource = read('js/paket-1.js');
 const welcomeSource = read('js/arayuz/31-ux-64.js');
 const visitorSource = read('js/engine/sira-6316.js');
 const html = read('index.html');
@@ -77,6 +78,36 @@ mapDom.window.evrenMeta = () => ({ sis: true });
 assert.equal(mapDom.window.haritaEvrenGorunur(mapDom.window.veri.haritalar[1]), false, 'public map exception does not bypass fog/spoiler state');
 mapDom.window.close();
 
+// Both the readable source and shipped bundle explain an empty Ax-24 map instead of opening an empty globe.
+for (const [name, source] of [['source', mapSource], ['bundle', bundleMapSource]]) {
+  const renderStart = source.indexOf('function haritaCiz(){');
+  const renderEnd = source.indexOf('function haritaTamKur()', renderStart);
+  assert.ok(renderStart >= 0 && renderEnd > renderStart, `${name} map renderer exists`);
+  const dom = new JSDOM('<!doctype html><html><body><div id="haritaAlan"></div></body></html>', { runScripts: 'outside-only' });
+  let selected = 'ax24';
+  dom.window.veri = { haritalar: [
+    { id: 'tomye', ad: 'Tömye', aciklama: 'Tömye açıklaması', yerler: [{ id: 'liman' }] },
+    { id: 'ax24', ad: 'Ax-24', aciklama: 'Ax-24 açıklaması', yerler: [] }
+  ] };
+  dom.window.aktifHarita = () => dom.window.veri.haritalar.find((item) => item.id === selected);
+  dom.window.haritaEvrenGorunur = () => true;
+  dom.window.haritaGorunenEvrenler = () => dom.window.veri.haritalar;
+  dom.window.kacir = (value) => String(value ?? '');
+  dom.window.HARITA_IKON_BUYUT = '↗';
+  dom.window.haritaOnizlemeGozle = () => {};
+  dom.window.HT = { acik: false };
+  dom.window.gzkHaritaSatiri = () => {};
+  dom.window.eval(source.slice(renderStart, renderEnd));
+  dom.window.haritaCiz();
+  assert.match(dom.window.document.querySelector('#haritaAlan').textContent, /Ax-24 haritasında henüz yer yok/);
+  assert.equal(dom.window.document.querySelector('#haritaAlan .harita-onizleme'), null, `${name} must not offer an empty full-screen map`);
+  assert.ok(dom.window.document.querySelector('#haritaAlan [data-harita-sec="tomye"]'));
+  selected = 'tomye';
+  dom.window.haritaCiz();
+  assert.ok(dom.window.document.querySelector('#haritaAlan .harita-onizleme'), `${name} keeps the populated Tömye map interactive`);
+  dom.window.close();
+}
+
 // The production breadcrumb function is executed against route/map state, not just searched as text.
 const labelDom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://tentifor.test/' , runScripts: 'outside-only' });
 let activeMap = 'tomye';
@@ -102,6 +133,13 @@ labelDom.window.close();
 // The page route keeps the two distinct actions and the map section is explicitly named in Tömye context.
 assert.match(html, /data-evren-git="harita:tomye"/);
 assert.match(html, /href="#\/tomye">Tömye arşivi</);
+assert.match(html, /Tömye haritasını keşfet/);
+assert.match(html, /hero-diger-yollar/);
+assert.match(html, /aria-label="Ana sayfa bölümlerine atla"/);
+for (const target of ['#kesif', '#anaEvrenler', '#/harita', '#/dunya', '#/oyunlar']) {
+  assert.ok(html.includes(`href="${target}"`), `quick navigation target ${target} exists`);
+}
+assert.doesNotMatch(html, /id="surumNotuAlan"/);
 assert.match(html, /Tömye ve Ax-24 gezegen haritaları/);
 assert.match(navSource, /id:"dunya",ad:"Tömye dünyası"/);
 
@@ -131,6 +169,18 @@ assert.match(dateStrip.textContent, /Tömye'de bugün 1 Test Ayı 1\./);
 dateDom.window.veri.takvim = undefined;
 dateDom.window.tarihSeridi();
 assert.equal(dateStrip.textContent, 'Tömye takvimi yükleniyor…');
+const RealDate = dateDom.window.Date;
+const fixedNow = Date.UTC(2000, 0, 1) + 49 * 60 * 60 * 1000;
+dateDom.window.Date = class FixedDate extends RealDate {
+  constructor(...args) { super(...(args.length ? args : [fixedNow])); }
+  static now() { return fixedNow; }
+};
+dateDom.window.veri.takvim = { epokDunya: '2000-01-01', epokYil: 1, yilGun: 310, gunSaat: 25, aylar: [{ ad: 'Test Ayı', gun: 310 }] };
+dateDom.window.tarihSeridi();
+assert.match(dateDom.window.document.querySelector('#siraTarih').textContent, /2 Test Ayı 1/, '49 Earth hours equal one 25-hour Tömye day');
+dateDom.window.veri.takvim.gunSaat = 24;
+dateDom.window.tarihSeridi();
+assert.match(dateDom.window.document.querySelector('#siraTarih').textContent, /3 Test Ayı 1/, 'the displayed day follows the configured planetary day length');
 dateDom.window.close();
 
 // Onboarding remains inline and provides an explicit skip button in the real DOM.
@@ -155,5 +205,8 @@ welcomeDom.window.close();
 const response = await fetch('http://127.0.0.1:3000/harita/');
 assert.equal(response.status, 200, '/harita/ is served by the app fallback');
 assert.match(await response.text(), /<main\s+id="tepe"/);
+const queryResponse = await fetch('http://127.0.0.1:3000/harita/?harita=ax24');
+assert.equal(queryResponse.status, 200, 'direct clean map URL with selection query is served');
+assert.match(await queryResponse.text(), /<main\s+id="tepe"/);
 
 console.log('map route UX: PASS (clean/hash paths, map-only public access, breadcrumb state, date fallback, inline keyboard skip, HTTP rewrite)');

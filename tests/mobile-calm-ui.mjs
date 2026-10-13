@@ -26,15 +26,18 @@ for (const [name, engine] of engines) {
     await page.waitForSelector('.ana-tomye', { timeout: 15000 });
     await page.waitForSelector('#altMenu', { timeout: 15000 });
     await page.waitForSelector('#anaEvrenler .ana-evren-sar .ana-yildiz', { timeout: 15000 });
+    await page.waitForSelector('#tfDockTetik', { timeout: 15000 });
 
     const mobile = await page.evaluate(() => {
       const hero = document.querySelector('.ana-tomye');
       const primary = document.querySelector('.hero-eylem .dugme');
       const random = document.querySelector('#rastgeleHero');
+      const more = document.querySelector('.hero-diger-yollar');
       const nav = document.querySelector('#altMenu');
       const tip = document.querySelector('#turIpucu');
       const intro = document.querySelector('.ana-giris');
       const codeButton = document.querySelector('#btnKod');
+      const quickAccess = document.querySelector('#tfDockTetik');
       const visibleStarCards = [...document.querySelectorAll('#anaEvrenler .ana-evren-sar')]
         .filter((card) => card.getBoundingClientRect().width > 0 && card.querySelector('.ana-yildiz'));
       const starsAnchored = visibleStarCards.length > 0 && visibleStarCards.every((wrapper) => {
@@ -47,6 +50,7 @@ for (const [name, engine] of engines) {
       const r = (element) => element.getBoundingClientRect();
       const primaryBox = r(primary);
       const tipBox = tip ? r(tip) : null;
+      const quickAccessBox = r(quickAccess);
       return {
         width: innerWidth,
         documentWidth: document.documentElement.scrollWidth,
@@ -55,6 +59,8 @@ for (const [name, engine] of engines) {
         primaryHeight: Math.round(r(primary).height),
         primaryWidth: Math.round(r(primary).width),
         randomWidth: Math.round(r(random).width),
+        moreVisible: Boolean(more && more.getBoundingClientRect().height > 0),
+        moreOpen: Boolean(more?.open),
         starsAnchored,
         navHeight: Math.round(r(nav).height),
         navBottom: Math.round(r(nav).bottom),
@@ -63,11 +69,16 @@ for (const [name, engine] of engines) {
         tourTag: tip?.tagName || null,
         tourOpen: Boolean(tip?.open),
         tourModal: Boolean(tip?.matches(':modal')),
+        tourHeight: tip ? Math.round(tip.getBoundingClientRect().height) : 0,
         tourCoversPrimary: Boolean(tipBox && tipBox.left < primaryBox.right && tipBox.right > primaryBox.left && tipBox.top < primaryBox.bottom && tipBox.bottom > primaryBox.top),
         tourTitle: tip?.querySelector('#turBaslik')?.innerText.trim() || '',
         tourSkipText: tip?.querySelector('.tur-kapat')?.innerText.trim() || '',
         tourSkipLabel: tip?.querySelector('.tur-kapat')?.getAttribute('aria-label') || '',
         codeButtonText: codeButton?.innerText.trim() || '',
+        quickAccessWidth: Math.round(quickAccessBox.width),
+        quickAccessHeight: Math.round(quickAccessBox.height),
+        quickAccessLabel: quickAccess?.getAttribute('aria-label') || '',
+        quickAccessCoversPrimary: quickAccessBox.left < primaryBox.right && quickAccessBox.right > primaryBox.left && quickAccessBox.top < primaryBox.bottom && quickAccessBox.bottom > primaryBox.top,
         introText: intro?.innerText.trim() || '',
       };
     });
@@ -77,12 +88,16 @@ for (const [name, engine] of engines) {
     assert.ok(mobile.heroRadius >= 18, `${name}: hero card should have a soft rounded shape`);
     assert.ok(mobile.primaryHeight >= 44, `${name}: primary action should meet touch target minimum`);
     assert.ok(mobile.starsAnchored, `${name}: each visible favorite star must stay inside its own universe card`);
-    assert.ok(mobile.randomWidth >= mobile.primaryWidth - 2, `${name}: random discovery action should not be stranded in half a row`);
+    assert.ok(mobile.moreVisible && !mobile.moreOpen, `${name}: secondary discovery routes should be grouped behind a visible disclosure`);
+    assert.ok(mobile.quickAccessWidth >= 40 && mobile.quickAccessWidth <= 48 && mobile.quickAccessHeight >= 40 && mobile.quickAccessHeight <= 48, `${name}: floating quick access must not cover the primary CTA with a wide pill`);
+    assert.equal(mobile.quickAccessCoversPrimary, false, `${name}: floating quick access must not overlap the primary CTA`);
+    assert.match(mobile.quickAccessLabel, /Hızlı Erişim/, `${name}: compact quick access remains screen-reader discoverable`);
     assert.ok(mobile.navHeight >= 60, `${name}: bottom navigation should include safe-area space`);
     if (mobile.tipBottom !== null) assert.ok(mobile.tipBottom <= mobile.navTop + 1, `${name}: onboarding tip must not cover bottom navigation`);
     assert.equal(mobile.tourTag, 'DIALOG', `${name}: first-visit tour must use an accessible dialog`);
     assert.ok(mobile.tourOpen && !mobile.tourModal, `${name}: first-visit tour must remain a non-modal accessible dialog`);
     assert.equal(mobile.tourCoversPrimary, false, `${name}: first-visit tour must not cover the primary CTA`);
+    assert.ok(mobile.tourHeight <= 240, `${name}: first-visit tour should stay compact, got ${mobile.tourHeight}px`);
     assert.ok(mobile.tourTitle, `${name}: tour must have a labelled heading`);
     assert.equal(mobile.tourSkipText, 'Atla', `${name}: tour skip action must be visible and explicit`);
     assert.equal(mobile.tourSkipLabel, 'Turu atla', `${name}: tour skip action must have an accessible label`);

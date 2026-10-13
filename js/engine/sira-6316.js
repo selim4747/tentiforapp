@@ -22,10 +22,10 @@
     var t = (typeof veri !== "undefined" && veri && veri.takvim) || {};
     var aylar = Array.isArray(t.aylar) ? t.aylar : [];
     var yilGun = Number(t.yilGun || 310);
-    var epok = new Date((t.epokDunya || "2000-01-01") + "T00:00:00");
-    var bugun = new Date(); bugun.setHours(0, 0, 0, 0);
-    if (!aylar.length || !Number.isFinite(yilGun) || yilGun <= 0 || !Number.isFinite(epok.getTime())) return "";
-    var gun = Math.floor((bugun - epok) / 86400000);
+    var epok = new Date((t.epokDunya || "2000-01-01") + "T00:00:00Z");
+    var gunSaat = Number(t.gunSaat || 24);
+    if (!aylar.length || !Number.isFinite(yilGun) || yilGun <= 0 || !Number.isFinite(gunSaat) || gunSaat <= 0 || !Number.isFinite(epok.getTime())) return "";
+    var gun = Math.floor(((Date.now() - epok.getTime()) / 3600000) / gunSaat);
     if (!Number.isFinite(gun) || gun < 0) return "";
     var yil = Math.floor(gun / yilGun) + Number(t.epokYil || 1);
     var kalan = gun % yilGun;

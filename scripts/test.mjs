@@ -16,6 +16,7 @@ const tests = [
   'tests/alimlar-ecka-kontrol.mjs',
   'tests/5.4-complete.mjs',
   'tests/offline-yavas.mjs',
+  'tests/native-offline-startup.mjs',
   'tests/kullanici-simulasyonu.mjs',
   'tests/release-hygiene.mjs',
   'tests/changelog-removal.mjs',

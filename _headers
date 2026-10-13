@@ -29,8 +29,6 @@
   Cache-Control: public, max-age=0, must-revalidate
 /js/core/94-cakisma.js
   Cache-Control: public, max-age=0, must-revalidate
-/js/arsiv/34b-model-evreni.js
-  Cache-Control: public, max-age=0, must-revalidate
 /js/*
   Cache-Control: public, max-age=31536000, immutable
 /yazitipi/*

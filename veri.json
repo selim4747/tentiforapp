@@ -1,5 +1,5 @@
 {
-  "surum": "6.4.7",
+  "surum": "6.4.8",
   "guncelleme": "2026-10-01",
   "delilik": {
     "baslik": "Delilik",
@@ -3960,19 +3960,19 @@
   ],
   "tur": [
     {
-      "baslik": "Burası bir arşiv",
+      "baslik": "Başlamak kolay",
       "hedef": "#/",
-      "metin": "Tömye'nin donmuş okyanuslarında geçen bir evren. Karakterler, kozmoloji, takvim ve dil ana sayfadan açılır."
+      "metin": "Tömye arşivi; karakterleri, haritayı ve takvimi içerir. Haritayla başlayabilir ya da menüden bölüm seçebilirsin."
     },
     {
-      "baslik": "Bazı kayıtlar buz altında",
+      "baslik": "Spoiler senin kontrolünde",
       "hedef": "#/tomye",
-      "metin": "Spoiler içeren bölümler kilitli. İstersen hiç açmadan da gezebilirsin; kilit, okumanı kesmez."
+      "metin": "Bazı kayıtlar spoiler içerir; kilitleri açmadan da arşivi gezebilirsin."
     },
     {
-      "baslik": "Oynanacak şeyler de var",
-      "hedef": "#/",
-      "metin": "Oyunlar eçka kazandırır. Eçka bu arşivin iç puanı; başlangıç bakiyesi üstte yazar. Tur bitince ana sayfada kalırsın."
+      "baslik": "Oyunlara istediğin zaman dön",
+      "hedef": "#/oyunlar",
+      "metin": "Oyunlar eçka kazandırır (arşivin iç puanı). İstersen oyunlara daha sonra da dönebilirsin."
     }
   ],
   "bulmacalar": [

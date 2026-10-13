@@ -1,4 +1,4 @@
-/* TentiFor — APK Özel ve Sıradaki Araçlar Motoru (v6.4.7)
+/* TentiFor — APK Özel ve Sıradaki Araçlar Motoru (v6.4.8)
  * 1. İnternetsiz Yerel Hatırlatıcı & Etkileşimli Bildirimler (Capacitor LocalNotifications)
  * 2. Bölünmüş Ekran Zekası (Split-Screen & Foldables Multi-Window)
  * 3. Yerel Klasör Senkronizasyonu (Documents/Tentifor Storage Access)
@@ -401,7 +401,7 @@
         var paket = {
           olusturuldu: new Date().toISOString(),
           cihaz: 'TentiforApp Android Native',
-          surum: (typeof window.veri !== 'undefined' && window.veri && window.veri.surum) || '6.4.7',
+          surum: (typeof window.veri !== 'undefined' && window.veri && window.veri.surum) || '6.4.8',
           zenTaslak: localStorage.getItem('tentifor_zen_taslak') || '',
           bolunmusNot: localStorage.getItem('tf_bolunmus_hizli_not') || '',
           okumaIlerleme: localStorage.getItem('tentiforapp_v50_devam') || '',

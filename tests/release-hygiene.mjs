@@ -56,6 +56,7 @@ const first = readJson('surum.json');
 const firstHash = first.paket;
 assert.equal(fs.existsSync(path.join(root, 'dist/uygulama/indir/apk.json')), Boolean(apkMeta), 'sürümü doğrulanmamış APK web production çıktısına taşınmamalı');
 assert.match(fs.readFileSync(path.join(root, 'dist/tomye/index.html'), 'utf8'), /Tömye — TentiFor/);
+assert.match(fs.readFileSync(path.join(root, 'dist/harita/index.html'), 'utf8'), /Harita — TentiFor/, 'doğrudan harita adresi gerçek bir app-shell route olarak üretilmeli');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql')), '6.3 discovery migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_631_archive_tools.sql')), '6.3.1 archive tools migration eksik');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_632_social_feed.sql')), '6.3.2 social feed migration eksik');
@@ -106,7 +107,7 @@ runBuild();
 const second = readJson('surum.json');
 assert.equal(second.paket, firstHash, 'aynı girdiler deterministik paket hash üretmeli');
 assert.equal(second.kuruldu, first.kuruldu, 'aynı hash yeniden build edilince kurulum tarihi değişmemeli');
-for (const file of ['dist/evren/e25/index.html', 'dist/evren/e99/index.html', 'dist/tomye/index.html', 'dist/fan/index.html', 'dist/oyunlar/index.html', 'dist/atolye/index.html', 'dist/okuma/index.html', 'dist/404.html']) {
+for (const file of ['dist/evren/e25/index.html', 'dist/evren/e99/index.html', 'dist/tomye/index.html', 'dist/fan/index.html', 'dist/oyunlar/index.html', 'dist/atolye/index.html', 'dist/okuma/index.html', 'dist/harita/index.html', 'dist/404.html']) {
   assert.ok(fs.existsSync(path.join(root, file)), `${file} public SEO fallback çıktısı eksik`);
 }
 assert.ok(fs.existsSync(path.join(root, 'favicon.ico')) && fs.existsSync(path.join(root, 'dist/favicon.ico')) && fs.existsSync(path.join(root, 'uygulama/kabuk/www/favicon.ico')), 'favicon web ve APK çıktılarında bulunmalı');

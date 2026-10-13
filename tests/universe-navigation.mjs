@@ -24,7 +24,7 @@ function routeWindow(registry = { fanEserleri: { evrenler: [] } }) {
 }
 
 assert.match(indexSource, /data-evren-git="harita:tomye"/);
-assert.match(indexSource, />24\. Evreni keşfet · Tömye’ye git</);
+assert.match(indexSource, />Tömye haritasını keşfet</);
 assert.match(indexSource, /href="#\/tomye">Tömye arşivi</);
 assert.match(routeNavigationSource, /function evrenGit\(e\)/);
 assert.match(routeNavigationSource, /e\.indexOf\("harita:"\)===0/);
