@@ -11,13 +11,24 @@
     } catch (_) { return []; }
   }
   function yaz(liste) {
-    try { localStorage.setItem(ANAHTAR, JSON.stringify(liste.slice(-MAX))); } catch (_) {}
+    try {
+      if (liste.length > MAX) {
+        window.dispatchEvent(new CustomEvent('tf4-offline-queue-full', { detail: { dropped: liste.length - MAX } }));
+      }
+      localStorage.setItem(ANAHTAR, JSON.stringify(liste.slice(-MAX)));
+      return true;
+    } catch (_) {
+      window.dispatchEvent(new CustomEvent('tf4-offline-queue-storage-error'));
+      return false;
+    }
   }
   function kimlik() { return 'q_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
   function ekle(tur, veri) {
     if (!tur || !veri || typeof veri !== 'object') throw new TypeError('offline queue kaydı geçersiz');
     var liste = oku();
-    var kayit = { id: kimlik(), tur: String(tur).slice(0, 80), veri: veri, deneme: 0, olusturuldu: Date.now(), sonraki: 0 };
+    var sahipId = null;
+    try { sahipId = window.hesapKullanici && window.hesapKullanici.id || null; } catch (_) {}
+    var kayit = { id: kimlik(), sahipId: sahipId, tur: String(tur).slice(0, 80), veri: veri, deneme: 0, olusturuldu: Date.now(), sonraki: 0 };
     liste.push(kayit); yaz(liste); return kayit;
   }
   function bekleyen() { return oku(); }
@@ -31,6 +42,12 @@
     try {
       for (var i = 0; i < liste.length; i += 1) {
         var kayit = liste[i];
+        var mevcutSahip = null;
+        try { mevcutSahip = window.hesapKullanici && window.hesapKullanici.id || null; } catch (_) {}
+        if (kayit.sahipId && kayit.sahipId !== mevcutSahip) {
+          kayit.durum = 'hesap-degisikligi';
+          kalan.push(kayit); sonuc.bekledi += 1; continue;
+        }
         if ((secenek && secenek.zorla) || !kayit.sonraki || kayit.sonraki <= simdi) {
           try {
             await transport(kayit);
