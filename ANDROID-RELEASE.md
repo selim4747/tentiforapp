@@ -1,12 +1,12 @@
 # TentiFor Android release
 
-## 6.4.8 indirilebilir APK — debug imzalı
+## 6.4.9 indirilebilir APK — debug imzalı
 
-`uygulama/indir/tentiforapp.apk` 6.4.8 Android indirme dosyasıdır:
+`uygulama/indir/tentiforapp.apk` 6.4.9 Android indirme dosyasıdır:
 
 - Package: `dev.pages.tentiforapp`
 - Version code: `648`
-- Version name: `6.4.8`
+- Version name: `6.4.9`
 - APK size: `8,883,940` bytes
 - APK SHA-256: `195a72ad233a2acaa1e33ab738ff8afaace1140c738a992f4d9b6aade3740b7c`
 - İmza: `Android Debug`; sertifika SHA-256: `F2:5A:D2:8F:21:D7:C8:05:F3:F2:38:88:DC:56:45:9D:9D:67:3A:A3:3E:55:F8:43:22:B4:F4:68:F0:E4:C3:FA`

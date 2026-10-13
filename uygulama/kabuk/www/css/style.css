@@ -708,7 +708,7 @@ html[data-tf644-sepya] .okuma-metin p,html[data-tf644-sepya] .uzun-metin p,html[
 }
 
 
-/* 6.4.8 — clearer first steps, honest empty map state, and a compact first-visit guide. */
+/* 6.4.9 — clearer first steps, honest empty map state, and a compact first-visit guide. */
 .hero-eylem {
   display: flex;
   flex-direction: column;
@@ -858,3 +858,11 @@ html[data-tf644-sepya] .okuma-metin p,html[data-tf644-sepya] .uzun-metin p,html[
 @media (max-width: 430px) {
   .harita-bosdurum > .dugme { width: calc(100% - 72px); }
 }
+
+
+/* 6.4.9 — bağımsız pencere katmanları: en son etkileşim gören üste çıkar. */
+#perde:not([hidden]), .mobil-menu-katman, .tentifor-terminal-konteyner, .tf642-panel, .tf62-overlay, [data-tf-panel] { position: fixed; }
+#perde:not([hidden]) { z-index: 1100; }
+.mobil-menu-katman { z-index: 1110; }
+.tentifor-terminal-konteyner { z-index: 1120; }
+.tf-panel-aktif { isolation: isolate; }

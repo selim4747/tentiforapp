@@ -2191,6 +2191,7 @@ Telif Hakkı (C) 2026 NJG Games / Tentiforverse. Tüm hakları saklıdır.
         `);
       }
       modal.classList.remove('gizli');
+      if (typeof window.tfPanelUste === 'function') window.tfPanelUste(modal);
       this.pencereAcik = true;
       const giris = modal.querySelector('#term-modal-giris');
       if (giris) setTimeout(() => { if (this.pencereAcik) giris.focus({ preventScroll: true }); }, 50);

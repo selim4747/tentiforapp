@@ -1,7 +1,7 @@
 {
   "packageName": "dev.pages.tentiforapp",
-  "version": "6.4.8",
-  "versionCode": 648,
+  "version": "6.4.9",
+  "versionCode": 649,
   "sizeBytes": 8883940,
   "sha256": "195a72ad233a2acaa1e33ab738ff8afaace1140c738a992f4d9b6aade3740b7c",
   "signingType": "debug",
