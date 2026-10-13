@@ -105,4 +105,27 @@ public class TentiforNativePlugin extends Plugin {
             call.resolve(result);
         });
     }
+    @PluginMethod
+    public void saveBridge(PluginCall call) {
+        String value = call.getString("value", "");
+        if (value == null || value.length() > 64000) {
+            call.reject("Offline köprü verisi çok büyük.");
+            return;
+        }
+        getContext().getSharedPreferences("tentifor_native", Context.MODE_PRIVATE)
+                .edit().putString("bridge", value).apply();
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void loadBridge(PluginCall call) {
+        String value = getContext().getSharedPreferences("tentifor_native", Context.MODE_PRIVATE)
+                .getString("bridge", "");
+        getContext().getSharedPreferences("tentifor_native", Context.MODE_PRIVATE)
+                .edit().remove("bridge").apply();
+        JSObject result = new JSObject();
+        result.put("value", value == null ? "" : value);
+        call.resolve(result);
+    }
+
 }

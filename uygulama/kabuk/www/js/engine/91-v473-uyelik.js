@@ -9,9 +9,29 @@
     evrenyazar: { ad: 'EvrenYazar', evren: Infinity, gezgin: Infinity, hikaye: Infinity, gezegen: Infinity, takim: Infinity }
   };
   var PLAN_EG_BEDELI = { evrengezer: 250, evrenyazar: 750 };
+  var UYELIK_ONBELLEK = 'tf4_uyelik_onbellek_';
   var satinAlmaIstekleri = {};
+  function aktifKullaniciId() {
+    try { return typeof hesapKullanici !== 'undefined' && hesapKullanici && hesapKullanici.id || ''; } catch (_) { return ''; }
+  }
+  function yerelUyelikOku() {
+    var id = aktifKullaniciId(); if (!id) return null;
+    try {
+      var raw = localStorage.getItem(UYELIK_ONBELLEK + id), value = raw && JSON.parse(raw);
+      if (!value || value.userId !== id || !value.plan) return null;
+      if (value.bitis && Date.now() > new Date(value.bitis).getTime()) return null;
+      return value;
+    } catch (_) { return null; }
+  }
+  function yerelUyelikYaz(value) {
+    var id = aktifKullaniciId(); if (!id || !value) return;
+    try { localStorage.setItem(UYELIK_ONBELLEK + id, JSON.stringify(Object.assign({}, value, { userId: id, alindi: new Date().toISOString() }))); } catch (_) {}
+  }
+  window.tf4UyelikOnbellekYaz = yerelUyelikYaz;
+  window.tf4UyelikOnbellekOku = yerelUyelikOku;
   function plan() {
     var t = typeof TF4 !== 'undefined' && TF4.uyelik && TF4.uyelik.tip;
+    if (!t) { var cached = yerelUyelikOku(); t = cached && cached.plan; }
     t = String(t || 'ucretsiz').toLocaleLowerCase('tr');
     return t === 'pro' ? 'evrengezer' : (PLAN[t] ? t : 'ucretsiz');
   }
@@ -203,7 +223,7 @@
         '<button type="button" class="dugme" data-uyelik-ode="evrenyazar">750 EG ile 30 gün al</button></div>' +
       '</div><p class="oyun-not">Gerçek parayla EG yüklemesi ayrı bir entegrasyondur ve şu an bu satın alma akışında tahsilat yapılmaz. Yönetici, kullanıcı adını kullanarak planı ücretsiz hediye edebilir.</p><p id="egCuzdanDurum" class="oyun-not" role="status">Güvenli sunucu EG bakiyesi yükleniyor…</p><p class="pencere-durum" id="uyelikDurum" role="status"></p></div>';
   }
-  function ac() { var e = document.querySelector('#perde'); if (!e) return; e.innerHTML = planPencere(); e.hidden = false; egCuzdanYukle(); }
+  function ac() { var e = document.querySelector('#perde'); if (!e) return; e.innerHTML = planPencere(); e.hidden = false; if (typeof window.tfPanelUste === 'function') window.tfPanelUste(e); egCuzdanYukle(); }
   function editorKapali() { return sinirliPlan(); }
   function engelle(n) {
     if (!editorKapali()) return false;
@@ -229,7 +249,13 @@
     var h = e.target.closest && e.target.closest('[data-pro-ver]');
     if (h && h.closest('.mod-yonetici')) { e.preventDefault(); e.stopImmediatePropagation(); var kutu = h.closest('.mod-yonetici'); var tip = (kutu.querySelector('[data-uyelik-tip]') || {}).value || 'evrengezer'; var kadi = String((kutu.querySelector('#proKadi') || {}).value || '').trim(); var gun = Math.max(1, Math.min(3650, Number((kutu.querySelector('#proGun') || {}).value) || 30)); var d = kutu.querySelector('#modKodDurum'); var yazDurum = function (metin, iyi) { if (d) { d.className = 'pencere-durum ' + (iyi ? 'iyi' : 'kotu'); d.textContent = metin; } }; if (!kadi) { yazDurum('Hediye edilecek kullanıcı adını yaz.', false); return; } if (typeof hesapIstemci === 'undefined' || !hesapIstemci) { yazDurum('Hesap bağlantısı hazır değil; yönetici hesabınla giriş yapıp tekrar dene.', false); return; } h.disabled = true; yazDurum('@' + kadi + ' için yönetici yetkisi kontrol ediliyor…', true); Promise.resolve().then(function () { return hesapIstemci.rpc('tam_yonetici_mi'); }).then(function (yetki) { if (yetki && yetki.error) throw yetki.error; if (!yetki || yetki.data !== true) { throw new Error('Bu oturum Supabase’de tam yönetici olarak tanınmıyor. Çıkış yapıp yönetici hesabıyla yeniden giriş yapın.'); } yazDurum('@' + kadi + ' için hediye kontrol ediliyor…', true); return hesapIstemci.rpc('abonelik_hediye', { p_kullanici_adi: kadi, p_tip: tip, p_gun: gun }); }).then(function (r) { var sonuc = r && r.data || {}; if (r && r.error) { var er = r.error; yazDurum('Hediye verilemedi: ' + (er.message || 'Supabase RPC hatası') + (er.code ? ' [' + er.code + ']' : '') + (er.details ? ' · ' + er.details : ''), false); return; } var mesaj = { yok: 'Bu kullanıcı adıyla kayıtlı hesap bulunamadı.', yetki: 'Bu işlem için tam yönetici yetkisi gerekli.', baslik_yok: 'Plan bilgisi eksik.', gecersiz: 'Geçersiz hediye bilgisi.', dusurme_yok: 'EvrenYazar planı EvrenGezer’e düşürülemez.' }[sonuc.durum]; if (sonuc.durum === 'tamam') { var tarih = sonuc.bitis ? new Date(sonuc.bitis).toLocaleDateString('tr-TR') : ''; yazDurum('@' + kadi + ' hesabına ' + (sonuc.tip === 'evrenyazar' ? 'EvrenYazar' : 'EvrenGezer') + ' başarıyla hediye edildi' + (tarih ? ' · bitiş: ' + tarih : '') + '.', true); } else yazDurum('Hediye verilemedi: ' + (mesaj || sonuc.durum || 'bilinmeyen hata'), false); }).catch(function (x) { yazDurum('Hediye isteği başarısız: ' + (x && x.message || x || 'ağ hatası'), false); }).finally(function () { h.disabled = false; }); }
   }, true);
-  document.addEventListener('tf4-uyelik', function () { var a = document.querySelector('#proAlan'); if (a) a.innerHTML = planKartHtml(); });
+  document.addEventListener('tf4-uyelik', function () {
+    try {
+      var u = typeof TF4 !== 'undefined' && TF4 && TF4.uyelik;
+      if (u && u.tip && typeof window.tf4UyelikOnbellekYaz === 'function') window.tf4UyelikOnbellekYaz({ plan: u.tip, baslangic: u.baslangic || null, bitis: u.bitis || null });
+    } catch (_) {}
+    var a = document.querySelector('#proAlan'); if (a) a.innerHTML = planKartHtml();
+  });
   document.addEventListener('tf-veri-hazir', function () { setTimeout(function () { var a = document.querySelector('#proAlan'); if (a) a.innerHTML = planKartHtml(); hediyeAraciniEkle(); }, 0); });
   var oldCiz = window.anaEvrenlerCiz;
   if (typeof oldCiz === 'function') window.anaEvrenlerCiz = function () { oldCiz.apply(this, arguments); var a = document.querySelector('#anaEvrenler .ana-kur'); if (a && gezerPlan()) a.querySelector('.ana-evren-not') && (a.querySelector('.ana-evren-not').textContent = 'EvrenGezer: bu ay ' + say('evren') + ' / 5 evren hakkı kullanıldı.'); };

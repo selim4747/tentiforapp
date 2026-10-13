@@ -228,7 +228,7 @@
           } catch (_) {}
         }
       } else if (actionId === 'TAMAMLA') {
-        var bugun = new Date().toISOString().slice(0, 10);
+        var bugun = new Date().toLocaleDateString('en-CA');
         try {
           var okumaMap = JSON.parse(localStorage.getItem('tf28_okuma') || '{}');
           okumaMap[bugun] = Math.max(okumaMap[bugun] || 0, 900); // 15 dk tamamlandı say

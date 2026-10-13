@@ -10,6 +10,7 @@ import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    private Intent pendingRouteIntent;
     @Override
     public void onCreate(Bundle state) {
         registerPlugin(TentiforNativePlugin.class);
@@ -42,8 +43,16 @@ public class MainActivity extends BridgeActivity {
     public void onResume() {
         super.onResume();
         WebView webView = getBridge() == null ? null : getBridge().getWebView();
-        if (webView != null) webView.postDelayed(() -> webView.evaluateJavascript(
-                "window.dispatchEvent(new Event('capacitorResume'));", null), 120);
+        if (webView != null) {
+            webView.postDelayed(() -> {
+                webView.evaluateJavascript("window.dispatchEvent(new Event('capacitorResume'));", null);
+                if (pendingRouteIntent != null) {
+                    Intent pending = pendingRouteIntent;
+                    pendingRouteIntent = null;
+                    handleRouteIntent(pending);
+                }
+            }, 120);
+        }
     }
 
     @Override
@@ -76,7 +85,10 @@ public class MainActivity extends BridgeActivity {
         final String sharedMime = mime == null ? "" : mime;
         final String sharedUri = uri == null ? "" : uri;
         WebView webView = getBridge() == null ? null : getBridge().getWebView();
-        if (webView == null) return;
+        if (webView == null) {
+            pendingRouteIntent = new Intent(intent);
+            return;
+        }
         String detail = "{route:" + org.json.JSONObject.quote(targetRoute)
                 + ",title:" + org.json.JSONObject.quote(sharedTitle)
                 + ",text:" + org.json.JSONObject.quote(sharedText)

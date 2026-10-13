@@ -21,12 +21,34 @@
     }
   }
   function safeStorage() { try { return root.localStorage; } catch (_) { return null; } }
+  function nativePlugin() {
+    try { return root.Capacitor && root.Capacitor.Plugins && root.Capacitor.Plugins.TentiforNative || null; } catch (_) { return null; }
+  }
+  function nativeBridgeKaydet(value) {
+    var plugin = nativePlugin();
+    if (!plugin || typeof plugin.saveBridge !== 'function' || !value) return Promise.resolve(false);
+    return Promise.resolve(plugin.saveBridge({ value: value })).then(function () { return true; }).catch(function () { return false; });
+  }
+  function nativeBridgeOku() {
+    var plugin = nativePlugin();
+    if (!plugin || typeof plugin.loadBridge !== 'function') return Promise.resolve('');
+    return Promise.resolve(plugin.loadBridge()).then(function (result) { return result && result.value || ''; }).catch(function () { return ''; });
+  }
   function hasAuthStorage() {
     var storage = safeStorage();
     if (!storage) return false;
+    var keys = ['sb-tentiforapp-oturum', 'sb-tentiforapp-auth-token'];
+    for (var k = 0; k < keys.length; k += 1) {
+      try {
+        var raw = storage.getItem(keys[k]);
+        if (!raw) continue;
+        var parsed = JSON.parse(raw);
+        if (parsed && (parsed.access_token || parsed.refresh_token || parsed.user)) return true;
+      } catch (_) {}
+    }
     for (var i = 0; i < storage.length; i += 1) {
       var key = String(storage.key(i) || '').toLowerCase();
-      if (/^sb-[a-z0-9-]+-auth-token$/.test(key) || /auth|token|session|password|secret/.test(key)) return true;
+      if (/^sb-[a-z0-9-]+-auth-token$/.test(key)) return true;
     }
     return false;
   }
@@ -64,17 +86,25 @@
     all.forEach(function (item) { if (item && item.id && !seen[item.id]) { seen[item.id] = true; result.push(item); } });
     return result.slice(-100);
   }
-  function importBridge() {
-    if (typeof URLSearchParams !== 'function') return;
-    var params = new URLSearchParams(root.location.search || ''), encoded = params.get(BRIDGE_PARAM), data = encoded && decode(encoded), storage = safeStorage();
+  function applyBridge(encoded) {
+    if (!encoded || typeof URLSearchParams !== 'function') return;
+    var data = decode(encoded), storage = safeStorage();
     if (!data || data.v !== BRIDGE_VERSION || !storage) return;
     Object.keys(data.keys || {}).forEach(function (key) { if (bridgeKeyAllowed(key) && !storage.getItem(key)) storage.setItem(key, String(data.keys[key])); });
     if (Array.isArray(data.queue)) {
       var current = []; try { current = JSON.parse(storage.getItem('tf4_offline_queue_v1') || '[]'); } catch (_) {}
-      storage.setItem('tf4_offline_queue_v1', JSON.stringify(mergeQueue(current, data.queue)));
+      try { storage.setItem('tf4_offline_queue_v1', JSON.stringify(mergeQueue(current, data.queue))); } catch (_) {}
     }
-    try { params.delete(BRIDGE_PARAM); root.history.replaceState(null, '', root.location.pathname + (params.toString() ? '?' + params.toString() : '') + root.location.hash); } catch (_) {}
-    root.dispatchEvent(new CustomEvent('tf-native-origin-bridge-imported', { detail: { keys: Object.keys(data.keys || {}).length, queue: data.queue.length } }));
+    try { root.dispatchEvent(new CustomEvent('tf-native-origin-bridge-imported', { detail: { keys: Object.keys(data.keys || {}).length, queue: data.queue.length } })); } catch (_) {}
+  }
+  function importBridge() {
+    var params = typeof URLSearchParams === 'function' ? new URLSearchParams(root.location.search || '') : null;
+    var encoded = params && params.get(BRIDGE_PARAM);
+    if (encoded) {
+      applyBridge(encoded);
+      try { params.delete(BRIDGE_PARAM); root.history.replaceState(null, '', root.location.pathname + (params.toString() ? '?' + params.toString() : '') + root.location.hash); } catch (_) {}
+    }
+    nativeBridgeOku().then(function (value) { if (value) applyBridge(value); });
   }
   function hasUnsavedInput() {
     var active = root.document && root.document.activeElement;
@@ -83,7 +113,7 @@
   }
   function liveTarget() {
     var target = new URL(root.location.href); target.protocol = 'https:'; target.host = LIVE_HOST;
-    var bridge = exportBridge(); if (bridge) target.searchParams.set(BRIDGE_PARAM, bridge);
+    target.searchParams.delete(BRIDGE_PARAM);
     return target.href;
   }
   function emitBlocked(reason) { if (typeof root.dispatchEvent === 'function' && typeof CustomEvent === 'function') root.dispatchEvent(new CustomEvent('tf-native-live-blocked', { detail: { reason: reason } })); }
@@ -95,8 +125,14 @@
     var timer = root.setTimeout(function () { settle(false); }, PROBE_TIMEOUT_MS);
     function settle(reachable) {
       if (settled) return; settled = true; root.clearTimeout(timer); probe.onload = null; probe.onerror = null; probe.src = 'data:,';
-      if (reachable && localHost() && nativeApp() && !hasAuthStorage() && !hasUnsavedInput()) { state = 'done'; root.location.replace(liveTarget()); }
-      else { state = 'idle'; emitBlocked(reachable ? 'safe-point-required' : 'site-unreachable'); }
+      if (reachable && localHost() && nativeApp() && !hasAuthStorage() && !hasUnsavedInput()) {
+        var bridge = exportBridge();
+        nativeBridgeKaydet(bridge).then(function (saved) {
+          state = 'done';
+          if (saved || !bridge) root.location.replace(liveTarget());
+          else { var legacy = new URL(liveTarget()); legacy.searchParams.set(BRIDGE_PARAM, bridge); root.location.replace(legacy.href); }
+        });
+      } else { state = 'idle'; emitBlocked(reachable ? 'safe-point-required' : 'site-unreachable'); }
     }
     probe.onload = function () { settle(true); };
     probe.onerror = function () { settle(false); };
