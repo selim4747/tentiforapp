@@ -3,13 +3,15 @@ import fs from 'node:fs';
 
 const read = (path) => fs.readFileSync(path, 'utf8');
 const pkg = JSON.parse(read('package.json'));
-assert.equal(pkg.version, '6.4.10', 'uygulama sürümü tam olarak 6.4.10 olmalı');
+assert.equal(pkg.version, '6.5.0', 'uygulama sürümü tam olarak 6.5.0 olmalı');
 assert.equal(JSON.parse(read('veri.json')).surum, pkg.version);
 assert.equal(JSON.parse(read('manifest.webmanifest')).version, pkg.version);
 assert.equal(JSON.parse(read('uygulama/kabuk/package.json')).version, pkg.version);
 const androidGradle = read('uygulama/kabuk/android/app/build.gradle');
 assert.ok(androidGradle.includes(`versionName "${pkg.version}"`));
-assert.match(androidGradle, new RegExp(`versionCode\\s+${Number(pkg.version.replaceAll('.', ''))}\\b`), 'Android versionCode should stay monotonic with the app release');
+const [major, minor, patch] = pkg.version.split('.').map(Number);
+const expectedVersionCode = major * 1000 + minor * 100 + patch;
+assert.match(androidGradle, new RegExp(`versionCode\\s+${expectedVersionCode}\\b`), 'Android versionCode should stay monotonic with the app release');
 
 const index = read('index.html');
 assert.doesNotMatch(index, /id="yenilikAlan"|id="surumNotuAlan"|yenilikler · günün kaydı|26-ziyaret-yenilikleri/);
