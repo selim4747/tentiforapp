@@ -90,5 +90,5 @@
   document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-tf645-share-reading]'); if (b) { shareReading(b); return; } if (e.target.closest && e.target.closest('[data-tf645-conflict]')) { conflictDialog(); return; } if (e.target.closest && e.target.closest('[data-tf645-close]')) { var p = document.querySelector('#perde'); if (p) { p.hidden = true; p.innerHTML = ''; } } });
   document.addEventListener('keydown', keyboardSearch);
   document.addEventListener('DOMContentLoaded', boot); document.addEventListener('tf-veri-hazir', refresh); document.addEventListener('tf-hesap-hazir', refresh); window.addEventListener('hashchange', function () { setTimeout(function () { refresh(); restorePosition(); }, 120); });
-  window.tf645 = { refresh: refresh, devices: devices, version: '6.4.6.0' };
+  window.tf645 = { refresh: refresh, devices: devices, version: '6.4.4' };
 }());

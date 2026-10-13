@@ -45,6 +45,8 @@ for (const [name, engine] of engines) {
           && star.top >= box.top - 1 && star.bottom <= box.bottom + 1;
       });
       const r = (element) => element.getBoundingClientRect();
+      const primaryBox = r(primary);
+      const tipBox = tip ? r(tip) : null;
       return {
         width: innerWidth,
         documentWidth: document.documentElement.scrollWidth,
@@ -61,6 +63,7 @@ for (const [name, engine] of engines) {
         tourTag: tip?.tagName || null,
         tourOpen: Boolean(tip?.open),
         tourModal: Boolean(tip?.matches(':modal')),
+        tourCoversPrimary: Boolean(tipBox && tipBox.left < primaryBox.right && tipBox.right > primaryBox.left && tipBox.top < primaryBox.bottom && tipBox.bottom > primaryBox.top),
         tourTitle: tip?.querySelector('#turBaslik')?.innerText.trim() || '',
         tourSkipText: tip?.querySelector('.tur-kapat')?.innerText.trim() || '',
         tourSkipLabel: tip?.querySelector('.tur-kapat')?.getAttribute('aria-label') || '',
@@ -78,12 +81,17 @@ for (const [name, engine] of engines) {
     assert.ok(mobile.navHeight >= 60, `${name}: bottom navigation should include safe-area space`);
     if (mobile.tipBottom !== null) assert.ok(mobile.tipBottom <= mobile.navTop + 1, `${name}: onboarding tip must not cover bottom navigation`);
     assert.equal(mobile.tourTag, 'DIALOG', `${name}: first-visit tour must use an accessible dialog`);
-    assert.ok(mobile.tourOpen && mobile.tourModal, `${name}: tour must clearly open as a modal`);
+    assert.ok(mobile.tourOpen && !mobile.tourModal, `${name}: first-visit tour must remain a non-modal accessible dialog`);
+    assert.equal(mobile.tourCoversPrimary, false, `${name}: first-visit tour must not cover the primary CTA`);
     assert.ok(mobile.tourTitle, `${name}: tour must have a labelled heading`);
     assert.equal(mobile.tourSkipText, 'Atla', `${name}: tour skip action must be visible and explicit`);
     assert.equal(mobile.tourSkipLabel, 'Turu atla', `${name}: tour skip action must have an accessible label`);
     assert.equal(mobile.codeButtonText, 'Kod gir', `${name}: header code action should state what it does`);
     assert.equal(mobile.introText, 'Evrenleri keşfet; oku, oyna ya da kendi evrenini kur.', `${name}: home intro should avoid unexplained jargon`);
+
+    await page.locator('[data-evren-git="harita:tomye"]').click();
+    await page.waitForFunction(() => location.pathname === '/harita/');
+    await page.waitForFunction(() => document.querySelector('#harita')?.classList.contains('gizli') === false);
 
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => !document.querySelector('#turIpucu'));
@@ -94,7 +102,7 @@ for (const [name, engine] of engines) {
     const darkBackground = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--kar').trim().toLowerCase());
     assert.equal(darkBackground, '#0b1017', `${name}: mobile palette must preserve the existing night theme`);
     assert.equal(pageErrors.length, 0, `${name}: runtime errors ${pageErrors.join('; ')}`);
-    results.push(`${name}: PASS (390px home, calm palette, no overflow, anchored universe stars, balanced CTA rows, accessible modal tour/skip/Escape, clear code action, night theme)`);
+    results.push(`${name}: PASS (390px home, calm palette, no overflow, anchored universe stars, balanced CTA rows, non-modal CTA-accessible tour/skip/Escape, clear code action, night theme)`);
     await page.close();
   } catch (error) {
     results.push(`${name}: FAIL (${error.stack || error})`);

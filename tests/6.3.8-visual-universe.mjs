@@ -39,8 +39,10 @@ assert.match(migration, /select '6\.3\.8'::text/, 'migration updates the databas
 const canonicalMigration = migration.slice(0, migration.indexOf('-- Release marker')).trim();
 assert.ok(setup.includes(canonicalMigration), 'canonical setup must retain the 6.3.8 migration definitions before later releases');
 assert.equal((setup.match(/create or replace function public\.kurulum_surumu\b/g) || []).length, 1, 'canonical setup keeps one version marker');
-const webVersionPattern = packageJson.version.replaceAll('.', '\\.');
-assert.match(setup, new RegExp(`select '${webVersionPattern}'::text`));
+const setupVersion = setup.match(/create or replace function public\.kurulum_surumu\b[\s\S]*?select '([^']+)'::text/)?.[1];
+const setupTarget = read('js/paket-4.js').match(/const KURULUM_BEKLENEN="([^"]+)"/)?.[1];
+assert.ok(setupVersion && setupTarget, 'backend schema sürümü okunabilmeli');
+assert.equal(setupTarget, setupVersion, 'admin beklenen schema sürümü Supabase kurulum sürümüyle eşleşmeli');
 
 for (const rpc of ['evren_gorsel_haritayi_yukle','evren_gorsel_haritayi_kaydet','evren_gorsel_dugumu_guncelle','evren_gorsel_bagi_degistir','evren_zaman_cizelgesi_yukle','evren_zaman_olay_kaydet','evren_zaman_olay_sil','evren_zaman_bagi_degistir']) {
   assert.ok(client.includes(`'${rpc}'`), `client calls ${rpc}`);

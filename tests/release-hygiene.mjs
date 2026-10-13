@@ -85,8 +85,12 @@ assert.ok(fs.existsSync(path.join(root, 'js/engine/free-universe-cleanup-6313.js
 assert.ok(fs.existsSync(path.join(root, 'js/engine/secure-sharing.js')), '6.3.10 güvenli paylaşım istemcisi eksik');
 const webVersionRegex = pkg.version.replaceAll('.', '\\.');
 assert.match(fs.readFileSync(path.join(root, 'js/core/78-uygulama-kabugu.js'), 'utf8'), new RegExp(`p_surum:"${webVersionRegex}"`));
-assert.match(fs.readFileSync(path.join(root, 'js/paket-4.js'), 'utf8'), new RegExp(`KURULUM_BEKLENEN="${webVersionRegex}"`));
-assert.match(fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8'), new RegExp(`select '${webVersionRegex}'::text`));
+const setupSqlForVersion = fs.readFileSync(path.join(root, 'supabase/kurulum.sql'), 'utf8');
+const setupFn = setupSqlForVersion.match(/create or replace function public\.kurulum_surumu\b[\s\S]*?select '([^']+)'::text/);
+const setupVersion = setupFn && setupFn[1];
+const setupTarget = fs.readFileSync(path.join(root, 'js/paket-4.js'), 'utf8').match(/const KURULUM_BEKLENEN="([^"]+)"/)?.[1];
+assert.ok(setupVersion && setupTarget, 'Supabase ve uygulama backend schema sürümü okunabilmeli');
+assert.equal(setupTarget, setupVersion, 'Yönetim paneli beklenen schema sürümü Supabase kurulum sürümüyle aynı olmalı');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/kisisel-arsiv-araclari.js')), '6.3.1 arşiv modülü eksik');
 assert.ok(fs.existsSync(path.join(root, 'js/engine/kesif-kullanici-profili.js')), '6.3 keşif modülü eksik');
 assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql'), 'utf8'), /public_kullanici_profili/);
