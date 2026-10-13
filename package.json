@@ -12,6 +12,7 @@
     "paketle": "node scripts/paketle.mjs",
     "test": "node scripts/test.mjs",
     "test:live": "node tests/canli-ortam-simulasyonu.mjs",
+    "test:map-browser": "node tests/map-route-playwright.mjs",
     "test:seo": "node tests/seo-playwright.mjs",
     "test:release": "node tests/release-hygiene.mjs",
     "lint": "node scripts/lint.mjs"

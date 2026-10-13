@@ -55,7 +55,7 @@
     var host = document.querySelector("#baslangicAlan");
     if (!host || read(ONBOARD, {}).tamam) return;
     var steps = ["Bir karakter veya evren keşfet", "Bir metni okuma listene ekle", "Kendi evreninin ilk kaydını oluştur"];
-    host.innerHTML = '<div class="tf64-onboarding"><div class="tf64-onboarding-head"><div><span class="oyun-etiket">Yeni arşivci rehberi</span><h3>İlk 10 dakikada TentiFor</h3></div><button class="ic-bag" data-tf64-onboard-close>Şimdilik kapat</button></div><ol>' + steps.map(function (step, i) { return '<li><span>' + (i + 1) + '</span><label><input type="checkbox" data-tf64-step="' + i + '"> ' + esc(step) + '</label></li>'; }).join("") + '</ol><p class="oyun-not">Yeni hesap hediyen ilk adımları denemek için hazır.</p></div>';
+    host.innerHTML = '<div class="tf64-onboarding"><div class="tf64-onboarding-head"><div><span class="oyun-etiket">Yeni arşivci rehberi</span><h3>İlk 10 dakikada TentiFor</h3></div><div class="tf64-onboarding-actions"><button type="button" class="ic-bag" data-tf64-onboard-close aria-label="Rehberi atla">Atla</button><button type="button" class="ic-bag" data-tf64-onboard-close>Şimdilik kapat</button></div></div><ol>' + steps.map(function (step, i) { return '<li><span>' + (i + 1) + '</span><label><input type="checkbox" data-tf64-step="' + i + '"> ' + esc(step) + '</label></li>'; }).join("") + '</ol><p class="oyun-not">Yeni hesap hediyen ilk adımları denemek için hazır.</p></div>';
   }
 
   function personalArchive() {

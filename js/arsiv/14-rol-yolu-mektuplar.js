@@ -41,10 +41,11 @@ function turCiz() {
     '<button type="button" class="dugme" data-tur="ileri">' + eylem + '</button>';
 
   if (yeni) {
-    if (typeof dialog.showModal === "function") dialog.showModal();
+    // Keep the guide non-modal: the primary map CTA stays visible and usable underneath it.
+    if (typeof dialog.show === "function") dialog.show();
     else dialog.setAttribute("open", "");
   }
   const sonraki = dialog.querySelector('[data-tur="ileri"]');
   if (sonraki) sonraki.focus();
 }
-document.addEventListener("click",function(e){if(e.target.closest("[data-seri]")){seriOdulAl();return}if(e.target.closest("[data-bulmaca]")){const n=document.querySelector("#bulmacaGiris");n&&bulmacaCevapla(n.value);return}const i=e.target.closest("[data-tur]");if(i){if(i.dataset.tur==="atla"){turBitir();return}const n=(veri.tur||[])[turAdim];if(turAdim++,turAdim>=(veri.tur||[]).length){turBitir(),n&&n.hedef&&(location.hash=n.hedef);return}turCiz()}}),document.addEventListener("keydown",function(e){e.key==="Enter"&&document.activeElement&&document.activeElement.id==="bulmacaGiris"&&bulmacaCevapla(document.activeElement.value)});
+document.addEventListener("click",function(e){if(e.target.closest("[data-seri]")){seriOdulAl();return}if(e.target.closest("[data-bulmaca]")){const n=document.querySelector("#bulmacaGiris");n&&bulmacaCevapla(n.value);return}const i=e.target.closest("[data-tur]");if(i){if(i.dataset.tur==="atla"){turBitir();return}const n=(veri.tur||[])[turAdim];if(turAdim++,turAdim>=(veri.tur||[]).length){turBitir(),n&&n.hedef&&(location.hash=n.hedef);return}turCiz()}}),document.addEventListener("keydown",function(e){if(e.key==="Escape"&&document.querySelector("#turIpucu")){e.preventDefault();turBitir();return}e.key==="Enter"&&document.activeElement&&document.activeElement.id==="bulmacaGiris"&&bulmacaCevapla(document.activeElement.value)});

@@ -124,7 +124,7 @@ const server = http.createServer((req, res) => {
     const knownRoutes = new Set([
       'sen', 'arsiv', 'moderasyon', 'tomye', 'fan', 'oyunlar', 'atolye', 'okuma',
       'baglar', 'dunya', 'belgeler', 'testler', 'araclar', 'proje',
-      'basla'
+      'basla', 'harita'
     ]);
     const isSpaFallback = knownRoutes.has(cleanRoute);
     if (isSpaFallback) {

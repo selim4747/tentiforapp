@@ -669,3 +669,40 @@ html[data-tf644-sepya] .okuma-metin p,html[data-tf644-sepya] .uzun-metin p,html[
 .kanon-gizli-kimlik-dugmeleri .dugme{text-align:left;white-space:normal}
 .kanon-gizli-kimlik-dugmeleri .dugme:disabled{opacity:.68;cursor:not-allowed}
 @media(max-width:640px){.kanon-gizli-kimlikler{padding:.8rem}.kanon-gizli-kimlik-dugmeleri{display:grid;grid-template-columns:1fr}.kanon-gizli-kimlik-dugmeleri .dugme{width:100%}}
+
+/* Compact, wrapping header and legible active location on narrow screens. */
+@media (max-width: 760px) {
+  header.ust { height: auto; min-height: var(--ust-h); flex-wrap: wrap; gap: 8px; padding: 7px 12px; }
+  header.ust .evren-sec-btn { display: inline-flex; align-items: center; margin: 0; }
+  header.ust .cuzdan-rozet { margin-left: 0; }
+  header.ust .kod-btn { margin-left: auto; }
+}
+@media (max-width: 520px) {
+  header.ust { min-height: 58px; gap: 6px; padding: 7px 10px; }
+  header.ust .marka-ad { font-size: 18px; }
+  header.ust .cuzdan-rozet { align-items: center; padding-inline: 3px; }
+  header.ust .ust-ikon { padding: 8px 9px; }
+  header.ust .evren-sec-btn { font-size: 10px; padding: 6px 9px; }
+  header.ust .kod-btn { font-size: 10px; padding: 7px 9px; }
+  .aktif-serit { position: relative; top: auto; min-height: 1.8rem; padding: 3px 10px; }
+  #aktifBolum { display: block; font-size: clamp(8px, 2.7vw, 10px); letter-spacing: .03em; line-height: 1.4; white-space: normal; overflow-wrap: anywhere; }
+  .tf64-onboarding-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
+}
+
+/* Keep the non-modal first-visit guide clear of the primary CTA at every viewport size. */
+.tur-ipucu {
+  top: calc(76px + env(safe-area-inset-top, 0px));
+  right: 16px;
+  bottom: auto;
+  left: auto;
+  margin: 0;
+}
+@media (max-width: 720px) {
+  .tur-ipucu {
+    top: calc(72px + env(safe-area-inset-top, 0px));
+    right: 14px;
+    bottom: auto;
+    left: 14px;
+    margin: 0 auto;
+  }
+}

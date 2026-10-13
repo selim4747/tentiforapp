@@ -113,6 +113,7 @@ rotaSon = rota();
     arsiv: ['Ana sayfa — TentiFor', 'Tentiforverse arşivi'],
     '': ['Ana sayfa — TentiFor', 'Tentiforverse arşivi'],
     tomye: ['Tömye — TentiFor', 'Tömye evreni ve arşiv içerikleri'],
+    harita: ['Harita — TentiFor', 'Tömye ve Ax-24 gezegen haritaları'],
     fan: ['Fan evrenleri — TentiFor', 'TentiFor fan evrenleri ve hikâyeleri'],
     oyunlar: ['Oyunlar — TentiFor', 'TentiFor oyunları'],
     atolye: ['Atölye — TentiFor', 'TentiFor üretim atölyesi'],

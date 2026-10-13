@@ -20,17 +20,23 @@
 
   function tomyeBugun() {
     var t = (typeof veri !== "undefined" && veri && veri.takvim) || {};
-    var aylar = t.aylar || [];
-    var yilGun = t.yilGun || 310;
+    var aylar = Array.isArray(t.aylar) ? t.aylar : [];
+    var yilGun = Number(t.yilGun || 310);
     var epok = new Date((t.epokDunya || "2000-01-01") + "T00:00:00");
     var bugun = new Date(); bugun.setHours(0, 0, 0, 0);
+    if (!aylar.length || !Number.isFinite(yilGun) || yilGun <= 0 || !Number.isFinite(epok.getTime())) return "";
     var gun = Math.floor((bugun - epok) / 86400000);
-    if (!aylar.length || gun < 0) return "";
-    var yil = Math.floor(gun / yilGun) + (t.epokYil || 1);
+    if (!Number.isFinite(gun) || gun < 0) return "";
+    var yil = Math.floor(gun / yilGun) + Number(t.epokYil || 1);
     var kalan = gun % yilGun;
-    var ay = aylar[0], i;
-    for (i = 0; i < aylar.length; i++) { if (kalan < aylar[i].gun) { ay = aylar[i]; break; } kalan -= aylar[i].gun; }
-    return (kalan + 1) + " " + ay.ad + " " + yil;
+    var ay = null, i;
+    for (i = 0; i < aylar.length; i++) {
+      var ayGun = Number(aylar[i] && aylar[i].gun);
+      if (!Number.isFinite(ayGun) || ayGun <= 0) return "";
+      if (kalan < ayGun) { ay = aylar[i]; break; }
+      kalan -= ayGun;
+    }
+    return ay && ay.ad && Number.isFinite(yil) ? (kalan + 1) + " " + ay.ad + " " + yil : "";
   }
 
   function kalaniYaz(yer, ad) {
@@ -99,13 +105,28 @@
 
   function tarihSeridi() {
     var hero = document.querySelector(".hero-metin");
-    if (!hero || document.getElementById("siraTarih")) return;
-    var p = document.createElement("p");
-    p.id = "siraTarih";
-    p.className = "oyun-not";
+    if (!hero) return;
+    var p = document.getElementById("siraTarih");
+    if (!p) { p = document.createElement("p"); p.id = "siraTarih"; p.className = "oyun-not"; hero.insertAdjacentElement("afterend", p); }
+    var tarih = tomyeBugun();
+    if (!tarih) {
+      var yazi = (typeof veri === "undefined" || !veri || !veri.takvim) ? "Tömye takvimi yükleniyor…" : "Tömye takvimi şu anda kullanılamıyor.";
+      var bekleyen = kalaniOku();
+      var bekleyenAd = bekleyen && bekleyen.ad ? String(bekleyen.ad) : "";
+      if (p.dataset.durum !== yazi || p.dataset.kalanAd !== bekleyenAd) {
+        p.dataset.durum = yazi; p.dataset.tarih = ""; p.dataset.kalanAd = bekleyenAd;
+        p.innerHTML = kac(yazi) + (bekleyenAd ? ' <button type="button" class="dugme dugme-sade" data-sira-kal="1">Kaldığın yer: ' + kac(bekleyenAd) + "</button>" : "");
+      }
+      p.setAttribute("role", "status");
+      p.setAttribute("aria-live", "polite");
+      return;
+    }
+    p.removeAttribute("role"); p.removeAttribute("aria-live");
     var kalan = kalaniOku();
-    p.innerHTML = "Tömye'de bugün " + kac(tomyeBugun()) + ". Arşivde bu gün, ayların neden sayıldığının hâlâ bilinmediği gündür." + (kalan && kalan.ad ? ' <button type="button" class="dugme dugme-sade" data-sira-kal="1">Kaldığın yer: ' + kac(kalan.ad) + "</button>" : "");
-    hero.insertAdjacentElement("afterend", p);
+    var kalanAd = kalan && kalan.ad ? String(kalan.ad) : "";
+    if (p.dataset.tarih === tarih && p.dataset.kalanAd === kalanAd) return;
+    p.dataset.durum = ""; p.dataset.tarih = tarih; p.dataset.kalanAd = kalanAd;
+    p.innerHTML = "Tömye'de bugün " + kac(tarih) + ". Arşivde bu gün, ayların neden sayıldığının hâlâ bilinmediği gündür." + (kalanAd ? ' <button type="button" class="dugme dugme-sade" data-sira-kal="1">Kaldığın yer: ' + kac(kalanAd) + "</button>" : "");
   }
 
   function fanTaslak() {
@@ -168,6 +189,6 @@
   document.addEventListener("DOMContentLoaded", kur);
   window.addEventListener("hashchange", kur);
   window.addEventListener("popstate", kur);
-  new MutationObserver(function () { e26Onizleme(); eckaYazi(); }).observe(document.documentElement, { childList: true, subtree: true });
+  new MutationObserver(function () { e26Onizleme(); eckaYazi(); tarihSeridi(); }).observe(document.documentElement, { childList: true, subtree: true });
   setTimeout(kur, 600);
 })();
