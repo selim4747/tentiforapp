@@ -32,14 +32,22 @@
     }
   };
 
-  window.addEventListener('tentifor-native-route', function (event) {
+  function applyNativeRoute(event) {
     var detail = event && event.detail || {};
     var route = detail.route;
     if (typeof route === 'string' && /^#\//.test(route)) window.location.hash = route;
     if (detail.text || detail.uri) {
       window.dispatchEvent(new CustomEvent('tentifor-native-share', { detail: detail }));
     }
+  }
+  window.__tfQueueNativeRoute = function (detail) {
+    if (detail && typeof detail === 'object') applyNativeRoute({ detail: detail });
+  };
+  window.addEventListener('tentifor-native-route', applyNativeRoute);
+  (window.__tfPendingNativeRoutes || []).splice(0).forEach(function (detail) {
+    window.__tfQueueNativeRoute(detail);
   });
+  window.__tfPendingNativeRoutes = [];
 
   function addNativeTools() {
     if (!isNative()) return;
