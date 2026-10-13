@@ -32,7 +32,6 @@
     }
   },
   "server": {
-    "url": "https://tentifor.com/",
     "cleartext": false,
     "allowNavigation": [
       "tentifor.com",

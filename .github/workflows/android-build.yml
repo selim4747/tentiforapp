@@ -72,6 +72,26 @@ jobs:
         run: |
           apk="${{ env.TF_ANDROID_SIGNING_READY == 'true' && 'uygulama/kabuk/android/app/build/outputs/apk/release/app-release.apk' || 'uygulama/kabuk/android/app/build/outputs/apk/debug/app-debug.apk' }}"
           test -s "$apk"
+          python3 - "$apk" <<'PY'
+          import json, re, sys, zipfile
+          with zipfile.ZipFile(sys.argv[1]) as archive:
+              names = set(archive.namelist())
+              config = json.loads(archive.read('assets/capacitor.config.json'))
+              assert not config.get('server', {}).get('url'), 'APK cold start must use its bundled local web shell'
+              assert 'tentifor.com' in config.get('server', {}).get('allowNavigation', []), 'live site navigation must remain allowed'
+              required = ['assets/public/index.html', 'assets/public/sw.js', 'assets/public/veri.json', 'assets/public/js/core/125-live-site-bootstrap.js']
+              for asset in required:
+                  assert asset in names, f'missing offline APK asset: {asset}'
+              service_worker = archive.read('assets/public/sw.js').decode('utf-8')
+              block = re.search(r'const ILK\s*=\s*\[(.*?)\];', service_worker, re.S)
+              assert block, 'offline precache manifest must exist'
+              entries = re.findall(r"[\"']([^\"']+)[\"']", block.group(1))
+              for entry in entries:
+                  relative = entry.split('?', 1)[0].lstrip('./') or 'index.html'
+                  assert f'assets/public/{relative}' in names, f'precache asset missing from APK: {entry}'
+              assert not any('34b-model-evreni.js' in entry for entry in entries), 'retired model asset must not be precached'
+              print(f'Offline APK shell verified: {len(entries)} precache assets')
+          PY
           retired_pattern='cl''aude|et''erya|fornek-et''erya'
           if unzip -l "$apk" | grep -Eiq "$retired_pattern"; then
             echo 'Emekli evren içeriği APK içinde bulundu'
