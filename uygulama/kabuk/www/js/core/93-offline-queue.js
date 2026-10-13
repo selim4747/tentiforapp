@@ -22,12 +22,17 @@
       return false;
     }
   }
+  function sahipIdOku() {
+    try {
+      var id = window.hesapKullanici && window.hesapKullanici.id;
+      return id == null || id === '' ? null : String(id);
+    } catch (_) { return null; }
+  }
   function kimlik() { return 'q_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
   function ekle(tur, veri) {
     if (!tur || !veri || typeof veri !== 'object') throw new TypeError('offline queue kaydı geçersiz');
     var liste = oku();
-    var sahipId = null;
-    try { sahipId = window.hesapKullanici && window.hesapKullanici.id || null; } catch (_) {}
+    var sahipId = sahipIdOku();
     var kayit = { id: kimlik(), sahipId: sahipId, tur: String(tur).slice(0, 80), veri: veri, deneme: 0, olusturuldu: Date.now(), sonraki: 0 };
     liste.push(kayit); yaz(liste); return kayit;
   }
@@ -42,9 +47,9 @@
     try {
       for (var i = 0; i < liste.length; i += 1) {
         var kayit = liste[i];
-        var mevcutSahip = null;
-        try { mevcutSahip = window.hesapKullanici && window.hesapKullanici.id || null; } catch (_) {}
-        if (kayit.sahipId && kayit.sahipId !== mevcutSahip) {
+        var mevcutSahip = sahipIdOku();
+        var kayitSahibi = kayit.sahipId == null || kayit.sahipId === '' ? null : String(kayit.sahipId);
+        if (kayitSahibi !== mevcutSahip) {
           kayit.durum = 'hesap-degisikligi';
           kalan.push(kayit); sonuc.bekledi += 1; continue;
         }
