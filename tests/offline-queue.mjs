@@ -6,6 +6,7 @@ const source = fs.readFileSync('js/core/93-offline-queue.js', 'utf8');
 const store = new Map();
 const handlers = {};
 const window = {
+  hesapKullanici: null,
   addEventListener(name, fn) { handlers[name] = fn; },
   setTimeout
 };
@@ -42,5 +43,27 @@ assert.equal(queue.bekleyen().length, 1);
 assert.equal(first.id.startsWith('q_'), true);
 assert.equal(second.id.startsWith('q_'), true);
 assert.equal(typeof handlers.online, 'function');
+queue.temizle();
+const guestEntry = queue.ekle('guest-action', { n: 2 });
+window.hesapKullanici = { id: 'account-b' };
+let crossAccountSent = false;
+const guestBlocked = await queue.gonder(async () => { crossAccountSent = true; });
+assert.equal(guestEntry.sahipId, null);
+assert.equal(crossAccountSent, false, 'guest records must not be sent under a signed-in account');
+assert.equal(guestBlocked.bekledi, 1);
+assert.equal(queue.bekleyen().length, 1);
+
+queue.temizle();
+window.hesapKullanici = { id: 'account-a' };
+const ownedEntry = queue.ekle('account-action', { n: 3 });
+window.hesapKullanici = { id: 'account-b' };
+let ownedSent = false;
+const accountBlocked = await queue.gonder(async () => { ownedSent = true; });
+assert.equal(ownedEntry.sahipId, 'account-a');
+assert.equal(ownedSent, false, 'records must not be sent after switching accounts');
+assert.equal(accountBlocked.bekledi, 1);
+window.hesapKullanici = { id: 'account-a' };
+const restored = await queue.gonder(async (item) => { assert.equal(item.sahipId, 'account-a'); });
+assert.equal(restored.gonderildi, 1, 'the original account may still send its own queued record');
 queue.temizle();
 console.log('Offline queue local persistence, retry/backoff and online hook: PASS');

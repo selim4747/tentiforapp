@@ -35,6 +35,66 @@ assert.match(navigationSource, /Ax-24/);
 assert.match(navigationSource, /E25 · kanon evren/);
 assert.match(navigationSource, /E26 · kanon evren/);
 
+const mapNavigation = new JSDOM(baseHtml, { url: 'https://tentifor.com/', runScripts: 'outside-only', pretendToBeVisual: true });
+mapNavigation.window.CSS = { escape: (value) => String(value) };
+mapNavigation.window.veri = { haritalar: [
+  { id: 'tomye', ad: 'Tömye', evrenAdi: 'Tentiforverse' },
+  { id: 'ax24', ad: 'Ax-24', ustEvren: 'tomye' }
+] };
+mapNavigation.window.rota = () => mapNavigation.window.location.hash || '#/';
+mapNavigation.window.aktifEvrenSec = () => {};
+mapNavigation.window.evrenSeciciKapat = () => {};
+mapNavigation.window.haritaDurumUrlGuncelle = (id) => {
+  const url = new URL(mapNavigation.window.location.href);
+  url.searchParams.set('harita', id);
+  mapNavigation.window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+};
+let mapDraws = 0;
+mapNavigation.window.haritaCiz = () => { mapDraws += 1; };
+mapNavigation.window.haritaBolumuOdakla = () => {};
+mapNavigation.window.aktifBolumIsaretle = () => {};
+const mapNavigationStart = selectorSource.indexOf('function evrenGit(e){');
+const mapNavigationEnd = selectorSource.indexOf('function evrenDugmesiKur()', mapNavigationStart);
+assert.ok(mapNavigationStart >= 0 && mapNavigationEnd > mapNavigationStart, 'universe navigation handler exists');
+mapNavigation.window.eval(selectorSource.slice(mapNavigationStart, mapNavigationEnd));
+mapNavigation.window.evrenGit('harita:tomye');
+assert.equal(mapNavigation.window.location.hash, '#/harita');
+assert.equal(mapNavigation.window.location.search, '?harita=tomye');
+await new Promise((resolve) => setTimeout(resolve, 140));
+assert.ok(mapDraws > 0, 'Tömye map is redrawn after its navigation completes');
+const currentResolverStart = multiUniverseSource.indexOf('function simdikiEvren(){');
+const currentResolverEnd = multiUniverseSource.indexOf('function baslangicEvrenAdi()', currentResolverStart);
+mapNavigation.window.eval(multiUniverseSource.slice(currentResolverStart, currentResolverEnd));
+assert.deepEqual(
+  { ...mapNavigation.window.simdikiEvren() },
+  { ad: 'Tömye', git: 'harita:tomye' },
+  'navigation from the 24th-universe hero must remain selected in the universe menu'
+);
+mapNavigation.window.close();
+
+const activeUniverseStart = multiUniverseSource.indexOf('function simdikiEvren(){');
+const activeUniverseEnd = multiUniverseSource.indexOf('function baslangicEvrenAdi()', activeUniverseStart);
+assert.ok(activeUniverseStart >= 0 && activeUniverseEnd > activeUniverseStart, 'active universe resolver exists');
+const mapSelection = new JSDOM(baseHtml, { url: 'https://tentifor.com/harita/?harita=tomye', runScripts: 'outside-only' });
+mapSelection.window.veri = { haritalar: [
+  { id: 'tomye', ad: 'Tömye', evrenAdi: 'Tentiforverse' },
+  { id: 'ax24', ad: 'Ax-24', ustEvren: 'tomye' }
+] };
+mapSelection.window.rota = () => '#/harita';
+mapSelection.window.eval(multiUniverseSource.slice(activeUniverseStart, activeUniverseEnd));
+assert.deepEqual(
+  { ...mapSelection.window.simdikiEvren() },
+  { ad: 'Tömye', git: 'harita:tomye' },
+  'Tömye map route must be active in the universe selector'
+);
+mapSelection.window.history.replaceState(null, '', '/harita/?harita=ax24');
+assert.deepEqual(
+  { ...mapSelection.window.simdikiEvren() },
+  { ad: 'Ax-24', git: 'harita:ax24' },
+  'Ax-24 map route must be active in the universe selector'
+);
+mapSelection.window.close();
+
 const privateRoute = routeWindow();
 privateRoute.window.location.hash = '#/ev/benim/my-world-1';
 privateRoute.window.rotaYolaCevir();
