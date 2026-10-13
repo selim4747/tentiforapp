@@ -55,9 +55,10 @@
       '    <span style="font-size: 13.5px; line-height: 1.5; color: var(--murekkep-2);">Bu araç, Android donanım hızlandırması, yerel dosya sistemi (SAF), haptik titreşim motoru ve çevrimdışı işlem altyapısıyla bütünleşik tasarlanmıştır. Web tarayıcısı üzerinden doğrudan çalıştırılamaz; tam deneyim için Tentifor APK gereklidir.</span>',
       '  </div>',
       '  <div style="display: flex; gap: 10px; flex-wrap: wrap;">',
-      '    <a class="dugme" href="/uygulama/indir/tentiforapp.apk" download style="text-decoration:none;">📲 Tentifor Android APK İndir</a>',
+      '    <a class="dugme" href="/uygulama/indir/tentiforapp.apk" download style="text-decoration:none;">📲 Tentifor Android APK 6.4.8 İndir</a>',
       '    <button class="dugme dugme-sade" type="button" data-apk-kapat>Anladım, Kapat</button>',
       '  </div>',
+      '  <p class="oyun-not" role="note" style="font-size: 12px; margin: 10px 0 0;">Not: Bu APK debug sertifikasıyla imzalıdır. Bazı önceki kurulumların üzerine yükleme reddedilebilir; uygulamayı kaldırıp yeniden kurmak cihazdaki yerel verileri silebilir. Gerekli verileri önceden yedekleyin.</p>',
       '</div>'
     ].join('');
   }
