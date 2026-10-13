@@ -16,6 +16,7 @@
         window.dispatchEvent(new CustomEvent('tf4-offline-queue-full', { detail: { dropped: liste.length - MAX } }));
       }
       localStorage.setItem(ANAHTAR, JSON.stringify(liste.slice(-MAX)));
+      try { window.dispatchEvent(new CustomEvent('tf4-offline-queue-change', { detail: { kalan: Math.min(liste.length, MAX) } })); } catch (_) {}
       return true;
     } catch (_) {
       window.dispatchEvent(new CustomEvent('tf4-offline-queue-storage-error'));
@@ -65,7 +66,9 @@
         } else { kalan.push(kayit); sonuc.bekledi += 1; }
       }
       yaz(kalan);
-      return Object.assign(sonuc, { kalan: kalan.length });
+      var tamamlanan = Object.assign(sonuc, { kalan: kalan.length });
+      try { window.dispatchEvent(new CustomEvent('tf4-offline-sync-result', { detail: tamamlanan })); } catch (_) {}
+      return tamamlanan;
     } finally { durum.calisiyor = false; }
   }
   function ayarla(transport) { if (transport != null && typeof transport !== 'function') throw new TypeError('transport function gerekli'); window.tf4OfflineTransport = transport || null; return !!window.tf4OfflineTransport; }

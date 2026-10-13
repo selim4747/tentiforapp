@@ -1,0 +1,33 @@
+/* TentiforApp 6.5.0: offline sync center and publication preflight */
+.tf65-sync-button { position: relative; overflow: visible; }
+.tf65-sync-badge { position: absolute; top: -3px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px; display: inline-flex; align-items: center; justify-content: center; border-radius: 99px; background: #c13b43; color: #fff; font: 700 10px/1 system-ui, sans-serif; box-shadow: 0 0 0 2px var(--kar, #fff); }
+.tf65-sync-badge[hidden] { display: none; }
+.tf65-sync-backdrop { position: fixed; inset: 0; z-index: 10050; display: flex; align-items: center; justify-content: center; padding: 14px; background: rgba(8, 13, 24, .68); }
+.tf65-sync-panel { width: min(620px, 100%); max-height: min(88vh, 760px); overflow: auto; padding: 18px; border-radius: 16px; box-shadow: 0 18px 60px rgba(0, 0, 0, .3); background: var(--beyaz, #fff); color: var(--murekkep, #111); }
+.tf65-sync-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.tf65-sync-head h2 { margin: 3px 0 10px; }
+.tf65-sync-status { padding: 10px 12px; border-radius: 10px; background: rgba(100, 130, 180, .12); }
+.tf65-sync-summary { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 8px; margin: 12px 0; font-size: .88em; }
+.tf65-sync-summary > span { padding: 9px; border: 1px solid rgba(125, 140, 160, .25); border-radius: 9px; }
+.tf65-sync-list { list-style: none; margin: 12px 0; padding: 0; }
+.tf65-sync-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 11px 3px; border-bottom: 1px solid rgba(125, 140, 160, .2); }
+.tf65-sync-row > div { display: grid; gap: 4px; }
+.tf65-sync-row > div span, .tf65-sync-row time { color: inherit; opacity: .75; font-size: .85em; }
+.tf65-sync-row time { white-space: nowrap; }
+.tf65-sync-empty { padding: 16px 0; }
+.tf65-sync-actions { align-items: center; justify-content: space-between; margin-top: 14px; }
+.tf65-sync-actions .oyun-not { max-width: 330px; }
+.tf65-preflight { margin: 10px 0 14px; }
+.tf65-preflight-result { margin-top: 10px; padding: 12px; border: 1px solid rgba(125, 140, 160, .3); border-radius: 10px; }
+.tf65-preflight-result.iyi { border-color: #32805d; }
+.tf65-preflight-result.kotu { border-color: #b44848; }
+.tf65-preflight-result ul { margin: 8px 0; padding-left: 22px; }
+.tf65-preflight-result li { margin: 4px 0; }
+.tf65-preflight-result small { opacity: .72; }
+@media (max-width: 540px) {
+  .tf65-sync-summary { grid-template-columns: 1fr; }
+  .tf65-sync-row { display: grid; }
+  .tf65-sync-row time { white-space: normal; }
+  .tf65-sync-panel { padding: 15px; }
+  .tf65-sync-actions { align-items: flex-start; flex-direction: column; }
+}
