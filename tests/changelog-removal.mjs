@@ -3,11 +3,11 @@ import fs from 'node:fs';
 
 const read = (path) => fs.readFileSync(path, 'utf8');
 const pkg = JSON.parse(read('package.json'));
-assert.equal(pkg.version, '6.4.4', 'uygulama sürümü tam olarak 6.4.4 olmalı');
+assert.equal(pkg.version, '6.4.7', 'uygulama sürümü tam olarak 6.4.7 olmalı');
 assert.equal(JSON.parse(read('veri.json')).surum, pkg.version);
 assert.equal(JSON.parse(read('manifest.webmanifest')).version, pkg.version);
 assert.equal(JSON.parse(read('uygulama/kabuk/package.json')).version, pkg.version);
-assert.match(read('uygulama/kabuk/android/app/build.gradle'), /versionName "6\.4\.4"/);
+assert.ok(read('uygulama/kabuk/android/app/build.gradle').includes(`versionName "${pkg.version}"`));
 
 const index = read('index.html');
 assert.doesNotMatch(index, /id="yenilikAlan"|yenilikler · günün kaydı|26-ziyaret-yenilikleri/);
