@@ -133,7 +133,9 @@
     window.altMenuCiz = function () {
       var result = originalDock.apply(this, arguments);
       var button = document.querySelector('#altMenu [data-evren-sec]');
-      var target = window.aktifEvrenHedefi('evren');
+      var target = typeof window.altMenuEvrenHedefi === 'function'
+        ? window.altMenuEvrenHedefi('evren')
+        : window.aktifEvrenHedefi('evren');
       if (!button || !target) return result;
       var link = document.createElement('a');
       link.className = button.className;
@@ -150,6 +152,9 @@
     };
   }
   document.addEventListener('click', function (event) {
+    if (event.target && event.target.closest && event.target.closest('[data-alt-hedef]') && typeof window.mobilMenuKapat === 'function') {
+      window.mobilMenuKapat();
+    }
     var readLink = event.target && event.target.closest && event.target.closest('[data-alt-hedef="oku"]');
     if (readLink) window.__tf65ForceGuideOnce = true;
   }, true);
