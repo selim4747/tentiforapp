@@ -1,12 +1,12 @@
 # TentiFor Android release
 
-## 6.5.0 indirilebilir APK — debug imzalı
+## 6.5.1 indirilebilir APK — debug imzalı
 
-`uygulama/indir/tentiforapp.apk` Android CI tarafından 6.5.0 kaynaklarından derlenmiş APK’dır:
+`uygulama/indir/tentiforapp.apk` Android CI tarafından 6.5.1 kaynaklarından derlenmiş APK’dır:
 
 - Package: `dev.pages.tentiforapp`
 - Version code: `6500`
-- Version name: `6.5.0`
+- Version name: `6.5.1`
 - APK size: `8,902,949` bytes
 - APK SHA-256: `dd413c48bc8b67919ba67cef744975ec033b1131acb0e560d949944193281c48`
 - İmza: `Android Debug`; sertifika SHA-256: `6D:C4:B0:A8:39:EA:49:DD:8E:23:C8:66:5D:A0:72:64:57:C7:6A:E0:47:7D:13:A8:EE:01:02:27:AB:B6:D2:31`
@@ -15,7 +15,7 @@ Bu dosya kalıcı release keystore ile imzalı değildir. 6.4.10 veya farklı de
 
 ## Önceki APK: 6.4.10 — tarihsel metadata
 
-Önceki debug APK: version code `6410`, APK size `8,931,459` bytes, SHA-256 `8f0e3f682aa495876be17c67a9429f55bc7fe6b5f015d0612a1024634b484ef4`. İndirme yolu artık 6.5.0 dosyasını gösterir.
+Önceki debug APK: version code `6410`, APK size `8,931,459` bytes, SHA-256 `8f0e3f682aa495876be17c67a9429f55bc7fe6b5f015d0612a1024634b484ef4`. İndirme yolu artık 6.5.1 dosyasını gösterir.
 
 ## 6.3.16 indirilebilir APK
 
