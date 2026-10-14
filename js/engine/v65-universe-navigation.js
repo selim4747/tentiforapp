@@ -1,4 +1,4 @@
-/* TentiforApp 6.5.0 — evren bağlamlı bilgi ve okuma rotaları. */
+/* TentiforApp 6.5.1 — evren bağlamlı bilgi ve okuma rotaları. */
 (function () {
   'use strict';
   var previousGuide = window.evrenRehberi;
@@ -92,6 +92,11 @@
     if (!current) {
       var first = array(window.veri && window.veri.haritalar)[0];
       current = { git: first ? 'harita:' + first.id : '#/arsiv', ad: first && (first.evrenAdi || first.ad) || 'Tentiforverse' };
+    }
+    // Ana sayfa, başlangıç evreninin kısa yolu; alt menü ana sayfaya değil lore sayfasına gitmeli.
+    if (current.git === '#/arsiv') {
+      var root = array(window.veri && window.veri.haritalar)[0];
+      if (root) current = { git: 'harita:' + root.id, ad: root.evrenAdi || root.ad || 'Evren' };
     }
     var git = String(current.git || '');
     if (git === '#/legacy-universe') return { git: git, ad: current.ad || 'Eski arşiv', ce: kind === 'oyna' ? 'oyunlar' : 'roman' };

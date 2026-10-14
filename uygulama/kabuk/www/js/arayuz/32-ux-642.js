@@ -1,4 +1,4 @@
-/* TentiFor 6.5.0 — kişisel merkez ve keşif araçları. Yerel, geri alınabilir UX katmanı. */
+/* TentiFor 6.5.1 — kişisel merkez ve keşif araçları. Yerel, geri alınabilir UX katmanı. */
 (function () {
   'use strict';
 
@@ -138,7 +138,7 @@
       '<button class="dugme dugme-sade" data-tf642-reading="sepya">' + (state.readingTheme === 'sepya' ? 'Normal zemin' : 'Sepya zemin') + '</button>' +
       '</div></section>' +
       '<section class="tf642-card"><h3>Koleksiyonum</h3><p class="tf642-muted">Favori rotalarını cihazında tut.</p><div class="tf642-collection">' + (collection.length ? collection.map(function (x) { return '<a class="tf642-result" href="' + esc(x.route) + '"><strong>' + esc(x.title) + '</strong><small>' + esc(x.route) + '</small></a>'; }).join('') : '<p class="tf642-muted">Henüz kayıt yok.</p>') + '</div><button class="dugme dugme-sade" data-tf642-save-current>Bu sayfayı koleksiyona ekle</button></section>' +
-      '<section class="tf642-card tf642-actions"><button class="dugme dugme-sade" data-tf642-share>Bağlantıyı kopyala</button><a class="dugme dugme-sade" href="mailto:destek@tentifor.com?subject=TentiFor%206.5.0%20hata%20bildirimi">Hata bildir</a><span class="tf642-muted">Sürüm 6.5.0</span></section>';
+      '<section class="tf642-card tf642-actions"><button class="dugme dugme-sade" data-tf642-share>Bağlantıyı kopyala</button><a class="dugme dugme-sade" href="mailto:destek@tentifor.com?subject=TentiFor%206.5.1%20hata%20bildirimi">Hata bildir</a><span class="tf642-muted">Sürüm 6.5.1</span></section>';
     panel.querySelector('[data-tf642-search]').addEventListener('input', function (e) { renderSearch(e.target.value); });
     panel.querySelectorAll('[data-tf642-font]').forEach(function (button) { button.addEventListener('click', function () { state.fontScale = Math.max(.9, Math.min(1.3, state.fontScale + (button.dataset.tf642Font === '+' ? .1 : -.1))); save(); applyPrefs(); renderPanel(); }); });
     panel.querySelectorAll('[data-tf642-toggle]').forEach(function (button) { button.addEventListener('click', function () { var key = button.dataset.tf642Toggle; state[key] = !state[key]; save(); applyPrefs(); renderPanel(); }); });
@@ -153,7 +153,7 @@
     button.className = 'tf642-trigger'; button.type = 'button'; button.textContent = 'Kişisel merkez'; button.setAttribute('aria-label', 'Kişisel merkez ve erişilebilirlik araçlarını aç');
     var host = document.querySelector('.ust') || document.body; host.appendChild(button);
     panel = document.createElement('aside'); panel.className = 'tf642-panel'; panel.hidden = true; panel.dataset.tf642Panel = 'true'; panel.setAttribute('aria-label', 'Kişisel merkez');
-    panel.innerHTML = '<div class="tf642-head"><div><span class="etiket">6.5.0</span><h2>Kişisel merkez</h2></div><button class="pencere-kapat" type="button" data-tf642-close aria-label="Kapat">×</button></div><div data-tf642-body></div>';
+    panel.innerHTML = '<div class="tf642-head"><div><span class="etiket">6.5.1</span><h2>Kişisel merkez</h2></div><button class="pencere-kapat" type="button" data-tf642-close aria-label="Kapat">×</button></div><div data-tf642-body></div>';
     document.body.appendChild(panel);
     button.addEventListener('click', openPanel); panel.querySelector('[data-tf642-close]').addEventListener('click', closePanel);
     panel.addEventListener('click', function (e) { if (e.target === panel) closePanel(); });
@@ -163,5 +163,5 @@
     setResume();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
-  window.tf642 = { open: openPanel, close: closePanel, resetSearch: function () { searchIndex = null; }, version: '6.5.0' };
+  window.tf642 = { open: openPanel, close: closePanel, resetSearch: function () { searchIndex = null; }, version: '6.5.1' };
 }());

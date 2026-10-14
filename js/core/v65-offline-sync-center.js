@@ -1,4 +1,4 @@
-/* TentiforApp 6.5.0 — çevrimdışı eşitleme merkezi. */
+/* TentiforApp 6.5.1 — çevrimdışı eşitleme merkezi. */
 (function () {
   'use strict';
   var LAST_SUCCESS = 'tf65_offline_sync_last_success';

@@ -1,4 +1,4 @@
-/* Native startup 6.5.0: local-first, safe origin bridge, resumable live-site probe. */
+/* Native startup 6.5.1: local-first, safe origin bridge, resumable live-site probe. */
 (function (root) {
   'use strict';
   var LIVE_HOST = 'tentifor.com';
