@@ -5,8 +5,7 @@ function yoldanRota(yol) {
   const parcalar = String(yol || '').split('/').filter((parca) => parca && parca !== 'index.html').map((parca) => {
     try { return decodeURIComponent(parca); } catch { return parca; }
   });
-  if (!parcalar.length) return '';
-  if (parcalar[0] === 'evren' && parcalar[1]) {
+  if (!parcalar.length) return ''; const ilk = String(parcalar[0]).toLocaleLowerCase('tr-TR'); if (ilk === 'yonetici' || ilk === 'yönetici') return '#/yonetici'; if (parcalar[0] === 'evren' && parcalar[1]) {
     if (['benim', 'acilan', 'fan', 'site', 'onizle'].includes(parcalar[1])) return '#/ev/' + parcalar.slice(1).join('/');
     if (parcalar[1] === 'e99') return '#/ev/e99';
     if (parcalar[1] === 'e25') return '#/ev/site/e25';
@@ -73,7 +72,7 @@ function rotaYolaCevir() {
 }
 
 let rotaSon = '';
-const ROTA_KISISEL = /^#\/(moderasyon(?:\/|$)|sen|u\/|ev\/(benim|acilan)|kartpostal|fanAc|fan\/paylasim)/;
+const ROTA_KISISEL = /^#\/(moderasyon(?:\/|$)|sen|yonetici(?:\/|$)|u\/|ev\/(benim|acilan)|kartpostal|fanAc|fan\/paylasim)/;
 function rotaRobotlar() {
   const robots = document.querySelector('meta[name="robots"]');
   if (document.body && document.body.hasAttribute('data-seo-not-found')) {
@@ -118,7 +117,7 @@ rotaSon = rota();
     fan: ['Fan evrenleri — TentiFor', 'TentiFor fan evrenleri ve hikâyeleri'],
     oyunlar: ['Oyunlar — TentiFor', 'TentiFor oyunları'],
     atolye: ['Atölye — TentiFor', 'TentiFor üretim atölyesi'],
-    okuma: ['Okuma — TentiFor', 'TentiFor okuma alanı']
+    okuma: ['Okuma — TentiFor', 'TentiFor okuma alanı'], yonetici: ['Yönetici paneli — TentiFor', 'TentiFor yönetim paneli. Erişim için yönetici kodu gerekir.', false]
   };
   window.tf4RouteHead = function () {
     const bolum = (location.pathname.split('/')[1] || location.hash.replace(/^#\/?/, '').split('/')[0] || '').toLowerCase();

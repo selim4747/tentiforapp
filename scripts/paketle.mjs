@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { approvedCanonicalUniversePages, fetchPublicSeoPages, renderSeoNotFound, writeSeoRoutes } from './public-seo.mjs';
+import { approvedCanonicalUniversePages, fetchPublicSeoPages, renderSeoNotFound, renderStandaloneAdminPage, writeSeoRoutes } from './public-seo.mjs';
 import { syncTerminalRoutes } from './sync-terminal-routes.mjs';
 import { copyPublicAsset, isHiddenUniverseAssetPath, stripHiddenUniverseSections } from './visibility.mjs';
 
@@ -45,6 +45,42 @@ if (veri.surum !== canonicalVersion) {
   console.error(`❌ Sürüm uyuşmazlığı: package.json=${canonicalVersion}, veri.json=${veri.surum || '(boş)'}`);
   process.exit(1);
 }
+
+// Source route handlers live in core/00-rota.js and are shipped inside paket-1.js.
+// Keep the serving bundle in sync; otherwise production silently runs the stale route map.
+const routeSource = fs.readFileSync(path.join(ROOT_DIR, 'js/core/00-rota.js'), 'utf8');
+const routeBundlePath = path.join(ROOT_DIR, 'js/paket-1.js');
+let routeBundle = fs.readFileSync(routeBundlePath, 'utf8');
+if (!routeSource.includes("ilk === 'yonetici' || ilk === 'yönetici'") || !routeSource.includes('yonetici(?:\\/|$)') || !routeSource.includes('yonetici:')) {
+  throw new Error('core/00-rota.js içinde yönetici route/metadata koruması bulunamadı; paket üretimi durduruldu.');
+}
+function replaceRouteBundleFragment(bundle, current, replacement, label) {
+  if (bundle.includes(replacement)) return bundle;
+  const first = bundle.indexOf(current);
+  if (first < 0 || bundle.indexOf(current, first + current.length) >= 0) {
+    throw new Error(`paket-1.js ${label} rota parçası beklenen biçimde değil; paket üretimi durduruldu.`);
+  }
+  return bundle.slice(0, first) + replacement + bundle.slice(first + current.length);
+}
+routeBundle = replaceRouteBundleFragment(
+  routeBundle,
+  "if (!parcalar.length) return '';\n  if (parcalar[0] === 'evren' && parcalar[1]) {",
+  "if (!parcalar.length) return ''; const ilk = String(parcalar[0]).toLocaleLowerCase('tr-TR'); if (ilk === 'yonetici' || ilk === 'yönetici') return '#/yonetici'; if (parcalar[0] === 'evren' && parcalar[1]) {",
+  'admin path'
+);
+routeBundle = replaceRouteBundleFragment(
+  routeBundle,
+  'const ROTA_KISISEL = /^#\\/(moderasyon(?:\\/|$)|sen|u\\/|ev\\/(benim|acilan)|kartpostal|fanAc|fan\\/paylasim)/;',
+  'const ROTA_KISISEL = /^#\\/(moderasyon(?:\\/|$)|sen|yonetici(?:\\/|$)|u\\/|ev\\/(benim|acilan)|kartpostal|fanAc|fan\\/paylasim)/;',
+  'private route noindex'
+);
+routeBundle = replaceRouteBundleFragment(
+  routeBundle,
+  "okuma: ['Okuma — TentiFor', 'TentiFor okuma alanı']",
+  "okuma: ['Okuma — TentiFor', 'TentiFor okuma alanı'], yonetici: ['Yönetici paneli — TentiFor', 'TentiFor yönetim paneli. Erişim için yönetici kodu gerekir.', false]",
+  'admin metadata'
+);
+fs.writeFileSync(routeBundlePath, routeBundle, 'utf8');
 
 // 2. Paket karması hesapla. Tarih kullanılmaz; aynı girdiler aynı cache adını üretir.
 syncTerminalRoutes(ROOT_DIR);
@@ -240,7 +276,6 @@ const seoIndex = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
 // privacy-filtered public RPC; local universe pages require an approved registry record and a
 // matching evrenler/{id}.json file. Private/draft database rows are never copied into output.
 const staticSeoPages = [
-  { tur: 'sayfa', path: '/yonetici/', title: 'Yönetici — TentiFor', description: 'TentiFor yönetim ve içerik paneli.' },
   { tur: 'sayfa', path: '/tomye/', title: 'Tömye — TentiFor', description: 'Tömye evreni ve Tentiforverse arşiv içerikleri.' },
   { tur: 'sayfa', path: '/fan/', title: 'Fan evrenleri — TentiFor', description: 'TentiFor’te yayınlanmış fan evrenleri ve hikâyeler.' },
   { tur: 'sayfa', path: '/oyunlar/', title: 'Oyunlar — TentiFor', description: 'TentiFor oyunları ve yarışları.' },
@@ -272,6 +307,17 @@ if (process.env.TF_SEO_STATIC_ONLY !== '1') {
   }
 }
 const routeCount = writeSeoRoutes({ indexHtml: seoIndex, distDir, items: publicSeoPages, staticPages: staticSeoPages, appRoutes });
+// Yönetici paneli kendi HTML rotasında çalışır; genel SEO fallback'i içindeki
+// içerik bölümlerini gizleyen stil burada kullanılmaz. Panel Sen kabuğuna girmez.
+const yoneticiHtml = renderStandaloneAdminPage(seoIndex);
+for (const root of [distDir, ROOT_DIR, wwwDir]) {
+  if (!root || !fs.existsSync(root)) continue;
+  const targets = [path.join(root, 'yonetici', 'index.html'), path.join(root, 'yonetici.html')];
+  for (const target of targets) {
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, yoneticiHtml, 'utf8');
+  }
+}
 // Uygulama ve statik sayfaları kök dizin ve www ile senkronize et
 for (const route of [...staticSeoPages, ...appRoutes]) {
   const rel = (route.path || '').replace(/^\/+|\/+$/g, '');

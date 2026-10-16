@@ -5,7 +5,7 @@ export const SEO_ORIGIN = 'https://tentifor.com';
 export const SEO_PAGE_LIMIT = 100;
 export const SEO_PAGE_CAP = 5000;
 const SOCIAL_IMAGE = `${SEO_ORIGIN}/paylasim.png`;
-const PUBLIC_SECTION_PATHS = new Set(['/tomye/', '/fan/', '/oyunlar/', '/atolye/', '/okuma/', '/yonetici/']);
+const PUBLIC_SECTION_PATHS = new Set(['/tomye/', '/fan/', '/oyunlar/', '/atolye/', '/okuma/']);
 
 export function escapeHtml(value) {
   return String(value == null ? '' : value).replace(/[&<>"']/g, (char) => ({
@@ -283,6 +283,37 @@ export function renderNoindexAppRoute(indexHtml, route) {
   const title = short(route.title || 'TentiFor', 70);
   const description = short(route.description || 'TentiFor uygulama alanı.', 155);
   let html = indexHtml.replace(/<!--[\s\S]*?-->/g, '');
+  if (!/<base\b/i.test(html)) html = html.replace('<head>', '<head>\n<base href="/">');
+  html = html.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`);
+  html = replaceMeta(html, 'name', 'description', description);
+  html = replaceMeta(html, 'name', 'robots', 'noindex, follow');
+  html = replaceMeta(html, 'property', 'og:title', title);
+  html = replaceMeta(html, 'property', 'og:description', description);
+  html = replaceMeta(html, 'property', 'og:url', canonical);
+  html = replaceMeta(html, 'name', 'twitter:title', title);
+  html = replaceMeta(html, 'name', 'twitter:description', description);
+  html = replaceMeta(html, 'name', 'twitter:url', canonical);
+  html = replaceCanonical(html, canonical);
+  return html;
+}
+
+export function renderStandaloneAdminPage(indexHtml) {
+  const mainPattern = /<main\b(?=[^>]*\bid=["']tepe["'])[^>]*>[\s\S]*?<\/main>/i;
+  if (!mainPattern.test(indexHtml)) throw new TypeError('Ana uygulama alanı bulunamadı; yönetici sayfası üretilemedi.');
+  const adminMain = `<main id="tepe">
+  <section class="bolum" id="yonetici">
+    <div class="bolum-basi">
+      <span class="etiket">Yönetim</span>
+      <h1>Yönetici paneli</h1>
+      <p class="bolum-alt">Yönetim araçlarına erişmek için yönetici kodunla giriş yap.</p>
+    </div>
+    <div id="yoneticiAlan"></div>
+  </section>
+</main>`;
+  const canonical = `${SEO_ORIGIN}/yonetici/`;
+  const title = 'Yönetici paneli — TentiFor';
+  const description = 'TentiFor yönetim paneli. Erişim için yönetici kodu gerekir.';
+  let html = String(indexHtml).replace(mainPattern, adminMain);
   if (!/<base\b/i.test(html)) html = html.replace('<head>', '<head>\n<base href="/">');
   html = html.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`);
   html = replaceMeta(html, 'name', 'description', description);

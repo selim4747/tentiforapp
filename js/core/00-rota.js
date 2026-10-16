@@ -6,7 +6,7 @@ function yoldanRota(yol) {
   });
   if (!parcalar.length) return '';
   const ilk = String(parcalar[0]).toLocaleLowerCase('tr-TR');
-  if (ilk === 'yonetici') return '#/yonetici';
+  if (ilk === 'yonetici' || ilk === 'yönetici') return '#/yonetici';
   if (parcalar[0] === 'evren' && parcalar[1]) {
     if (['benim', 'acilan', 'fan', 'site', 'onizle'].includes(parcalar[1])) return '#/ev/' + parcalar.slice(1).join('/');
     if (parcalar[1] === 'e99') return '#/ev/e99';
@@ -21,6 +21,7 @@ function rotadanYol(rotaMetni) {
   const parcalar = String(rotaMetni || '').replace(/^#\/?/, '').split('/').filter(Boolean);
   if (!parcalar.length) return '/';
   const yol = (bolumler) => '/' + bolumler.map(encodeURIComponent).join('/') + '/';
+  if (parcalar[0] === 'yonetici' || parcalar[0] === 'yönetici') return '/yonetici/';
   if (parcalar[0] === 'ev') {
     if (parcalar[1] === 'e99' && parcalar.length === 2) return '/evren/e99/';
     if (parcalar[1] === 'site' && parcalar[2] && /^e\d+$/.test(parcalar[2]) && parcalar[2] !== 'e99') return yol(['evren', parcalar[2]]);
@@ -72,7 +73,7 @@ function rotaYolaCevir() {
 }
 
 let rotaSon = '';
-const ROTA_KISISEL = /^#\/(moderasyon(?:\/|$)|sen|u\/|ev\/(benim|acilan)|kartpostal|fanAc|fan\/paylasim)/;
+const ROTA_KISISEL = /^#\/(moderasyon(?:\/|$)|sen|yonetici(?:\/|$)|u\/|ev\/(benim|acilan)|kartpostal|fanAc|fan\/paylasim)/;
 function rotaRobotlar() {
   const robots = document.querySelector('meta[name="robots"]');
   if (document.body && document.body.hasAttribute('data-seo-not-found')) {
@@ -118,10 +119,13 @@ rotaSon = rota();
     oyunlar: ['Oyunlar — TentiFor', 'TentiFor oyunları', true],
     atolye: ['Atölye — TentiFor', 'TentiFor üretim atölyesi', true],
     okuma: ['Okuma — TentiFor', 'TentiFor okuma alanı', true],
-    yonetici: ['Yönetici — TentiFor', 'TentiFor yönetim ve içerik paneli.', true]
+    yonetici: ['Yönetici paneli — TentiFor', 'TentiFor yönetim paneli. Erişim için yönetici kodu gerekir.', false]
   };
   window.tf4RouteHead = function () {
-    const bolum = (location.pathname.split('/')[1] || location.hash.replace(/^#\/?/, '').split('/')[0] || '').toLowerCase();
+    let bolum = location.pathname.split('/')[1] || location.hash.replace(/^#\/?/, '').split('/')[0] || '';
+    try { bolum = decodeURIComponent(bolum); } catch {}
+    bolum = String(bolum).toLocaleLowerCase('tr-TR');
+    if (bolum === 'yönetici') bolum = 'yonetici';
     const metadata = map[bolum];
     if (!metadata) return;
     document.title = metadata[0];
@@ -130,7 +134,7 @@ rotaSon = rota();
     const openGraph = document.querySelector('meta[property="og:url"]');
     const robots = document.querySelector('meta[name="robots"]');
     if (description) description.content = metadata[1];
-    const path = '/' + (bolum || '') + '/';
+    const path = bolum === 'yonetici' ? '/yonetici/' : '/' + (bolum || '') + '/';
     if (canonical) canonical.href = location.origin + path;
     if (openGraph) openGraph.content = location.origin + path;
     if (robots && metadata.length > 2 && metadata[2] === false) robots.setAttribute('content', 'noindex, follow');

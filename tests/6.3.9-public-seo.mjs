@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { approvedCanonicalUniversePages, buildSitemap, fetchPublicSeoPages, renderNoindexAppRoute, renderSeoNotFound, renderSeoPage, seoMetadata, writeSeoRoutes } from '../scripts/public-seo.mjs';
+import { approvedCanonicalUniversePages, buildSitemap, fetchPublicSeoPages, renderNoindexAppRoute, renderSeoNotFound, renderSeoPage, renderStandaloneAdminPage, seoMetadata, writeSeoRoutes } from '../scripts/public-seo.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
@@ -14,6 +14,7 @@ const client = read('js/engine/seo-meta.js');
 const routeSource = read('js/core/00-rota.js');
 const routeBundle = read('js/paket-1.js');
 const buildScript = read('scripts/paketle.mjs');
+const redirects = read('_redirects');
 const index = read('index.html');
 const sw = read('sw.js');
 const packageJson = JSON.parse(read('package.json'));
@@ -46,13 +47,22 @@ assert.match(client, /addEventListener\('popstate', handleRoute\)/);
 assert.match(client, /public_seo_sayfa/);
 assert.match(client, /approvedCanonicalUniverse/);
 assert.match(client, /noindex, follow/);
+assert.match(routeSource, /ilk === 'yonetici' \|\| ilk === 'yönetici'/, 'ASCII and Turkish admin path names resolve to the dedicated app route');
+assert.match(routeSource, /return '\/yonetici\/'/, 'SPA admin navigation canonicalizes to the ASCII URL');
+assert.match(routeBundle, /ilk === 'yonetici' \|\| ilk === 'yönetici'/, 'the served bundle must resolve the dedicated ASCII admin route');
+assert.match(routeBundle, /const ROTA_KISISEL =/);
+assert.match(routeBundle, /yonetici\(\?:\\\/\|\$\)/, 'the served bundle treats admin as a private noindex route');
+assert.match(routeBundle, /yonetici: \['Yönetici paneli — TentiFor'/, 'the served bundle keeps admin route metadata in sync');
 const moderationPrivacyRule = 'ROTA_KISISEL=/^#\\/(moderasyon(?:\\/|$)|sen|';
 assert.ok(routeSource.replace(/\s+/g, '').includes(moderationPrivacyRule), 'moderation is a private noindex app route');
 assert.ok(routeBundle.replace(/\s+/g, '').includes(moderationPrivacyRule), 'served route bundle matches the privacy rule in source');
 assert.doesNotMatch(client, /\.innerHTML\s*=/, 'untrusted public profile/world text must be rendered with textContent/attributes, never HTML parsing');
 assert.match(index, /js\/engine\/seo-meta\.js/);
+assert.doesNotMatch(index, /id="yonetici"/, 'the public/Sen application shell must not contain the admin panel');
 assert.match(sw, /js\/engine\/seo-meta\.js/);
 assert.match(buildScript, /publicSeoPages/);
+assert.match(redirects, /^\/yonetici\s+\/yonetici\/\s+301$/m, 'the extensionless admin path redirects to the dedicated ASCII URL');
+assert.doesNotMatch(redirects, /^\/yonetici\/\s+\/index\.html\s+200$/m, 'the admin URL must not rewrite to the home/Sen application');
 
 const shell = '<!doctype html><html><head><title>Home</title><meta name="description" content="Home"><meta name="robots" content="index, follow"><meta property="og:url" content="https://example.test/"><link rel="canonical" href="https://example.test/"></head><body><main id="tepe"><h2>App</h2></main></body></html>';
 const hostile = { tur: 'evren', slug: 'safe-world', baslik: '<script>alert(1)</script> & "quote"', ozet: '<img src=x onerror=alert(1)>', yazar_adi: 'Yazar <svg onload=alert(1)>' };
@@ -82,6 +92,7 @@ assert.match(sitemap, /\/evren\/safe-world\//);
 assert.match(sitemap, /\/evren\/%C4%B1%C5%9F%C4%B1k-evren\//);
 assert.doesNotMatch(sitemap, /bad\/route/);
 assert.doesNotMatch(sitemap, /\/sen\/|\/admin\/|draft/i);
+assert.equal(seoMetadata({ tur: 'sayfa', path: '/yonetici/', title: 'Yönetici paneli' }), null, 'the private admin page is not treated as public SEO content');
 
 const approvedLocalUniverses = approvedCanonicalUniversePages(root, JSON.parse(read('veri.json')));
 const e126 = approvedLocalUniverses.find((item) => item.slug === 'e126');
@@ -101,6 +112,16 @@ assert.match(moderationShell, /<link rel="canonical" href="https:\/\/tentifor\.c
 assert.doesNotMatch(moderationShell, /data-seo-not-found|data-seo-fallback|Sayfa bulunamadı/);
 assert.match(moderationShell, /<main id="tepe"><h2>App<\/h2><\/main>/, 'private moderation route keeps the app background visible');
 assert.throws(() => renderNoindexAppRoute(shell, { path: '/../secrets/' }), /Güvenli olmayan uygulama rotası/);
+const senShell = renderNoindexAppRoute(index, { path: '/sen/', title: 'Sen — TentiFor' });
+assert.doesNotMatch(senShell, /id="yonetici"/, 'the Sen page no longer carries the admin panel DOM');
+const standaloneAdmin = renderStandaloneAdminPage(index);
+const standaloneMain = standaloneAdmin.match(/<main\b[^>]*>[\s\S]*?<\/main>/i)?.[0] || '';
+assert.match(standaloneAdmin, /<title>Yönetici paneli — TentiFor<\/title>/);
+assert.match(standaloneAdmin, /<link rel="canonical" href="https:\/\/tentifor\.com\/yonetici\/">/);
+assert.match(standaloneAdmin, /<meta name="robots" content="noindex, follow">/);
+assert.equal((standaloneMain.match(/<section\b/g) || []).length, 1, 'the dedicated admin page renders only the panel section');
+assert.match(standaloneMain, /id="yoneticiAlan"/);
+assert.doesNotMatch(standaloneMain, /id="sen"|id="arsiv"|id="bag"/);
 
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'tentifor-seo-test-'));
 try {

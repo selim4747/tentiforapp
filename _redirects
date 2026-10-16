@@ -19,5 +19,7 @@
 /harita       /index.html   200
 /harita/      /index.html   200
 
-/yonetici        /index.html   200
-/yonetici/       /index.html   200
+/yonetici        /yonetici/    301
+/yonetici.html   /yonetici/    301
+/yönetici        /yonetici/    301
+/yönetici/       /yonetici/    301

@@ -11,6 +11,7 @@ assert.ok(fs.existsSync(path.join(dist, 'evren/e25/index.html')), 'run npm run b
 assert.ok(fs.existsSync(path.join(dist, 'evren/e126/index.html')), 'approved E126 must have a generated public route');
 assert.ok(fs.existsSync(path.join(dist, 'moderasyon/index.html')), 'moderation must have an app-shell route instead of the static 404');
 assert.ok(fs.existsSync(path.join(dist, 'moderasyon.html')), 'extensionless moderation URL must have an app-shell route');
+assert.ok(fs.existsSync(path.join(dist, 'yonetici/index.html')), 'admin must have a dedicated ASCII app-shell route');
 const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.xml': 'application/xml; charset=utf-8', '.txt': 'text/plain; charset=utf-8' };
 const server = http.createServer((request, response) => {
   let pathname;
@@ -61,6 +62,17 @@ try {
   assert.equal(await crawler.locator('meta[name="robots"]').getAttribute('content'), 'noindex, follow');
   assert.equal(await crawler.locator('link[rel="canonical"]').getAttribute('href'), 'https://tentifor.com/moderasyon/');
   assert.doesNotMatch(await crawler.locator('body').innerText(), /404|Sayfa bulunamadı|Aradığın adres:/i);
+  const adminResponse = await crawler.goto(`${origin}/yonetici/`, { waitUntil: 'domcontentloaded' });
+  assert.equal(adminResponse.status(), 200);
+  assert.match(await crawler.title(), /Yönetici paneli.*TentiFor/);
+  assert.equal(await crawler.locator('meta[name="robots"]').getAttribute('content'), 'noindex, follow');
+  assert.equal(await crawler.locator('link[rel="canonical"]').getAttribute('href'), 'https://tentifor.com/yonetici/');
+  assert.equal(await crawler.locator('#tepe > section').count(), 1, 'dedicated admin page contains only the admin section');
+  assert.equal(await crawler.locator('#yoneticiAlan').count(), 1);
+  assert.equal(await crawler.locator('#sen').count(), 0, 'admin must not be embedded in the Sen page DOM');
+  const senResponse = await crawler.goto(`${origin}/sen/`, { waitUntil: 'domcontentloaded' });
+  assert.equal(senResponse.status(), 200);
+  assert.equal(await crawler.locator('#yonetici').count(), 0, 'Sen page must not contain the admin panel');
   const moderationNoSlash = await crawler.goto(`${origin}/moderasyon`, { waitUntil: 'domcontentloaded' });
   assert.equal(moderationNoSlash.status(), 200);
   assert.equal(await crawler.locator('meta[name="robots"]').getAttribute('content'), 'noindex, follow');
@@ -99,6 +111,17 @@ try {
   await page.waitForFunction(() => typeof window.__copiedShare === 'string' && window.__copiedShare.includes('/evren/e25/'));
   const pageWidth = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
   assert.ok(pageWidth.document <= pageWidth.viewport + 1, `mobile layout overflows horizontally: ${JSON.stringify(pageWidth)}`);
+
+  const directAdminResponse = await page.goto(`${origin}/yonetici/`, { waitUntil: 'domcontentloaded' });
+  assert.equal(directAdminResponse.status(), 200);
+  await page.waitForFunction(() => (document.querySelector('#yoneticiAlan')?.textContent || '').trim().length > 0);
+  assert.equal(new URL(page.url()).pathname, '/yonetici/', 'the admin route must stay at the requested ASCII URL');
+  assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'), 'noindex, follow');
+  assert.equal(await page.locator('#tepe > section').count(), 1);
+  assert.match(await page.locator('#yoneticiAlan').innerText(), /gir|kod|yönetici/i);
+  const senAfterAdmin = await page.goto(`${origin}/sen/`, { waitUntil: 'domcontentloaded' });
+  assert.equal(senAfterAdmin.status(), 200);
+  assert.equal(await page.locator('#yonetici').count(), 0, 'the Sen route stays free of the admin panel after JS boot');
 
   // E126's canonical snapshot and route normalization are covered by the static crawler
   // assertions above and tests/domain-brand-regression.mjs; this browser test is offline.
