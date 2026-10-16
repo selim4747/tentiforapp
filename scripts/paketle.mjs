@@ -240,6 +240,7 @@ const seoIndex = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
 // privacy-filtered public RPC; local universe pages require an approved registry record and a
 // matching evrenler/{id}.json file. Private/draft database rows are never copied into output.
 const staticSeoPages = [
+  { tur: 'sayfa', path: '/yonetici/', title: 'Yönetici — TentiFor', description: 'TentiFor yönetim ve içerik paneli.' },
   { tur: 'sayfa', path: '/tomye/', title: 'Tömye — TentiFor', description: 'Tömye evreni ve Tentiforverse arşiv içerikleri.' },
   { tur: 'sayfa', path: '/fan/', title: 'Fan evrenleri — TentiFor', description: 'TentiFor’te yayınlanmış fan evrenleri ve hikâyeler.' },
   { tur: 'sayfa', path: '/oyunlar/', title: 'Oyunlar — TentiFor', description: 'TentiFor oyunları ve yarışları.' },
@@ -260,7 +261,6 @@ const appRoutes = [
   { path: '/testler/', title: 'Testler — TentiFor', description: 'TentiFor karakter ve kimlik testleri.' },
   { path: '/araclar/', title: 'Araçlar — TentiFor', description: 'TentiFor isim sistemi, yazılar ve araçlar.' },
   { path: '/proje/', title: 'Proje — TentiFor', description: 'TentiFor proje bilgileri, basın kiti ve moodboard.' },
-  { path: '/yonetici/', title: 'Yönetici — TentiFor', description: 'TentiFor yönetim ve içerik paneli.' },
 ];
 let publicSeoPages = [];
 if (process.env.TF_SEO_STATIC_ONLY !== '1') {
