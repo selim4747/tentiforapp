@@ -316,6 +316,7 @@ export function renderStandaloneAdminPage(indexHtml) {
   const title = 'Yönetici paneli — TentiFor';
   const description = 'TentiFor yönetim paneli. Erişim için yönetici kodu gerekir.';
   let html = String(indexHtml).replace(mainPattern, adminMain);
+  html = html.replace(/<html\b([^>]*)>/i, (tag, attributes) => /\bdata-standalone-admin(?:\s|=|$)/i.test(attributes) ? tag : `<html${attributes} data-standalone-admin="true">`);
   if (!/<base\b/i.test(html)) html = html.replace('<head>', '<head>\n<base href="/">');
   html = html.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`);
   html = replaceMeta(html, 'name', 'description', description);

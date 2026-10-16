@@ -51,8 +51,12 @@ if (veri.surum !== canonicalVersion) {
 const routeSource = fs.readFileSync(path.join(ROOT_DIR, 'js/core/00-rota.js'), 'utf8');
 const routeBundlePath = path.join(ROOT_DIR, 'js/paket-1.js');
 let routeBundle = fs.readFileSync(routeBundlePath, 'utf8');
+const tourSource = fs.readFileSync(path.join(ROOT_DIR, 'js/arsiv/14-rol-yolu-mektuplar.js'), 'utf8');
 if (!routeSource.includes("ilk === 'yonetici' || ilk === 'yönetici'") || !routeSource.includes('yonetici(?:\\/|$)') || !routeSource.includes('yonetici:') || !routeSource.includes('DOMContentLoaded') || !routeSource.includes('window.sayfaYonlendir')) {
   throw new Error('core/00-rota.js içinde yönetici route/metadata koruması bulunamadı; paket üretimi durduruldu.');
+}
+if (!tourSource.includes('hasAttribute("data-standalone-admin")')) {
+  throw new Error('Admin sayfası için onboarding turu koruması kaynakta bulunamadı; paket üretimi durduruldu.');
 }
 function replaceRouteBundleFragment(bundle, current, replacement, label) {
   if (bundle.includes(replacement)) return bundle;
@@ -85,6 +89,12 @@ routeBundle = replaceRouteBundleFragment(
   'rotaYolaCevir();\nrotaSon = rota();',
   "rotaYolaCevir();\nrotaSon = rota(); document.addEventListener('DOMContentLoaded',function(){if(rota()==='#/yonetici'&&typeof window.sayfaYonlendir==='function')window.sayfaYonlendir()});",
   'admin direct-route boot'
+);
+routeBundle = replaceRouteBundleFragment(
+  routeBundle,
+  'function turGerekli(){return kayitOku(TUR_ANAHTAR)!=="bitti"}function turBaslat(){turAdim=0,turCiz()}',
+  'function turGerekli(){return !document.documentElement.hasAttribute("data-standalone-admin")&&kayitOku(TUR_ANAHTAR)!=="bitti"}function turBaslat(){if(document.documentElement.hasAttribute("data-standalone-admin"))return;turAdim=0,turCiz()}',
+  'admin onboarding guard'
 );
 fs.writeFileSync(routeBundlePath, routeBundle, 'utf8');
 

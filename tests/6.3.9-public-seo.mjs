@@ -14,6 +14,8 @@ const client = read('js/engine/seo-meta.js');
 const routeSource = read('js/core/00-rota.js');
 const routeBundle = read('js/paket-1.js');
 const buildScript = read('scripts/paketle.mjs');
+const archiveCore = read('js/core/24-arsiv-mantigi.js');
+const onboardingModule = read('js/arsiv/14-rol-yolu-mektuplar.js');
 const redirects = read('_redirects');
 const index = read('index.html');
 const sw = read('sw.js');
@@ -57,6 +59,9 @@ assert.match(routeBundle, /yonetici: \['Yönetici paneli — TentiFor'/, 'the se
 assert.match(routeBundle, /DOMContentLoaded[\s\S]*window\.sayfaYonlendir/, 'the served bundle boots the direct admin route on first load');
 assert.match(routeBundle, /id:"yonetici",ad:"Yönetici"/, 'the served navigation recognizes admin as its own page');
 assert.match(routeBundle, /SAYFA_GIZLI_BOLUMLER=\{\}/, 'admin is not registered as hidden Sen content');
+assert.match(routeBundle, /turGerekli\(\)\{return !document\.documentElement\.hasAttribute\("data-standalone-admin"\)/, 'the first-visit tour is disabled only for the standalone admin shell');
+assert.match(onboardingModule, /turGerekli\(\)\{return !document\.documentElement\.hasAttribute\("data-standalone-admin"\)/);
+assert.match(archiveCore, /a\.length&&!document\.documentElement\.hasAttribute\("data-standalone-admin"\)/, 'missing main-page sections do not produce a misleading admin-page diagnostic');
 const moderationPrivacyRule = 'ROTA_KISISEL=/^#\\/(moderasyon(?:\\/|$)|sen|';
 assert.ok(routeSource.replace(/\s+/g, '').includes(moderationPrivacyRule), 'moderation is a private noindex app route');
 assert.ok(routeBundle.replace(/\s+/g, '').includes(moderationPrivacyRule), 'served route bundle matches the privacy rule in source');
@@ -123,6 +128,7 @@ const standaloneMain = standaloneAdmin.match(/<main\b[^>]*>[\s\S]*?<\/main>/i)?.
 assert.match(standaloneAdmin, /<title>Yönetici paneli — TentiFor<\/title>/);
 assert.match(standaloneAdmin, /<link rel="canonical" href="https:\/\/tentifor\.com\/yonetici\/">/);
 assert.match(standaloneAdmin, /<meta name="robots" content="noindex, follow">/);
+assert.match(standaloneAdmin, /<html[^>]*data-standalone-admin="true"/);
 assert.equal((standaloneMain.match(/<section\b/g) || []).length, 1, 'the dedicated admin page renders only the panel section');
 assert.match(standaloneMain, /id="yoneticiAlan"/);
 assert.doesNotMatch(standaloneMain, /id="sen"|id="arsiv"|id="bag"/);
