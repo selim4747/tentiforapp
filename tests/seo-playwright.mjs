@@ -116,6 +116,10 @@ try {
   assert.equal(directAdminResponse.status(), 200);
   await page.waitForFunction(() => (document.querySelector('#yoneticiAlan')?.textContent || '').trim().length > 0);
   assert.equal(new URL(page.url()).pathname, '/yonetici/', 'the admin route must stay at the requested ASCII URL');
+  await page.waitForFunction(() => document.querySelector('#sayfaBasi h1')?.textContent.trim() === 'Yönetici');
+  assert.equal(await page.locator('#sayfaBasi h1').innerText(), 'Yönetici', 'direct admin URL must not inherit the saved Sen page header');
+  assert.equal(await page.locator('#gezinme a[aria-current="page"]').innerText(), 'Yönetici');
+  assert.doesNotMatch(await page.title(), /Sen/);
   assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'), 'noindex, follow');
   assert.equal(await page.locator('#tepe > section').count(), 1);
   assert.match(await page.locator('#yoneticiAlan').innerText(), /gir|kod|yönetici/i);

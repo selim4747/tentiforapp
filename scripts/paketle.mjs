@@ -51,7 +51,7 @@ if (veri.surum !== canonicalVersion) {
 const routeSource = fs.readFileSync(path.join(ROOT_DIR, 'js/core/00-rota.js'), 'utf8');
 const routeBundlePath = path.join(ROOT_DIR, 'js/paket-1.js');
 let routeBundle = fs.readFileSync(routeBundlePath, 'utf8');
-if (!routeSource.includes("ilk === 'yonetici' || ilk === 'yönetici'") || !routeSource.includes('yonetici(?:\\/|$)') || !routeSource.includes('yonetici:')) {
+if (!routeSource.includes("ilk === 'yonetici' || ilk === 'yönetici'") || !routeSource.includes('yonetici(?:\\/|$)') || !routeSource.includes('yonetici:') || !routeSource.includes('DOMContentLoaded') || !routeSource.includes('window.sayfaYonlendir')) {
   throw new Error('core/00-rota.js içinde yönetici route/metadata koruması bulunamadı; paket üretimi durduruldu.');
 }
 function replaceRouteBundleFragment(bundle, current, replacement, label) {
@@ -80,10 +80,57 @@ routeBundle = replaceRouteBundleFragment(
   "okuma: ['Okuma — TentiFor', 'TentiFor okuma alanı'], yonetici: ['Yönetici paneli — TentiFor', 'TentiFor yönetim paneli. Erişim için yönetici kodu gerekir.', false]",
   'admin metadata'
 );
+routeBundle = replaceRouteBundleFragment(
+  routeBundle,
+  'rotaYolaCevir();\nrotaSon = rota();',
+  "rotaYolaCevir();\nrotaSon = rota(); document.addEventListener('DOMContentLoaded',function(){if(rota()==='#/yonetici'&&typeof window.sayfaYonlendir==='function')window.sayfaYonlendir()});",
+  'admin direct-route boot'
+);
 fs.writeFileSync(routeBundlePath, routeBundle, 'utf8');
 
 // 2. Paket karması hesapla. Tarih kullanılmaz; aynı girdiler aynı cache adını üretir.
 syncTerminalRoutes(ROOT_DIR);
+const navigationSource = fs.readFileSync(path.join(ROOT_DIR, 'js/arayuz/18-gezinme.js'), 'utf8');
+routeBundle = fs.readFileSync(routeBundlePath, 'utf8');
+function balancedInitializer(text, name, opening, closing) {
+  const marker = `${name}=`;
+  const markerAt = text.indexOf(marker);
+  if (markerAt < 0 || text.indexOf(marker, markerAt + marker.length) >= 0) {
+    throw new Error(`Navigation initializer ${name} tekil değil; paket üretimi durduruldu.`);
+  }
+  let start = markerAt + marker.length;
+  while (/\s/.test(text[start] || '')) start++;
+  if (text[start] !== opening) throw new Error(`Navigation initializer ${name} beklenen ${opening} ile başlamıyor.`);
+  let depth = 0;
+  let quote = '';
+  let escaped = false;
+  for (let i = start; i < text.length; i++) {
+    const char = text[i];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === quote) quote = '';
+      continue;
+    }
+    if (char === '"' || char === "'" || char === '`') { quote = char; continue; }
+    if (char === opening) depth++;
+    else if (char === closing && --depth === 0) return { start, end: i + 1, value: text.slice(start, i + 1) };
+  }
+  throw new Error(`Navigation initializer ${name} kapanmıyor; paket üretimi durduruldu.`);
+}
+for (const [name, opening, closing] of [
+  ['GEZINME', '[', ']'],
+  ['GEZINME_ANA', '[', ']'],
+  ['SAYFA_GIZLI_BOLUMLER', '{', '}'],
+  ['YARDIMCI_BOLUMLER', '[', ']']
+]) {
+  const sourceValue = balancedInitializer(navigationSource, name, opening, closing).value;
+  const bundleValue = balancedInitializer(routeBundle, name, opening, closing);
+  if (bundleValue.value !== sourceValue) {
+    routeBundle = routeBundle.slice(0, bundleValue.start) + sourceValue + routeBundle.slice(bundleValue.end);
+  }
+}
+fs.writeFileSync(routeBundlePath, routeBundle, 'utf8');
 const hashGirdileri = [
   'index.html', 'manifest.webmanifest', 'package.json', 'veri.json',
   'paylasim.png', 'favicon.ico', 'css', 'js', 'ikon', 'yazitipi', 'evrenler'

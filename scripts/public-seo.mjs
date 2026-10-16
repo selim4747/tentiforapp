@@ -301,10 +301,12 @@ export function renderStandaloneAdminPage(indexHtml) {
   const mainPattern = /<main\b(?=[^>]*\bid=["']tepe["'])[^>]*>[\s\S]*?<\/main>/i;
   if (!mainPattern.test(indexHtml)) throw new TypeError('Ana uygulama alanı bulunamadı; yönetici sayfası üretilemedi.');
   const adminMain = `<main id="tepe">
+  <header id="sayfaBasi" class="sayfa-basi">
+    <div class="sayfa-bas-ust"><div class="sayfa-bas-yazi"><h1>Yönetici</h1></div></div>
+  </header>
   <section class="bolum" id="yonetici">
     <div class="bolum-basi">
       <span class="etiket">Yönetim</span>
-      <h1>Yönetici paneli</h1>
       <p class="bolum-alt">Yönetim araçlarına erişmek için yönetici kodunla giriş yap.</p>
     </div>
     <div id="yoneticiAlan"></div>

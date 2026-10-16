@@ -107,6 +107,9 @@ document.addEventListener('click', function (event) {
 }, true);
 rotaYolaCevir();
 rotaSon = rota();
+document.addEventListener('DOMContentLoaded', function () {
+  if (rota() === '#/yonetici' && typeof window.sayfaYonlendir === 'function') window.sayfaYonlendir();
+});
 
 /* Public route metadata: keeps title/canonical/OG in sync after SPA navigation. */
 (function () {
