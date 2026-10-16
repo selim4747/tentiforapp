@@ -1,6 +1,13 @@
 {
   "surum": "6.5.1",
   "guncelleme": "2026-10-01",
+  "kilitAyarlar": {
+    "genelAcik": false,
+    "katmanlar": {},
+    "bloklar": {},
+    "sayfalar": {},
+    "urunler": {}
+  },
   "delilik": {
     "baslik": "Delilik",
     "altbaslik": "Roman ve oyun",

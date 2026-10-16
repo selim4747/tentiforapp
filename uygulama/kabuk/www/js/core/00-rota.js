@@ -6,7 +6,7 @@ function yoldanRota(yol) {
   });
   if (!parcalar.length) return '';
   const ilk = String(parcalar[0]).toLocaleLowerCase('tr-TR');
-  if (ilk === 'yonetici') return '#/yonetici';
+  if (ilk === 'yonetici' || ilk === 'yönetici') return '#/yonetici';
   if (parcalar[0] === 'evren' && parcalar[1]) {
     if (['benim', 'acilan', 'fan', 'site', 'onizle'].includes(parcalar[1])) return '#/ev/' + parcalar.slice(1).join('/');
     if (parcalar[1] === 'e99') return '#/ev/e99';
@@ -21,6 +21,7 @@ function rotadanYol(rotaMetni) {
   const parcalar = String(rotaMetni || '').replace(/^#\/?/, '').split('/').filter(Boolean);
   if (!parcalar.length) return '/';
   const yol = (bolumler) => '/' + bolumler.map(encodeURIComponent).join('/') + '/';
+  if (parcalar[0] === 'yonetici' || parcalar[0] === 'yönetici') return '/yonetici/';
   if (parcalar[0] === 'ev') {
     if (parcalar[1] === 'e99' && parcalar.length === 2) return '/evren/e99/';
     if (parcalar[1] === 'site' && parcalar[2] && /^e\d+$/.test(parcalar[2]) && parcalar[2] !== 'e99') return yol(['evren', parcalar[2]]);
@@ -51,10 +52,8 @@ function rotaHashKalir(rotaMetni) {
 
 function rota() {
   const hash = rotaHashDuzelt(location.hash);
-  if (hash && hash !== location.hash) {
-    try { history.replaceState(history.state, '', hash); } catch {}
-  }
-  return hash || yoldanRota(location.pathname);
+  if (hash && hash.indexOf('#/') === 0) return hash;
+  return yoldanRota(location.pathname);
 }
 
 function rotaAdresi(rotaMetni) {
@@ -74,7 +73,7 @@ function rotaYolaCevir() {
 }
 
 let rotaSon = '';
-const ROTA_KISISEL = /^#\/(moderasyon(?:\/|$)|sen|u\/|ev\/(benim|acilan)|kartpostal|fanAc|fan\/paylasim)/;
+const ROTA_KISISEL = /^#\/(moderasyon(?:\/|$)|sen|yonetici(?:\/|$)|u\/|ev\/(benim|acilan)|kartpostal|fanAc|fan\/paylasim)/;
 function rotaRobotlar() {
   const robots = document.querySelector('meta[name="robots"]');
   if (document.body && document.body.hasAttribute('data-seo-not-found')) {
@@ -108,30 +107,40 @@ document.addEventListener('click', function (event) {
 }, true);
 rotaYolaCevir();
 rotaSon = rota();
+document.addEventListener('DOMContentLoaded', function () {
+  if (rota() === '#/yonetici' && typeof window.sayfaYonlendir === 'function') window.sayfaYonlendir();
+});
 
 /* Public route metadata: keeps title/canonical/OG in sync after SPA navigation. */
 (function () {
   const map = {
-    arsiv: ['Ana sayfa — TentiFor', 'Tentiforverse arşivi'],
-    '': ['Ana sayfa — TentiFor', 'Tentiforverse arşivi'],
-    tomye: ['Tömye — TentiFor', 'Tömye evreni ve arşiv içerikleri'],
-    harita: ['Harita — TentiFor', 'Tömye ve Ax-24 gezegen haritaları'],
-    fan: ['Fan evrenleri — TentiFor', 'TentiFor fan evrenleri ve hikâyeleri'],
-    oyunlar: ['Oyunlar — TentiFor', 'TentiFor oyunları'],
-    atolye: ['Atölye — TentiFor', 'TentiFor üretim atölyesi'],
-    okuma: ['Okuma — TentiFor', 'TentiFor okuma alanı']
+    arsiv: ['Ana sayfa — TentiFor', 'Tentiforverse arşivi', true],
+    '': ['Ana sayfa — TentiFor', 'Tentiforverse arşivi', true],
+    tomye: ['Tömye — TentiFor', 'Tömye evreni ve arşiv içerikleri', true],
+    harita: ['Harita — TentiFor', 'Tömye ve Ax-24 gezegen haritaları', true],
+    fan: ['Fan evrenleri — TentiFor', 'TentiFor fan evrenleri ve hikâyeleri', true],
+    oyunlar: ['Oyunlar — TentiFor', 'TentiFor oyunları', true],
+    atolye: ['Atölye — TentiFor', 'TentiFor üretim atölyesi', true],
+    okuma: ['Okuma — TentiFor', 'TentiFor okuma alanı', true],
+    yonetici: ['Yönetici paneli — TentiFor', 'TentiFor yönetim paneli. Erişim için yönetici kodu gerekir.', false]
   };
   window.tf4RouteHead = function () {
-    const bolum = (location.pathname.split('/')[1] || location.hash.replace(/^#\/?/, '').split('/')[0] || '').toLowerCase();
+    let bolum = location.pathname.split('/')[1] || location.hash.replace(/^#\/?/, '').split('/')[0] || '';
+    try { bolum = decodeURIComponent(bolum); } catch {}
+    bolum = String(bolum).toLocaleLowerCase('tr-TR');
+    if (bolum === 'yönetici') bolum = 'yonetici';
     const metadata = map[bolum];
     if (!metadata) return;
     document.title = metadata[0];
     const description = document.querySelector('meta[name="description"]');
     const canonical = document.querySelector('link[rel="canonical"]');
     const openGraph = document.querySelector('meta[property="og:url"]');
+    const robots = document.querySelector('meta[name="robots"]');
     if (description) description.content = metadata[1];
-    if (canonical) canonical.href = location.origin + '/' + bolum + '/';
-    if (openGraph) openGraph.content = location.origin + '/' + bolum + '/';
+    const path = bolum === 'yonetici' ? '/yonetici/' : '/' + (bolum || '') + '/';
+    if (canonical) canonical.href = location.origin + path;
+    if (openGraph) openGraph.content = location.origin + path;
+    if (robots && metadata.length > 2 && metadata[2] === false) robots.setAttribute('content', 'noindex, follow');
   };
   addEventListener('hashchange', window.tf4RouteHead);
   addEventListener('popstate', window.tf4RouteHead);
