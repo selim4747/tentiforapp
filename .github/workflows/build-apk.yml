@@ -40,7 +40,6 @@ jobs:
         working-directory: uygulama/kabuk
         run: |
           npm ci --no-audit --no-fund
-          npx cap add android
           npx cap sync android
 
       - name: Debug APK derle
