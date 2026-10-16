@@ -1,6 +1,20 @@
 /* TentiforApp 6.5.1 — evren bağlamlı bilgi ve okuma rotaları. */
 (function () {
   'use strict';
+  // `veri` ve `EVS` klasik script'lerde let ile tanımlıdır; window özelliği olmazlar.
+  // Bu dosya window.veri / window.EVS okuduğu için, ikisini canlı değerlere bağlayan köprü kurulur.
+  function bridgeGlobal(name, read, write) {
+    if (Object.prototype.hasOwnProperty.call(window, name)) return;
+    try {
+      Object.defineProperty(window, name, { get: read, set: write, configurable: true });
+    } catch (error) { /* köprü kurulamazsa eski davranış sürer */ }
+  }
+  bridgeGlobal('veri',
+    function () { try { return veri; } catch (error) { return undefined; } },
+    function (value) { try { veri = value; } catch (error) { /* yok say */ } });
+  bridgeGlobal('EVS',
+    function () { try { return EVS; } catch (error) { return undefined; } },
+    function (value) { try { EVS = value; } catch (error) { /* yok say */ } });
   var previousGuide = window.evrenRehberi;
   var previousPage = window.evrenSayfaVerisi;
   var previousTabs = window.evrenEkSekmeler;
