@@ -123,7 +123,7 @@ const server = http.createServer((req, res) => {
     const cleanRoute = safePath.replace(/^\/+|\/+$/g, '').toLowerCase();
     const knownRoutes = new Set([
       'sen', 'arsiv', 'moderasyon', 'tomye', 'fan', 'oyunlar', 'atolye', 'okuma',
-      'baglar', 'dunya', 'belgeler', 'testler', 'araclar', 'proje', 'yonetici', 'yönetici',
+      'baglar', 'dunya', 'belgeler', 'testler', 'araclar', 'proje', 'yonetici',
       'basla', 'harita'
     ]);
     const isSpaFallback = knownRoutes.has(cleanRoute);
