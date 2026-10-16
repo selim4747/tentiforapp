@@ -1,4 +1,4 @@
-/* TentiforApp 6.5.2 — evren bağlamlı bilgi ve okuma rotaları. */
+/* TentiforApp 6.5.3 — evren bağlamlı bilgi ve okuma rotaları. */
 (function () {
   'use strict';
   // `veri` ve `EVS` klasik script'lerde let ile tanımlıdır; window özelliği olmazlar.

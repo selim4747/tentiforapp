@@ -22,6 +22,9 @@ const bootstrap = fs.readFileSync(path.join(root, 'js/core/125-live-site-bootstr
 const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const capacitor = JSON.parse(fs.readFileSync(path.join(root, 'uygulama/kabuk/capacitor.config.json'), 'utf8'));
 assert.match(index, /js\/core\/125-live-site-bootstrap\.js/);
+assert.match(bootstrap, /loadAppState/);
+assert.match(bootstrap, /saveAppState/);
+assert.match(bootstrap, /sb-tentiforapp/);
 assert.equal(capacitor.server.url, undefined, 'native startup uses packaged local assets before online redirect');
 assert.ok(capacitor.server.allowNavigation.includes('tentifor.com'));
 assert.ok(capacitor.server.allowNavigation.includes('www.tentifor.com'));

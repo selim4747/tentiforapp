@@ -127,7 +127,7 @@ const standaloneAdmin = renderStandaloneAdminPage(index);
 const standaloneMain = standaloneAdmin.match(/<main\b[^>]*>[\s\S]*?<\/main>/i)?.[0] || '';
 assert.match(standaloneAdmin, /<title>Yönetici paneli — TentiFor<\/title>/);
 assert.match(standaloneAdmin, /<link rel="canonical" href="https:\/\/tentifor\.com\/yonetici\/">/);
-assert.match(standaloneAdmin, /<meta name="robots" content="index, follow">/);
+assert.match(standaloneAdmin, /<meta name="robots" content="noindex, follow">/);
 assert.match(standaloneAdmin, /<html[^>]*data-standalone-admin="true"/);
 assert.equal((standaloneMain.match(/<section\b/g) || []).length, 1, 'the dedicated admin page renders only the panel section');
 assert.match(standaloneMain, /id="yoneticiAlan"/);

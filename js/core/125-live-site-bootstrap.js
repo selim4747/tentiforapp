@@ -1,4 +1,4 @@
-/* Native startup 6.5.2: local-first, safe origin bridge, resumable live-site probe. */
+/* Native startup 6.5.3: local-first, safe origin bridge, resumable live-site probe. */
 (function (root) {
   'use strict';
   var LIVE_HOST = 'tentifor.com';
@@ -9,6 +9,8 @@
   var BRIDGE_VERSION = 1;
   var state = 'idle';
   var retryTimer = null;
+  var durableSaveTimer = null;
+  var durableLoading = false;
   function localHost() {
     var host = String(root.location && root.location.hostname || '').toLowerCase();
     return host === 'localhost' || host === '127.0.0.1';
@@ -24,6 +26,56 @@
   function nativePlugin() {
     try { return root.Capacitor && root.Capacitor.Plugins && root.Capacitor.Plugins.TentiforNative || null; } catch (_) { return null; }
   }
+  function durableStateSnapshot() {
+    var storage = safeStorage(), data = { v: 1, keys: {} };
+    if (!storage) return data;
+    for (var i = 0; i < storage.length; i += 1) {
+      var key = storage.key(i);
+      if (!key) continue;
+      try {
+        var value = storage.getItem(key);
+        if (value != null && value.length <= 200000) data.keys[key] = value;
+      } catch (_) {}
+    }
+    return data;
+  }
+  function durableStateSave() {
+    if (durableLoading) return;
+    var plugin = nativePlugin();
+    if (!plugin || typeof plugin.saveAppState !== 'function') return;
+    if (durableSaveTimer) root.clearTimeout(durableSaveTimer);
+    durableSaveTimer = root.setTimeout(function () {
+      durableSaveTimer = null;
+      try { plugin.saveAppState({ value: JSON.stringify(durableStateSnapshot()) }); } catch (_) {}
+    }, 250);
+  }
+  function durableStateApply(value) {
+    var storage = safeStorage(), data;
+    if (!storage || !value) return;
+    try { data = JSON.parse(value); } catch (_) { return; }
+    if (!data || data.v !== 1 || !data.keys) return;
+    durableLoading = true;
+    try { Object.keys(data.keys).forEach(function (key) { if (!storage.getItem(key)) storage.setItem(key, String(data.keys[key])); }); } catch (_) {}
+    durableLoading = false;
+    try { root.dispatchEvent(new CustomEvent('tf-native-state-restored')); } catch (_) {}
+  }
+  function durableStateLoad() {
+    var plugin = nativePlugin();
+    if (!plugin || typeof plugin.loadAppState !== 'function') return Promise.resolve();
+    return Promise.resolve(plugin.loadAppState()).then(function (result) { durableStateApply(result && result.value || ''); }).catch(function () {});
+  }
+  function watchDurableStorage() {
+    try {
+      var proto = root.Storage && root.Storage.prototype;
+      if (!proto || proto.__tfDurableState) return;
+      var setItem = proto.setItem, removeItem = proto.removeItem, clear = proto.clear;
+      proto.setItem = function (key, value) { var result = setItem.apply(this, arguments); if (this === safeStorage()) durableStateSave(); return result; };
+      proto.removeItem = function (key) { var result = removeItem.apply(this, arguments); if (this === safeStorage()) durableStateSave(); return result; };
+      proto.clear = function () { var result = clear.apply(this, arguments); if (this === safeStorage()) durableStateSave(); return result; };
+      proto.__tfDurableState = true;
+    } catch (_) {}
+  }
+
   function nativeBridgeKaydet(value) {
     var plugin = nativePlugin();
     if (!plugin || typeof plugin.saveBridge !== 'function' || !value) return Promise.resolve(false);
@@ -72,7 +124,7 @@
   }
   function exportBridge() {
     var storage = safeStorage(), data = { v: BRIDGE_VERSION, keys: {}, queue: [] };
-    if (!storage || hasAuthStorage()) return null;
+    if (!storage) return null;
     for (var i = 0; i < storage.length; i += 1) {
       var key = storage.key(i);
       if (bridgeKeyAllowed(key)) { var value = storage.getItem(key); if (value && value.length <= 16000) data.keys[key] = value; }
@@ -151,7 +203,8 @@
       if (Date.now() < deadline) root.setTimeout(poll, 50);
     }());
   }
-  importBridge();
+  watchDurableStorage();
+  durableStateLoad().then(function () { durableStateSave(); return importBridge(); });
   root.TentiforNativeBridge = { retryLiveSite: function () { state = 'idle'; checkLiveSite(); }, status: function () { return state; } };
   if (typeof root.addEventListener === 'function') {
     root.addEventListener('online', function () { retry('online'); });

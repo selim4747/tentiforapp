@@ -5,7 +5,7 @@ export const SEO_ORIGIN = 'https://tentifor.com';
 export const SEO_PAGE_LIMIT = 100;
 export const SEO_PAGE_CAP = 5000;
 const SOCIAL_IMAGE = `${SEO_ORIGIN}/paylasim.png`;
-const PUBLIC_SECTION_PATHS = new Set(['/tomye/', '/fan/', '/oyunlar/', '/atolye/', '/okuma/', '/yonetici/']);
+const PUBLIC_SECTION_PATHS = new Set(['/tomye/', '/fan/', '/oyunlar/', '/atolye/', '/okuma/']);
 
 export function escapeHtml(value) {
   return String(value == null ? '' : value).replace(/[&<>"']/g, (char) => ({
@@ -286,7 +286,7 @@ export function renderNoindexAppRoute(indexHtml, route) {
   if (!/<base\b/i.test(html)) html = html.replace('<head>', '<head>\n<base href="/">');
   html = html.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`);
   html = replaceMeta(html, 'name', 'description', description);
-  html = replaceMeta(html, 'name', 'robots', 'index, follow');
+  html = replaceMeta(html, 'name', 'robots', 'noindex, follow');
   html = replaceMeta(html, 'property', 'og:title', title);
   html = replaceMeta(html, 'property', 'og:description', description);
   html = replaceMeta(html, 'property', 'og:url', canonical);
@@ -320,7 +320,7 @@ export function renderStandaloneAdminPage(indexHtml) {
   if (!/<base\b/i.test(html)) html = html.replace('<head>', '<head>\n<base href="/">');
   html = html.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`);
   html = replaceMeta(html, 'name', 'description', description);
-  html = replaceMeta(html, 'name', 'robots', 'index, follow');
+  html = replaceMeta(html, 'name', 'robots', 'noindex, follow');
   html = replaceMeta(html, 'property', 'og:title', title);
   html = replaceMeta(html, 'property', 'og:description', description);
   html = replaceMeta(html, 'property', 'og:url', canonical);
