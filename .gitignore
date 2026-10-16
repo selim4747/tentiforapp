@@ -7,3 +7,6 @@ dist/
 *.keystore
 .env
 .dev.env.json
+
+bun.lock
+deno.lock
