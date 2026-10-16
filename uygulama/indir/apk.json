@@ -2,8 +2,8 @@
   "packageName": "dev.pages.tentiforapp",
   "version": "6.5.2",
   "versionCode": 6502,
-  "sizeBytes": 8902949,
-  "sha256": "dd413c48bc8b67919ba67cef744975ec033b1131acb0e560d949944193281c48",
+  "sizeBytes": 8937240,
+  "sha256": "8e7f65ef6944ddc5ed998da373550e51f8139fa40e64b8f3d928c8f5cf246d1f",
   "signingType": "debug",
   "certificateSha256": "6D:C4:B0:A8:39:EA:49:DD:8E:23:C8:66:5D:A0:72:64:57:C7:6A:E0:47:7D:13:A8:EE:01:02:27:AB:B6:D2:31"
 }
