@@ -48,6 +48,7 @@ const tests = [
   'tests/6.3.7-moderation.mjs',
   'tests/6.3.8-visual-universe.mjs',
   'tests/6.3.9-public-seo.mjs',
+  'tests/admin-locks.mjs',
   'tests/6.3.10-secure-sharing.mjs',
   'tests/6.4.2-universe-indexing.mjs',
   'tests/6.4.3.0-ux-fixes.mjs',

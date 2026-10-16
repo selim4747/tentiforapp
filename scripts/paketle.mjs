@@ -62,6 +62,13 @@ function replaceRouteBundleFragment(bundle, current, replacement, label) {
   if (bundle.includes(replacement)) return bundle;
   const first = bundle.indexOf(current);
   if (first < 0 || bundle.indexOf(current, first + current.length) >= 0) {
+    const alreadyCanonical = {
+      'admin path': routeSource.includes("ilk === 'yonetici' || ilk === 'yönetici'"),
+      'private route noindex': routeSource.includes('yonetici(?:\\/|$)'),
+      'admin metadata': routeSource.includes('yonetici:'),
+      'admin direct-route boot': routeSource.includes('window.sayfaYonlendir')
+    }[label];
+    if (alreadyCanonical) return bundle;
     throw new Error(`paket-1.js ${label} rota parçası beklenen biçimde değil; paket üretimi durduruldu.`);
   }
   return bundle.slice(0, first) + replacement + bundle.slice(first + current.length);
@@ -96,6 +103,23 @@ routeBundle = replaceRouteBundleFragment(
   'function turGerekli(){return !document.documentElement.hasAttribute("data-standalone-admin")&&kayitOku(TUR_ANAHTAR)!=="bitti"}function turBaslat(){if(document.documentElement.hasAttribute("data-standalone-admin"))return;turAdim=0,turCiz()}',
   'admin onboarding guard'
 );
+// Keep both path directions identical to the canonical source. The older
+// fragment patch above only updated yoldanRota(), leaving rotadanYol() stale.
+const routeStart = 'function yoldanRota(yol)';
+const routeEnd = 'function rota()';
+function routeRange(text, label) {
+  const start = text.indexOf(routeStart);
+  const end = text.indexOf(routeEnd, start + routeStart.length);
+  if (start < 0 || end <= start || text.indexOf(routeStart, start + routeStart.length) >= 0) {
+    throw new Error(`${label} içinde kanonik rota aralığı tekil değil; paket üretimi durduruldu.`);
+  }
+  return { start, end };
+}
+const sourceRouteRange = routeRange(routeSource, 'core/00-rota.js');
+const bundleRouteRange = routeRange(routeBundle, 'paket-1.js');
+routeBundle = routeBundle.slice(0, bundleRouteRange.start)
+  + routeSource.slice(sourceRouteRange.start, sourceRouteRange.end)
+  + routeBundle.slice(bundleRouteRange.end);
 fs.writeFileSync(routeBundlePath, routeBundle, 'utf8');
 
 // 2. Paket karması hesapla. Tarih kullanılmaz; aynı girdiler aynı cache adını üretir.
@@ -140,6 +164,33 @@ for (const [name, opening, closing] of [
     routeBundle = routeBundle.slice(0, bundleValue.start) + sourceValue + routeBundle.slice(bundleValue.end);
   }
 }
+// Lock controls are part of the legacy paket-1 runtime. Keep the served copy
+// in sync with their canonical sources, including the GitHub-versioned config.
+function replaceSourceRange(bundle, source, sourceStart, sourceEnd, bundleStart, bundleEnd, label) {
+  const a = source.indexOf(sourceStart);
+  const b = source.indexOf(sourceEnd, a + sourceStart.length);
+  const c = bundle.indexOf(bundleStart);
+  const d = bundle.indexOf(bundleEnd, c + bundleStart.length);
+  if (a < 0 || b <= a || c < 0 || d <= c) {
+    throw new Error(`${label} kaynak/paket sınırları bulunamadı; paket üretimi durduruldu.`);
+  }
+  return bundle.slice(0, c) + source.slice(a, b) + bundle.slice(d);
+}
+const lockSource = fs.readFileSync(path.join(ROOT_DIR, 'js/arsiv/23-kanon-kilidi.js'), 'utf8');
+const walletSource = fs.readFileSync(path.join(ROOT_DIR, 'js/core/03-cuzdan.js'), 'utf8');
+const kanonStart = 'function kilitAyarlariniHazirla()';
+const kanonEnd = 'const KANON_GRUPLARI=';
+if (routeBundle.includes(kanonStart)) {
+  routeBundle = replaceSourceRange(routeBundle, lockSource, kanonStart, kanonEnd, kanonStart, kanonEnd, 'kilit config');
+} else {
+  const a = lockSource.indexOf(kanonStart);
+  const b = lockSource.indexOf(kanonEnd, a + kanonStart.length);
+  const c = routeBundle.indexOf(kanonEnd);
+  if (a < 0 || b <= a || c < 0) throw new Error('Kilit config ilk paket enjeksiyonu için sınırlar bulunamadı; paket üretimi durduruldu.');
+  routeBundle = routeBundle.slice(0, c) + lockSource.slice(a, b) + routeBundle.slice(c);
+}
+routeBundle = replaceSourceRange(routeBundle, lockSource, 'function bolumErisimi(i)', 'const KANON_DISI_EVRENLER=', 'function bolumErisimi(i)', 'const KANON_DISI_EVRENLER=', 'page lock gate');
+routeBundle = replaceSourceRange(routeBundle, walletSource, 'function kilitAcik(n)', 'function cuzdanGoster()', 'function kilitAcik(n)', 'function cuzdanGoster()', 'product lock gate');
 fs.writeFileSync(routeBundlePath, routeBundle, 'utf8');
 const hashGirdileri = [
   'index.html', 'manifest.webmanifest', 'package.json', 'veri.json',

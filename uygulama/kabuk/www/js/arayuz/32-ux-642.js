@@ -72,8 +72,8 @@
       var route = routeFor({ tur: 'evren', id: id });
       if (route && !out.some(function (x) { return x.route === route; })) out.push({ kind: 'Kanon evren', title: text(item.ad || id, 100), description: text(item.ozet, 180), route: route });
     });
-    addList(data.karakterler, 'Karakter', function () { return '#/arsiv'; }, function (item) { return item.ad || item.id; }, function (item) { return [item.unvan, item.ozet].filter(Boolean).join(' · '); });
-    addList(data.evren, 'İçerik', function () { return '#/okuma'; }, function (item) { return item.baslik || item.id; }, function (item) { return item.ozet || item.metin; });
+    addList(data.karakterler, 'Karakter', function (item) { return item && item.id ? '#/karakter/' + encodeURIComponent(item.id) : '#/arsiv'; }, function (item) { return item.ad || item.id; }, function (item) { return [item.unvan, item.ozet].filter(Boolean).join(' · '); });
+    addList(data.evren, 'İçerik', function (item) { return item && item.id ? '#/evren/' + encodeURIComponent(item.id) : '#/okuma'; }, function (item) { return item.baslik || item.id; }, function (item) { return item.ozet || item.metin; });
     addList(data.mektuplar, 'Belge', function () { return '#/belgeler'; }, function (item) { return [item.kimden, item.kime].filter(Boolean).join(' → ') || item.id; }, function (item) { return item.not || item.metin; });
     addList(data.galeri, 'Oyun/görsel', function () { return '#/oyunlar'; }, function (item) { return item.baslik || item.id; }, function (item) { return item.aciklama; });
     addList(data.yapimlar, 'Yapım', function () { return '#/proje'; }, function (item) { return item.ad; }, function (item) { return [item.tur, item.not].filter(Boolean).join(' · '); });
@@ -156,7 +156,7 @@
     panel.innerHTML = '<div class="tf642-head"><div><span class="etiket">6.5.1</span><h2>Kişisel merkez</h2></div><button class="pencere-kapat" type="button" data-tf642-close aria-label="Kapat">×</button></div><div data-tf642-body></div>';
     document.body.appendChild(panel);
     button.addEventListener('click', openPanel); panel.querySelector('[data-tf642-close]').addEventListener('click', closePanel);
-    panel.addEventListener('click', function (e) { if (e.target === panel) closePanel(); });
+    panel.addEventListener('click', function (e) { if (e.target === panel || e.target.closest('a[href]')) closePanel(); });
     window.addEventListener('online', renderPanel); window.addEventListener('offline', renderPanel);
     window.addEventListener('hashchange', setResume); window.addEventListener('popstate', setResume);
     document.addEventListener('keydown', function (e) { if (e.key === '?' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); openPanel(); } if (e.key === 'Escape') closePanel(); });
