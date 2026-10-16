@@ -72,7 +72,7 @@ function rotaYolaCevir() {
 }
 
 let rotaSon = '';
-const ROTA_KISISEL = /^#\/(moderasyon(?:\/|$)|sen|yonetici(?:\/|$)|u\/|ev\/(benim|acilan)|kartpostal|fanAc|fan\/paylasim)/;
+const ROTA_KISISEL = /^#\/(moderasyon(?:\/|$)|sen|u\/|ev\/(benim|acilan)|kartpostal|fanAc|fan\/paylasim)/;
 function rotaRobotlar() {
   const robots = document.querySelector('meta[name="robots"]');
   if (document.body && document.body.hasAttribute('data-seo-not-found')) {
@@ -118,7 +118,7 @@ rotaSon = rota();
     oyunlar: ['Oyunlar — TentiFor', 'TentiFor oyunları', true],
     atolye: ['Atölye — TentiFor', 'TentiFor üretim atölyesi', true],
     okuma: ['Okuma — TentiFor', 'TentiFor okuma alanı', true],
-    yonetici: ['Yönetici — TentiFor', 'TentiFor yönetim ve içerik paneli.', false]
+    yonetici: ['Yönetici — TentiFor', 'TentiFor yönetim ve içerik paneli.', true]
   };
   window.tf4RouteHead = function () {
     const bolum = (location.pathname.split('/')[1] || location.hash.replace(/^#\/?/, '').split('/')[0] || '').toLowerCase();
