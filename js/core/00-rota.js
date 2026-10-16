@@ -74,7 +74,7 @@ function rotaYolaCevir() {
 }
 
 let rotaSon = '';
-const ROTA_KISISEL = /^#\/(moderasyon(?:\/|$)|sen|u\/|ev\/(benim|acilan)|kartpostal|fanAc|fan\/paylasim)/;
+const ROTA_KISISEL = /^#\/(moderasyon(?:\/|$)|sen|yonetici(?:\/|$)|u\/|ev\/(benim|acilan)|kartpostal|fanAc|fan\/paylasim)/;
 function rotaRobotlar() {
   const robots = document.querySelector('meta[name="robots"]');
   if (document.body && document.body.hasAttribute('data-seo-not-found')) {

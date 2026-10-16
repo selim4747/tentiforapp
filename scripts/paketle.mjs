@@ -260,6 +260,7 @@ const appRoutes = [
   { path: '/testler/', title: 'Testler — TentiFor', description: 'TentiFor karakter ve kimlik testleri.' },
   { path: '/araclar/', title: 'Araçlar — TentiFor', description: 'TentiFor isim sistemi, yazılar ve araçlar.' },
   { path: '/proje/', title: 'Proje — TentiFor', description: 'TentiFor proje bilgileri, basın kiti ve moodboard.' },
+  { path: '/yonetici/', title: 'Yönetici — TentiFor', description: 'TentiFor yönetim ve içerik paneli.' },
 ];
 let publicSeoPages = [];
 if (process.env.TF_SEO_STATIC_ONLY !== '1') {
