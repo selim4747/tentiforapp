@@ -3,7 +3,7 @@ import fs from 'node:fs';
 
 const read = (path) => fs.readFileSync(path, 'utf8');
 const pkg = JSON.parse(read('package.json'));
-assert.equal(pkg.version, '6.5.1', 'uygulama sürümü tam olarak 6.5.1 olmalı');
+assert.equal(pkg.version, '6.5.2', 'uygulama sürümü tam olarak 6.5.2 olmalı');
 assert.equal(JSON.parse(read('veri.json')).surum, pkg.version);
 assert.equal(JSON.parse(read('manifest.webmanifest')).version, pkg.version);
 assert.equal(JSON.parse(read('uygulama/kabuk/package.json')).version, pkg.version);
