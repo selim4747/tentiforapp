@@ -2,6 +2,28 @@
 (function () {
   'use strict';
   var mounted = false;
+  var flushing = false;
+  var PENDING_KEY = 'tf65_evren_taslak_bekleyen';
+  function pendingRead() { try { var value = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); return Array.isArray(value) ? value : []; } catch (_) { return []; } }
+  function pendingWrite(value) { try { localStorage.setItem(PENDING_KEY, JSON.stringify(value.slice(-50))); return true; } catch (_) { return false; } }
+  function currentOwner() { try { return window.hesapKullanici && window.hesapKullanici.id ? String(window.hesapKullanici.id) : null; } catch (_) { return null; } }
+  function pendingAdd(type, payload) { var owner = currentOwner(); if (!owner) return false; var list = pendingRead(); list.push({ id: 'draft_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7), owner: owner, type: type, payload: payload, created: Date.now() }); return pendingWrite(list); }
+  async function flushPending() {
+    if (flushing || navigator.onLine === false || !c() || !currentOwner()) return;
+    flushing = true;
+    var list = pendingRead(), keep = [], changed = false;
+    for (var i = 0; i < list.length; i += 1) {
+      var item = list[i];
+      if (!item || String(item.owner) !== currentOwner()) { keep.push(item); continue; }
+      try {
+        var result = item.type === 'evren-taslak' ? await c().rpc('evren_taslak_kaydet', item.payload) : await c().rpc('evren_zaman_noktasi_ekle', item.payload);
+        if (result && result.error) throw result.error;
+        changed = true;
+      } catch (_) { keep.push(item); }
+    }
+    if (changed) pendingWrite(keep);
+    flushing = false;
+  }
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>'"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]; }); }
   function c() { return typeof hesapIstemci !== 'undefined' && hesapIstemci && hesapIstemci.rpc ? hesapIstemci : null; }
   function msg(root, text, good) { var n = root.querySelector('[data-tf633-msg]'); if (n) { n.textContent = text; n.className = 'pencere-durum ' + (good ? 'iyi' : 'kotu'); } }
@@ -45,8 +67,8 @@
   async function submit(event) {
     var f=event.target; if (!f.matches('[data-tf633-save], [data-tf633-time]')) return; event.preventDefault(); var box=f.closest('.tf633-kurucu'), fd=new FormData(f);
     try { var r;
-      if (f.matches('[data-tf633-save]')) { var data; try { data=JSON.parse(fd.get('veri')); } catch (_) { throw new Error('JSON verisi geçersiz'); } if (fd.get('durum') === 'onizleme') { var check = preflight(f, data); if (!check || !check.ok) throw new Error('Önizleme denetimindeki hataları düzeltip yeniden dene.'); } r=await c().rpc('evren_taslak_kaydet',{p_evren_id:fd.get('evren'),p_baslik:fd.get('baslik'),p_veri:data,p_durum:fd.get('durum')}); }
-      else r=await c().rpc('evren_zaman_noktasi_ekle',{p_evren_id:fd.get('evren'),p_zaman:fd.get('zaman'),p_baslik:fd.get('baslik'),p_aciklama:fd.get('aciklama')||'',p_tur:fd.get('tur')});
+      if (f.matches('[data-tf633-save]')) { var data; try { data=JSON.parse(fd.get('veri')); } catch (_) { throw new Error('JSON verisi geçersiz'); } if (fd.get('durum') === 'onizleme') { var check = preflight(f, data); if (!check || !check.ok) throw new Error('Önizleme denetimindeki hataları düzeltip yeniden dene.'); } var draftPayload={p_evren_id:fd.get('evren'),p_baslik:fd.get('baslik'),p_veri:data,p_durum:fd.get('durum')}; if (navigator.onLine === false) { if (!pendingAdd('evren-taslak',draftPayload)) throw new Error('Çevrimdışı taslak cihazda saklanamadı'); msg(box,'İnternet yok; taslak bu cihaza kaydedildi, bağlantı gelince gönderilecek.',true); f.reset(); return; } r=await c().rpc('evren_taslak_kaydet',draftPayload); }
+      else { var timePayload={p_evren_id:fd.get('evren'),p_zaman:fd.get('zaman'),p_baslik:fd.get('baslik'),p_aciklama:fd.get('aciklama')||'',p_tur:fd.get('tur')}; if (navigator.onLine === false) { if (!pendingAdd('evren-zaman',timePayload)) throw new Error('Çevrimdışı zaman noktası cihazda saklanamadı'); msg(box,'İnternet yok; zaman noktası bu cihaza kaydedildi, bağlantı gelince gönderilecek.',true); f.reset(); return; } r=await c().rpc('evren_zaman_noktasi_ekle',timePayload); }
       if(r.error) throw r.error; msg(box, f.matches('[data-tf633-save]') ? 'Sürüm kaydedildi.' : 'Zaman noktası eklendi.', true); if(f.matches('[data-tf633-save]')) drafts(box); f.reset();
     } catch(e) { msg(box, 'Kaydedilemedi: '+(e.message||e), false); }
   }
@@ -56,6 +78,7 @@
     var load=event.target.closest('[data-tf633-load]'); if(!load) return;
     var r=await c().rpc('evren_taslak_detay',{p_id:load.dataset.tf633Load}); if(r.error||!r.data) return; var f=load.closest('.tf633-kurucu').querySelector('[data-tf633-save]'); f.elements.evren.value=r.data.evren_id; f.elements.baslik.value=r.data.baslik+' (kopya)'; f.elements.durum.value='taslak'; f.elements.veri.value=JSON.stringify(r.data.veri,null,2); msg(f.closest('.tf633-kurucu'),'Taslak forma yüklendi; kaydettiğinde yeni sürüm oluşur.',true);
   }
-  function boot(){mount();}
-  document.addEventListener('DOMContentLoaded',boot,{once:true}); document.addEventListener('tf-veri-hazir',boot); new MutationObserver(boot).observe(document.body,{childList:true,subtree:true});
+  function boot(){mount(); flushPending();}
+  window.addEventListener('online', function(){ flushPending(); });
+  document.addEventListener('DOMContentLoaded',boot,{once:true}); document.addEventListener('tf-veri-hazir',boot); window.addEventListener('tf-hesap-hazir',flushPending); new MutationObserver(boot).observe(document.body,{childList:true,subtree:true});
 }());
