@@ -1,0 +1,115 @@
+import { spawn } from 'node:child_process';
+import { setTimeout as wait } from 'node:timers/promises';
+
+const tests = [
+  'tests/calistir.mjs',
+  'tests/kanon-takvim.mjs',
+  'tests/5.1-dashboard.mjs',
+  'tests/5.2-membership.mjs',
+  'tests/5.3-regressions.mjs',
+  'tests/5.3.2-vitrin.mjs',
+  'tests/5.3.3-profile-badges.mjs',
+  'tests/5.3.4-layout-notifications.mjs',
+  'tests/5.3.4-gifting.mjs',
+  'tests/5.4.0-store.mjs',
+  'tests/6.4.6-eg-membership.mjs',
+  'tests/alimlar-ecka-kontrol.mjs',
+  'tests/5.4-complete.mjs',
+  'tests/offline-yavas.mjs',
+  'tests/native-offline-startup.mjs',
+  'tests/kullanici-simulasyonu.mjs',
+  'tests/release-hygiene.mjs',
+  'tests/changelog-removal.mjs',
+  'tests/6.4.3-retired-universe-removal.mjs',
+  'tests/offline-queue.mjs',
+  'tests/6.5-offline-sync-center.mjs',
+  'tests/cakisma.mjs',
+  'tests/ortak-evren.mjs',
+  'tests/android-native.mjs',
+  'tests/6.1-universe-center.mjs',
+  'tests/mobile-menu-regression.mjs',
+  'tests/mobile-calm-ui.mjs',
+  'tests/6.3-discovery.mjs',
+  'tests/6.3.1-archive-tools.mjs',
+  'tests/6.3.2-social-feed.mjs',
+  'tests/6.3.3-builder.mjs',
+  'tests/secret-identities.mjs',
+  'tests/secret-identities-6314.mjs',
+  'tests/user-universe-secret-identities.mjs',
+  'tests/universe-navigation.mjs',
+  'tests/6.5-universe-navigation.mjs',
+  'tests/6.5-publication-check.mjs',
+  'tests/map-route-ux.mjs',
+  'tests/native-content-sync.mjs',
+  'tests/sira-6316-runtime.mjs',
+  'tests/6.3.4-discovery-feed.mjs',
+  'tests/6.3.5-quality-privacy.mjs',
+  'tests/6.3.6-gamification.mjs',
+  'tests/6.3.7-moderation.mjs',
+  'tests/6.3.8-visual-universe.mjs',
+  'tests/6.3.9-public-seo.mjs',
+  'tests/6.3.10-secure-sharing.mjs',
+  'tests/6.4.2-universe-indexing.mjs',
+  'tests/6.4.3.0-ux-fixes.mjs',
+  'tests/6.4.4-ux.mjs',
+  'tests/6.4.4-ux-runtime.mjs',
+  'tests/6.4.5-ux.mjs',
+  'tests/6.2-platform.mjs',
+  'tests/termux-library.mjs',
+  'tests/tentifor-terminal.mjs',
+  'tests/terminal-integration-regression.mjs',
+  'tests/test-runner-exit-code.mjs',
+  'tests/domain-brand-regression.mjs'
+];
+
+const server = spawn(process.execPath, ['server.js'], { stdio: ['ignore', 'pipe', 'pipe'] });
+let serverOutput = '';
+server.stdout.on('data', (chunk) => { serverOutput += chunk; });
+server.stderr.on('data', (chunk) => { serverOutput += chunk; });
+const TEST_TIMEOUT_MS = Number(process.env.TF_TEST_TIMEOUT_MS) || 120000;
+
+async function serverReady() {
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/');
+      if (response.ok) return;
+    } catch {}
+    await wait(100);
+  }
+  throw new Error(`Yerel sunucu başlatılamadı. ${serverOutput}`);
+}
+
+function run(file) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [file], { stdio: 'inherit' });
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      child.kill('SIGTERM');
+      setTimeout(() => { try { child.kill('SIGKILL'); } catch {} }, 2000).unref();
+      reject(new Error(`${file} zaman aşımına uğradı (${TEST_TIMEOUT_MS} ms)`));
+    }, TEST_TIMEOUT_MS);
+    child.on('error', (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.on('exit', (code, signal) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (code === 0) resolve();
+      else reject(new Error(`${file} başarısız oldu (code=${code}, signal=${signal || 'yok'})`));
+    });
+  });
+}
+
+try {
+  await serverReady();
+  for (const test of tests) await run(test);
+  console.log('\nTüm uygulama regression testleri başarılı.');
+} finally {
+  try { server.kill('SIGKILL'); } catch {}
+}

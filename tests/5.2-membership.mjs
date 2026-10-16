@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const s = fs.readFileSync('js/engine/91-v473-uyelik.js', 'utf8');
+assert(s.includes('takim: 2'));
+assert(s.includes('takim: Infinity'));
+assert(s.includes("'d30-'"));
+assert(s.includes('30 * 24 * 60 * 60 * 1000'));
+assert(s.includes('sahibi dahil en fazla 2 kişi'));
+assert(s.includes('Sınırsız evren, Evrengezer, fan hikâyesi ve yerel takım paketi'));
+assert(s.includes('Ortak evrenler Supabase kimlik ve davet kontrolüyle, içerik ise GitHub private deposuyla korunur.'));
+assert(!s.includes('evren_uyeleri'));
+assert(!s.includes('evren_davetleri'));
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const data = JSON.parse(fs.readFileSync('veri.json', 'utf8'));
+assert.equal(data.surum, pkg.version);
+
+const evren = fs.readFileSync('js/engine/54-evren-dosyalari.js', 'utf8');
+assert(evren.includes('"evren/"+String(n).replace'));
+assert(evren.includes('(?:evren|evrenler)'));
+assert(fs.existsSync('evren/README.md'));
+console.log('5.2 membership policy assertions: PASS');

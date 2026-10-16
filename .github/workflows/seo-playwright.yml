@@ -1,0 +1,46 @@
+name: SEO Playwright
+
+on:
+  push:
+    branches: [main, 'feat/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seo-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build public SEO snapshots
+        run: npm run build
+
+      - name: Run regression and release contracts
+        run: npm test
+
+      - name: Rebuild snapshots after deterministic release test
+        run: npm run build
+
+      - name: Run Playwright SEO E2E
+        run: npm run test:seo

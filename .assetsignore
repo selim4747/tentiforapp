@@ -1,0 +1,15 @@
+node_modules
+node_modules/**
+.git
+.git/**
+.wrangler
+.wrangler/**
+uygulama/kabuk/android
+uygulama/kabuk/android/**
+.apk-release-output
+.apk-release-output/**
+tests
+tests/**
+scripts
+scripts/**
+*.log

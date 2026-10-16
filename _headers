@@ -1,0 +1,37 @@
+/sitemap.xml
+  Content-Type: application/xml
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy-Report-Only: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; worker-src 'self' blob:; frame-src 'self' https://*.supabase.co
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+/veri.json
+  Cache-Control: public, max-age=0, must-revalidate
+/surum.json
+  Cache-Control: public, max-age=0, must-revalidate
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+/uygulama/indir/tentiforapp.apk
+  Content-Type: application/vnd.android.package-archive
+  Content-Disposition: attachment; filename="tentiforapp.apk"
+  Cache-Control: public, max-age=300, must-revalidate
+/uygulama/indir/apk.json
+  Cache-Control: public, max-age=0, must-revalidate
+/.well-known/assetlinks.json
+  Content-Type: application/json
+  Cache-Control: public, max-age=3600, must-revalidate
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+/js/core/93-offline-queue.js
+  Cache-Control: public, max-age=0, must-revalidate
+/js/core/94-cakisma.js
+  Cache-Control: public, max-age=0, must-revalidate
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+/yazitipi/*
+  Cache-Control: public, max-age=31536000, immutable
+/ikon/*
+  Cache-Control: public, max-age=31536000, immutable

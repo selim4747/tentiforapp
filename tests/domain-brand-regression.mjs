@@ -1,0 +1,93 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {JSDOM} from 'jsdom';
+import {SEO_ORIGIN,seoMetadata,buildSitemap,approvedCanonicalUniversePages} from '../scripts/public-seo.mjs';
+
+const root=process.cwd();
+const read=(p)=>fs.readFileSync(p,'utf8');
+const document=new JSDOM(read('index.html')).window.document;
+assert.equal(document.querySelector('.marka-ad').textContent,'TentiFor');
+assert.equal(document.querySelector('meta[property="og:site_name"]').content,'TentiFor');
+assert.equal(document.querySelector('meta[name="apple-mobile-web-app-title"]').content,'TentiFor');
+assert.equal(document.querySelectorAll('link[rel="canonical"]').length,1,'exactly one canonical tag');
+assert.equal(document.querySelectorAll('meta[property="og:url"]').length,1,'exactly one OpenGraph URL tag');
+assert.equal(document.querySelector('link[rel="canonical"]').href,'https://tentifor.com/');
+assert.equal(document.querySelector('meta[property="og:url"]').content,'https://tentifor.com/');
+assert.equal(document.querySelector('meta[property="og:image"]').content,'https://tentifor.com/paylasim.png');
+assert.equal(SEO_ORIGIN,'https://tentifor.com');
+assert.match(seoMetadata({tur:'evren',slug:'test-world',baslik:'Evren'}).title,/TentiFor/);
+const approvedLocal=approvedCanonicalUniversePages(root,JSON.parse(read('veri.json')));
+assert.ok(approvedLocal.some((item)=>item.slug==='e126'),'approved E126 is included in local public routes');
+const routeLogic=(text)=>{const start=text.indexOf('function yoldanRota('),end=text.indexOf('function rota()',start);assert.ok(start>=0&&end>start,'route functions are present');return text.slice(start,end);};
+assert.equal(routeLogic(read('js/paket-1.js')),routeLogic(read('js/core/00-rota.js')),'served route bundle must match its source');
+const routeDom=(url)=>{const dom=new JSDOM('<!doctype html><html><head></head><body></body></html>',{url,runScripts:'outside-only'});dom.window.eval(read('js/core/00-rota.js'));return dom;};
+const e126Direct=routeDom('https://tentifor.com/evren/e126/');
+assert.equal(e126Direct.window.rota(),'#/ev/site/e126','approved E126 uses its canonical site route, not the fan route');
+assert.equal(e126Direct.window.rotadanYol('#/ev/site/e126'),'/evren/e126/');
+assert.equal(e126Direct.window.rotadanYol('#/ev/fan/e126'),'/evren/e126/','legacy fan hash remains URL-compatible');
+e126Direct.window.close();
+const e126Legacy=routeDom('https://tentifor.com/#/ev/site/e126');
+assert.equal(e126Legacy.window.location.pathname,'/evren/e126/','legacy E126 site route normalizes to its canonical URL');
+assert.equal(e126Legacy.window.rota(),'#/ev/site/e126');
+e126Legacy.window.close();
+const sitemap=buildSitemap([]);
+assert.match(sitemap,/https:\/\/tentifor\.com\/evren\/e25\//);
+assert.equal(JSON.parse(read('manifest.webmanifest')).name,'TentiFor');
+assert.equal(JSON.parse(read('manifest.webmanifest')).short_name,'TentiFor');
+assert.equal(JSON.parse(read('manifest.webmanifest')).id,'./');
+assert.equal(JSON.parse(read('package.json')).name,'tentiforapp','technical package identity must stay compatible');
+assert.match(read('js/core/28-hesap.js'),/sb-tentiforapp-oturum/,'existing auth storage identity must stay compatible');
+assert.match(read('js/engine/tentifor-terminal.js'),/window\.TentiforTerminal\s*=/,'terminal API identity must stay compatible');
+assert.match(read('uygulama/kabuk/android/app/src/main/AndroidManifest.xml'),/android:host="tentifor\.com"/);
+assert.match(read('uygulama/kabuk/android/app/src/main/AndroidManifest.xml'),/android:host="www\.tentifor\.com"/);
+assert.equal(JSON.parse(read('uygulama/kabuk/capacitor.config.json')).appName,'TentiFor');
+assert.equal(JSON.parse(read('uygulama/kabuk/capacitor.config.json')).appId,'dev.pages.tentiforapp');
+assert.match(read('uygulama/kabuk/android/app/src/main/java/dev/pages/tentiforapp/MainActivity.java'),/"TentiFor bildirimleri"/);
+assert.match(read('uygulama/kabuk/android/app/src/main/res/layout/tentifor_widget.xml'),/android:text="TentiFor"/);
+assert.ok(!fs.existsSync('dist/uygulama/kabuk'),'native source must not be part of production web output');
+const webVersion=JSON.parse(read('package.json')).version;
+const distApkMeta=fs.existsSync('dist/uygulama/indir/apk.json');
+const sourceApkMeta=fs.existsSync('uygulama/indir/apk.json') ? JSON.parse(read('uygulama/indir/apk.json')) : null;
+assert.equal(distApkMeta, Boolean(sourceApkMeta && sourceApkMeta.version === webVersion), 'stale APK metadata must not enter a web-only production output');
+assert.ok(fs.existsSync('dist/uygulama/ac/index.html'),'public native auth bridge must remain available');
+const authFunction=read('js/core/28-hesap.js').match(/function hesapDonusAdresi\(e\)\{([^}]+)\}/)[1];
+const callback=new Function('e','location','kabukMu',authFunction);
+assert.equal(callback('onay',{origin:'https://localhost',pathname:'/'},()=>true),'https://tentifor.com/uygulama/ac/?hesap=onay');
+assert.equal(callback('yenisifre',{origin:'https://tentifor.com',pathname:'/'},()=>false),'https://tentifor.com/?hesap=yenisifre');
+assert.doesNotMatch(read('uygulama/kabuk/www/hata.html'),/TentiforApp|pages\.dev/,'preserved native error fallback must use new branding');
+assert.match(read('index.html'),/<link rel="icon" type="image\/x-icon"[^>]*href="\/favicon\.ico">/);
+for(const target of ['dist/favicon.ico','uygulama/kabuk/www/favicon.ico']) assert.ok(fs.readFileSync('favicon.ico').equals(fs.readFileSync(target)),`${target} must match the root favicon`);
+const routeDoc=new JSDOM(read('dist/evren/e25/index.html')).window.document;
+assert.equal(routeDoc.querySelector('meta[name="twitter:url"]').content,'https://tentifor.com/evren/e25/');
+const e126RouteDoc=new JSDOM(read('dist/evren/e126/index.html')).window.document;
+assert.equal(e126RouteDoc.querySelector('link[rel="canonical"]').href,'https://tentifor.com/evren/e126/');
+assert.match(read('uygulama/kabuk/www/evrenler/e126.json'),/"id"\s*:\s*"e126"/);
+let allFiles = [];
+try {
+  allFiles = execFileSync('git', ['ls-files'], { encoding: 'utf8' }).trim().split('\n');
+} catch {
+  const walk = (d) => {
+    const entries = fs.readdirSync(d, { withFileTypes: true });
+    let res = [];
+    for (const e of entries) {
+      if (e.name === 'node_modules' || e.name === '.git' || e.name === 'dist') continue;
+      const f = path.join(d, e.name);
+      if (e.isDirectory()) res.push(...walk(f));
+      else res.push(path.relative('.', f));
+    }
+    return res;
+  };
+  allFiles = walk('.');
+}
+for (const file of allFiles) {
+  if (!fs.existsSync(file)) continue;
+  if (!/\.(?:html|js|mjs|ts|json|xml|md|txt|webmanifest)$/.test(file)) continue;
+  assert.doesNotMatch(read(file), /tentifor(?:app)?(?:\\?\.)pages(?:\\?\.)dev/i, `${file} should not use previous site address`);
+}
+for(const p of ['dist','uygulama/kabuk/www']){
+ assert.equal(read(`${p}/manifest.webmanifest`),read('manifest.webmanifest'));
+ assert.equal(read(`${p}/js/engine/seo-meta.js`),read('js/engine/seo-meta.js'));
+}
+console.log('Domain/brand regression: PASS (brand, canonical origin, old address removal, PWA identity, auth storage, terminal API, output parity)');

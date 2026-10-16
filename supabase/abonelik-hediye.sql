@@ -1,0 +1,16 @@
+-- TentiforApp 4.7.4 üyelik sistemi
+--
+-- Bu mantık artık supabase/kurulum.sql içine birleştirilmiştir.
+-- Supabase SQL Editor'de yalnızca kurulum.sql dosyasını çalıştırın.
+--
+-- Bu dosya kasıtlı olarak boş bırakılmıştır: ayrı çalıştırılırsa
+-- abonelik_durumum() ve abonelik_hediye() fonksiyonlarının güncel sürümünü
+-- yanlışlıkla eski sürümle ezmemesi gerekir.
+--
+-- Güncel planlar:
+--   ücretsiz   : 1 evren, 3 EvrenGezer, 10 fan hikâyesi, 1 ek gezegen (başlangıç gezegeni sayılmaz)
+--   evrengezer : aylık 5 evren, 12 Evrengezer, 42 fan hikâyesi, evren başına 5 gezegen
+--   evrenyazar : sınırsız
+--
+-- Yönetici hediyesi: kurulum.sql içindeki abonelik_hediye(kullanici_adi, plan, gün)
+-- Eski panel uyumluluğu: pro_ver(kullanici_adi, gün) -> EvrenYazar

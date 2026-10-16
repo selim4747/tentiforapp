@@ -1,0 +1,204 @@
+{
+  "bicim": "tentifor-eser",
+  "surum": 1,
+  "tur": "evren",
+  "id": "e126",
+  "olusturma": "2026-10-02T10:17:30.332Z",
+  "guncelleme": "2026-10-07T11:54:55.417Z",
+  "ad": "E126",
+  "yazar": "",
+  "ozet": "Fantastik · Bazı kişilerin bedenlerinin iki evren arasinda gezmesi",
+  "kurallar": [
+    {
+      "ad": "Çift evren",
+      "tur": "kural",
+      "aciklama": ""
+    }
+  ],
+  "kisiler": [
+    {
+      "ad": "Euno",
+      "rol": "Esnaf çırağı ",
+      "yas": "19",
+      "yer": "",
+      "aciklama": "",
+      "soz": "",
+      "etiketler": ""
+    },
+    {
+      "ad": "Morae",
+      "rol": "Manav çırağı ",
+      "yas": "20",
+      "yer": "",
+      "aciklama": "",
+      "soz": "",
+      "etiketler": ""
+    },
+    {
+      "ad": "Ratu",
+      "rol": "İşsiz",
+      "yas": "19",
+      "yer": "",
+      "aciklama": "",
+      "soz": "",
+      "etiketler": ""
+    }
+  ],
+  "yerler": [],
+  "tarih": [],
+  "sozluk": [],
+  "ozelAlanlar": [],
+  "belgeler": [],
+  "aylar": [],
+  "etkinlikler": [],
+  "harita": {
+    "yerler": [
+      {
+        "id": "amuv5jq12",
+        "ad": "Maunas",
+        "tur": "Kıta",
+        "not": "",
+        "x": 56.86,
+        "y": 44.17,
+        "sekil": [
+          [
+            89.79,
+            4.29
+          ],
+          [
+            65.76,
+            4.22
+          ],
+          [
+            50.46,
+            6.94
+          ],
+          [
+            29.66,
+            6.87
+          ],
+          [
+            9.73,
+            16.34
+          ],
+          [
+            7.5,
+            52.04
+          ],
+          [
+            11.4,
+            82.63
+          ],
+          [
+            25.08,
+            87.53
+          ],
+          [
+            46.67,
+            82.69
+          ],
+          [
+            60.3,
+            84.92
+          ],
+          [
+            81.34,
+            83.93
+          ],
+          [
+            94.1,
+            68.29
+          ],
+          [
+            97.17,
+            51.46
+          ],
+          [
+            94.93,
+            24.61
+          ],
+          [
+            88.99,
+            5.84
+          ]
+        ]
+      },
+      {
+        "id": "ymuv5l7ab",
+        "ad": "Koaren",
+        "tur": "Şehir",
+        "not": "",
+        "x": 34.58,
+        "y": 23.82
+      },
+      {
+        "id": "ymuv5lyog",
+        "ad": "Esenta",
+        "tur": "Şehir",
+        "not": "",
+        "x": 81.8,
+        "y": 7.33
+      },
+      {
+        "id": "ymuv5mb3r",
+        "ad": "Carge",
+        "tur": "Şehir",
+        "not": "",
+        "x": 26.67,
+        "y": 62.44
+      }
+    ],
+    "cizgiler": [
+      {
+        "id": "cmuv5mvdh",
+        "tur": "nehir",
+        "ad": "",
+        "noktalar": [
+          [
+            9.14,
+            45.43
+          ],
+          [
+            16.65,
+            43.77
+          ]
+        ]
+      }
+    ],
+    "olcek": {
+      "deger": 20,
+      "birim": "km"
+    },
+    "stil": {
+      "font": "mono"
+    }
+  },
+  "para": {
+    "ad": "Maoru",
+    "simge": "ပ",
+    "kur": 0.1
+  },
+  "stil": {
+    "ana": "#8B3A2E",
+    "zemin": "#E9E7E4",
+    "yazi": "#232120",
+    "font": "serif",
+    "kose": 4,
+    "desen": "dalga",
+    "boyut": "buyuk",
+    "hiza": "orta"
+  },
+  "yazi": {
+    "tur": "alfabe",
+    "isaretler": {},
+    "baslik": false
+  },
+  "ortak": true,
+  "ortakIz": {
+    "kim": "selimblackstone",
+    "sekme": "baloncuk",
+    "zaman": "2026-10-05T17:41:34.848Z"
+  },
+  "eklenme": "2026-10-07",
+  "yazar_kadi": "selimblackstone"
+}

@@ -1,0 +1,11 @@
+node_modules/**
+.git/**
+.apk-release-output/**
+uygulama/kabuk/android/**
+tests/**
+scripts/**
+server.js
+package.json
+package-lock.json
+bun.lock
+bun.lockb
