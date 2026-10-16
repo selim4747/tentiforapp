@@ -5,6 +5,8 @@ function yoldanRota(yol) {
     try { return decodeURIComponent(parca); } catch { return parca; }
   });
   if (!parcalar.length) return '';
+  const ilk = String(parcalar[0]).toLocaleLowerCase('tr-TR');
+  if (ilk === 'yönetici' || ilk === 'yonetici') return '#/yonetici';
   if (parcalar[0] === 'evren' && parcalar[1]) {
     if (['benim', 'acilan', 'fan', 'site', 'onizle'].includes(parcalar[1])) return '#/ev/' + parcalar.slice(1).join('/');
     if (parcalar[1] === 'e99') return '#/ev/e99';
