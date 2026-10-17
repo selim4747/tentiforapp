@@ -1,4 +1,4 @@
-/* TentiFor — APK Özel ve Sıradaki Araçlar Motoru (v6.5.2)
+/* TentiFor — APK Özel ve Sıradaki Araçlar Motoru (v6.5.3)
  * 1. İnternetsiz Yerel Hatırlatıcı & Etkileşimli Bildirimler (Capacitor LocalNotifications)
  * 2. Bölünmüş Ekran Zekası (Split-Screen & Foldables Multi-Window)
  * 3. Yerel Klasör Senkronizasyonu (Documents/Tentifor Storage Access)
@@ -55,7 +55,7 @@
       '    <span style="font-size: 13.5px; line-height: 1.5; color: var(--murekkep-2);">Bu araç, Android donanım hızlandırması, yerel dosya sistemi (SAF), haptik titreşim motoru ve çevrimdışı işlem altyapısıyla bütünleşik tasarlanmıştır. Web tarayıcısı üzerinden doğrudan çalıştırılamaz; tam deneyim için Tentifor APK gereklidir.</span>',
       '  </div>',
       '  <div style="display: flex; gap: 10px; flex-wrap: wrap;">',
-      '    <a class="dugme" href="/uygulama/indir/tentiforapp.apk" download style="text-decoration:none;">📲 Tentifor Android APK 6.5.2 İndir</a>',
+      '    <a class="dugme" href="/uygulama/indir/tentiforapp.apk" download style="text-decoration:none;">📲 Tentifor Android APK 6.5.3 İndir</a>',
       '    <button class="dugme dugme-sade" type="button" data-apk-kapat>Anladım, Kapat</button>',
       '  </div>',
       '  <p class="oyun-not" role="note" style="font-size: 12px; margin: 10px 0 0;">Not: Bu APK debug sertifikasıyla imzalıdır. Bazı önceki kurulumların üzerine yükleme reddedilebilir; uygulamayı kaldırıp yeniden kurmak cihazdaki yerel verileri silebilir. Gerekli verileri önceden yedekleyin.</p>',
@@ -402,7 +402,7 @@
         var paket = {
           olusturuldu: new Date().toISOString(),
           cihaz: 'TentiforApp Android Native',
-          surum: (typeof window.veri !== 'undefined' && window.veri && window.veri.surum) || '6.5.2',
+          surum: (typeof window.veri !== 'undefined' && window.veri && window.veri.surum) || '6.5.3',
           zenTaslak: localStorage.getItem('tentifor_zen_taslak') || '',
           bolunmusNot: localStorage.getItem('tf_bolunmus_hizli_not') || '',
           okumaIlerleme: localStorage.getItem('tentiforapp_v50_devam') || '',

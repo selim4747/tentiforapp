@@ -2,6 +2,10 @@ package dev.pages.tentiforapp;
 
 import android.app.Activity;
 import android.content.Context;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -105,6 +109,60 @@ public class TentiforNativePlugin extends Plugin {
             call.resolve(result);
         });
     }
+    private File durableStateFile() {
+        return new File(getContext().getFilesDir(), "tentiforapp-state.json");
+    }
+
+    @PluginMethod
+    public void saveAppState(PluginCall call) {
+        String value = call.getString("value", "");
+        if (value == null || value.length() > 8_000_000) {
+            call.reject("Uygulama durumu çok büyük.");
+            return;
+        }
+        File target = durableStateFile();
+        File temp = new File(target.getParentFile(), target.getName() + ".tmp");
+        try (FileOutputStream output = new FileOutputStream(temp)) {
+            output.write(value.getBytes(StandardCharsets.UTF_8));
+            output.getFD().sync();
+            if (!temp.renameTo(target)) {
+                try (FileOutputStream fallback = new FileOutputStream(target)) {
+                    fallback.write(value.getBytes(StandardCharsets.UTF_8));
+                    fallback.getFD().sync();
+                }
+                temp.delete();
+            }
+            call.resolve();
+        } catch (Exception error) {
+            temp.delete();
+            call.reject("Uygulama durumu kaydedilemedi.", error);
+        }
+    }
+
+    @PluginMethod
+    public void loadAppState(PluginCall call) {
+        File target = durableStateFile();
+        if (!target.exists()) {
+            JSObject result = new JSObject();
+            result.put("value", "");
+            call.resolve(result);
+            return;
+        }
+        try (FileInputStream input = new FileInputStream(target)) {
+            byte[] bytes = new byte[(int) Math.min(target.length(), 8_000_000)];
+            int length = 0;
+            int read;
+            while (length < bytes.length && (read = input.read(bytes, length, bytes.length - length)) != -1) {
+                length += read;
+            }
+            JSObject result = new JSObject();
+            result.put("value", length > 0 ? new String(bytes, 0, length, StandardCharsets.UTF_8) : "");
+            call.resolve(result);
+        } catch (Exception error) {
+            call.reject("Uygulama durumu okunamadı.", error);
+        }
+    }
+
     @PluginMethod
     public void saveBridge(PluginCall call) {
         String value = call.getString("value", "");
