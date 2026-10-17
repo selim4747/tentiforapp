@@ -64,10 +64,18 @@ const setupTarget = fs.readFileSync('js/paket-4.js', 'utf8').match(/const KURULU
 assert.ok(setupVersion && setupTarget, 'backend schema version must be readable');
 assert.equal(setupTarget, setupVersion, 'admin expected schema version must match Supabase setup version');
 assert.equal(packageJson.version, JSON.parse(fs.readFileSync('veri.json', 'utf8')).surum);
-assert.equal(androidPackage.version, apkMeta.version);
-assert.match(gradle, new RegExp(`versionCode\\s+${apkMeta.versionCode}\\b`));
-const mobileVersionPattern = apkMeta.version.replaceAll('.', '\\.');
-assert.match(gradle, new RegExp(`versionName\\s+"${mobileVersionPattern}"`));
+assert.equal(androidPackage.version, packageJson.version);
+const shellVersionPattern = androidPackage.version.replaceAll('.', '\\.');
+assert.match(gradle, /versionCode\s+\d+\b/);
+assert.match(gradle, new RegExp(`versionName\\s+"${shellVersionPattern}"`));
+const currentApk = apkMeta.version === androidPackage.version;
+if (currentApk) {
+  assert.match(gradle, new RegExp(`versionCode\\s+${apkMeta.versionCode}\\b`));
+  const mobileVersionPattern = apkMeta.version.replaceAll('.', '\\.');
+  assert.match(gradle, new RegExp(`versionName\\s+"${mobileVersionPattern}"`));
+} else {
+  assert.notEqual(apkMeta.version, packageJson.version, 'eski APK, sürümü uyuşmadığından paketleme adımında web dist’inden çıkarılmalı');
+}
 
 assert.match(client, /navigator\.share/);
 assert.match(client, /TentiforKopru\.paylas/);

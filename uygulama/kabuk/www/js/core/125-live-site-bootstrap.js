@@ -10,6 +10,8 @@
   var state = 'idle';
   var retryTimer = null;
   var durableSaveTimer = null;
+  var durableSaveRunning = false;
+  var durableSavePending = false;
   var durableLoading = false;
   function localHost() {
     var host = String(root.location && root.location.hostname || '').toLowerCase();
@@ -39,14 +41,27 @@
     }
     return data;
   }
-  function durableStateSave() {
+  function durableStateFlush() {
     if (durableLoading) return;
     var plugin = nativePlugin();
     if (!plugin || typeof plugin.saveAppState !== 'function') return;
+    if (durableSaveRunning) { durableSavePending = true; return; }
+    durableSaveRunning = true;
+    Promise.resolve().then(function () {
+      return plugin.saveAppState({ value: JSON.stringify(durableStateSnapshot()) });
+    }).catch(function () {}).then(function () {
+      durableSaveRunning = false;
+      if (durableSavePending) { durableSavePending = false; durableStateFlush(); }
+    });
+  }
+  function durableStateSave(immediate) {
+    if (durableLoading) return;
     if (durableSaveTimer) root.clearTimeout(durableSaveTimer);
+    durableSaveTimer = null;
+    if (immediate) { durableStateFlush(); return; }
     durableSaveTimer = root.setTimeout(function () {
       durableSaveTimer = null;
-      try { plugin.saveAppState({ value: JSON.stringify(durableStateSnapshot()) }); } catch (_) {}
+      durableStateFlush();
     }, 250);
   }
   function durableStateApply(value) {
@@ -69,9 +84,9 @@
       var proto = root.Storage && root.Storage.prototype;
       if (!proto || proto.__tfDurableState) return;
       var setItem = proto.setItem, removeItem = proto.removeItem, clear = proto.clear;
-      proto.setItem = function (key, value) { var result = setItem.apply(this, arguments); if (this === safeStorage()) durableStateSave(); return result; };
-      proto.removeItem = function (key) { var result = removeItem.apply(this, arguments); if (this === safeStorage()) durableStateSave(); return result; };
-      proto.clear = function () { var result = clear.apply(this, arguments); if (this === safeStorage()) durableStateSave(); return result; };
+      proto.setItem = function (key, value) { var result = setItem.apply(this, arguments); if (this === safeStorage()) durableStateSave(/^sb-[a-z0-9-]+-auth-token$/i.test(String(key)) || String(key) === 'sb-tentiforapp-oturum'); return result; };
+      proto.removeItem = function (key) { var result = removeItem.apply(this, arguments); if (this === safeStorage()) durableStateSave(true); return result; };
+      proto.clear = function () { return clear.apply(this, arguments); };
       proto.__tfDurableState = true;
     } catch (_) {}
   }
@@ -207,6 +222,8 @@
   durableStateLoad().then(function () { durableStateSave(); return importBridge(); });
   root.TentiforNativeBridge = { retryLiveSite: function () { state = 'idle'; checkLiveSite(); }, status: function () { return state; } };
   if (typeof root.addEventListener === 'function') {
+    root.addEventListener('pagehide', function () { durableStateSave(true); });
+    root.addEventListener('beforeunload', function () { durableStateSave(true); });
     root.addEventListener('online', function () { retry('online'); });
     root.addEventListener('resume', function () { retry('resume'); });
     root.addEventListener('capacitorResume', function () { retry('resume'); });
