@@ -41,6 +41,9 @@ if (apkMeta) {
     assert.equal(versionCompare(apkMeta.version, pkg.version), 0, 'güncel Android APK’si web sürümüyle aynı olmalı');
     assert.equal(apkMeta.version, androidVersionName, 'güncel APK metadata sürümü Android native sürümüyle eşleşmeli');
     assert.equal(apkMeta.versionCode, androidVersionCode, 'güncel APK metadata versionCode’u Gradle native versionCode ile eşleşmeli');
+    assert.equal(apkMeta.surum, apkMeta.version, 'indirme menüsü güncel APK sürümünü gösterebilmeli');
+    assert.equal(Number(apkMeta.kod), Number(apkMeta.versionCode), 'indirme menüsü güncel APK build kodunu alabilmeli');
+    assert.equal(Number(apkMeta.boyut), Number(apkMeta.sizeBytes), 'indirme menüsü APK boyutunu gösterebilmeli');
   }
 }
 const assetLinks = readJson('.well-known/assetlinks.json');
