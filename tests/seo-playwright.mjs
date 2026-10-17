@@ -123,7 +123,7 @@ try {
   assert.equal(await adminPage.locator('#sayfaBasi h1').innerText(), 'Yönetici', 'direct admin URL must not inherit a saved Sen page header');
   assert.equal(await adminPage.locator('#gezinme a[aria-current="page"]').innerText(), 'Yönetici');
   assert.doesNotMatch(await adminPage.title(), /Sen/);
-  assert.equal(await adminPage.locator('meta[name="robots"]').getAttribute('content'), 'index, follow');
+  assert.equal(await adminPage.locator('meta[name="robots"]').getAttribute('content'), 'noindex, follow');
   assert.equal(await adminPage.locator('#tepe > section').count(), 1);
   assert.match(await adminPage.locator('#yoneticiAlan').innerText(), /gir|kod|yönetici/i);
   await adminPage.waitForTimeout(900);

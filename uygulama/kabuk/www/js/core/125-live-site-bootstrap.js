@@ -34,7 +34,7 @@
       if (!key) continue;
       try {
         var value = storage.getItem(key);
-        if (value != null && value.length <= 200000) data.keys[key] = value;
+        if (value != null && value.length <= 1000000) data.keys[key] = value;
       } catch (_) {}
     }
     return data;

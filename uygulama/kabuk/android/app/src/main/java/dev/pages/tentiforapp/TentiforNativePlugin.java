@@ -116,7 +116,7 @@ public class TentiforNativePlugin extends Plugin {
     @PluginMethod
     public void saveAppState(PluginCall call) {
         String value = call.getString("value", "");
-        if (value == null || value.length() > 2_000_000) {
+        if (value == null || value.length() > 8_000_000) {
             call.reject("Uygulama durumu çok büyük.");
             return;
         }
@@ -149,8 +149,12 @@ public class TentiforNativePlugin extends Plugin {
             return;
         }
         try (FileInputStream input = new FileInputStream(target)) {
-            byte[] bytes = new byte[(int) Math.min(target.length(), 2_000_000)];
-            int length = input.read(bytes);
+            byte[] bytes = new byte[(int) Math.min(target.length(), 8_000_000)];
+            int length = 0;
+            int read;
+            while (length < bytes.length && (read = input.read(bytes, length, bytes.length - length)) != -1) {
+                length += read;
+            }
             JSObject result = new JSObject();
             result.put("value", length > 0 ? new String(bytes, 0, length, StandardCharsets.UTF_8) : "");
             call.resolve(result);
