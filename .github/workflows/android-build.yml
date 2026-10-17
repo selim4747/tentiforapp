@@ -2,7 +2,7 @@ name: Android build
 
 on:
   push:
-    branches: [main, 'feat/**']
+    branches: [main, 'feat/**', 'ui/**']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -67,6 +67,37 @@ jobs:
         working-directory: uygulama/kabuk/android
         run: ./gradlew --no-daemon --stacktrace assembleDebug
 
+      - name: Generate APK metadata
+        env:
+          TF_ANDROID_SIGNING_READY: ${{ env.TF_ANDROID_SIGNING_READY }}
+        run: |
+          if [ "$TF_ANDROID_SIGNING_READY" = "true" ]; then
+            apk="uygulama/kabuk/android/app/build/outputs/apk/release/app-release.apk"
+            signing_type="release"
+          else
+            apk="uygulama/kabuk/android/app/build/outputs/apk/debug/app-debug.apk"
+            signing_type="debug"
+          fi
+          version=$(node -p "require('./veri.json').surum")
+          version_code=$(sed -n 's/.*versionCode \([0-9][0-9]*\).*/\1/p' uygulama/kabuk/android/app/build.gradle | head -1)
+          certificate=$(apksigner verify --print-certs "$apk" 2>/dev/null | sed -n 's/.*certificate SHA-256 digest: //p' | head -1)
+          python3 - "$apk" "$version" "$version_code" "$signing_type" "${certificate:-unknown}" <<'PY'
+          import hashlib, json, pathlib, sys
+          apk, version, version_code, signing_type, certificate = sys.argv[1:]
+          path = pathlib.Path(apk)
+          data = {
+              'packageName': 'dev.pages.tentiforapp',
+              'version': version,
+              'versionCode': int(version_code),
+              'sizeBytes': path.stat().st_size,
+              'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+              'signingType': signing_type,
+              'certificateSha256': certificate,
+          }
+          pathlib.Path('uygulama/indir/apk.json').write_text(json.dumps(data, indent=2) + '\n')
+          print(json.dumps(data, indent=2))
+          PY
+
       - name: Verify APK output and retired-content absence
         if: always()
         run: |
@@ -103,7 +134,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tentiforapp-release-apk
-          path: uygulama/kabuk/android/app/build/outputs/apk/release/app-release.apk
+          path: |
+            uygulama/kabuk/android/app/build/outputs/apk/release/app-release.apk
+            uygulama/indir/apk.json
           if-no-files-found: error
           retention-days: 14
 
@@ -112,6 +145,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tentiforapp-debug-apk
-          path: uygulama/kabuk/android/app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            uygulama/kabuk/android/app/build/outputs/apk/debug/app-debug.apk
+            uygulama/indir/apk.json
           if-no-files-found: error
           retention-days: 14

@@ -13,10 +13,16 @@ const manifest = readJson('manifest.webmanifest');
 const shellPkg = readJson('uygulama/kabuk/package.json');
 const apkPath = path.join(root, 'uygulama/indir/tentiforapp.apk');
 const apkMetaPath = path.join(root, 'uygulama/indir/apk.json');
-const apkMeta = fs.existsSync(apkMetaPath) && fs.existsSync(apkPath) ? readJson('uygulama/indir/apk.json') : null;
+const apkMetaCandidate = fs.existsSync(apkMetaPath) && fs.existsSync(apkPath) ? readJson('uygulama/indir/apk.json') : null;
 const androidGradle = fs.readFileSync(path.join(root, 'uygulama/kabuk/android/app/build.gradle'), 'utf8');
 const androidVersionCode = Number(androidGradle.match(/versionCode\s+(\d+)/)?.[1]);
 const androidVersionName = androidGradle.match(/versionName\s+"([^"]+)"/)?.[1];
+// A locally checked-in APK may legitimately lag the source while CI is rebuilding it.
+// Only a metadata-matched binary is eligible for release assertions and packaging.
+const apkMeta = apkMetaCandidate?.version === pkg.version
+  && apkMetaCandidate?.versionCode === androidVersionCode
+  ? apkMetaCandidate
+  : null;
 const versionCompare = (left, right) => {
   const a = left.split('.').map(Number); const b = right.split('.').map(Number);
   const len = Math.max(a.length, b.length);
