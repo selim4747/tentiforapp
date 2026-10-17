@@ -887,3 +887,300 @@ html[data-tf644-sepya] .okuma-metin p,html[data-tf644-sepya] .uzun-metin p,html[
   #altMenu .alt-oge { font-size: 9.5px; letter-spacing: 0; }
   #altMenu.alt-menu-evren .alt-oge { font-size: 8.5px; }
 }
+
+
+/* 6.5.4 — Sakin arayüz: daha fazla nefes, daha net hiyerarşi, daha rahat dokunma. */
+:root {
+  --rahat-ritim: 1.12;
+  --rahat-max: 72ch;
+  --rahat-golge: 0 8px 24px rgba(13, 53, 96, .07);
+  --rahat-golge-hover: 0 12px 30px rgba(13, 53, 96, .11);
+}
+
+body {
+  line-height: 1.7;
+  letter-spacing: .005em;
+}
+
+p, li, label, .oyun-not, .bolum-alt {
+  overflow-wrap: anywhere;
+}
+
+main > .bolum,
+main > .hero {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
+.bolum {
+  padding-top: clamp(48px, 7vw, 76px);
+  padding-bottom: clamp(48px, 7vw, 76px);
+}
+
+.bolum-basi {
+  max-width: var(--rahat-max);
+  margin-bottom: clamp(24px, 4vw, 36px);
+}
+
+.bolum-basi h2,
+.sayfa-basi h1 {
+  text-wrap: balance;
+}
+
+.bolum-alt {
+  max-width: 62ch;
+  line-height: 1.7;
+}
+
+.uzun-metin,
+.okuma-metin,
+.fan-metin,
+.evs-roman,
+.detay-metin {
+  max-width: var(--rahat-max);
+}
+
+.uzun-metin p,
+.okuma-metin p,
+.fan-metin p,
+.evs-roman p,
+.detay-metin p {
+  max-width: 68ch;
+  line-height: 1.78;
+}
+
+.dugme,
+.kod-btn,
+.hesap-btn,
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+.dugme,
+.kod-btn,
+.hesap-btn,
+.ust-ikon,
+.evren-sec-btn,
+.filtre button,
+.oyun-sekme button,
+.gez-btn {
+  min-height: 44px;
+}
+
+.dugme,
+.kod-btn,
+.hesap-btn,
+.evren-sec-btn,
+.ust-ikon,
+input,
+select,
+textarea {
+  transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease, color .16s ease, transform .16s ease;
+}
+
+.dugme:active,
+.kod-btn:active,
+.hesap-btn:active,
+.evren-sec-btn:active,
+.ust-ikon:active {
+  transform: translateY(1px);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea,
+.kod-giris,
+.arama-giris {
+  border-radius: var(--r-kucuk, 8px);
+  border-color: var(--sig);
+  background: color-mix(in srgb, var(--beyaz) 92%, var(--kar));
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+select:focus,
+textarea:focus,
+.kod-giris:focus,
+.arama-giris:focus {
+  border-color: var(--deniz);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sig) 62%, transparent);
+  outline: 0;
+}
+
+.izgara {
+  gap: clamp(16px, 2.2vw, 22px);
+}
+
+.kart,
+.madde,
+.kutu-y,
+.arac-blok,
+.baslangic,
+.ana-tomye,
+.ana-evren,
+.devam-kart {
+  box-shadow: var(--rahat-golge);
+}
+
+.kart,
+.madde,
+.kutu-y,
+.arac-blok,
+.baslangic,
+.ana-evren,
+.devam-kart {
+  border-color: color-mix(in srgb, var(--buz) 82%, var(--sig));
+}
+
+.kart:hover,
+.kart:focus-within,
+.madde:hover,
+.kutu-y:focus-within,
+.ana-evren:hover {
+  box-shadow: var(--rahat-golge-hover);
+}
+
+.kart:focus-within,
+.ana-evren:focus-within {
+  border-color: var(--deniz);
+}
+
+.arac-blok,
+.kutu-y,
+.baslangic,
+.devam-kart {
+  padding: clamp(16px, 3vw, 24px);
+}
+
+.ana-tomye {
+  padding: clamp(22px, 4vw, 38px);
+}
+
+.hero-metin {
+  max-width: 58ch;
+  line-height: 1.78;
+}
+
+.hero-eylem {
+  gap: .8rem;
+}
+
+.hero-ana-eylem {
+  min-height: 48px;
+  padding-inline: 22px;
+}
+
+.arama-kutu {
+  max-width: 68ch;
+  margin-inline: auto;
+}
+
+.arama-giris {
+  min-height: 50px;
+  padding: 12px 16px;
+}
+
+.madde-liste {
+  gap: 14px;
+}
+
+.madde-bas {
+  min-height: 62px;
+  padding: 18px 22px;
+}
+
+.pencere {
+  box-shadow: 0 18px 60px rgba(10, 25, 40, .2);
+}
+
+.pencere p,
+.pencere li {
+  line-height: 1.65;
+}
+
+@media (max-width: 760px) {
+  body {
+    line-height: 1.66;
+  }
+
+  .bolum {
+    padding: 46px 16px;
+  }
+
+  .bolum-basi {
+    margin-bottom: 24px;
+  }
+
+  .ana-tomye {
+    padding: 22px 18px 24px;
+  }
+
+  .hero-metin {
+    font-size: 16px;
+  }
+
+  .hero-eylem > .dugme.hero-ana-eylem,
+  .hero-ana-eylem {
+    width: calc(100% - 56px);
+  }
+
+  .harita-bosdurum > .dugme {
+    width: 100%;
+  }
+
+  .hero-baslangic-yollari,
+  .hero-diger-icerik {
+    gap: .2rem .7rem;
+  }
+
+  .hero-yol,
+  .hero-diger-yollar > summary {
+    min-height: 44px;
+  }
+
+  .kart,
+  .madde-bas {
+    padding-inline: 16px;
+  }
+
+  .arac-blok,
+  .kutu-y,
+  .baslangic,
+  .devam-kart {
+    padding: 16px;
+  }
+
+  .filtre,
+  .oyun-sira,
+  .oyun-sekme {
+    gap: 10px;
+  }
+
+  .filtre button,
+  .oyun-sekme button {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dugme:active,
+  .kod-btn:active,
+  .hesap-btn:active,
+  .evren-sec-btn:active,
+  .ust-ikon:active {
+    transform: none;
+  }
+
+  .dugme,
+  .kod-btn,
+  .hesap-btn,
+  .evren-sec-btn,
+  .ust-ikon,
+  input,
+  select,
+  textarea {
+    transition: none;
+  }
+}
