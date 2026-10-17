@@ -5,6 +5,10 @@ import vm from 'node:vm';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const source = fs.readFileSync(path.join(process.cwd(), 'js/core/125-live-site-bootstrap.js'), 'utf8');
+const nativeSource = fs.readFileSync(path.join(process.cwd(), 'uygulama/kabuk/android/app/src/main/java/dev/pages/tentiforapp/TentiforNativePlugin.java'), 'utf8');
+assert.match(nativeSource, /AndroidKeyStore/, 'Android must keep the state encryption key in Keystore');
+assert.match(nativeSource, /AES\/GCM\/NoPadding/, 'durable app state must be encrypted at rest');
+assert.match(nativeSource, /TFSTATE1:/, 'encrypted state format must be versioned');
 
 class FakeStorage {
   constructor(seed = {}) { this.data = new Map(Object.entries(seed)); }
@@ -19,6 +23,8 @@ class FakeStorage {
 async function boot(persisted, storage) {
   const saved = [];
   const listeners = {};
+  class BootStorage extends FakeStorage {}
+  Object.setPrototypeOf(storage, BootStorage.prototype);
   const location = { href: 'https://localhost/harita/', hostname: 'localhost', search: '', pathname: '/harita/', hash: '', replace() {} };
   const plugin = {
     loadAppState: async () => ({ value: JSON.stringify(persisted) }),
@@ -29,7 +35,7 @@ async function boot(persisted, storage) {
   const root = {
     location,
     localStorage: storage,
-    Storage: FakeStorage,
+    Storage: BootStorage,
     navigator: { onLine: false },
     Capacitor: { isNativePlatform: () => true, Plugins: { TentiforNative: plugin } },
     document: { activeElement: null, querySelector: () => null, addEventListener() {} },
@@ -71,4 +77,21 @@ restored.storage.setItem('tf65_evren_taslak_bekleyen', JSON.stringify([{ owner, 
 await delay(320);
 assert.equal(JSON.parse(restored.saved.at(-1).keys.tf65_evren_taslak_bekleyen)[0].owner, owner, 'yeni çevrimdışı kayıt dosyaya yazılmalı');
 
-console.log('Native durable state feature test: PASS (cache-clear restore, account identity, large universe ownership and offline draft persistence)');
+const cacheBackup = restored.saved.at(-1);
+restored.storage.clear();
+await delay(0);
+assert.equal(restored.saved.at(-1), cacheBackup, 'localStorage temizliği şifreli yedek state’i silmemeli');
+const reopenedAfterCacheClear = await boot(cacheBackup, new FakeStorage());
+assert.equal(JSON.parse(reopenedAfterCacheClear.storage.getItem('sb-tentiforapp-oturum')).user.id, owner, 'önbellek temizlendikten sonra hesap oturumu geri yüklenmeli');
+assert.equal(JSON.parse(reopenedAfterCacheClear.storage.getItem('tentiforapp_fan_eserlerim'))[0].sahibi, owner, 'önbellek temizliği evren sahipliğini korumalı');
+
+reopenedAfterCacheClear.storage.removeItem('sb-tentiforapp-oturum');
+await delay(0);
+const afterLogout = reopenedAfterCacheClear.saved.at(-1);
+assert.ok(afterLogout, 'çıkış durumu gecikmesiz şekilde kalıcı olmalı');
+assert.equal(Object.hasOwn(afterLogout.keys, 'sb-tentiforapp-oturum'), false, 'çıkış sonrası eski oturum kalıcı depoda tutulmamalı');
+const reopenedAfterLogout = await boot(afterLogout, new FakeStorage());
+assert.equal(reopenedAfterLogout.storage.getItem('sb-tentiforapp-oturum'), null, 'yeniden açılış eski hesabı oturum açmış gibi geri getirmemeli');
+assert.equal(JSON.parse(reopenedAfterLogout.storage.getItem('tentiforapp_fan_eserlerim'))[0].sahibi, owner, 'oturum kapanması yerel evren sahipliği verisini silmemeli');
+
+console.log('Native durable state feature test: PASS (cache-clear restore, account identity, large universe ownership, offline drafts and immediate logout persistence)');

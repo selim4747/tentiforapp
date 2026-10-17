@@ -1,9 +1,11 @@
 {
   "packageName": "dev.pages.tentiforapp",
-  "version": "6.5.2",
-  "versionCode": 6502,
-  "sizeBytes": 8937240,
-  "sha256": "8e7f65ef6944ddc5ed998da373550e51f8139fa40e64b8f3d928c8f5cf246d1f",
+  "version": "6.5.3",
+  "versionCode": 6503,
+  "sizeBytes": 8941981,
+  "sha256": "7d598a77ea7a9306e2b2010fab351debd24c3d232b074d838b317c3d9eff40e8",
   "signingType": "debug",
-  "certificateSha256": "6D:C4:B0:A8:39:EA:49:DD:8E:23:C8:66:5D:A0:72:64:57:C7:6A:E0:47:7D:13:A8:EE:01:02:27:AB:B6:D2:31"
+  "kod": 6503,
+  "surum": "6.5.3",
+  "boyut": 8941981
 }

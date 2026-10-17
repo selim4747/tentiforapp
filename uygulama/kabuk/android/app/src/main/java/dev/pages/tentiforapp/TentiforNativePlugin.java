@@ -6,6 +6,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
+import android.util.Base64;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -113,6 +121,52 @@ public class TentiforNativePlugin extends Plugin {
         return new File(getContext().getFilesDir(), "tentiforapp-state.json");
     }
 
+    private static final String DURABLE_STATE_KEY_ALIAS = "tentiforapp-durable-state-v1";
+    private static final String DURABLE_STATE_PREFIX = "TFSTATE1:";
+
+    private SecretKey durableStateKey() throws Exception {
+        KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+        keyStore.load(null);
+        if (keyStore.containsAlias(DURABLE_STATE_KEY_ALIAS)) {
+            return ((KeyStore.SecretKeyEntry) keyStore.getEntry(DURABLE_STATE_KEY_ALIAS, null)).getSecretKey();
+        }
+        KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+        generator.init(new KeyGenParameterSpec.Builder(DURABLE_STATE_KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setRandomizedEncryptionRequired(true)
+                .build());
+        return generator.generateKey();
+    }
+
+    private byte[] encryptDurableState(String value) throws Exception {
+        byte[] plaintext = value.getBytes(StandardCharsets.UTF_8);
+        if (plaintext.length > 8_000_000) throw new IllegalArgumentException("Uygulama durumu çok büyük.");
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, durableStateKey());
+        byte[] iv = cipher.getIV();
+        byte[] encrypted = cipher.doFinal(plaintext);
+        byte[] payload = new byte[iv.length + encrypted.length];
+        System.arraycopy(iv, 0, payload, 0, iv.length);
+        System.arraycopy(encrypted, 0, payload, iv.length, encrypted.length);
+        return (DURABLE_STATE_PREFIX + Base64.encodeToString(payload, Base64.NO_WRAP)).getBytes(StandardCharsets.UTF_8);
+    }
+
+    private String decryptDurableState(byte[] stored) throws Exception {
+        String value = new String(stored, StandardCharsets.UTF_8);
+        if (!value.startsWith(DURABLE_STATE_PREFIX)) return value; // Eski düz metin durumunu sonraki yazımda yükselt.
+        byte[] payload = Base64.decode(value.substring(DURABLE_STATE_PREFIX.length()), Base64.NO_WRAP);
+        if (payload.length <= 12) throw new IllegalArgumentException("Kalıcı uygulama verisi bozuk.");
+        byte[] iv = new byte[12];
+        byte[] encrypted = new byte[payload.length - iv.length];
+        System.arraycopy(payload, 0, iv, 0, iv.length);
+        System.arraycopy(payload, iv.length, encrypted, 0, encrypted.length);
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, durableStateKey(), new GCMParameterSpec(128, iv));
+        return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
+    }
+
     @PluginMethod
     public void saveAppState(PluginCall call) {
         String value = call.getString("value", "");
@@ -123,7 +177,7 @@ public class TentiforNativePlugin extends Plugin {
         File target = durableStateFile();
         File temp = new File(target.getParentFile(), target.getName() + ".tmp");
         try (FileOutputStream output = new FileOutputStream(temp)) {
-            output.write(value.getBytes(StandardCharsets.UTF_8));
+            output.write(encryptDurableState(value));
             output.getFD().sync();
             if (!temp.renameTo(target)) {
                 try (FileOutputStream fallback = new FileOutputStream(target)) {
@@ -149,14 +203,14 @@ public class TentiforNativePlugin extends Plugin {
             return;
         }
         try (FileInputStream input = new FileInputStream(target)) {
-            byte[] bytes = new byte[(int) Math.min(target.length(), 8_000_000)];
+            byte[] bytes = new byte[(int) Math.min(target.length(), 12_000_000)];
             int length = 0;
             int read;
             while (length < bytes.length && (read = input.read(bytes, length, bytes.length - length)) != -1) {
                 length += read;
             }
             JSObject result = new JSObject();
-            result.put("value", length > 0 ? new String(bytes, 0, length, StandardCharsets.UTF_8) : "");
+            result.put("value", length > 0 ? decryptDurableState(bytes) : "");
             call.resolve(result);
         } catch (Exception error) {
             call.reject("Uygulama durumu okunamadı.", error);

@@ -14,6 +14,7 @@ const shellPkg = readJson('uygulama/kabuk/package.json');
 const apkPath = path.join(root, 'uygulama/indir/tentiforapp.apk');
 const apkMetaPath = path.join(root, 'uygulama/indir/apk.json');
 const apkMeta = fs.existsSync(apkMetaPath) && fs.existsSync(apkPath) ? readJson('uygulama/indir/apk.json') : null;
+const apkMatchesCurrent = Boolean(apkMeta && apkMeta.version === pkg.version);
 const androidGradle = fs.readFileSync(path.join(root, 'uygulama/kabuk/android/app/build.gradle'), 'utf8');
 const androidVersionCode = Number(androidGradle.match(/versionCode\s+(\d+)/)?.[1]);
 const androidVersionName = androidGradle.match(/versionName\s+"([^"]+)"/)?.[1];
@@ -32,13 +33,18 @@ assert.match(pkg.version, /^\d+\.\d+\.\d+(?:\.\d+)?$/);
 assert.equal(data.surum, pkg.version, 'veri.json package.json ile aynı sürümü taşımalı');
 assert.equal(manifest.version, pkg.version, 'manifest package.json ile aynı sürümü taşımalı');
 assert.equal(versionCompare(shellPkg.version, pkg.version), 0, 'Android kabuğu web sürümüyle aynı olmalı');
-if (apkMeta) assert.equal(versionCompare(apkMeta.version, pkg.version), 0, 'Android APK’si web sürümüyle aynı olmalı');
 assert.equal(shellPkg.version, androidVersionName, 'Android package sürümü Gradle native sürümüyle eşleşmeli');
 if (apkMeta) {
-  assert.equal(apkMeta.version, androidVersionName, 'APK metadata sürümü Android native sürümüyle eşleşmeli');
-  assert.equal(apkMeta.versionCode, androidVersionCode, 'APK metadata versionCode’u Gradle native versionCode ile eşleşmeli');
   assert.equal(apkMeta.sizeBytes, fs.statSync(apkPath).size, 'APK metadata boyutu binary ile aynı olmalı');
   assert.equal(apkMeta.sha256, crypto.createHash('sha256').update(fs.readFileSync(apkPath)).digest('hex'), 'APK metadata hash’i binary ile aynı olmalı');
+  if (apkMatchesCurrent) {
+    assert.equal(versionCompare(apkMeta.version, pkg.version), 0, 'güncel Android APK’si web sürümüyle aynı olmalı');
+    assert.equal(apkMeta.version, androidVersionName, 'güncel APK metadata sürümü Android native sürümüyle eşleşmeli');
+    assert.equal(apkMeta.versionCode, androidVersionCode, 'güncel APK metadata versionCode’u Gradle native versionCode ile eşleşmeli');
+    assert.equal(apkMeta.surum, apkMeta.version, 'indirme menüsü güncel APK sürümünü gösterebilmeli');
+    assert.equal(Number(apkMeta.kod), Number(apkMeta.versionCode), 'indirme menüsü güncel APK build kodunu alabilmeli');
+    assert.equal(Number(apkMeta.boyut), Number(apkMeta.sizeBytes), 'indirme menüsü APK boyutunu gösterebilmeli');
+  }
 }
 const assetLinks = readJson('.well-known/assetlinks.json');
 assert.ok(assetLinks.some((entry) => entry.target?.sha256_cert_fingerprints?.some((fp) => fp.replaceAll(':', '').toLowerCase() === '7dde5a8e4ab8e285fc5fae67987279c0da81f842ef6b37c9c9346c09991512de')), 'yeni release APK fingerprint’i App Links allowlistesinde olmalı');
@@ -54,7 +60,7 @@ const runBuild = () => execFileSync(process.execPath, ['scripts/paketle.mjs'], {
 runBuild();
 const first = readJson('surum.json');
 const firstHash = first.paket;
-assert.equal(fs.existsSync(path.join(root, 'dist/uygulama/indir/apk.json')), Boolean(apkMeta), 'sürümü doğrulanmamış APK web production çıktısına taşınmamalı');
+assert.equal(fs.existsSync(path.join(root, 'dist/uygulama/indir/apk.json')), apkMatchesCurrent, 'eski sürümlü APK metadata’sı web production çıktısına taşınmamalı');
 assert.match(fs.readFileSync(path.join(root, 'dist/tomye/index.html'), 'utf8'), /Tömye — TentiFor/);
 assert.match(fs.readFileSync(path.join(root, 'dist/harita/index.html'), 'utf8'), /Harita — TentiFor/, 'doğrudan harita adresi gerçek bir app-shell route olarak üretilmeli');
 assert.ok(fs.existsSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql')), '6.3 discovery migration eksik');
