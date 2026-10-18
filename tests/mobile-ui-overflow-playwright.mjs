@@ -71,6 +71,16 @@ async function measureRoute(width, route) {
       assert.equal(layout.terminalInScrollableNav, true, 'terminal CTA must be inside the horizontally scrollable navigation');
       assert.ok(layout.navClientWidth <= width && layout.navScrollWidth >= layout.navClientWidth, 'navigation overflow must remain within its own scroller');
     }
+    if (width === 375 || width === 768) {
+      await page.locator('[data-tf654-tools-toggle]').click();
+      const toolsPanel = await page.locator('#ustAraclarPanel').evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        return { left: box.left, right: box.right, viewport: innerWidth, overflow: document.documentElement.scrollWidth };
+      });
+      assert.ok(toolsPanel.left >= -1 && toolsPanel.right <= width + 1, `Araçlar paneli ${width}px viewport içine sığmalı: ${JSON.stringify(toolsPanel)}`);
+      assert.equal(toolsPanel.overflow, width, `Araçlar paneli ${width}px sayfa taşması oluşturmamalı: ${JSON.stringify(toolsPanel)}`);
+      await page.locator('[data-tf654-tools-toggle]').click();
+    }
     await page.close();
     return layout;
   } catch (error) {
