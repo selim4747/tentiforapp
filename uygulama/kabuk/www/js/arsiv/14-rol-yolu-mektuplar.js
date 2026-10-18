@@ -25,8 +25,16 @@ function turCiz() {
       turBitir();
     });
     const host = document.querySelector(".hero .ana-tomye .hero-eylem");
-    if (host) host.insertAdjacentElement("afterend", dialog);
-    else document.body.appendChild(dialog);
+    if (host) host.insertAdjacentElement("beforebegin", dialog);
+    else {
+      document.body.appendChild(dialog);
+      const observer = new MutationObserver(function() {
+        if (!dialog.isConnected) { observer.disconnect(); return; }
+        const readyHost = document.querySelector(".hero .ana-tomye .hero-eylem");
+        if (readyHost) { readyHost.insertAdjacentElement("beforebegin", dialog); observer.disconnect(); }
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+    }
   }
 
   const adim = adimlar[turAdim];
@@ -48,6 +56,6 @@ function turCiz() {
     else dialog.setAttribute("open", "");
   }
   const sonraki = dialog.querySelector('[data-tur="ileri"]');
-  if (sonraki) sonraki.focus();
+  if (sonraki) { try { sonraki.focus({ preventScroll: true }); } catch { sonraki.focus(); } }
 }
 document.addEventListener("click",function(e){if(e.target.closest("[data-seri]")){seriOdulAl();return}if(e.target.closest("[data-bulmaca]")){const n=document.querySelector("#bulmacaGiris");n&&bulmacaCevapla(n.value);return}const i=e.target.closest("[data-tur]");if(i){if(i.dataset.tur==="atla"){turBitir();return}const n=(veri.tur||[])[turAdim];if(turAdim++,turAdim>=(veri.tur||[]).length){turBitir(),n&&n.hedef&&(location.hash=n.hedef);return}turCiz()}}),document.addEventListener("keydown",function(e){if(e.key==="Escape"&&document.querySelector("#turIpucu")){e.preventDefault();turBitir();return}e.key==="Enter"&&document.activeElement&&document.activeElement.id==="bulmacaGiris"&&bulmacaCevapla(document.activeElement.value)});

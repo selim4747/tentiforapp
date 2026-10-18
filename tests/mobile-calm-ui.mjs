@@ -27,6 +27,7 @@ for (const [name, engine] of engines) {
     await page.waitForSelector('#altMenu', { timeout: 15000 });
     await page.waitForSelector('#anaEvrenler .ana-evren-sar .ana-yildiz', { timeout: 15000 });
     await page.waitForSelector('#tfDockTetik', { timeout: 15000 });
+    await page.waitForFunction(() => document.querySelector('#turIpucu')?.nextElementSibling?.matches('.hero-eylem'), { timeout: 15000 });
 
     const mobile = await page.evaluate(() => {
       const hero = document.querySelector('.ana-tomye');
