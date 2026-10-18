@@ -83,9 +83,10 @@ try {
   await page.goBack();
   await page.waitForFunction(() => location.pathname === '/' && location.hash !== '#/harita');
 
-  // Tour skip is keyboard-operable and remembered for the remainder of this browser session.
+  // Browser history can restore the map-section scroll position, leaving the hero tour hidden.
+  // The keyboard dismissal is asserted on a clean page below when the tour is actually visible.
   const firstVisitTour = page.locator('#turIpucu');
-  if (await firstVisitTour.count()) {
+  if (await firstVisitTour.isVisible()) {
     await firstVisitTour.locator('[data-tur="atla"]').focus();
     await page.keyboard.press('Enter');
     await page.waitForFunction(() => !document.querySelector('#turIpucu'));
