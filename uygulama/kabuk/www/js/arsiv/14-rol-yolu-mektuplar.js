@@ -24,7 +24,9 @@ function turCiz() {
       event.preventDefault();
       turBitir();
     });
-    document.body.appendChild(dialog);
+    const host = document.querySelector(".hero .ana-tomye .hero-eylem");
+    if (host) host.insertAdjacentElement("afterend", dialog);
+    else document.body.appendChild(dialog);
   }
 
   const adim = adimlar[turAdim];

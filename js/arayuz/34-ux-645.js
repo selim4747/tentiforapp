@@ -83,12 +83,91 @@
     var card = document.querySelector('.tf-esitleme-yeni, .hesap-esit'); if (!card || card.querySelector('[data-tf645-conflict]')) return;
     var button = document.createElement('button'); button.type = 'button'; button.className = 'dugme dugme-sade'; button.dataset.tf645Conflict = '1'; button.textContent = 'Çakışmayı incele'; card.appendChild(button);
   }
-  function refresh() { addReadingActions(); enhanceSearch(); syncConflict(); devices().catch(function () {}); }
+  function enhanceSearchShortcut() {
+    var nav = document.querySelector('#gezinme'); if (!nav) return;
+    var button = nav.querySelector('#komutTetikBtn');
+    if (!button) {
+      button = document.createElement('button'); button.type = 'button'; button.id = 'komutTetikBtn'; button.className = 'gez-btn gez-ara';
+      button.setAttribute('aria-label', 'Hızlı arama'); button.title = 'Hızlı ara · Ctrl/⌘ K';
+      button.innerHTML = '<span aria-hidden="true">⌕</span> <span>Ara</span>';
+      var contents = nav.querySelector('#icindekilerBtn');
+      if (contents) contents.insertAdjacentElement('afterend', button); else nav.insertBefore(button, nav.firstChild);
+    }
+  }
+  function enhanceArchiveSearch() {
+    var section = document.querySelector('#arsiv'), grid = document.querySelector('#karakterIzgara');
+    var heading = section && section.querySelector('.bolum-basi'); if (!heading || !grid) return;
+    var wrap = document.querySelector('#tf654ArchiveSearch');
+    if (!wrap) {
+      wrap = document.createElement('div'); wrap.id = 'tf654ArchiveSearch'; wrap.className = 'tf654-archive-search';
+      wrap.innerHTML = '<label for="tf654CharacterQuery">Karakter ara</label><input id="tf654CharacterQuery" type="search" autocomplete="off" spellcheck="false" placeholder="Ad, unvan veya kısa tanım"><span class="tf654-archive-count" role="status" aria-live="polite"></span>';
+      heading.insertAdjacentElement('afterend', wrap);
+    }
+    var input = wrap.querySelector('input'), status = wrap.querySelector('.tf654-archive-count');
+    if (!input) return;
+    function filterCards() {
+      var query = input.value.trim().toLocaleLowerCase('tr-TR');
+      var cards = Array.prototype.slice.call(grid.querySelectorAll('.kart[data-karakter]'));
+      var visible = 0;
+      cards.forEach(function (card) { var match = !query || (card.textContent || '').toLocaleLowerCase('tr-TR').indexOf(query) !== -1; card.hidden = !match; if (match) visible++; });
+      if (status) status.textContent = query ? (visible ? visible + ' / ' + cards.length + ' eşleşme' : 'Eşleşme bulunamadı') : cards.length + ' karakter';
+    }
+    if (input.dataset.tf654Ready !== '1') { input.dataset.tf654Ready = '1'; input.addEventListener('input', filterCards); }
+    filterCards();
+  }
+  function enhanceCharacterModal() {
+    var modal = document.querySelector('#perde .pencere');
+    if (!modal || !modal.querySelector('[data-oku^="kar:"]')) return;
+    var badge = modal.querySelector('.rozet-kutu'); if (!badge) return;
+    modal.classList.add('tf654-character-modal');
+    var list = badge.querySelector('.rozet-liste');
+    if (list && !list.closest('.tf654-rozet-list-toggle')) {
+      var detail = document.createElement('details'); detail.className = 'tf654-rozet-list-toggle';
+      var summary = document.createElement('summary'); summary.textContent = 'Okuma listesi · ' + list.querySelectorAll('li').length + ' kutu';
+      detail.appendChild(summary); list.parentNode.insertBefore(detail, list); detail.appendChild(list);
+      var hasOpenState = Object.prototype.hasOwnProperty.call(modal.dataset, 'tf654BadgeOpen');
+      detail.open = hasOpenState ? modal.dataset.tf654BadgeOpen === '1' : list.querySelectorAll('li').length <= 4;
+      detail.addEventListener('toggle', function () { modal.dataset.tf654BadgeOpen = detail.open ? '1' : '0'; });
+      modal.dataset.tf654BadgeOpen = detail.open ? '1' : '0';
+    }
+    if (list) list.querySelectorAll('li').forEach(function (row) { row.classList.add('tf654-badge-row'); var link = row.querySelector('a'); if (link) link.classList.add('tf654-badge-link'); });
+    var bar = modal.querySelector('.tf654-modal-tools');
+    if (!bar) {
+      bar = document.createElement('div'); bar.className = 'tf654-modal-tools'; bar.setAttribute('role', 'toolbar'); bar.setAttribute('aria-label', 'Karakter penceresi araçları');
+      var back = modal.querySelector('.pencere-geri'), close = modal.querySelector('.pencere-kapat');
+      if (back) bar.appendChild(back);
+      var progress = document.createElement('span'); progress.className = 'tf654-modal-progress'; progress.dataset.tf654Progress = '1'; progress.setAttribute('role', 'status'); progress.setAttribute('aria-live', 'polite'); bar.appendChild(progress);
+      var jump = document.createElement('button'); jump.type = 'button'; jump.className = 'tf654-modal-jump'; jump.dataset.tf654RozetJump = '1'; jump.textContent = 'Kutular'; jump.setAttribute('aria-label', 'Okuma kutularını göster'); bar.appendChild(jump);
+      if (close) bar.appendChild(close);
+      modal.insertBefore(bar, modal.firstChild);
+    }
+    var source = badge.querySelector('.oyun-etiket'), progressText = bar.querySelector('[data-tf654-progress]');
+    var nextText = source ? source.textContent.trim() : '';
+    if (progressText && nextText && progressText.textContent !== nextText) progressText.textContent = nextText;
+  }
+  function watchDynamicUi() {
+    var grid = document.querySelector('#karakterIzgara');
+    if (grid && grid.dataset.tf654Observed !== '1' && typeof MutationObserver === 'function') {
+      grid.dataset.tf654Observed = '1'; new MutationObserver(enhanceArchiveSearch).observe(grid, { childList: true, subtree: true });
+    }
+    var host = document.querySelector('#perde');
+    if (host && host.dataset.tf654Observed !== '1' && typeof MutationObserver === 'function') {
+      host.dataset.tf654Observed = '1'; new MutationObserver(enhanceCharacterModal).observe(host, { childList: true, subtree: true });
+    }
+  }
+  function refresh() { addReadingActions(); enhanceSearch(); enhanceSearchShortcut(); enhanceArchiveSearch(); enhanceCharacterModal(); watchDynamicUi(); syncConflict(); devices().catch(function () {}); }
 
   function boot() { load(); refresh(); restorePosition(); if (!deviceTimer) deviceTimer = setInterval(function () { devices().catch(function () {}); }, 5 * 60 * 1000); }
   window.addEventListener('scroll', function () { clearTimeout(scrollTimer); scrollTimer = setTimeout(readingPosition, 600); }, { passive: true });
-  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-tf645-share-reading]'); if (b) { shareReading(b); return; } if (e.target.closest && e.target.closest('[data-tf645-conflict]')) { conflictDialog(); return; } if (e.target.closest && e.target.closest('[data-tf645-close]')) { var p = document.querySelector('#perde'); if (p) { p.hidden = true; p.innerHTML = ''; } } });
+  document.addEventListener('click', function (e) {
+    var tools = document.querySelector('#ustAraclar'), toggle = e.target.closest && e.target.closest('[data-tf654-tools-toggle]');
+    if (toggle && tools) { var open = !tools.classList.contains('acik'); tools.classList.toggle('acik', open); toggle.setAttribute('aria-expanded', String(open)); return; }
+    if (tools && !e.target.closest('#ustAraclar')) { tools.classList.remove('acik'); var toolToggle = tools.querySelector('[data-tf654-tools-toggle]'); if (toolToggle) toolToggle.setAttribute('aria-expanded', 'false'); }
+    else if (tools && e.target.closest('#ustAraclarPanel')) { tools.classList.remove('acik'); var panelToggle = tools.querySelector('[data-tf654-tools-toggle]'); if (panelToggle) panelToggle.setAttribute('aria-expanded', 'false'); }
+    if (e.target.closest && e.target.closest('[data-tf654-rozet-jump]')) { var pane = document.querySelector('#perde .pencere'), target = pane && pane.querySelector('.tf654-rozet-list-toggle'); if (target) { target.open = true; if (pane) pane.dataset.tf654BadgeOpen = '1'; if (typeof target.scrollIntoView === 'function') target.scrollIntoView({ block: 'start', behavior: 'smooth' }); } return; }
+    var b = e.target.closest && e.target.closest('[data-tf645-share-reading]'); if (b) { shareReading(b); return; } if (e.target.closest && e.target.closest('[data-tf645-conflict]')) { conflictDialog(); return; } if (e.target.closest && e.target.closest('[data-tf645-close]')) { var p = document.querySelector('#perde'); if (p) { p.hidden = true; p.innerHTML = ''; } }
+  });
   document.addEventListener('keydown', keyboardSearch);
   document.addEventListener('DOMContentLoaded', boot); document.addEventListener('tf-veri-hazir', refresh); document.addEventListener('tf-hesap-hazir', refresh); window.addEventListener('hashchange', function () { setTimeout(function () { refresh(); restorePosition(); }, 120); });
-  window.tf645 = { refresh: refresh, devices: devices, version: '6.5.3' };
+  window.tf645 = { refresh: refresh, devices: devices, version: '6.5.4' };
 }());

@@ -1184,3 +1184,42 @@ textarea:focus,
     transition: none;
   }
 }
+
+/* TentiFor 6.5.4 — kullanıcı arayüzü iyileştirmeleri */
+.tur-ipucu{position:relative;inset:auto;display:block;width:min(420px,100%);max-width:100%;margin:16px 0 0;padding:12px 14px;z-index:auto}
+.tur-kapat{min-width:44px;min-height:44px;border-radius:10px}
+.gez-ara{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:0 12px;flex:0 0 auto}
+.ust-araclar{position:relative;display:flex;align-items:center;flex:0 0 auto}
+.ust-araclar-trigger{display:none}
+.ust-araclar-panel{display:flex;align-items:center;gap:6px}
+.tf654-home-week{margin:12px 0}
+.tf654-home-week>summary{display:flex;align-items:center;min-height:48px;padding:10px 14px;border:1px solid var(--buz);border-radius:10px;background:var(--beyaz);color:var(--deniz);font-weight:600;cursor:pointer}
+.tf654-home-week[open]>summary{border-radius:10px 10px 0 0}
+.tf654-home-week>#ilkHaftaAlan{padding:10px 0}
+.tf654-archive-search{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;max-width:540px;margin:0 0 18px}
+.tf654-archive-search label{font-size:13px;font-weight:600;color:var(--murekkep-2)}
+.tf654-archive-search input{width:100%;min-height:48px;padding:10px 14px;border:1px solid var(--sig);border-radius:10px;background:var(--beyaz);color:var(--murekkep);font:inherit;font-size:16px;box-sizing:border-box}
+.tf654-archive-search input:focus-visible{outline:3px solid var(--sig);outline-offset:2px}
+.tf654-archive-count{min-height:1.2em;font-size:12px;color:var(--murekkep-2)}
+#karakterIzgara .kart[hidden]{display:none!important}
+#perde .tf654-modal-tools{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;min-height:52px;margin:-10px -4px 14px;padding:4px 0;background:var(--beyaz);border-bottom:1px solid var(--buz)}
+.tf654-modal-progress{flex:1;min-width:0;overflow:hidden;color:var(--murekkep-2);font-size:12px;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+.tf654-modal-jump{flex:0 0 auto;min-width:64px;min-height:44px;padding:6px 10px;border:1px solid var(--sig);border-radius:10px;background:var(--kar);color:var(--deniz);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.tf654-modal-tools .pencere-kapat,.tf654-modal-tools .pencere-geri{position:static;inset:auto;flex:0 0 auto;min-width:44px;min-height:44px;width:44px;height:44px;margin:0;padding:0;border-radius:10px}
+.tf654-modal-tools .pencere-kapat{display:grid;place-items:center}
+.tf654-rozet-list-toggle{margin:12px 0}
+.tf654-rozet-list-toggle>summary{display:flex;align-items:center;min-height:48px;padding:8px 12px;border:1px solid var(--buz);border-radius:10px;background:var(--kar);color:var(--deniz);font-weight:600;cursor:pointer;scroll-margin-top:72px}
+.tf654-rozet-list-toggle[open]>summary{border-radius:10px 10px 0 0}
+.tf654-badge-row{min-height:44px;margin:3px 0;line-height:1.5}
+.tf654-badge-link{display:inline-flex;align-items:center;min-height:44px;max-width:100%;padding:6px 8px;border-radius:8px;box-sizing:border-box;line-height:1.45;text-underline-offset:3px}
+.tf654-badge-link:focus-visible,.tf654-modal-jump:focus-visible,.ust-araclar-trigger:focus-visible{outline:3px solid var(--sig);outline-offset:2px}
+@media(max-width:720px){
+  .ust-araclar{display:block}
+  .ust-araclar-trigger{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:0 10px;border:1px solid var(--buz);border-radius:10px;background:var(--beyaz);color:var(--murekkep);font:inherit;font-size:13px;cursor:pointer}
+  .ust-araclar-panel{display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:120;width:min(220px,calc(100vw - 24px));padding:8px;border:1px solid var(--sig);border-radius:12px;background:var(--beyaz);box-shadow:0 10px 28px #0a0f1433}
+  .ust-araclar.acik .ust-araclar-panel{display:grid;gap:6px}
+  .ust-araclar-panel .ust-ikon{width:100%;min-height:44px;justify-content:flex-start;padding:0 12px}
+  .tf654-modal-tools{gap:4px}
+  .tf654-modal-progress{font-size:11px}
+}
+@media(min-width:900px){#perde .tf654-character-modal{width:min(860px,calc(100vw - 48px));max-width:860px}}
