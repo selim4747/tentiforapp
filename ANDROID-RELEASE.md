@@ -2,14 +2,14 @@
 
 ## Güncel indirilebilir APK: 6.5.6 — debug imzalı
 
-`uygulama/indir/tentiforapp.apk` Android CI tarafından 6.5.6 kaynaklarından derlenmiştir; indirme düğmesinin kullandığı dosya budur. Build run: [39152075406](https://github.com/selim4747/tentiforapp/actions/runs/39152075406).
+`uygulama/indir/tentiforapp.apk` Android CI tarafından 6.5.6 kaynaklarından derlenmiştir; indirme düğmesinin kullandığı dosya budur. Build run: [39153123384](https://github.com/selim4747/tentiforapp/actions/runs/39153123384).
 
 - Package: `dev.pages.tentiforapp`
 - Version code: `6505`
 - Version name: `6.5.6`
-- APK size: `8,952,895` bytes
-- APK SHA-256: `db95017bedbf81702f2c3222091c8f467c220f80ca5ff1bb74a2477675c860ba`
-- Signing: `Android Debug`; certificate SHA-256: `0C:95:3D:61:ED:41:D0:78:9A:A9:C5:A8:DD:10:8B:01:2E:F4:8B:F2:B9:F3:62:33:AA:8D:93:CD:A1:86:05:E6`
+- APK size: `8,953,122` bytes
+- APK SHA-256: `2f6115ace6ea5add2f1f1b70b247dbca9bdca90de1ca491ecf83703f7bad2300`
+- Signing: `Android Debug`; certificate SHA-256: `42:28:FB:C8:37:E9:44:9F:B0:1E:6A:9A:3D:25:E8:FE:9E:D8:60:B7:2E:0E:CC:90:EE:2C:5A:38:65:79:7C:4A`
 
 Bu APK kalıcı release keystore ile imzalı değildir. Farklı bir imzayla kurulu eski uygulamanın üzerine güncelleme Android tarafından reddedilebilir. Uygulamayı kaldırıp yeniden kurmak cihazdaki yerel verileri silebilir; önce yedek alın. Aynı sertifikayla imzalı güncellemeler için kalıcı release keystore yapılandırılmalıdır.
 
