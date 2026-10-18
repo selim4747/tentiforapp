@@ -169,5 +169,5 @@
   });
   document.addEventListener('keydown', keyboardSearch);
   document.addEventListener('DOMContentLoaded', boot); document.addEventListener('tf-veri-hazir', refresh); document.addEventListener('tf-hesap-hazir', refresh); window.addEventListener('hashchange', function () { setTimeout(function () { refresh(); restorePosition(); }, 120); });
-  window.tf645 = { refresh: refresh, devices: devices, version: '6.5.4' };
+  window.tf645 = { refresh: refresh, devices: devices, version: '6.5.5' };
 }());
