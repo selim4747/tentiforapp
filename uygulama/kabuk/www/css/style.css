@@ -1358,8 +1358,10 @@ textarea:focus,
     right: 0;
     z-index: 120;
     display: none;
+    box-sizing: border-box;
     width: min(220px, calc(100vw - 24px));
     max-width: calc(100vw - 24px);
+    overflow: hidden;
     padding: 8px;
     border: 1px solid var(--sig);
     border-radius: 12px;
@@ -1373,7 +1375,9 @@ textarea:focus,
   }
 
   .ust-araclar-panel .ust-ikon {
+    box-sizing: border-box;
     width: 100%;
+    min-width: 0;
     min-height: 44px;
     justify-content: flex-start;
     padding: 0 12px;
