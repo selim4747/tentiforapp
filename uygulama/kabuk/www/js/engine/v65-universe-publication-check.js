@@ -1,4 +1,4 @@
-/* TentiforApp 6.5.3 — evren yayın/önizleme öncesi kalite denetimi. */
+/* TentiforApp 6.5.4 — evren yayın/önizleme öncesi kalite denetimi. */
 (function () {
   'use strict';
   function list(value) { return Array.isArray(value) ? value : []; }

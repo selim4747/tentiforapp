@@ -103,6 +103,44 @@ routeBundle = replaceRouteBundleFragment(
   'function turGerekli(){return !document.documentElement.hasAttribute("data-standalone-admin")&&kayitOku(TUR_ANAHTAR)!=="bitti"}function turBaslat(){if(document.documentElement.hasAttribute("data-standalone-admin"))return;turAdim=0,turCiz()}',
   'admin onboarding guard'
 );
+function functionRange(text, signature, label) {
+  const start = text.indexOf(signature);
+  if (start < 0 || text.indexOf(signature, start + signature.length) >= 0) {
+    throw new Error(`${label} fonksiyonu tekil değil; paket üretimi durduruldu.`);
+  }
+  const opening = text.indexOf('{', start + signature.length);
+  if (opening < 0) throw new Error(`${label} fonksiyon başlangıcı bulunamadı.`);
+  let depth = 0;
+  let quote = '';
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = false;
+  for (let i = opening; i < text.length; i++) {
+    const char = text[i];
+    const next = text[i + 1];
+    if (lineComment) { if (char === '\n') lineComment = false; continue; }
+    if (blockComment) { if (char === '*' && next === '/') { blockComment = false; i++; } continue; }
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === quote) quote = '';
+      continue;
+    }
+    if (char === '/' && next === '/') { lineComment = true; i++; continue; }
+    if (char === '/' && next === '*') { blockComment = true; i++; continue; }
+    if (char === '"' || char === "'" || char === '`') { quote = char; continue; }
+    if (char === '{') depth++;
+    else if (char === '}' && --depth === 0) return { start, end: i + 1 };
+  }
+  throw new Error(`${label} fonksiyonu kapanmıyor; paket üretimi durduruldu.`);
+}
+const tourFunction = 'function turCiz()';
+const sourceTourRange = functionRange(tourSource, tourFunction, 'Onboarding kaynak');
+const bundleTourRange = functionRange(routeBundle, tourFunction, 'Onboarding paket');
+const sourceTour = tourSource.slice(sourceTourRange.start, sourceTourRange.end);
+if (routeBundle.slice(bundleTourRange.start, bundleTourRange.end) !== sourceTour) {
+  routeBundle = routeBundle.slice(0, bundleTourRange.start) + sourceTour + routeBundle.slice(bundleTourRange.end);
+}
 // Keep both path directions identical to the canonical source. The older
 // fragment patch above only updated yoldanRota(), leaving rotadanYol() stale.
 const routeStart = 'function yoldanRota(yol)';
