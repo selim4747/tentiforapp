@@ -1226,3 +1226,27 @@ textarea:focus,
   .tf654-modal-progress{font-size:11px}
 }
 @media(min-width:900px){#perde .tf654-character-modal{width:min(860px,calc(100vw - 48px));max-width:860px}}
+
+
+/* 6.5.5 mobile overflow hardening */
+@media (max-width: 760px) {
+  .ust { min-width: 0; overflow: visible; }
+  .ust > .marka { min-width: 0; flex: 1 1 auto; overflow: hidden; }
+  .ust > .marka .marka-ad { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ust > .cuzdan-rozet { flex: 0 1 8.5rem; min-width: 0; max-width: 8.5rem; overflow: hidden; }
+  .ust-araclar { flex: 0 0 auto; min-width: 0; }
+  .ust-araclar-trigger { min-width: 0; width: auto; max-width: 5.5rem; padding-inline: 8px; white-space: nowrap; }
+  .ust-araclar-panel { right: 0; max-width: calc(100vw - 24px); }
+  .ust > .kod-btn { flex: 0 0 auto; min-width: 0; max-width: 5.25rem; padding-inline: 9px; white-space: nowrap; }
+  .oyun-sekme, .filtre, .oyun-sira, .evh-arac { max-width: 100%; min-width: 0; }
+  .oyun-sekme { overflow-x: auto; overscroll-behavior-inline: contain; }
+  .oyun-sira > *, .evh-arac > * { min-width: 0; max-width: 100%; }
+  .evh-kutu { width: 100%; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+  .evh-svg { width: 100%; max-width: 100%; height: auto; min-width: 0; }
+}
+@media (max-width: 390px) {
+  .ust { gap: 5px; padding-inline: 8px; }
+  .ust > .cuzdan-rozet { max-width: 7rem; }
+  .ust-araclar-trigger { font-size: 12px; padding-inline: 6px; }
+  .ust > .kod-btn { font-size: 12px; padding-inline: 7px; }
+}

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "routes": [
+    {"path": "/", "title": "TentiFor"},
+    {"path": "/sen/", "title": "Sen — TentiFor"},
+    {"path": "/arsiv/", "title": "Arşiv — TentiFor"},
+    {"path": "/atolye/", "title": "Evren Atölyesi — TentiFor"},
+    {"path": "/oyunlar/", "title": "Oyunlar — TentiFor"},
+    {"path": "/harita/", "title": "Harita — TentiFor"},
+    {"path": "/okuma/", "title": "Okuma — TentiFor"},
+    {"path": "/dunya/", "title": "Dünya — TentiFor"}
+  ]
+}
