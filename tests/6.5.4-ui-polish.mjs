@@ -69,7 +69,7 @@ assert.equal(window.document.querySelector('.tf654-rozet-list-toggle').open, tru
 assert.match(index, /class="tf654-home-week"[\s\S]*?<summary>7 günlük okuma yolu<\/summary>/);
 assert.match(index, /class="ust-araclar-trigger"[\s\S]*?id="rastgeleBtn"[\s\S]*?id="btnTerminalUst"/);
 assert.match(tour, /host\.insertAdjacentElement\("beforebegin", dialog\)/, 'ilk tur ana CTA’dan önce yerleştirilmeli');
-assert.match(css, /\.tur-ipucu\{position:relative/);
+assert.match(css, /\.tur-ipucu\{position:fixed;top:calc\(72px \+ env\(safe-area-inset-top, 0px\)\)/, 'mobil tur bottom nav üzerinde sabitlenmeli');
 assert.match(css, /\.tf654-badge-link\{[^}]*min-height:44px/);
 assert.match(css, /#perde \.tf654-modal-tools\{position:sticky/);
 
