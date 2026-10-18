@@ -1186,7 +1186,7 @@ textarea:focus,
 }
 
 /* TentiFor 6.5.4 — kullanıcı arayüzü iyileştirmeleri */
-.tur-ipucu{position:relative;inset:auto;display:block;width:min(420px,100%);max-width:100%;margin:16px 0 0;padding:12px 14px;z-index:auto}
+.tur-ipucu{display:block;width:min(420px,100%);max-width:100%;margin:16px 0 0;padding:12px 14px}
 .tur-kapat{min-width:44px;min-height:44px;border-radius:10px}
 .gez-ara{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:0 12px;flex:0 0 auto}
 .ust-araclar{position:relative;display:flex;align-items:center;flex:0 0 auto}
@@ -1214,6 +1214,9 @@ textarea:focus,
 .tf654-badge-link{display:inline-flex;align-items:center;min-height:44px;max-width:100%;padding:6px 8px;border-radius:8px;box-sizing:border-box;line-height:1.45;text-underline-offset:3px}
 .tf654-badge-link:focus-visible,.tf654-modal-jump:focus-visible,.ust-araclar-trigger:focus-visible{outline:3px solid var(--sig);outline-offset:2px}
 @media(max-width:720px){
+  .hero:has(#turIpucu),.ana-tomye:has(#turIpucu){content-visibility:visible}
+  .hero-ana-eylem{scroll-margin-bottom:calc(64px + env(safe-area-inset-bottom, 0px) + 12px)}
+  .tur-ipucu{position:fixed;top:max(calc(72px + env(safe-area-inset-top, 0px)),calc(100dvh - min(54vh, 360px) - 64px - env(safe-area-inset-bottom, 0px) - 12px));right:14px;bottom:auto;left:14px;width:auto;max-width:none;margin:0;z-index:110}
   .ust-araclar{display:block}
   .ust-araclar-trigger{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:0 10px;border:1px solid var(--buz);border-radius:10px;background:var(--beyaz);color:var(--murekkep);font:inherit;font-size:13px;cursor:pointer}
   .ust-araclar-panel{display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:120;width:min(220px,calc(100vw - 24px));padding:8px;border:1px solid var(--sig);border-radius:12px;background:var(--beyaz);box-shadow:0 10px 28px #0a0f1433}

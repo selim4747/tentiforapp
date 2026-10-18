@@ -13,6 +13,8 @@ function turCiz() {
     return;
   }
 
+  const tourHost = document.querySelector(".hero .ana-tomye .hero-eylem");
+  if (!tourHost || tourHost.getBoundingClientRect().width === 0 || tourHost.getBoundingClientRect().height === 0) return;
   let dialog = document.querySelector("#turIpucu");
   const yeni = !dialog;
   if (yeni) {
@@ -24,7 +26,7 @@ function turCiz() {
       event.preventDefault();
       turBitir();
     });
-    const host = document.querySelector(".hero .ana-tomye .hero-eylem");
+    const host = tourHost;
     if (host) host.insertAdjacentElement("beforebegin", dialog);
     else {
       document.body.appendChild(dialog);
