@@ -9,7 +9,7 @@ export default [
     ]
   },
   {
-    files: ['server.js', 'scripts/**/*.mjs', 'tests/**/*.mjs', 'js/**/*.js'],
+    files: ['server.js', 'scripts/**/*.mjs', 'tests/**/*.mjs', 'js/**/*.js', 'worker/**/*.js', 'functions/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

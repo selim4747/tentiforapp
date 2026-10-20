@@ -3,7 +3,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
 const root = process.cwd();
-const roots = ['server.js', 'scripts', 'tests', 'js'];
+const roots = ['server.js', 'scripts', 'tests', 'js', 'worker', 'functions'];
 const skip = new Set(['js/vendor']);
 const files = [];
 
