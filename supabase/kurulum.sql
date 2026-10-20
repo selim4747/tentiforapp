@@ -5310,7 +5310,7 @@ revoke all on function public.evren_gorsel_varlik_oku(text) from public;
 grant execute on function public.evren_gorsel_varlik_oku(text) to anon, authenticated;
 
 create or replace function public.kurulum_surumu() returns text
-language sql stable security definer set search_path = '' as $$ select '6.5.0'::text $$;
+language sql stable security definer set search_path = '' as $$ select '6.6.1'::text $$;
 revoke all on function public.kurulum_surumu() from public;
 grant execute on function public.kurulum_surumu() to anon, authenticated;
 notify pgrst, 'reload schema';

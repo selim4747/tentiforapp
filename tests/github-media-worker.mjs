@@ -114,7 +114,7 @@ try {
   assert.equal(JSON.parse(save.init.body).p_saydamlik, 0);
   assert.ok(requests.some((item) => item.url.includes('api.github.com/repos/selim4747/tentiforapp-media/releases')));
 
-  // Deleting clears Supabase metadata and then deletes the corresponding private asset.
+  // Deleting removes the private asset before clearing Supabase metadata.
   let deletedAsset = false;
   globalThis.fetch = async (url, init = {}) => {
     const value = String(url);
@@ -127,6 +127,20 @@ try {
   assert.equal(response.status, 200);
   assert.equal((await response.json()).cleanup, 'done');
   assert.equal(deletedAsset, true);
+
+  // A failed GitHub cleanup must leave Supabase metadata intact for retry.
+  let metadataDeleteCalled = false;
+  globalThis.fetch = async (url, init = {}) => {
+    const value = String(url);
+    if (value.endsWith('/rest/v1/rpc/evren_gorsel_varlik_oku')) return Response.json({ durum: 'tamam', yol: `${userId}/world-retry/gh-315.png` });
+    if (value.endsWith('/rest/v1/rpc/evren_gorsel_varlik_sil')) { metadataDeleteCalled = true; return Response.json({ durum: 'tamam' }); }
+    if (value.endsWith('/releases/assets/315') && init.method === 'DELETE') return new Response('GitHub unavailable', { status: 503 });
+    throw new Error(`Unexpected request: ${value}`);
+  };
+  response = await handleRequest(request('DELETE', 'https://tentifor.com/api/evren-gorsel?evrenId=world-retry'), env, {});
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, 'image-cleanup-failed');
+  assert.equal(metadataDeleteCalled, false);
 
   // Disallowed browser origins cannot read image metadata.
   response = await handleRequest(request('OPTIONS', 'https://tentifor.com/api/evren-gorsel', { origin: 'https://attacker.example' }), env, {});

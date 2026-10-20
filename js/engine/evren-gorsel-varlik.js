@@ -228,7 +228,7 @@
       return apiHeaders().then(function (headers) { return fetch(apiUrl(context.evrenId), { method: 'POST', headers: headers, body: form, credentials: 'omit' }); }).then(function (response) {
         return response.json().catch(function () { return {}; }).then(function (data) {
           if (!response.ok) {
-            var messages = { 'login-required': 'Hesabınıza tekrar giriş yapın.', 'not-authorized': 'Bu evren için görsel yükleme izniniz yok.', 'image-too-large': 'Görsel 10 MB sınırını aşıyor.', 'unsupported-image': 'Yalnızca PNG, JPEG veya WebP görseller kabul edilir.', 'image-storage-not-configured': 'GitHub görsel deposu henüz yapılandırılmadı.' };
+            var messages = { 'login-required': 'Hesabınıza tekrar giriş yapın.', 'not-authorized': 'Bu evren için görsel yükleme izniniz yok.', 'image-too-large': 'Görsel 10 MB sınırını aşıyor.', 'unsupported-image': 'Yalnızca PNG, JPEG veya WebP görseller kabul edilir.', 'image-storage-not-configured': 'GitHub görsel deposu henüz yapılandırılmadı.', 'image-cleanup-failed': 'Görsel sunucudan güvenle kaldırılamadı; metadata korunuyor, lütfen tekrar deneyin.' };
             throw new Error(messages[data.error] || 'Görsel GitHub’a aktarılamadı.');
           }
           if (data.id && window.EVH_GORSEL_URL[data.id]) URL.revokeObjectURL(window.EVH_GORSEL_URL[data.id]);

@@ -293,15 +293,19 @@ async function deleteMapImage(request, env, cors) {
   let previous;
   try { previous = await supabaseRpc(env, 'evren_gorsel_varlik_oku', { p_evren_id: worldId }, token); }
   catch { return json({ error: 'not-authorized' }, 403, cors); }
+  const previousPath = previous && previous.durum === 'tamam' ? String(previous.yol || '') : '';
+  const githubPath = previousPath ? imagePath(previousPath.split('/')[0], worldId, previousPath) : null;
+  if (githubPath) {
+    let deleted;
+    try { deleted = await deleteReleaseAsset(env, githubPath.assetId); }
+    catch { deleted = false; }
+    if (!deleted) return json({ error: 'image-cleanup-failed' }, 503, cors);
+  }
   let removed;
   try { removed = await supabaseRpc(env, 'evren_gorsel_varlik_sil', { p_evren_id: worldId }, token); }
   catch { return json({ error: 'not-authorized' }, 403, cors); }
   if (!removed || removed.durum !== 'tamam') return json({ error: 'not-authorized' }, 403, cors);
-  const path = String(removed && removed.yol || previous && previous.durum === 'tamam' && previous.yol || '');
-  const githubPath = path ? imagePath(path.split('/')[0], worldId, path) : null;
-  let cleanup = 'none';
-  if (githubPath) cleanup = await deleteReleaseAsset(env, githubPath.assetId) ? 'done' : 'pending';
-  return json({ durum: 'tamam', cleanup }, 200, cors);
+  return json({ durum: 'tamam', cleanup: githubPath ? 'done' : 'none' }, 200, cors);
 }
 export async function handleRequest(request, env, ctx) {
   const url = new URL(request.url);
