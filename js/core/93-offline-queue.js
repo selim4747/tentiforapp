@@ -4,6 +4,16 @@
   var ANAHTAR = 'tf4_offline_queue_v1';
   var MAX = 100;
   var durum = { calisiyor: false };
+  function listeyiBirlestir(ilkIds, kalan) {
+    var anlik = oku(), sonuc = [], gorulen = {};
+    anlik.forEach(function (kayit) {
+      if (!ilkIds[kayit.id] && !gorulen[kayit.id]) { sonuc.push(kayit); gorulen[kayit.id] = true; }
+    });
+    kalan.forEach(function (kayit) {
+      if (!gorulen[kayit.id]) { sonuc.push(kayit); gorulen[kayit.id] = true; }
+    });
+    return sonuc;
+  }
   function oku() {
     try {
       var deger = JSON.parse(localStorage.getItem(ANAHTAR) || '[]');
@@ -44,7 +54,8 @@
     if (typeof transport !== 'function') throw new TypeError('transport function gerekli');
     if (durum.calisiyor) return { atlandi: true, kalan: oku().length };
     durum.calisiyor = true;
-    var simdi = Date.now(), liste = oku(), kalan = [], sonuc = { gonderildi: 0, bekledi: 0, basarisiz: 0 };
+    var simdi = Date.now(), liste = oku(), kalan = [], ilkIds = {}, sonuc = { gonderildi: 0, bekledi: 0, basarisiz: 0, kaliciHata: 0 };
+    liste.forEach(function (kayit) { ilkIds[kayit.id] = true; });
     try {
       for (var i = 0; i < liste.length; i += 1) {
         var kayit = liste[i];
@@ -60,11 +71,21 @@
             sonuc.gonderildi += 1;
           } catch (_) {
             kayit.deneme += 1;
-            kayit.sonraki = Date.now() + beklemeSuresi(kayit.deneme);
+            if (_.tfKalici) {
+              kayit.durum = 'kalici-hata';
+              kayit.hata = String(_.message || _).slice(0, 240);
+              kayit.sonraki = Number.MAX_SAFE_INTEGER;
+              sonuc.kaliciHata += 1;
+            } else {
+              kayit.sonraki = Date.now() + beklemeSuresi(kayit.deneme);
+            }
             kalan.push(kayit); sonuc.basarisiz += 1;
           }
         } else { kalan.push(kayit); sonuc.bekledi += 1; }
       }
+      /* RPC beklerken eklenen kayıtları silmemek için yalnızca ilk snapshot
+         kayıtlarının ACK durumunu uygula; yeni kayıtları mevcut kuyruktan koru. */
+      kalan = listeyiBirlestir(ilkIds, kalan);
       yaz(kalan);
       var tamamlanan = Object.assign(sonuc, { kalan: kalan.length });
       try { window.dispatchEvent(new CustomEvent('tf4-offline-sync-result', { detail: tamamlanan })); } catch (_) {}

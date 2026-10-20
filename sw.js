@@ -1,48 +1,48 @@
 /* TentiforApp servis çalışanı — sayfa ve veri önce ağdan (yavaşsa son kopya), sürümlü dosyalar önbellekten.
    Yeni bir sürüm yayınlanınca sayfalar kendiliğinden yenilenir; eski kopya yalnızca çevrimdışı ya da yavaş ağda kullanılır. */
-const ONBELLEK = "tentiforapp-3bec2f33f05c";
+const ONBELLEK = "tentiforapp-a0c2f5f302e5";
 /* Hesap kütüphanesi burada yok: yalnızca hesabı kullanan indirir (ilk kullanımda önbelleğe girer). */
 const ILK = [
   "./",
   "index.html",
   "favicon.ico",
   "css/style.css?v=c5820a42e3fc",
-  "css/v65.css?v=3bec2f33f05c",
+  "css/v65.css?v=a0c2f5f302e5",
   "veri.json",
-  "js/paket-1.js?v=3bec2f33f05c",
-  "js/paket-2.js?v=3bec2f33f05c",
-  "js/paket-3.js?v=3bec2f33f05c",
-  "js/paket-4.js?v=3bec2f33f05c",
+  "js/paket-1.js?v=a0c2f5f302e5",
+  "js/paket-2.js?v=a0c2f5f302e5",
+  "js/paket-3.js?v=a0c2f5f302e5",
+  "js/paket-4.js?v=a0c2f5f302e5",
   "manifest.webmanifest",
   "ikon/ikon-192.png",
   "yazitipi/karla-normal-400-latin.woff2",
-  "js/core/24-arsiv-mantigi.js?v=3bec2f33f05c",
-  "js/engine/user-universe-secret-identities.js?v=3bec2f33f05c",
-  "js/engine/88-v46-yenilikler.js?v=3bec2f33f05c",
-  "js/engine/92-v51-dashboard.js?v=3bec2f33f05c",
-  "js/core/93-offline-queue.js?v=3bec2f33f05c",
-  "js/core/94-cakisma.js?v=3bec2f33f05c",
-  "js/engine/91-v473-uyelik.js?v=3bec2f33f05c",
-  "js/engine/evren-harita-zaman-cizelgesi.js?v=3bec2f33f05c",
-  "js/engine/seo-meta.js?v=3bec2f33f05c",
-  "js/engine/free-universe-cleanup-6313.js?v=3bec2f33f05c",
-  "js/engine/profile-sharing-6313.js?v=3bec2f33f05c",
-  "js/engine/secure-sharing.js?v=3bec2f33f05c",
-  "js/core/54-v54-olgunlastirma.js?v=3bec2f33f05c",
-  "js/arayuz/32-ux-642.js?v=3bec2f33f05c",
-  "js/arayuz/33-ux-644.js?v=3bec2f33f05c",
-  "js/arayuz/34-ux-645.js?v=3bec2f33f05c",
-  "js/core/100-v60-native.js?v=3bec2f33f05c",
-  "js/core/110-v62-platform.js?v=3bec2f33f05c",
-  "js/core/120-mobil-ambiyans-uretim-aliskanlik.js?v=3bec2f33f05c",
-  "js/core/125-live-site-bootstrap.js?v=3bec2f33f05c",
+  "js/core/24-arsiv-mantigi.js?v=a0c2f5f302e5",
+  "js/engine/user-universe-secret-identities.js?v=a0c2f5f302e5",
+  "js/engine/88-v46-yenilikler.js?v=a0c2f5f302e5",
+  "js/engine/92-v51-dashboard.js?v=a0c2f5f302e5",
+  "js/core/93-offline-queue.js?v=a0c2f5f302e5",
+  "js/core/94-cakisma.js?v=a0c2f5f302e5",
+  "js/engine/91-v473-uyelik.js?v=a0c2f5f302e5",
+  "js/engine/evren-harita-zaman-cizelgesi.js?v=a0c2f5f302e5",
+  "js/engine/seo-meta.js?v=a0c2f5f302e5",
+  "js/engine/free-universe-cleanup-6313.js?v=a0c2f5f302e5",
+  "js/engine/profile-sharing-6313.js?v=a0c2f5f302e5",
+  "js/engine/secure-sharing.js?v=a0c2f5f302e5",
+  "js/core/54-v54-olgunlastirma.js?v=a0c2f5f302e5",
+  "js/arayuz/32-ux-642.js?v=a0c2f5f302e5",
+  "js/arayuz/33-ux-644.js?v=a0c2f5f302e5",
+  "js/arayuz/34-ux-645.js?v=a0c2f5f302e5",
+  "js/core/100-v60-native.js?v=a0c2f5f302e5",
+  "js/core/110-v62-platform.js?v=a0c2f5f302e5",
+  "js/core/120-mobil-ambiyans-uretim-aliskanlik.js?v=a0c2f5f302e5",
+  "js/core/125-live-site-bootstrap.js?v=a0c2f5f302e5",
   "js/engine/101-v61-universe.js?v=612",
-  "js/core/99-v50-mobil.js?v=3bec2f33f05c",
-  "js/core/v65-offline-sync-center.js?v=3bec2f33f05c",
-  "js/engine/v65-universe-navigation.js?v=3bec2f33f05c",
-  "js/engine/v65-universe-publication-check.js?v=3bec2f33f05c",
-  "css/terminal.css?v=3bec2f33f05c",
-  "js/engine/tentifor-terminal.js?v=3bec2f33f05c"
+  "js/core/99-v50-mobil.js?v=a0c2f5f302e5",
+  "js/core/v65-offline-sync-center.js?v=a0c2f5f302e5",
+  "js/engine/v65-universe-navigation.js?v=a0c2f5f302e5",
+  "js/engine/v65-universe-publication-check.js?v=a0c2f5f302e5",
+  "css/terminal.css?v=a0c2f5f302e5",
+  "js/engine/tentifor-terminal.js?v=a0c2f5f302e5"
 ];
 
 self.addEventListener("message", function (e) {
@@ -56,13 +56,15 @@ self.addEventListener("install", function (e) {
      hemen önbelleğe girer; eksikler ilk ağ dönüşünde fetch stratejisiyle alınır. */
   e.waitUntil(caches.open(ONBELLEK).then(function (c) {
     return Promise.all(ILK.map(function (u) { return c.add(u).catch(function () { return null; }); }));
-  }).then(function () { return self.skipWaiting(); }));
+  }));
 });
 
 self.addEventListener("activate", function (e) {
   e.waitUntil(caches.keys().then(function (anahtarlar) {
-    return Promise.all(anahtarlar.filter(function (a) { return a !== ONBELLEK && a.indexOf("tentiforapp-") === 0; })
-      .map(function (a) { return caches.delete(a); }));
+    /* Eski sekmeler eski hashli assetleri kullanabilir. Yeni worker
+       aktive olur olmaz eski cache'leri silmek bu sekmeleri kırar; cache
+       temizliği release sonrası ayrı bir bakım adımına bırakılır. */
+    return Promise.resolve(anahtarlar);
   }).then(function () { return self.clients.claim(); }));
 });
 

@@ -115,7 +115,8 @@ function guncellemeCubugu() {
                 '<button class="pencere-kapat" data-guncelle-kapat aria-label="Sonra">✕</button>';
   document.body.appendChild(e);
   guncellemeBildirimiGonder(mesaj, aciklama);
-  if (navigator.onLine && !guncellemeDokunuldu && !guncellemeBekletir()) setTimeout(function () { guncellemeYeni && guncellemeUygula(); }, 1800);
+  /* Yeni worker yalnızca kullanıcı Yenile düğmesine bastığında aktive edilir.
+     Böylece açık sekmeler eski HTML ile yeni cache arasında kalmaz. */
 }
 
 async function guncellemeBak(e) {
