@@ -124,6 +124,34 @@ try {
   });
   assert.equal(mobileEmptyLayout.overlap, false, `mobile Ax-24 return action overlaps quick access: ${JSON.stringify(mobileEmptyLayout)}`);
 
+  // A route chosen before veri.json resolves must render when the first load finishes, without refreshing.
+  const coldContext = await browser.newContext({ serviceWorkers: 'block' });
+  let releaseData;
+  const dataGate = new Promise((resolve) => { releaseData = resolve; });
+  let dataRequested = false;
+  try {
+    const coldStart = await coldContext.newPage();
+    await coldStart.route('**/veri.json**', async (route) => {
+      dataRequested = true;
+      await dataGate;
+      await route.continue();
+    });
+    await coldStart.goto(`${baseURL}/`, { waitUntil: 'domcontentloaded' });
+    await coldStart.waitForFunction(() => typeof sayfaYonlendir === 'function');
+    assert.equal(dataRequested, true, 'the first data request is held until after route selection');
+    assert.equal(await coldStart.evaluate(() => document.documentElement.classList.contains('veri-hazir')), false);
+    const initialTimeOrigin = await coldStart.evaluate(() => performance.timeOrigin);
+    await coldStart.evaluate(() => { location.hash = '#/harita'; });
+    await coldStart.waitForFunction(() => location.pathname === '/harita/');
+    releaseData();
+    await coldStart.waitForFunction(() => document.documentElement.classList.contains('veri-hazir'));
+    await coldStart.waitForFunction(() => document.querySelector('#haritaAlan [data-harita-sec="tomye"]')?.textContent.trim());
+    assert.equal(await coldStart.evaluate(() => performance.timeOrigin), initialTimeOrigin, 'map content renders without a page reload');
+  } finally {
+    releaseData();
+    await coldContext.close();
+  }
+
   // Direct clean URL, refresh, and direct legacy hash all enter the same default Tömye map.
   const direct = await browser.newPage();
   const cleanResponse = await direct.goto(`${baseURL}/harita/`, { waitUntil: 'domcontentloaded' });
