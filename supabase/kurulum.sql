@@ -2991,8 +2991,11 @@ create or replace function public.moderator_giris(p_kod text) returns text
 language plpgsql security definer set search_path = '' as $$
 declare oz text := public.mod_ozet(upper(p_kod), '#mod'); t text;
 begin
-  -- kaba kuvvete karşı: son 10 dakikada 30'dan çok hatalı deneme varsa bekle
-  if (select count(*) from public.moderator_denemeler where zaman > now() - interval '10 minutes' and (kod_ozet = oz or kod_ozet = '') ) >= 10 then
+  -- kaba kuvvete karşı: hem aynı özette 5 hem de tüm anonim istemcilerde 30
+  -- hatalı denemeye ulaşıldığında 10 dakika bekle. Kod özeti tahminleri
+  -- arasında dağıtılarak global sınırın aşılması engellenir.
+  if (select count(*) from public.moderator_denemeler where zaman > now() - interval '10 minutes') >= 30
+     or (select count(*) from public.moderator_denemeler where zaman > now() - interval '10 minutes' and kod_ozet = oz) >= 5 then
     raise exception 'çok deneme; biraz bekle';
   end if;
   if not exists (select 1 from public.moderator_kodlari where ozet = oz and aktif) then

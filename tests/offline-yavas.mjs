@@ -66,7 +66,9 @@ async function eventResponse(handler, request) {
   let installPromise;
   h.handlers.install({ waitUntil: (p) => { installPromise = p; } });
   await installPromise;
-  assert.equal(h.self.skipped, true);
+  // Yeni worker açık sekmeleri kırmamak için kurulumda otomatik aktive olmaz;
+  // aktivasyon yalnızca kullanıcı güncelleme düğmesine bastığında yapılır.
+  assert.equal(h.self.skipped, undefined);
   assert.equal(h.cache.items.has('https://app.test/index.html'), true);
 }
 
