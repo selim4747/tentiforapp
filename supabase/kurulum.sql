@@ -47,11 +47,7 @@ drop trigger if exists profiller_sunucu_alanlari on public.profiller;
 create trigger profiller_sunucu_alanlari before update on public.profiller
 for each row execute function public.profiller_sunucu_alanlarini_koru();
 
--- Public profil sözleşmesi: istemci public_profiller view'ını kullanır.
-create or replace view public.public_profiller as
-select id, kullanici_adi, gorunen_ad, gorsel, tentifor_adi, hakkinda, vitrin, olusturma, guncelleme
-from public.profiller;
-grant select on public.public_profiller to anon, authenticated;
+-- public_profiller, gizlilik sütunları eklendikten sonra aşağıda oluşturulur.
 -- ============ İLERLEME (yalnızca sahibi) ============
 -- Eçka, çözülen kodlar, madalyalar, defter... Başka kimse okuyamaz.
 create table if not exists public.ilerlemeler (
