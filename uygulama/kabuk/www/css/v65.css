@@ -31,3 +31,24 @@
   .tf65-sync-panel { padding: 15px; }
   .tf65-sync-actions { align-items: flex-start; flex-direction: column; }
 }
+
+/* Keep the administrator tab strip discoverable when it overflows on desktop. */
+.y-grup-secici + .oyun-sekme {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: 9px;
+  scrollbar-color: var(--deniz) var(--buz);
+  scrollbar-width: thin;
+}
+.y-grup-secici + .oyun-sekme::-webkit-scrollbar {
+  display: block;
+  height: 9px;
+}
+.y-grup-secici + .oyun-sekme::-webkit-scrollbar-track {
+  background: var(--buz);
+  border-radius: 99px;
+}
+.y-grup-secici + .oyun-sekme::-webkit-scrollbar-thumb {
+  background: var(--deniz);
+  border-radius: 99px;
+}
