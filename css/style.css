@@ -1252,7 +1252,7 @@ textarea:focus,
 }
 
 
-/* 6.5.6 — tablet header taşmasını ve evren haritası genişlik zincirini sınırla. */
+/* 6.6.0 — tablet header taşmasını ve evren haritası genişlik zincirini sınırla. */
 @media (max-width: 820px) {
   .ust {
     min-width: 0;
