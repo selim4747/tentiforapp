@@ -13,7 +13,7 @@ android {
         applicationId "dev.pages.tentiforapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 6505
+        versionCode 6599
         versionName "6.6.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {

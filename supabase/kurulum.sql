@@ -3453,10 +3453,6 @@ $$;
 revoke execute on function public.mod_sikayet_kapat(text, text, text) from public;
 grant execute on function public.mod_sikayet_kapat(text, text, text) to anon, authenticated;
 
-create or replace function public.kurulum_surumu() returns text
-language sql stable security definer set search_path = '' as $$ select '6.4.6.0'::text $$;
-revoke all on function public.kurulum_surumu() from public;
-grant execute on function public.kurulum_surumu() to anon, authenticated;
 -- ---------- 5.4 migration: hediye geçmişi, alıcı bildirimi ve plan politikası ----------
 -- 6.2.7: ücretsiz plan 1 evren, 3 EvrenGezer, 10 fan hikâyesi, 1 ek gezegen.
 alter table public.kullanici_bildirimleri add column if not exists kategori text not null default 'profil';

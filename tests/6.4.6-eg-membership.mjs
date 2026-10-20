@@ -42,7 +42,7 @@ for (const sql of [migration, setup]) {
   assert.match(sql, /revoke all on function public\.evren_gezer_bakiye_yukle\(uuid, bigint, uuid, text\) from public, anon, authenticated/);
   assert.match(sql, /grant execute on function public\.evren_gezer_bakiye_aktar\(uuid, bigint\) to service_role/);
   assert.match(sql, /revoke all on function public\.evren_gezer_bakiye_aktar\(uuid, bigint\) from public, anon, authenticated/);
-  assert.match(sql, /select '6\.4\.6\.0'::text/);
+  assert.match(sql, sql === setup ? /select '6\.5\.0'::text/ : /select '6\.4\.6\.0'::text/);
   assert.doesNotMatch(sql, /evren_gezer_cuzdanlari[\s\S]{0,1500}grant select/i, 'sunucu cüzdan tablosuna doğrudan SELECT yetkisi verilmemeli');
 }
 assert.equal((setup.match(/create or replace function public\.kurulum_surumu\b/g) || []).length, 1);

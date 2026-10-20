@@ -119,6 +119,8 @@
     return !meta || !meta.id ? Promise.resolve(true) : transaction('readwrite', function (store) { return store.delete(meta.id); }).then(function () { return true; });
   }
   window.EVH_GORSEL_URL = Object.create(null);
+  window.EVH_GORSEL_UZAK_META = Object.create(null);
+  var uzakBekleyen = Object.create(null);
   window.evrenGorselGoster = function (meta, rerender) {
     if (!meta || !meta.id || window.EVH_GORSEL_URL[meta.id]) return;
     window.evrenGorselVarlik.oku(meta, { kaynak: meta.kaynak }).then(function (record) {
@@ -141,6 +143,29 @@
       if (result && result.error) throw result.error;
       return meta.yol ? hesapIstemci.storage.from(BUCKET).remove([meta.yol]).then(function () { return true; }) : true;
     });
+  }
+  function serverMetaRead(evrenId) {
+    if (!evrenId || typeof hesapIstemci === 'undefined' || !hesapIstemci) return Promise.resolve(null);
+    return hesapIstemci.rpc('evren_gorsel_varlik_oku', { p_evren_id: evrenId }).then(function (result) {
+      if (!result || result.error || !result.data || result.data.durum !== 'tamam' || !result.data.yol) return null;
+      var data = result.data;
+      return { id: 'remote-' + String(evrenId), tur: 'arka-plan', kaynak: 'supabase', yol: data.yol,
+        mime: data.mime, boyut: data.boyut, genislik: data.genislik, yukseklik: data.yukseklik,
+        alt: data.alt || 'Harita resmi', kaplama: data.kaplama === 'contain' ? 'contain' : 'cover',
+        saydamlik: Math.max(0, Math.min(1, Number(data.saydamlik == null ? 1 : data.saydamlik))),
+        herkeseAcik: data.herkese_acik === true };
+    });
+  }
+  function uzakGorselGoster(evrenId, rerender) {
+    if (!evrenId || typeof hesapIstemci === 'undefined' || !hesapIstemci) return;
+    if (window.EVH_GORSEL_UZAK_META[evrenId]) return;
+    if (!uzakBekleyen[evrenId]) {
+      uzakBekleyen[evrenId] = serverMetaRead(evrenId).then(function (meta) {
+        if (meta) window.EVH_GORSEL_UZAK_META[evrenId] = meta;
+        return meta;
+      }).catch(function () { return null; }).finally(function () { delete uzakBekleyen[evrenId]; });
+    }
+    uzakBekleyen[evrenId].then(function (meta) { if (meta && typeof rerender === 'function') rerender(meta); });
   }
   function serverUpload(file, context) {
     context = context || {};
@@ -187,6 +212,8 @@
       return localDelete(meta);
     },
     disaAktar: function (meta) { return localRead(meta); },
+    uzaktanOku: serverMetaRead,
+    uzakGorselGoster: uzakGorselGoster,
     gomuluAktar: function (meta, dataUrl) {
       if (!dataUrl || !/^data:image\/(png|jpeg|webp);base64,/i.test(dataUrl)) return Promise.reject(new Error('Gömülü görsel biçimi geçersiz.'));
       return fetch(dataUrl).then(function (response) { return response.blob(); }).then(function (blob) { return localUpload(blob, meta || {}); });
@@ -244,18 +271,23 @@
       if (input) input.click();
     }
   });
-  document.addEventListener('change', function (event) {
-    var input = event.target;
+  function gorselAyarGuncelle(input) {
     if (input && input.matches && input.matches('[data-evh-gorsel-alt], [data-evh-gorsel-kaplama], [data-evh-gorsel-saydamlik]')) {
       var settingsPage = typeof evrenSayfaVerisi === 'function' ? evrenSayfaVerisi() : null;
       var settingsMap = settingsPage && typeof evrenHaritaVerisi === 'function' ? evrenHaritaVerisi(settingsPage) : null;
-      if (!settingsMap || !settingsMap.duzen || !settingsMap.duzen.gorsel || typeof evrenHaritaDegistir !== 'function') return;
+      if (!settingsMap || !settingsMap.duzen || !settingsMap.duzen.gorsel || typeof evrenHaritaDegistir !== 'function') return true;
       var field = input.hasAttribute('data-evh-gorsel-alt') ? 'alt' : input.hasAttribute('data-evh-gorsel-kaplama') ? 'kaplama' : 'saydamlik';
       var value = field === 'alt' ? String(input.value || '').slice(0, 160) : field === 'kaplama' ? (input.value === 'contain' ? 'contain' : 'cover') : Math.max(0, Math.min(1, Number(input.value) || 0));
       evrenHaritaDegistir(function (draft) { draft.gorsel[field] = value; });
       if (typeof evrenSayfaCiz === 'function') evrenSayfaCiz();
-      return;
+      return true;
     }
+    return false;
+  }
+  document.addEventListener('input', function (event) { gorselAyarGuncelle(event.target); });
+  document.addEventListener('change', function (event) {
+    var input = event.target;
+    if (gorselAyarGuncelle(input)) return;
     if (!input || !input.matches || !input.matches('[data-evh-gorsel-input]')) return;
     var file = input.files && input.files[0];
     if (!file || typeof evrenGorselVarlik === 'undefined' || typeof evrenHaritaDegistir !== 'function') return;

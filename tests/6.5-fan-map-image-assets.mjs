@@ -35,10 +35,14 @@ assert.match(fan, /cizgiler/);
 // The image is rendered as the map's first visual layer, not as a replacement
 // for polygons, paths, labels or the selection/editing layer.
 assert.match(map, /evh-arka-plan/);
-assert.match(map, /gorsel:\(n\.duzen\|\|t\)\.gorsel/);
+assert.match(map, /gorsel:h/);
+assert.match(map, /EVH_GORSEL_UZAK_META/);
 assert.match(map, /data-evh-gorsel-input/);
 assert.match(map, /data-evh-gorsel-sil/);
 assert.match(map, /evrenGorselGoster/);
+assert.match(adapter, /evren_gorsel_varlik_oku/);
+assert.match(adapter, /uzakGorselGoster/);
+assert.match(adapter, /document\.addEventListener\('input'/);
 
 assert.match(migration, /evren_gorsel_varlik_kaydet/);
 assert.match(migration, /evren_gorsel_varlik_sil/);
