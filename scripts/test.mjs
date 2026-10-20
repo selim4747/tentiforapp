@@ -24,6 +24,7 @@ const tests = [
   'tests/6.4.3-retired-universe-removal.mjs',
   'tests/offline-queue.mjs',
   'tests/6.5-offline-sync-center.mjs',
+  'tests/6.5-fan-map-image-assets.mjs',
   'tests/cakisma.mjs',
   'tests/ortak-evren.mjs',
   'tests/android-native.mjs',
