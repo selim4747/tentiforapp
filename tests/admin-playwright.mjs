@@ -56,6 +56,10 @@ try {
   await page.locator('[data-yonetici="kaydet"]').click();
   await page.waitForFunction(() => (localStorage.getItem('tentiforapp_yonetici_taslak_v1') || '').includes('Playwright yerel taslak testi'), null, { timeout: 10000 });
   assert.deepEqual(await page.evaluate(() => Object.keys(localStorage).filter((key) => key === 'tentiforapp_yonetici' || key === 'tentiforapp_github')), [], 'admin code and GitHub token/settings must not be persisted');
+  assert.deepEqual(await page.evaluate(() => {
+    const draft = JSON.parse(localStorage.getItem('tentiforapp_yonetici_taslak_v1'));
+    return Object.keys(draft).filter((key) => ['jeton', 'kod', 'katmanKodlari'].includes(key));
+  }), [], 'local draft envelope must not contain admin secrets');
 
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.querySelector('#yGiris') || document.querySelector('[data-y-sekme="karakterler"]'), null, { timeout: 15000 });
