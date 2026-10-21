@@ -429,6 +429,10 @@ const seoIndex = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
 // Crawlers/social bots receive a static page snapshot. Database entries come only from the
 // privacy-filtered public RPC; local universe pages require an approved registry record and a
 // matching evrenler/{id}.json file. Private/draft database rows are never copied into output.
+// Deneme has no runtime catalog/payload; E126's generated path currently points to the
+// unsupported #/ev/site/e126 route. Exclude only these broken URLs until their routes are fixed.
+const excludedUnopenableWorldSlugs = new Set(['deneme', 'e126']);
+const seoRouteAllowed = (item) => !(item && item.tur === 'evren' && excludedUnopenableWorldSlugs.has(String(item.slug || '').toLowerCase()));
 const staticSeoPages = [
   { tur: 'sayfa', path: '/tomye/', title: 'Tömye — TentiFor', description: 'Tömye evreni ve Tentiforverse arşiv içerikleri.' },
   { tur: 'sayfa', path: '/fan/', title: 'Fan evrenleri — TentiFor', description: 'TentiFor’te yayınlanmış fan evrenleri ve hikâyeler.' },
@@ -439,7 +443,7 @@ const staticSeoPages = [
   { tur: 'evren', slug: 'e25', baslik: veri.kanonEvrenleri?.e25?.ad || 'E25', ozet: typeof veri.kanonEvrenleri?.e25?.ozet === 'string' ? veri.kanonEvrenleri.e25.ozet : '' },
   { tur: 'evren', slug: 'e99', baslik: veri.e99?.ad || 'E99', ozet: typeof veri.e99?.ozet === 'string' ? veri.e99.ozet : '' },
   ...approvedCanonicalUniversePages(ROOT_DIR, veri)
-];
+].filter(seoRouteAllowed);
 const appRoutes = [
   { path: '/sen/', title: 'Sen — TentiFor', description: 'TentiFor kullanıcı alanı, arşivci kartı, defter ve ayarlar.' },
   { path: '/arsiv/', title: 'Ana sayfa — TentiFor', description: 'Tentiforverse arşiv ana sayfası ve karakterler.' },
@@ -455,7 +459,7 @@ const appRoutes = [
 let publicSeoPages = [];
 if (process.env.TF_SEO_STATIC_ONLY !== '1') {
   try {
-    publicSeoPages = await fetchPublicSeoPages(ROOT_DIR);
+    publicSeoPages = (await fetchPublicSeoPages(ROOT_DIR)).filter(seoRouteAllowed);
     console.log(`✓ Public SEO snapshot alındı (${publicSeoPages.length} yayınlanabilir profil/evren/okuma rotası)`);
   } catch {
     console.warn('⚠ Public SEO snapshot alınamadı; açık statik ve onaylı yerel kanon rotaları üretildi. Gizli/taslak veriler fallback’e eklenmez.');
