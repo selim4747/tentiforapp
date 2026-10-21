@@ -215,6 +215,9 @@ export function renderSeoNotFound(indexHtml) {
   let html = indexHtml.replace(/<!--[\s\S]*?-->/g, '');
   if (!/<base\b/i.test(html)) html = html.replace('<head>', '<head>\n<base href="/">');
   html = html.replace(/<title>[^<]*<\/title>/i, '<title>Sayfa bulunamadı — TentiFor</title>');
+  html = html.replace(/<link\b(?=[^>]*\brel=["']canonical["'])[^>]*>/gi, '');
+  html = html.replace(/<meta\b(?=[^>]*\bproperty=["']og:url["'])[^>]*>/gi, '');
+  html = html.replace(/<meta\b(?=[^>]*\bname=["']twitter:url["'])[^>]*>/gi, '');
   html = replaceMeta(html, 'name', 'robots', 'noindex, follow');
   html = replaceMeta(html, 'name', 'description', 'Bu TentiFor sayfası yayında olmayabilir veya adresi değişmiş olabilir.');
   html = replaceMeta(html, 'property', 'og:title', 'Sayfa bulunamadı — TentiFor');

@@ -1,48 +1,48 @@
 /* TentiforApp servis çalışanı — sayfa ve veri önce ağdan (yavaşsa son kopya), sürümlü dosyalar önbellekten.
    Yeni bir sürüm yayınlanınca sayfalar kendiliğinden yenilenir; eski kopya yalnızca çevrimdışı ya da yavaş ağda kullanılır. */
-const ONBELLEK = "tentiforapp-cb98abfbcc5b";
+const ONBELLEK = "tentiforapp-4cc7201b2899";
 /* Hesap kütüphanesi burada yok: yalnızca hesabı kullanan indirir (ilk kullanımda önbelleğe girer). */
 const ILK = [
   "./",
   "index.html",
   "favicon.ico",
   "css/style.css?v=b918b12e9541",
-  "css/v65.css?v=cb98abfbcc5b",
+  "css/v65.css?v=4cc7201b2899",
   "veri.json",
-  "js/paket-1.js?v=cb98abfbcc5b",
-  "js/paket-2.js?v=cb98abfbcc5b",
-  "js/paket-3.js?v=cb98abfbcc5b",
-  "js/paket-4.js?v=cb98abfbcc5b",
+  "js/paket-1.js?v=4cc7201b2899",
+  "js/paket-2.js?v=4cc7201b2899",
+  "js/paket-3.js?v=4cc7201b2899",
+  "js/paket-4.js?v=4cc7201b2899",
   "manifest.webmanifest",
   "ikon/ikon-192.png",
   "yazitipi/karla-normal-400-latin.woff2",
-  "js/core/24-arsiv-mantigi.js?v=cb98abfbcc5b",
-  "js/engine/user-universe-secret-identities.js?v=cb98abfbcc5b",
-  "js/engine/88-v46-yenilikler.js?v=cb98abfbcc5b",
-  "js/engine/92-v51-dashboard.js?v=cb98abfbcc5b",
-  "js/core/93-offline-queue.js?v=cb98abfbcc5b",
-  "js/core/94-cakisma.js?v=cb98abfbcc5b",
-  "js/engine/91-v473-uyelik.js?v=cb98abfbcc5b",
-  "js/engine/evren-harita-zaman-cizelgesi.js?v=cb98abfbcc5b",
-  "js/engine/seo-meta.js?v=cb98abfbcc5b",
-  "js/engine/free-universe-cleanup-6313.js?v=cb98abfbcc5b",
-  "js/engine/profile-sharing-6313.js?v=cb98abfbcc5b",
-  "js/engine/secure-sharing.js?v=cb98abfbcc5b",
-  "js/core/54-v54-olgunlastirma.js?v=cb98abfbcc5b",
-  "js/arayuz/32-ux-642.js?v=cb98abfbcc5b",
-  "js/arayuz/33-ux-644.js?v=cb98abfbcc5b",
-  "js/arayuz/34-ux-645.js?v=cb98abfbcc5b",
-  "js/core/100-v60-native.js?v=cb98abfbcc5b",
-  "js/core/110-v62-platform.js?v=cb98abfbcc5b",
-  "js/core/120-mobil-ambiyans-uretim-aliskanlik.js?v=cb98abfbcc5b",
-  "js/core/125-live-site-bootstrap.js?v=cb98abfbcc5b",
+  "js/core/24-arsiv-mantigi.js?v=4cc7201b2899",
+  "js/engine/user-universe-secret-identities.js?v=4cc7201b2899",
+  "js/engine/88-v46-yenilikler.js?v=4cc7201b2899",
+  "js/engine/92-v51-dashboard.js?v=4cc7201b2899",
+  "js/core/93-offline-queue.js?v=4cc7201b2899",
+  "js/core/94-cakisma.js?v=4cc7201b2899",
+  "js/engine/91-v473-uyelik.js?v=4cc7201b2899",
+  "js/engine/evren-harita-zaman-cizelgesi.js?v=4cc7201b2899",
+  "js/engine/seo-meta.js?v=4cc7201b2899",
+  "js/engine/free-universe-cleanup-6313.js?v=4cc7201b2899",
+  "js/engine/profile-sharing-6313.js?v=4cc7201b2899",
+  "js/engine/secure-sharing.js?v=4cc7201b2899",
+  "js/core/54-v54-olgunlastirma.js?v=4cc7201b2899",
+  "js/arayuz/32-ux-642.js?v=4cc7201b2899",
+  "js/arayuz/33-ux-644.js?v=4cc7201b2899",
+  "js/arayuz/34-ux-645.js?v=4cc7201b2899",
+  "js/core/100-v60-native.js?v=4cc7201b2899",
+  "js/core/110-v62-platform.js?v=4cc7201b2899",
+  "js/core/120-mobil-ambiyans-uretim-aliskanlik.js?v=4cc7201b2899",
+  "js/core/125-live-site-bootstrap.js?v=4cc7201b2899",
   "js/engine/101-v61-universe.js?v=612",
-  "js/core/99-v50-mobil.js?v=cb98abfbcc5b",
-  "js/core/v65-offline-sync-center.js?v=cb98abfbcc5b",
-  "js/engine/v65-universe-navigation.js?v=cb98abfbcc5b",
-  "js/engine/v65-universe-publication-check.js?v=cb98abfbcc5b",
-  "css/terminal.css?v=cb98abfbcc5b",
-  "js/engine/tentifor-terminal.js?v=cb98abfbcc5b"
+  "js/core/99-v50-mobil.js?v=4cc7201b2899",
+  "js/core/v65-offline-sync-center.js?v=4cc7201b2899",
+  "js/engine/v65-universe-navigation.js?v=4cc7201b2899",
+  "js/engine/v65-universe-publication-check.js?v=4cc7201b2899",
+  "css/terminal.css?v=4cc7201b2899",
+  "js/engine/tentifor-terminal.js?v=4cc7201b2899"
 ];
 
 self.addEventListener("message", function (e) {
@@ -61,10 +61,9 @@ self.addEventListener("install", function (e) {
 
 self.addEventListener("activate", function (e) {
   e.waitUntil(caches.keys().then(function (anahtarlar) {
-    /* Eski sekmeler eski hashli assetleri kullanabilir. Yeni worker
-       aktive olur olmaz eski cache'leri silmek bu sekmeleri kırar; cache
-       temizliği release sonrası ayrı bir bakım adımına bırakılır. */
-    return Promise.resolve(anahtarlar);
+    return Promise.all(anahtarlar.filter(function (anahtar) {
+      return anahtar.indexOf("tentiforapp-") === 0 && anahtar !== ONBELLEK;
+    }).map(function (anahtar) { return caches.delete(anahtar); }));
   }).then(function () { return self.clients.claim(); }));
 });
 
@@ -197,9 +196,15 @@ function onbellegeKoy(istek, yanit, sorguyla) {
 }
 
 function yedekKopya(istek, tamEslesme) {
-  return caches.match(istek, tamEslesme ? {} : { ignoreSearch: true }).then(function (k) {
+  return caches.open(ONBELLEK).then(function (cache) {
+    return cache.match(istek, tamEslesme ? {} : { ignoreSearch: true });
+  }).then(function (k) {
     if (k) { return k; }
-    if (istek.mode === "navigate") { return caches.match("./").then(function (a) { return a || caches.match("index.html"); }); }
+    if (istek.mode === "navigate") {
+      return caches.open(ONBELLEK).then(function (cache) {
+        return cache.match("./").then(function (a) { return a || cache.match("index.html"); });
+      });
+    }
     return undefined;
   });
 }
@@ -228,7 +233,7 @@ self.addEventListener("fetch", function (e) {
 
   const surumlu = /^\/(?:js\/|css\/|veri-[a-z]+\.json$)/.test(u.pathname) && u.searchParams.has("v");
   if (surumlu || /^\/(?:ikon|yazitipi)\//.test(u.pathname)) {
-    e.respondWith(caches.match(istek).then(function (k) {
+    e.respondWith(caches.open(ONBELLEK).then(function (cache) { return cache.match(istek); }).then(function (k) {
       return k || guvenliFetch(istek).then(function (y) { onbellegeKoy(istek, y, true); return y; }).catch(function () { return yedekKopya(istek, true); });
     }));
     return;
@@ -243,7 +248,7 @@ self.addEventListener("fetch", function (e) {
   e.waitUntil(ag.catch(function () { /* çevrimdışı */ }));
   /* 3.0 — ikinci açılış anında: cihazda kopyası olan sayfa ve veri beklemeden verilir, ağ arka planda
      kopyayı tazeler. Yayında yeni paket varsa sayfa bunu hemen fark edip bir kez yenilenir (js/core/46-guncelleme.js). */
-  e.respondWith(caches.match(istek, { ignoreSearch: true }).then(function (kopya) {
+  e.respondWith(caches.open(ONBELLEK).then(function (cache) { return cache.match(istek, { ignoreSearch: true }); }).then(function (kopya) {
     if (kopya) { return kopya; }
     return agiBekle(istek, ag);
   }));

@@ -133,9 +133,16 @@ const server = http.createServer((req, res) => {
       statusCode = 200;
     } else {
       const dist404 = path.join(PUBLIC_DIR, 'dist', '404.html');
-      filePath = fs.existsSync(dist404) ? dist404 : (fs.existsSync(path.join(PUBLIC_DIR, '404.html')) ? path.join(PUBLIC_DIR, '404.html') : path.join(PUBLIC_DIR, 'index.html'));
+      const root404 = path.join(PUBLIC_DIR, '404.html');
+      filePath = fs.existsSync(dist404) ? dist404 : (fs.existsSync(root404) ? root404 : null);
       statusCode = 404;
     }
+  }
+
+  if (!filePath) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end('Not Found');
+    return;
   }
 
   const ext = path.extname(filePath).toLowerCase();

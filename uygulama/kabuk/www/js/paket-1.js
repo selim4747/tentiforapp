@@ -1,5 +1,6 @@
 (window.__PAKET__=window.__PAKET__||{})["paket-1.js"]=[[2,"core/00-rota.js"],[4,"core/01-tanilama.js"],[10,"core/02-kripto.js"],[12,"core/03-cuzdan.js"],[14,"arsiv/04-araclar-isim-takvim.js"],[16,"oyun/05-nobet.js"],[18,"oyun/06-karakter-oyunlari.js"],[20,"arsiv/07-kisilik-ag-galeri.js"],[22,"arsiv/08-kesif.js"],[24,"arsiv/09-medya-harita.js"],[26,"arsiv/10-kyldo-yazisi.js"],[28,"arsiv/11-ek-katman.js"],[30,"arsiv/12-yankilar-okuma-sirasi.js"],[32,"arsiv/13-arsivci-karti-hikaye.js"],[34,"arsiv/14-rol-yolu-mektuplar.js"],[36,"arsiv/15-ziyaretci-notlar.js"],[42,"admin/16-yerinde-duzenleme.js"],[44,"arsiv/17-aile-agaci.js"],[46,"arayuz/18-gezinme.js"],[48,"arsiv/19-kimlik-sinavi.js"],[50,"arsiv/20-brifing-zaman.js"],[53,"arayuz/21-komut-sohbet-moodboard.js"],[55,"admin/22-yonetici.js"],[57,"arsiv/23-kanon-kilidi.js"]];
 const ROTA_HASH_KALIR = /^#\/(kartpostal\/|fan\/paylasim)/;
+const TF4_PUBLIC_ORIGIN = 'https://tentifor.com';
 
 function yoldanRota(yol) {
   const parcalar = String(yol || '').split('/').filter((parca) => parca && parca !== 'index.html').map((parca) => {
@@ -53,10 +54,8 @@ function rotaHashKalir(rotaMetni) {
 
 function rota() {
   const hash = rotaHashDuzelt(location.hash);
-  if (hash && hash !== location.hash) {
-    try { history.replaceState(history.state, '', hash); } catch {}
-  }
-  return hash || yoldanRota(location.pathname);
+  if (hash && hash.indexOf('#/') === 0) return hash;
+  return yoldanRota(location.pathname);
 }
 
 function rotaAdresi(rotaMetni) {
@@ -104,36 +103,69 @@ document.addEventListener('click', function (event) {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   const link = event.target.closest && event.target.closest('a[href^="#"]');
   if (!link || link.target === '_blank' || link.hasAttribute('download')) return;
-  event.preventDefault();
   const hedef = link.getAttribute('href');
-  if (hedef !== '#' && hedef !== rota()) location.hash = hedef;
+  if (!hedef || hedef === '#') return;
+  if (!hedef.startsWith('#/')) {
+    let fragmentId = hedef.slice(1);
+    try { fragmentId = decodeURIComponent(fragmentId); } catch {}
+    if (document.getElementById(fragmentId)) return;
+  }
+  if (!hedef.startsWith('#/') && !/^#[A-Za-z0-9_-]+$/.test(hedef)) return;
+  event.preventDefault();
+  if (hedef !== rota()) location.hash = hedef;
 }, true);
 rotaYolaCevir();
-rotaSon = rota(); document.addEventListener('DOMContentLoaded',function(){if(rota()==='#/yonetici'&&typeof window.sayfaYonlendir==='function')window.sayfaYonlendir()});
+rotaSon = rota();
+document.addEventListener('DOMContentLoaded', function () {
+  if (rota() === '#/yonetici' && typeof window.sayfaYonlendir === 'function') window.sayfaYonlendir();
+});
 
 /* Public route metadata: keeps title/canonical/OG in sync after SPA navigation. */
 (function () {
   const map = {
-    arsiv: ['Ana sayfa — TentiFor', 'Tentiforverse arşivi'],
-    '': ['Ana sayfa — TentiFor', 'Tentiforverse arşivi'],
-    tomye: ['Tömye — TentiFor', 'Tömye evreni ve arşiv içerikleri'],
-    harita: ['Harita — TentiFor', 'Tömye ve Ax-24 gezegen haritaları'],
-    fan: ['Fan evrenleri — TentiFor', 'TentiFor fan evrenleri ve hikâyeleri'],
-    oyunlar: ['Oyunlar — TentiFor', 'TentiFor oyunları'],
-    atolye: ['Atölye — TentiFor', 'TentiFor üretim atölyesi'],
-    okuma: ['Okuma — TentiFor', 'TentiFor okuma alanı'], yonetici: ['Yönetici paneli — TentiFor', 'TentiFor yönetim paneli. Erişim için yönetici kodu gerekir.', false]
+    arsiv: ['Ana sayfa — TentiFor', 'Tentiforverse arşivi', true],
+    '': ['Ana sayfa — TentiFor', 'Tentiforverse arşivi', true],
+    tomye: ['Tömye — TentiFor', 'Tömye evreni ve arşiv içerikleri', true],
+    harita: ['Harita — TentiFor', 'Tömye ve Ax-24 gezegen haritaları', true],
+    fan: ['Fan evrenleri — TentiFor', 'TentiFor fan evrenleri ve hikâyeleri', true],
+    oyunlar: ['Oyunlar — TentiFor', 'TentiFor oyunları', true],
+    atolye: ['Atölye — TentiFor', 'TentiFor üretim atölyesi', true],
+    okuma: ['Okuma — TentiFor', 'TentiFor okuma alanı', true],
+    yonetici: ['Yönetici paneli — TentiFor', 'TentiFor yönetim paneli. Erişim için yönetici kodu gerekir.', false]
   };
   window.tf4RouteHead = function () {
-    const bolum = (location.pathname.split('/')[1] || location.hash.replace(/^#\/?/, '').split('/')[0] || '').toLowerCase();
+    const hashRoute = location.hash.startsWith('#/');
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    const routeParts = hashRoute ? location.hash.replace(/^#\//, '').split('/') : pathParts;
+    let bolum = routeParts[0] || '';
+    try { bolum = decodeURIComponent(bolum); } catch {}
+    bolum = String(bolum).toLocaleLowerCase('tr-TR');
+    if (bolum === 'yönetici') bolum = 'yonetici';
     const metadata = map[bolum];
-    if (!metadata) return;
-    document.title = metadata[0];
+    const notFound = document.body && document.body.hasAttribute('data-seo-not-found');
+    const dynamicPublicPath = !hashRoute && !notFound && /^\/(?:u\/[^/]+|evren\/[^/]+|okuma-yolu\/[^/]+)\/?$/.test(location.pathname);
+    if (dynamicPublicPath) return;
+    const publicRoute = !!(metadata && metadata[2] !== false);
+    document.title = notFound ? 'Sayfa bulunamadı — TentiFor' : (metadata ? metadata[0] : 'TentiFor — Uygulama');
     const description = document.querySelector('meta[name="description"]');
     const canonical = document.querySelector('link[rel="canonical"]');
     const openGraph = document.querySelector('meta[property="og:url"]');
-    if (description) description.content = metadata[1];
-    if (canonical) canonical.href = location.origin + '/' + bolum + '/';
-    if (openGraph) openGraph.content = location.origin + '/' + bolum + '/';
+    const twitterUrl = document.querySelector('meta[name="twitter:url"]');
+    const robots = document.querySelector('meta[name="robots"]');
+    if (description) description.content = notFound
+      ? 'Bu TentiFor sayfası yayında olmayabilir veya adresi değişmiş olabilir.'
+      : (metadata ? metadata[1] : 'Tentiforverse arşivi ve kişisel alan.');
+    if (robots) robots.setAttribute('content', publicRoute && !notFound ? 'index, follow' : 'noindex, follow');
+    if (publicRoute && !notFound) {
+      const path = bolum === 'yonetici' ? '/yonetici/' : '/' + (bolum || '') + '/';
+      if (canonical) canonical.href = TF4_PUBLIC_ORIGIN + path;
+      if (openGraph) openGraph.content = TF4_PUBLIC_ORIGIN + path;
+      if (twitterUrl) twitterUrl.content = TF4_PUBLIC_ORIGIN + path;
+    } else {
+      if (canonical) canonical.removeAttribute('href');
+      if (openGraph) openGraph.removeAttribute('content');
+      if (twitterUrl) twitterUrl.removeAttribute('content');
+    }
   };
   addEventListener('hashchange', window.tf4RouteHead);
   addEventListener('popstate', window.tf4RouteHead);

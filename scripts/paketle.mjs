@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { approvedCanonicalUniversePages, fetchPublicSeoPages, renderSeoNotFound, renderStandaloneAdminPage, writeSeoRoutes } from './public-seo.mjs';
+import { approvedCanonicalUniversePages, fetchPublicSeoPages, renderSeoNotFound, renderStandaloneAdminPage, seoMetadata, writeSeoRoutes } from './public-seo.mjs';
 import { syncTerminalRoutes } from './sync-terminal-routes.mjs';
 import { copyPublicAsset, isHiddenUniverseAssetPath, stripHiddenUniverseSections } from './visibility.mjs';
 
@@ -158,6 +158,14 @@ const bundleRouteRange = routeRange(routeBundle, 'paket-1.js');
 routeBundle = routeBundle.slice(0, bundleRouteRange.start)
   + routeSource.slice(sourceRouteRange.start, sourceRouteRange.end)
   + routeBundle.slice(bundleRouteRange.end);
+const routerBundleStart = routeBundle.indexOf('const ROTA_HASH_KALIR =');
+const routerBundleEnd = routeBundle.indexOf('(function(){var c={};', routerBundleStart);
+if (routerBundleStart < 0 || routerBundleEnd <= routerBundleStart || !routeSource.startsWith('const ROTA_HASH_KALIR =')) {
+  throw new Error('paket-1.js tam router bölümü bulunamadı; paket üretimi durduruldu.');
+}
+routeBundle = routeBundle.slice(0, routerBundleStart)
+  + routeSource.trimEnd() + '\n\n'
+  + routeBundle.slice(routerBundleEnd);
 fs.writeFileSync(routeBundlePath, routeBundle, 'utf8');
 
 // 2. Paket karması hesapla. Tarih kullanılmaz; aynı girdiler aynı cache adını üretir.
@@ -454,6 +462,31 @@ if (process.env.TF_SEO_STATIC_ONLY !== '1') {
   }
 }
 const routeCount = writeSeoRoutes({ indexHtml: seoIndex, distDir, items: publicSeoPages, staticPages: staticSeoPages, appRoutes });
+// dist temiz kurulur; kök dizindeki önceki derleme kopyalarını da yalnızca
+// SEO üreticisinin işaretli evren HTML dosyaları için güncel kayıtlarla eşitle.
+const currentPublicWorldSlugs = new Set([...publicSeoPages, ...staticSeoPages]
+  .filter((item) => item && item.tur === 'evren' && typeof item.slug === 'string')
+  .map((item) => item.slug.toLowerCase()));
+for (const root of [ROOT_DIR, wwwDir]) {
+  const worldDir = path.join(root, 'evren');
+  if (!fs.existsSync(worldDir)) continue;
+  for (const entry of fs.readdirSync(worldDir, { withFileTypes: true })) {
+    const slug = entry.isDirectory()
+      ? entry.name
+      : (entry.isFile() && entry.name.toLowerCase().endsWith('.html') ? entry.name.slice(0, -5) : '');
+    if (!slug || currentPublicWorldSlugs.has(slug.toLowerCase())) continue;
+    if (entry.isDirectory()) {
+      const routeDir = path.join(worldDir, entry.name);
+      const routeIndex = path.join(routeDir, 'index.html');
+      if (fs.existsSync(routeIndex) && fs.readFileSync(routeIndex, 'utf8').includes('data-seo-fallback')) {
+        fs.unlinkSync(routeIndex);
+        try { fs.rmdirSync(routeDir); } catch { /* preserve non-generated files */ }
+      }
+    }
+    const flatPage = path.join(worldDir, `${slug}.html`);
+    if (fs.existsSync(flatPage) && fs.readFileSync(flatPage, 'utf8').includes('data-seo-fallback')) fs.unlinkSync(flatPage);
+  }
+}
 // Yönetici paneli kendi HTML rotasında çalışır; genel SEO fallback'i içindeki
 // içerik bölümlerini gizleyen stil burada kullanılmaz. Panel Sen kabuğuna girmez.
 const yoneticiHtml = renderStandaloneAdminPage(seoIndex);
@@ -465,9 +498,11 @@ for (const root of [distDir, ROOT_DIR, wwwDir]) {
     fs.writeFileSync(target, yoneticiHtml, 'utf8');
   }
 }
-// Uygulama ve statik sayfaları kök dizin ve www ile senkronize et
-for (const route of [...staticSeoPages, ...appRoutes]) {
-  const rel = (route.path || '').replace(/^\/+|\/+$/g, '');
+// Public SEO sayfalarını da kök dizin ve www ile eşitle; eski profil snapshot'ı
+// silinmiş yayın kayıtlarını taşımaya devam etmesin.
+for (const route of [...staticSeoPages, ...publicSeoPages, ...appRoutes]) {
+  const routePath = route.path || seoMetadata(route)?.route || '';
+  const rel = routePath.replace(/^\/+|\/+$/g, '');
   if (!rel) continue;
   const distRoute = path.join(distDir, rel);
   const rootRoute = path.join(ROOT_DIR, rel);

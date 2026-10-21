@@ -1,4 +1,5 @@
 const ROTA_HASH_KALIR = /^#\/(kartpostal\/|fan\/paylasim)/;
+const TF4_PUBLIC_ORIGIN = 'https://tentifor.com';
 
 function yoldanRota(yol) {
   const parcalar = String(yol || '').split('/').filter((parca) => parca && parca !== 'index.html').map((parca) => {
@@ -101,9 +102,16 @@ document.addEventListener('click', function (event) {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   const link = event.target.closest && event.target.closest('a[href^="#"]');
   if (!link || link.target === '_blank' || link.hasAttribute('download')) return;
-  event.preventDefault();
   const hedef = link.getAttribute('href');
-  if (hedef !== '#' && hedef !== rota()) location.hash = hedef;
+  if (!hedef || hedef === '#') return;
+  if (!hedef.startsWith('#/')) {
+    let fragmentId = hedef.slice(1);
+    try { fragmentId = decodeURIComponent(fragmentId); } catch {}
+    if (document.getElementById(fragmentId)) return;
+  }
+  if (!hedef.startsWith('#/') && !/^#[A-Za-z0-9_-]+$/.test(hedef)) return;
+  event.preventDefault();
+  if (hedef !== rota()) location.hash = hedef;
 }, true);
 rotaYolaCevir();
 rotaSon = rota();
@@ -125,22 +133,38 @@ document.addEventListener('DOMContentLoaded', function () {
     yonetici: ['Yönetici paneli — TentiFor', 'TentiFor yönetim paneli. Erişim için yönetici kodu gerekir.', false]
   };
   window.tf4RouteHead = function () {
-    let bolum = location.pathname.split('/')[1] || location.hash.replace(/^#\/?/, '').split('/')[0] || '';
+    const hashRoute = location.hash.startsWith('#/');
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    const routeParts = hashRoute ? location.hash.replace(/^#\//, '').split('/') : pathParts;
+    let bolum = routeParts[0] || '';
     try { bolum = decodeURIComponent(bolum); } catch {}
     bolum = String(bolum).toLocaleLowerCase('tr-TR');
     if (bolum === 'yönetici') bolum = 'yonetici';
     const metadata = map[bolum];
-    if (!metadata) return;
-    document.title = metadata[0];
+    const notFound = document.body && document.body.hasAttribute('data-seo-not-found');
+    const dynamicPublicPath = !hashRoute && !notFound && /^\/(?:u\/[^/]+|evren\/[^/]+|okuma-yolu\/[^/]+)\/?$/.test(location.pathname);
+    if (dynamicPublicPath) return;
+    const publicRoute = !!(metadata && metadata[2] !== false);
+    document.title = notFound ? 'Sayfa bulunamadı — TentiFor' : (metadata ? metadata[0] : 'TentiFor — Uygulama');
     const description = document.querySelector('meta[name="description"]');
     const canonical = document.querySelector('link[rel="canonical"]');
     const openGraph = document.querySelector('meta[property="og:url"]');
+    const twitterUrl = document.querySelector('meta[name="twitter:url"]');
     const robots = document.querySelector('meta[name="robots"]');
-    if (description) description.content = metadata[1];
-    const path = bolum === 'yonetici' ? '/yonetici/' : '/' + (bolum || '') + '/';
-    if (canonical) canonical.href = location.origin + path;
-    if (openGraph) openGraph.content = location.origin + path;
-    if (robots && metadata.length > 2 && metadata[2] === false) robots.setAttribute('content', 'noindex, follow');
+    if (description) description.content = notFound
+      ? 'Bu TentiFor sayfası yayında olmayabilir veya adresi değişmiş olabilir.'
+      : (metadata ? metadata[1] : 'Tentiforverse arşivi ve kişisel alan.');
+    if (robots) robots.setAttribute('content', publicRoute && !notFound ? 'index, follow' : 'noindex, follow');
+    if (publicRoute && !notFound) {
+      const path = bolum === 'yonetici' ? '/yonetici/' : '/' + (bolum || '') + '/';
+      if (canonical) canonical.href = TF4_PUBLIC_ORIGIN + path;
+      if (openGraph) openGraph.content = TF4_PUBLIC_ORIGIN + path;
+      if (twitterUrl) twitterUrl.content = TF4_PUBLIC_ORIGIN + path;
+    } else {
+      if (canonical) canonical.removeAttribute('href');
+      if (openGraph) openGraph.removeAttribute('content');
+      if (twitterUrl) twitterUrl.removeAttribute('content');
+    }
   };
   addEventListener('hashchange', window.tf4RouteHead);
   addEventListener('popstate', window.tf4RouteHead);
