@@ -99,7 +99,7 @@
   function localUpload(file, context) {
     return validate(file).then(function (normalized) {
       var meta = {
-        id: id(), tur: 'arka-plan', kaynak: 'indexeddb', yol: '', mime: normalized.mime,
+        id: id(), tur: context && ['portre', 'varlik', 'cizim'].indexOf(context.tur) !== -1 ? context.tur : 'arka-plan', kaynak: 'indexeddb', yol: '', mime: normalized.mime,
         genislik: normalized.width, yukseklik: normalized.height, alt: text(context && context.alt || 'Harita resmi').slice(0, 160),
         kaplama: context && context.kaplama === 'contain' ? 'contain' : 'cover',
         saydamlik: Math.max(0, Math.min(1, Number(context && context.saydamlik == null ? 1 : context.saydamlik))),

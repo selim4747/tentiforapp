@@ -213,6 +213,26 @@ for (const signature of ['function guncellemeBekletir()', 'async function guncel
 }
 fs.writeFileSync(updateBundlePath, updateBundle, 'utf8');
 
+// Custom-world visual metadata is normalized in the serving bundle as well as
+// the readable source; otherwise portraits/items disappear on the next save.
+const worldExtensionSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/45-evrengezer.js'), 'utf8');
+for (const signature of ['function evrenVarlikGorselTemizle(a)', 'function evrenVarliklarTemizle(a)', 'function evrenEkTemizle(a,e)']) {
+  const sourceRange = functionRange(worldExtensionSource, signature, `World visual source ${signature}`);
+  const sourceFunction = worldExtensionSource.slice(sourceRange.start, sourceRange.end);
+  const bundleStart = updateBundle.indexOf(signature);
+  if (bundleStart >= 0) {
+    const bundleRange = functionRange(updateBundle, signature, `World visual bundle ${signature}`);
+    updateBundle = updateBundle.slice(0, bundleRange.start) + sourceFunction + updateBundle.slice(bundleRange.end);
+  } else if (signature !== 'function evrenEkTemizle(a,e)') {
+    const anchor = updateBundle.indexOf('function evrenEkTemizle(a,e)');
+    if (anchor < 0) throw new Error('paket-3.js evrenEkTemizle sınırı bulunamadı; paket üretimi durduruldu.');
+    updateBundle = updateBundle.slice(0, anchor) + sourceFunction + '\n' + updateBundle.slice(anchor);
+  } else {
+    throw new Error('paket-3.js evrenEkTemizle bulunamadı; paket üretimi durduruldu.');
+  }
+}
+fs.writeFileSync(updateBundlePath, updateBundle, 'utf8');
+
 // 2. Paket karması hesapla. Tarih kullanılmaz; aynı girdiler aynı cache adını üretir.
 syncTerminalRoutes(ROOT_DIR);
 const navigationSource = fs.readFileSync(path.join(ROOT_DIR, 'js/arayuz/18-gezinme.js'), 'utf8');
