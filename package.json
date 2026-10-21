@@ -17,7 +17,8 @@
     "test:seo": "node tests/seo-playwright.mjs",
     "test:release": "node tests/release-hygiene.mjs",
     "lint": "node scripts/lint.mjs",
-    "test:admin-browser": "node tests/admin-playwright.mjs"
+    "test:admin-browser": "node tests/admin-playwright.mjs",
+    "test:universe-visual-browser": "node tests/universe-visual-playwright.mjs"
   },
   "keywords": [
     "tentifor",
