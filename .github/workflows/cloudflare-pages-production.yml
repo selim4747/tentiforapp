@@ -1,0 +1,71 @@
+name: Cloudflare Pages production
+
+# Production rollout is intentionally manual: dispatch only after production approval.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: cloudflare-pages-production
+  cancel-in-progress: false
+
+jobs:
+  build-test-deploy:
+    name: Build, test and deploy main to Cloudflare Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout production branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+
+      - name: Install dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build release assets
+        run: npm run build
+
+      - name: Run full regression suite
+        run: npm test
+
+      - name: Rebuild generated assets after regression tests
+        run: npm run build
+
+      - name: Install Chromium for SEO/admin route checks
+        run: npx playwright install --with-deps chromium
+
+      - name: Run admin session and cross-tab Playwright checks
+        run: npm run test:admin-browser
+
+      - name: Run SEO and public/admin route Playwright checks
+        run: npm run test:seo
+
+      - name: Require Cloudflare deployment credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo '::error::Configure CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID as GitHub Actions secrets before deploying.'
+            exit 1
+          fi
+
+      - name: Deploy verified main build to Cloudflare Pages production
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: pages deploy dist --project-name=tentiforapp --branch=main

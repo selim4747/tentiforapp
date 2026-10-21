@@ -32,8 +32,11 @@ try {
   server.stdout.on('data', (chunk) => { output += chunk; });
   server.stderr.on('data', (chunk) => { output += chunk; });
   await ready();
-  const browser = await chromium.launch({ headless: true, executablePath: '/usr/bin/chromium' });
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await context.route('https://static.cloudflareinsights.com/beacon.min.js*', (route) => route.fulfill({
+    status: 200, contentType: 'application/javascript; charset=utf-8', body: ''
+  }));
   const fixtureDigest = crypto.createHash('sha256').update('playwright-regresyon-kodu#dogrula').digest('hex');
   await context.route('**/veri.json*', async (route) => {
     const response = await route.fetch();

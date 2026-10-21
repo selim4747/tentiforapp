@@ -166,6 +166,23 @@ if (routerBundleStart < 0 || routerBundleEnd <= routerBundleStart || !routeSourc
 routeBundle = routeBundle.slice(0, routerBundleStart)
   + routeSource.trimEnd() + '\n\n'
   + routeBundle.slice(routerBundleEnd);
+const mapSource = fs.readFileSync(path.join(ROOT_DIR, 'js/arsiv/09-medya-harita.js'), 'utf8');
+const mapSourceStart = mapSource.indexOf('let haritaURLVeriBekliyor=false;');
+const mapSourceEnd = mapSource.indexOf('function haritaYerDurumu(', mapSourceStart);
+const mapBundleStart = routeBundle.includes('let haritaURLVeriBekliyor=false;')
+  ? routeBundle.indexOf('let haritaURLVeriBekliyor=false;')
+  : routeBundle.indexOf('function haritaURLSeciminiYukle()');
+const mapBundleEnd = routeBundle.indexOf('function haritaYerDurumu(', mapBundleStart);
+const mapBundleFunctionStart = routeBundle.indexOf('function haritaURLSeciminiYukle()', mapBundleStart);
+if (mapSourceStart < 0 || mapSourceEnd <= mapSourceStart || mapBundleStart < 0 || mapBundleEnd <= mapBundleStart
+  || mapSource.indexOf('let haritaURLVeriBekliyor=false;', mapSourceStart + 1) >= 0
+  || mapBundleFunctionStart < 0
+  || routeBundle.indexOf('function haritaURLSeciminiYukle()', mapBundleFunctionStart + 1) >= 0) {
+  throw new Error('Map URL hydration source/bundle boundary is not unique; build stopped.');
+}
+routeBundle = routeBundle.slice(0, mapBundleStart)
+  + mapSource.slice(mapSourceStart, mapSourceEnd)
+  + routeBundle.slice(mapBundleEnd);
 fs.writeFileSync(routeBundlePath, routeBundle, 'utf8');
 const universeSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/44-evrenler.js'), 'utf8');
 const universeBundlePath = path.join(ROOT_DIR, 'js/paket-2.js');
