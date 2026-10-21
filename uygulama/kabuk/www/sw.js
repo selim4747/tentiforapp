@@ -1,48 +1,48 @@
 /* TentiforApp servis çalışanı — sayfa ve veri önce ağdan (yavaşsa son kopya), sürümlü dosyalar önbellekten.
    Yeni bir sürüm yayınlanınca sayfalar kendiliğinden yenilenir; eski kopya yalnızca çevrimdışı ya da yavaş ağda kullanılır. */
-const ONBELLEK = "tentiforapp-2c6ceecbdae4";
+const ONBELLEK = "tentiforapp-cb98abfbcc5b";
 /* Hesap kütüphanesi burada yok: yalnızca hesabı kullanan indirir (ilk kullanımda önbelleğe girer). */
 const ILK = [
   "./",
   "index.html",
   "favicon.ico",
-  "css/style.css?v=58d6231b539f",
-  "css/v65.css?v=2c6ceecbdae4",
+  "css/style.css?v=b918b12e9541",
+  "css/v65.css?v=cb98abfbcc5b",
   "veri.json",
-  "js/paket-1.js?v=2c6ceecbdae4",
-  "js/paket-2.js?v=2c6ceecbdae4",
-  "js/paket-3.js?v=2c6ceecbdae4",
-  "js/paket-4.js?v=2c6ceecbdae4",
+  "js/paket-1.js?v=cb98abfbcc5b",
+  "js/paket-2.js?v=cb98abfbcc5b",
+  "js/paket-3.js?v=cb98abfbcc5b",
+  "js/paket-4.js?v=cb98abfbcc5b",
   "manifest.webmanifest",
   "ikon/ikon-192.png",
   "yazitipi/karla-normal-400-latin.woff2",
-  "js/core/24-arsiv-mantigi.js?v=2c6ceecbdae4",
-  "js/engine/user-universe-secret-identities.js?v=2c6ceecbdae4",
-  "js/engine/88-v46-yenilikler.js?v=2c6ceecbdae4",
-  "js/engine/92-v51-dashboard.js?v=2c6ceecbdae4",
-  "js/core/93-offline-queue.js?v=2c6ceecbdae4",
-  "js/core/94-cakisma.js?v=2c6ceecbdae4",
-  "js/engine/91-v473-uyelik.js?v=2c6ceecbdae4",
-  "js/engine/evren-harita-zaman-cizelgesi.js?v=2c6ceecbdae4",
-  "js/engine/seo-meta.js?v=2c6ceecbdae4",
-  "js/engine/free-universe-cleanup-6313.js?v=2c6ceecbdae4",
-  "js/engine/profile-sharing-6313.js?v=2c6ceecbdae4",
-  "js/engine/secure-sharing.js?v=2c6ceecbdae4",
-  "js/core/54-v54-olgunlastirma.js?v=2c6ceecbdae4",
-  "js/arayuz/32-ux-642.js?v=2c6ceecbdae4",
-  "js/arayuz/33-ux-644.js?v=2c6ceecbdae4",
-  "js/arayuz/34-ux-645.js?v=2c6ceecbdae4",
-  "js/core/100-v60-native.js?v=2c6ceecbdae4",
-  "js/core/110-v62-platform.js?v=2c6ceecbdae4",
-  "js/core/120-mobil-ambiyans-uretim-aliskanlik.js?v=2c6ceecbdae4",
-  "js/core/125-live-site-bootstrap.js?v=2c6ceecbdae4",
+  "js/core/24-arsiv-mantigi.js?v=cb98abfbcc5b",
+  "js/engine/user-universe-secret-identities.js?v=cb98abfbcc5b",
+  "js/engine/88-v46-yenilikler.js?v=cb98abfbcc5b",
+  "js/engine/92-v51-dashboard.js?v=cb98abfbcc5b",
+  "js/core/93-offline-queue.js?v=cb98abfbcc5b",
+  "js/core/94-cakisma.js?v=cb98abfbcc5b",
+  "js/engine/91-v473-uyelik.js?v=cb98abfbcc5b",
+  "js/engine/evren-harita-zaman-cizelgesi.js?v=cb98abfbcc5b",
+  "js/engine/seo-meta.js?v=cb98abfbcc5b",
+  "js/engine/free-universe-cleanup-6313.js?v=cb98abfbcc5b",
+  "js/engine/profile-sharing-6313.js?v=cb98abfbcc5b",
+  "js/engine/secure-sharing.js?v=cb98abfbcc5b",
+  "js/core/54-v54-olgunlastirma.js?v=cb98abfbcc5b",
+  "js/arayuz/32-ux-642.js?v=cb98abfbcc5b",
+  "js/arayuz/33-ux-644.js?v=cb98abfbcc5b",
+  "js/arayuz/34-ux-645.js?v=cb98abfbcc5b",
+  "js/core/100-v60-native.js?v=cb98abfbcc5b",
+  "js/core/110-v62-platform.js?v=cb98abfbcc5b",
+  "js/core/120-mobil-ambiyans-uretim-aliskanlik.js?v=cb98abfbcc5b",
+  "js/core/125-live-site-bootstrap.js?v=cb98abfbcc5b",
   "js/engine/101-v61-universe.js?v=612",
-  "js/core/99-v50-mobil.js?v=2c6ceecbdae4",
-  "js/core/v65-offline-sync-center.js?v=2c6ceecbdae4",
-  "js/engine/v65-universe-navigation.js?v=2c6ceecbdae4",
-  "js/engine/v65-universe-publication-check.js?v=2c6ceecbdae4",
-  "css/terminal.css?v=2c6ceecbdae4",
-  "js/engine/tentifor-terminal.js?v=2c6ceecbdae4"
+  "js/core/99-v50-mobil.js?v=cb98abfbcc5b",
+  "js/core/v65-offline-sync-center.js?v=cb98abfbcc5b",
+  "js/engine/v65-universe-navigation.js?v=cb98abfbcc5b",
+  "js/engine/v65-universe-publication-check.js?v=cb98abfbcc5b",
+  "css/terminal.css?v=cb98abfbcc5b",
+  "js/engine/tentifor-terminal.js?v=cb98abfbcc5b"
 ];
 
 self.addEventListener("message", function (e) {
@@ -209,6 +209,21 @@ self.addEventListener("fetch", function (e) {
   const u = new URL(istek.url);
   if (istek.method !== "GET" || u.origin !== location.origin) { return; }
   if (u.pathname.indexOf("/__") === 0) { return; }
+  /* veri.json always prefers the network so an online admin never sees an old
+     service-worker snapshot. The last successful response remains the offline fallback. */
+  if (u.pathname === "/veri.json") {
+    const guncel = guvenliFetch(istek, { cache: "no-store" }).then(function (y) {
+      onbellegeKoy(istek, y, false);
+      return y;
+    });
+    e.waitUntil(guncel.catch(function () { /* offline: response path uses cache */ }));
+    e.respondWith(guncel.catch(function () {
+      return yedekKopya(istek, false).then(function (k) { return k || new Response("Veri çevrimdışı kullanılamıyor.", {
+        status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" }
+      }); });
+    }));
+    return;
+  }
   if (u.pathname.indexOf("/api/") === 0) { return; }   /* sunucu fonksiyonları (functions/): kendi önbellekleri var */
 
   const surumlu = /^\/(?:js\/|css\/|veri-[a-z]+\.json$)/.test(u.pathname) && u.searchParams.has("v");
