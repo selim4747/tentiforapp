@@ -35,7 +35,7 @@ async function yayindakiPaket() {
 
 function guncellemeBekletir() {
   const e = document.activeElement;
-  return !!(e && (e.tagName === "TEXTAREA" || e.tagName === "INPUT" && !/^(button|submit|checkbox|radio|range|color)$/.test(e.type) || e.isContentEditable) || typeof panelAcik === "function" && panelAcik());
+  return !!(e && (e.tagName === "TEXTAREA" || e.tagName === "INPUT" && !/^(button|submit|checkbox|radio|range|color)$/.test(e.type) || e.isContentEditable) || document.querySelector('[data-tf-unsaved="1"], [data-tf-dirty="1"]') || typeof panelAcik === "function" && panelAcik());
 }
 
 function guncellemeGorulen(paket) {
@@ -53,28 +53,62 @@ function guncellemeGorulduIsaretle(paket) {
 }
 
 async function guncellemeUygula() {
-  if (guncellemeYeni && guncellemeYeni.paket) {
-    guncellemeGorulduIsaretle(guncellemeYeni.paket);
-    try {
-      sessionStorage.setItem("tentiforapp_guncellendi", guncellemeYeni.surum || yerelSurum());
-    } catch {}
+  if (guncellemeUygulaniyor) return;
+  if (guncellemeBekletir()) {
+    guncellemeDurumGoster("Kaydedilmemiş düzenleme açık; kaydedip yeniden deneyin. Mevcut sürüm çalışmaya devam ediyor.");
+    return;
   }
-  if (navigator.serviceWorker) {
-    try {
+  if (!navigator.onLine) {
+    guncellemeDurumGoster("Bağlantı yok; mevcut sürüm çalışmaya devam ediyor. Çevrimiçiyken yeniden deneyin.");
+    return;
+  }
+
+  guncellemeUygulaniyor = true;
+  const dugme = document.querySelector("#guncellemeCubugu [data-guncelle]");
+  if (dugme) { dugme.disabled = true; dugme.textContent = "Güncelleme hazırlanıyor…"; }
+  try {
+    if (navigator.serviceWorker) {
       const kayit = await navigator.serviceWorker.getRegistration("/");
       if (kayit) {
         await kayit.update();
-        if (kayit.waiting) {
-          const degisim = new Promise(function (coz) {
-            navigator.serviceWorker.addEventListener("controllerchange", coz, { once: true });
+        let bekleyen = kayit.waiting;
+        if (!bekleyen && kayit.installing) {
+          bekleyen = await Promise.race([
+            new Promise(function (coz) {
+              const kurulan = kayit.installing;
+              if (!kurulan) { coz(kayit.waiting || null); return; }
+              kurulan.addEventListener("statechange", function () {
+                if (kurulan.state === "installed") coz(kayit.waiting || kurulan);
+                else if (kurulan.state === "redundant") coz(null);
+              });
+            }),
+            new Promise(function (coz) { setTimeout(function () { coz(kayit.waiting || null); }, 8000); })
+          ]);
+        }
+        if (bekleyen) {
+          const degisim = new Promise(function (coz, reddet) {
+            const zaman = setTimeout(function () { reddet(new Error("Service Worker etkinleşmedi")); }, 8000);
+            navigator.serviceWorker.addEventListener("controllerchange", function () {
+              clearTimeout(zaman);
+              coz();
+            }, { once: true });
           });
-          kayit.waiting.postMessage({ action: "skipWaiting" });
-          await Promise.race([degisim, new Promise(function (coz) { setTimeout(coz, 2500); })]);
+          bekleyen.postMessage({ action: "skipWaiting" });
+          await degisim;
         }
       }
-    } catch {}
+    }
+    if (!navigator.onLine) throw new Error("Bağlantı kesildi");
+    if (guncellemeYeni && guncellemeYeni.paket) {
+      guncellemeGorulduIsaretle(guncellemeYeni.paket);
+      try { sessionStorage.setItem("tentiforapp_guncellendi", guncellemeYeni.surum || yerelSurum()); } catch {}
+    }
+    location.reload();
+  } catch {
+    guncellemeUygulaniyor = false;
+    if (dugme) { dugme.disabled = false; dugme.textContent = "Yenile"; }
+    guncellemeDurumGoster("Güncelleme alınamadı; mevcut sürüm çalışmaya devam ediyor. Bağlantıyı kontrol edip Yenile’yi tekrar deneyin.");
   }
-  location.reload();
 }
 
 function guncellemeBildirimiGonder(baslik, metin) {

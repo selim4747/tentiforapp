@@ -33,14 +33,14 @@ jobs:
           node-version: 20
 
       - name: Install web dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-package-lock --no-audit --no-fund
 
       - name: Build web and synchronize APK assets
         run: npm run build
 
       - name: Install Capacitor dependencies
         working-directory: uygulama/kabuk
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-package-lock --no-audit --no-fund
 
       - name: Synchronize Capacitor Android project
         working-directory: uygulama/kabuk

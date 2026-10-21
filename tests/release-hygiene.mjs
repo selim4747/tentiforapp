@@ -103,7 +103,9 @@ assert.ok(fs.existsSync(path.join(root, 'js/engine/kesif-kullanici-profili.js'))
 assert.match(fs.readFileSync(path.join(root, 'supabase/migrations/20261003_630_discovery.sql'), 'utf8'), /public_kullanici_profili/);
 
 assert.match(fs.readFileSync(path.join(root, 'js/engine/91-v473-uyelik.js'), 'utf8'), new RegExp(`SURUM = '${pkg.version.replaceAll('.', '\\.')}'`));
-assert.ok(fs.existsSync(path.join(root, 'package-lock.json')), 'bağımlılık lock dosyası eksik');
+const seoWorkflow = fs.readFileSync(path.join(root, '.github/workflows/seo-playwright.yml'), 'utf8');
+assert.doesNotMatch(seoWorkflow, /cache:\s*npm/, 'lockfile yokken setup-node npm cache etkinleştirilmemeli');
+assert.match(seoWorkflow, /npm install --no-package-lock/, 'lockfile yokken CI lock dosyası üretmeden kurulum yapmalı');
 const retiredPattern = ['cl' + 'aude', 'et' + 'erya', 'fornek-' + 'et' + 'erya'].join('|');
 const retiredSearch = spawnSync('git', ['grep', '-il', '-E', retiredPattern, '--', ':!node_modules', ':!tests/**'], { cwd: root, encoding: 'utf8' });
 const retiredFiles = (retiredSearch.stdout || '').trim();

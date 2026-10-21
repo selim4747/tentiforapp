@@ -128,9 +128,10 @@ assert.equal(seoFetches, 0, 'local test fixtures must not be sent to the public 
 sampleRoute.window.close();
 
 const publicRoute = routeWindow();
-publicRoute.window.location.hash = '#/ev/site/e126';
+publicRoute.window.location.hash = '#/evren/e126';
 publicRoute.window.rotaYolaCevir();
-assert.equal(publicRoute.window.location.pathname, '/evren/e126/', 'verified public universe routes retain their clean URL');
+assert.equal(publicRoute.window.location.pathname, '/', 'the E126 app route remains a hash route during client navigation');
+assert.equal(publicRoute.window.rota(), '#/evren/e126', 'client navigation uses the exact supported E126 route');
 publicRoute.window.close();
 
 const modal = new JSDOM(baseHtml, { url: 'https://tentifor.com/', runScripts: 'outside-only', pretendToBeVisual: true });
