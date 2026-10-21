@@ -49,6 +49,9 @@ assert.match(client, /addEventListener\('popstate', handleRoute\)/);
 assert.match(client, /public_seo_sayfa/);
 assert.match(client, /approvedCanonicalUniverse/);
 assert.match(client, /noindex, follow/);
+assert.match(client, /function showPublicLoadError/);
+assert.match(client, /data-public-seo-error/);
+assert.match(client, /retry\.addEventListener\('click'/);
 assert.match(routeSource, /ilk === 'yonetici' \|\| ilk === 'yönetici'/, 'ASCII and Turkish admin path names resolve to the dedicated app route');
 assert.match(routeSource, /return '\/yonetici\/'/, 'SPA admin navigation canonicalizes to the ASCII URL');
 assert.match(routeSource, /DOMContentLoaded[\s\S]*window\.sayfaYonlendir/, 'direct admin entry overrides a previously saved Sen page');
@@ -67,6 +70,8 @@ assert.ok(routeSource.replace(/\s+/g, '').includes(moderationPrivacyRule), 'mode
 assert.ok(routeBundle.replace(/\s+/g, '').includes(moderationPrivacyRule), 'served route bundle matches the privacy rule in source');
 assert.doesNotMatch(client, /\.innerHTML\s*=/, 'untrusted public profile/world text must be rendered with textContent/attributes, never HTML parsing');
 assert.match(index, /js\/engine\/seo-meta\.js/);
+assert.match(index, /id="tfAppBootStatus"[^>]*role="alert"/);
+assert.match(index, /__TF_APP_BOOT_TIMEOUT_MS/);
 assert.doesNotMatch(index, /id="yonetici"/, 'the public/Sen application shell must not contain the admin panel');
 assert.match(sw, /js\/engine\/seo-meta\.js/);
 assert.match(buildScript, /publicSeoPages/);
