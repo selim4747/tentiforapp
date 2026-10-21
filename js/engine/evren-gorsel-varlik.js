@@ -121,16 +121,57 @@
   window.EVH_GORSEL_URL = Object.create(null);
   window.EVH_GORSEL_UZAK_META = Object.create(null);
   var uzakBekleyen = Object.create(null);
-  window.evrenGorselGoster = function (meta, rerender) {
+  window.evrenGorselGoster = function (meta, rerender, evrenId) {
     if (!meta || !meta.id || window.EVH_GORSEL_URL[meta.id]) return;
-    window.evrenGorselVarlik.oku(meta, { kaynak: meta.kaynak }).then(function (record) {
+    window.evrenGorselVarlik.oku(meta, { kaynak: meta.kaynak, evrenId: evrenId }).then(function (record) {
       if (!record || !record.url) return;
       window.EVH_GORSEL_URL[meta.id] = record.url;
       if (typeof rerender === 'function') rerender();
     }).catch(function () {});
   };
   var BUCKET = 'evren-harita-gorselleri';
-  function serverRead(meta) {
+  var API_PATH = '/api/evren-gorsel';
+  function apiBase() {
+    try {
+      if (location.protocol === 'http:' || location.protocol === 'https:') {
+        if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return location.origin;
+      }
+    } catch (error) {}
+    return 'https://tentifor.com';
+  }
+  function apiHeaders() {
+    if (typeof hesapIstemci === 'undefined' || !hesapIstemci || !hesapIstemci.auth) return Promise.resolve({});
+    return hesapIstemci.auth.getSession().then(function (result) {
+      var token = result && result.data && result.data.session && result.data.session.access_token;
+      return token ? { Authorization: 'Bearer ' + token } : {};
+    });
+  }
+  function apiUrl(evrenId) { return apiBase() + API_PATH + '?evrenId=' + encodeURIComponent(String(evrenId || '')); }
+  function remoteMetaFrom(response, evrenId, fallback) {
+    var decodeAlt = 'Harita resmi';
+    try { decodeAlt = decodeURIComponent(response.headers.get('X-EVH-Image-Alt') || 'Harita resmi'); } catch (error) {}
+    fallback = fallback || {};
+    return {
+      id: fallback.id || 'remote-' + String(evrenId), tur: 'arka-plan',
+      kaynak: response.headers.get('X-EVH-Image-Source') === 'github' ? 'github' : 'supabase',
+      yol: fallback.yol || (response.headers.get('X-EVH-Image-Source') === 'github' ? '' : (function () { try { return decodeURIComponent(response.headers.get('X-EVH-Image-Path') || ''); } catch (error) { return ''; } }())), mime: response.headers.get('X-EVH-Image-Mime') || fallback.mime || '',
+      boyut: fallback.boyut, genislik: Number(response.headers.get('X-EVH-Image-Width')) || fallback.genislik,
+      yukseklik: Number(response.headers.get('X-EVH-Image-Height')) || fallback.yukseklik,
+      alt: decodeAlt, kaplama: response.headers.get('X-EVH-Image-Fit') === 'contain' ? 'contain' : 'cover',
+      saydamlik: Math.max(0, Math.min(1, Number(response.headers.get('X-EVH-Image-Opacity') == null ? 1 : response.headers.get('X-EVH-Image-Opacity')))),
+      herkeseAcik: fallback.herkeseAcik === true
+    };
+  }
+  function serverRead(meta, evrenId) {
+    if (evrenId) {
+      return apiHeaders().then(function (headers) { return fetch(apiUrl(evrenId), { headers: headers, credentials: 'omit' }); }).then(function (response) {
+        if (!response.ok) return null;
+        return response.blob().then(function (blob) {
+          var resolved = remoteMetaFrom(response, evrenId, meta);
+          return { meta: resolved, blob: blob, url: URL.createObjectURL(blob) };
+        });
+      });
+    }
     if (!meta || !meta.yol || typeof hesapIstemci === 'undefined' || !hesapIstemci) return Promise.resolve(null);
     return hesapIstemci.storage.from(BUCKET).download(meta.yol).then(function (result) {
       if (!result || result.error || !result.data) return null;
@@ -138,31 +179,36 @@
     });
   }
   function serverDelete(meta, evrenId) {
-    if (!meta || !evrenId || typeof hesapIstemci === 'undefined' || !hesapIstemci) return Promise.resolve(true);
+    if (!evrenId) return Promise.reject(new Error('Görseli silmek için evren kimliği gerekli.'));
+    if (meta && meta.kaynak === 'github') {
+      return apiHeaders().then(function (headers) {
+        return fetch(apiUrl(evrenId), { method: 'DELETE', headers: headers, credentials: 'omit' });
+      }).then(function (response) {
+        return response.json().catch(function () { return {}; }).then(function (data) {
+          if (!response.ok) throw new Error(data.error === 'login-required' ? 'Silmek için hesabınıza giriş yapmalısınız.' : 'Görsel GitHub’dan kaldırılamadı.');
+          return data.cleanup === 'pending' ? { cleanupPending: true } : true;
+        });
+      });
+    }
+    if (typeof hesapIstemci === 'undefined' || !hesapIstemci) return Promise.reject(new Error('Eski Supabase görselini silmek için hesap bağlantısı gerekli.'));
     return hesapIstemci.rpc('evren_gorsel_varlik_sil', { p_evren_id: evrenId }).then(function (result) {
       if (result && result.error) throw result.error;
-      return meta.yol ? hesapIstemci.storage.from(BUCKET).remove([meta.yol]).then(function () { return true; }) : true;
+      if (result && result.data && result.data.durum !== 'tamam') throw new Error('Görsel silme izni doğrulanamadı.');
+      return meta && meta.yol ? hesapIstemci.storage.from(BUCKET).remove([meta.yol]).then(function (removed) {
+        if (removed && removed.error) throw removed.error;
+        return true;
+      }) : true;
     });
   }
-  function serverMetaRead(evrenId) {
-    if (!evrenId || typeof hesapIstemci === 'undefined' || !hesapIstemci) return Promise.resolve(null);
-    return hesapIstemci.rpc('evren_gorsel_varlik_oku', { p_evren_id: evrenId }).then(function (result) {
-      if (!result || result.error || !result.data || result.data.durum !== 'tamam' || !result.data.yol) return null;
-      var data = result.data;
-      return { id: 'remote-' + String(evrenId), tur: 'arka-plan', kaynak: 'supabase', yol: data.yol,
-        mime: data.mime, boyut: data.boyut, genislik: data.genislik, yukseklik: data.yukseklik,
-        alt: data.alt || 'Harita resmi', kaplama: data.kaplama === 'contain' ? 'contain' : 'cover',
-        saydamlik: Math.max(0, Math.min(1, Number(data.saydamlik == null ? 1 : data.saydamlik))),
-        herkeseAcik: data.herkese_acik === true };
-    });
-  }
+  function serverMetaRead(evrenId) { return serverRead(null, evrenId).then(function (record) { return record || null; }); }
   function uzakGorselGoster(evrenId, rerender) {
-    if (!evrenId || typeof hesapIstemci === 'undefined' || !hesapIstemci) return;
-    if (window.EVH_GORSEL_UZAK_META[evrenId]) return;
+    if (!evrenId || window.EVH_GORSEL_UZAK_META[evrenId]) return;
     if (!uzakBekleyen[evrenId]) {
-      uzakBekleyen[evrenId] = serverMetaRead(evrenId).then(function (meta) {
-        if (meta) window.EVH_GORSEL_UZAK_META[evrenId] = meta;
-        return meta;
+      uzakBekleyen[evrenId] = serverMetaRead(evrenId).then(function (record) {
+        if (!record || !record.meta || !record.url) return null;
+        window.EVH_GORSEL_UZAK_META[evrenId] = record.meta;
+        window.EVH_GORSEL_URL[record.meta.id] = record.url;
+        return record.meta;
       }).catch(function () { return null; }).finally(function () { delete uzakBekleyen[evrenId]; });
     }
     uzakBekleyen[evrenId].then(function (meta) { if (meta && typeof rerender === 'function') rerender(meta); });
@@ -172,21 +218,23 @@
     if (typeof hesapIstemci === 'undefined' || !hesapIstemci || typeof hesapKullanici === 'undefined' || !hesapKullanici) return Promise.reject(new Error('Hesaba aktarmak için giriş yapmalısınız.'));
     if (!context.evrenId) return Promise.reject(new Error('Hesap aktarımı için evren kimliği eksik.'));
     return validate(file).then(function (normalized) {
-      var assetId = id(), ext = normalized.mime === 'image/png' ? 'png' : normalized.mime === 'image/jpeg' ? 'jpg' : 'webp';
-      var path = String(hesapKullanici.id) + '/' + String(context.evrenId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80) + '/' + assetId + '.' + ext;
-      return hesapIstemci.storage.from(BUCKET).upload(path, normalized.blob, { upsert: false, contentType: normalized.mime }).then(function (upload) {
-        if (upload && upload.error) throw upload.error;
-        return hesapIstemci.rpc('evren_gorsel_varlik_kaydet', {
-          p_evren_id: context.evrenId, p_yol: path, p_mime: normalized.mime, p_boyut: normalized.blob.size,
-          p_genislik: normalized.width, p_yukseklik: normalized.height, p_alt: context.alt || 'Harita resmi',
-          p_kaplama: context.kaplama || 'cover', p_saydamlik: context.saydamlik == null ? 1 : context.saydamlik
-        }).then(function (result) {
-          if (result && result.error) return hesapIstemci.storage.from(BUCKET).remove([path]).then(function () { throw result.error; });
-          var meta = result && result.data || {};
-          return { id: assetId, tur: 'arka-plan', kaynak: 'supabase', yol: path, mime: normalized.mime,
-            genislik: normalized.width, yukseklik: normalized.height, alt: context.alt || 'Harita resmi',
-            kaplama: context.kaplama === 'contain' ? 'contain' : 'cover', saydamlik: Number(context.saydamlik) || 1,
-            olusturma: new Date().toISOString(), sunucu: meta };
+      var form = new FormData();
+      var ext = normalized.mime === 'image/png' ? 'png' : normalized.mime === 'image/jpeg' ? 'jpg' : 'webp';
+      form.append('evrenId', String(context.evrenId));
+      form.append('alt', text(context.alt || 'Harita resmi').slice(0, 160));
+      form.append('kaplama', context.kaplama === 'contain' ? 'contain' : 'cover');
+      form.append('saydamlik', String(context.saydamlik == null ? 1 : context.saydamlik));
+      form.append('file', normalized.blob, 'harita.' + ext);
+      return apiHeaders().then(function (headers) { return fetch(apiUrl(context.evrenId), { method: 'POST', headers: headers, body: form, credentials: 'omit' }); }).then(function (response) {
+        return response.json().catch(function () { return {}; }).then(function (data) {
+          if (!response.ok) {
+            var messages = { 'login-required': 'Hesabınıza tekrar giriş yapın.', 'not-authorized': 'Bu evren için görsel yükleme izniniz yok.', 'image-too-large': 'Görsel 10 MB sınırını aşıyor.', 'unsupported-image': 'Yalnızca PNG, JPEG veya WebP görseller kabul edilir.', 'image-storage-not-configured': 'GitHub görsel deposu henüz yapılandırılmadı.', 'image-cleanup-failed': 'Görsel sunucudan güvenle kaldırılamadı; metadata korunuyor, lütfen tekrar deneyin.' };
+            throw new Error(messages[data.error] || 'Görsel GitHub’a aktarılamadı.');
+          }
+          if (data.id && window.EVH_GORSEL_URL[data.id]) URL.revokeObjectURL(window.EVH_GORSEL_URL[data.id]);
+          if (data.id) delete window.EVH_GORSEL_URL[data.id];
+          if (context.evrenId) delete window.EVH_GORSEL_UZAK_META[context.evrenId];
+          return data;
         });
       });
     });
@@ -198,17 +246,17 @@
     validate: validate,
     yukle: function (file, context) {
       context = context || {};
-      if (context.kaynak === 'supabase') return serverUpload(file, context);
+      if (context.kaynak === 'supabase' || context.kaynak === 'github') return serverUpload(file, context);
       return localUpload(file, context);
     },
     oku: function (meta, context) {
       context = context || {};
-      if (context.kaynak === 'supabase') return serverRead(meta);
+      if (context.kaynak === 'supabase' || context.kaynak === 'github') return serverRead(meta, context.evrenId);
       return localRead(meta);
     },
     sil: function (meta, context) {
       context = context || {};
-      if (context.kaynak === 'supabase') return serverDelete(meta, context.evrenId);
+      if (context.kaynak === 'supabase' || context.kaynak === 'github') return serverDelete(meta, context.evrenId);
       return localDelete(meta);
     },
     disaAktar: function (meta) { return localRead(meta); },
@@ -221,8 +269,12 @@
     hesabaAktar: function (meta, evrenId, context) {
       return localRead(meta).then(function (record) {
         if (!record || !record.blob) throw new Error('Yerel görsel bulunamadı.');
-        context = Object.assign({}, context || {}, { kaynak: 'supabase', evrenId: evrenId, alt: context && context.alt || meta.alt, kaplama: context && context.kaplama || meta.kaplama, saydamlik: context && context.saydamlik == null ? meta.saydamlik : context && context.saydamlik });
-        return serverUpload(record.blob, context);
+        context = Object.assign({}, context || {}, { kaynak: 'github', evrenId: evrenId, alt: context && context.alt || meta.alt, kaplama: context && context.kaplama || meta.kaplama, saydamlik: context && context.saydamlik == null ? meta.saydamlik : context && context.saydamlik });
+        return serverUpload(record.blob, context).then(function (remote) {
+          if (window.EVH_GORSEL_URL[meta.id]) URL.revokeObjectURL(window.EVH_GORSEL_URL[meta.id]);
+          delete window.EVH_GORSEL_URL[meta.id];
+          return localDelete(meta).catch(function () {}).then(function () { if (record.url) URL.revokeObjectURL(record.url); return remote; });
+        });
       });
     }
   };
@@ -249,7 +301,7 @@
       evrenGorselVarlik.hesabaAktar(transferMeta, transferId).then(function (serverMeta) {
         if (typeof evrenHaritaDegistir === 'function') evrenHaritaDegistir(function (draft) { draft.gorsel = serverMeta; });
         if (typeof evrenSayfaCiz === 'function') evrenSayfaCiz();
-        durum('Görsel hesabınıza kaydedildi.', true);
+        durum('Görsel hesabınıza GitHub üzerinden kaydedildi.', true);
       }).catch(function (error) { durum(error && error.message || 'Hesaba aktarılamadı.', false); }).finally(function () { transfer.disabled = false; });
       return;
     }
@@ -259,10 +311,18 @@
       var map = current && typeof evrenHaritaVerisi === 'function' ? evrenHaritaVerisi(current) : null;
       var meta = map && map.duzen && map.duzen.gorsel;
       if (!meta || typeof evrenHaritaDegistir !== 'function') return;
-      evrenHaritaDegistir(function (draft) { delete draft.gorsel; });
-      delete window.EVH_GORSEL_URL[meta.id];
-      if (typeof evrenGorselVarlik !== 'undefined') evrenGorselVarlik.sil(meta, { kaynak: meta.kaynak, evrenId: typeof EVS !== 'undefined' && EVS ? EVS.id : '' }).catch(function () {});
-      if (typeof evrenSayfaCiz === 'function') evrenSayfaCiz();
+      var removeId = typeof EVS !== 'undefined' && EVS ? EVS.id : '';
+      remove.disabled = true; durum('Görsel kaldırılıyor…', false);
+      evrenGorselVarlik.sil(meta, { kaynak: meta.kaynak, evrenId: removeId }).then(function (result) {
+        evrenHaritaDegistir(function (draft) { delete draft.gorsel; });
+        if (window.EVH_GORSEL_URL[meta.id]) URL.revokeObjectURL(window.EVH_GORSEL_URL[meta.id]);
+        delete window.EVH_GORSEL_URL[meta.id];
+        if (removeId) delete window.EVH_GORSEL_UZAK_META[removeId];
+        if (typeof evrenSayfaCiz === 'function') evrenSayfaCiz();
+        durum(result && result.cleanupPending ? 'Harita resimden kaldırıldı; sunucu temizliği daha sonra tamamlanacak.' : 'Harita resmi kaldırıldı.', true);
+      }).catch(function (error) {
+        durum(error && error.message || 'Harita resmi kaldırılamadı.', false);
+      }).finally(function () { remove.disabled = false; });
       return;
     }
     var choose = event.target.closest && event.target.closest('[data-evh-gorsel-alan] label[for="evhGorselDosya"]');
@@ -296,8 +356,9 @@
       var old = typeof evrenSayfaVerisi === 'function' ? evrenSayfaVerisi() : null;
       var data = old && typeof evrenHaritaVerisi === 'function' ? evrenHaritaVerisi(old) : null;
       var previous = data && data.duzen && data.duzen.gorsel;
+      var imageWorldId = typeof EVS !== 'undefined' && EVS ? EVS.id : '';
       evrenHaritaDegistir(function (draft) { draft.gorsel = meta; });
-      if (previous && previous.id !== meta.id) evrenGorselVarlik.sil(previous).catch(function () {});
+      if (previous && previous.id !== meta.id) evrenGorselVarlik.sil(previous, { kaynak: previous.kaynak, evrenId: imageWorldId }).catch(function () {});
       return evrenGorselVarlik.oku(meta).then(function (record) {
         if (record && record.url) window.EVH_GORSEL_URL[meta.id] = record.url;
         if (typeof evrenSayfaCiz === 'function') evrenSayfaCiz();
