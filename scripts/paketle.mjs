@@ -167,6 +167,34 @@ routeBundle = routeBundle.slice(0, routerBundleStart)
   + routeSource.trimEnd() + '\n\n'
   + routeBundle.slice(routerBundleEnd);
 fs.writeFileSync(routeBundlePath, routeBundle, 'utf8');
+const universeSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/44-evrenler.js'), 'utf8');
+const universeBundlePath = path.join(ROOT_DIR, 'js/paket-2.js');
+let universeBundle = fs.readFileSync(universeBundlePath, 'utf8');
+for (const signature of ['function evrenSayfaKur(e,n)', 'function evrenAdresiAc()']) {
+  const sourceRange = functionRange(universeSource, signature, `Universe source ${signature}`);
+  const bundleRange = functionRange(universeBundle, signature, `Universe bundle ${signature}`);
+  const sourceFunction = universeSource.slice(sourceRange.start, sourceRange.end);
+  if (universeBundle.slice(bundleRange.start, bundleRange.end) !== sourceFunction) {
+    universeBundle = universeBundle.slice(0, bundleRange.start) + sourceFunction + universeBundle.slice(bundleRange.end);
+  }
+}
+const oldUniverseBoot = 'if(evrenDugmesiKur(),rota().indexOf("#/ev/")===0)';
+const newUniverseBoot = 'if(evrenDugmesiKur(),rota()==="#/evren/e126"||rota().indexOf("#/ev/")===0)';
+if (universeBundle.includes(oldUniverseBoot)) universeBundle = universeBundle.replace(oldUniverseBoot, newUniverseBoot);
+else if (!universeBundle.includes(newUniverseBoot)) throw new Error('paket-2.js E126 cold-route bootstrap guard bulunamadı; paket üretimi durduruldu.');
+fs.writeFileSync(universeBundlePath, universeBundle, 'utf8');
+const updateSource = fs.readFileSync(path.join(ROOT_DIR, 'js/core/46-guncelleme.js'), 'utf8');
+const updateBundlePath = path.join(ROOT_DIR, 'js/paket-3.js');
+let updateBundle = fs.readFileSync(updateBundlePath, 'utf8');
+for (const signature of ['function guncellemeBekletir()', 'async function guncellemeUygula()']) {
+  const sourceRange = functionRange(updateSource, signature, `Update source ${signature}`);
+  const bundleRange = functionRange(updateBundle, signature, `Update bundle ${signature}`);
+  const sourceFunction = updateSource.slice(sourceRange.start, sourceRange.end);
+  if (updateBundle.slice(bundleRange.start, bundleRange.end) !== sourceFunction) {
+    updateBundle = updateBundle.slice(0, bundleRange.start) + sourceFunction + updateBundle.slice(bundleRange.end);
+  }
+}
+fs.writeFileSync(updateBundlePath, updateBundle, 'utf8');
 
 // 2. Paket karması hesapla. Tarih kullanılmaz; aynı girdiler aynı cache adını üretir.
 syncTerminalRoutes(ROOT_DIR);
@@ -224,6 +252,7 @@ function replaceSourceRange(bundle, source, sourceStart, sourceEnd, bundleStart,
 }
 const lockSource = fs.readFileSync(path.join(ROOT_DIR, 'js/arsiv/23-kanon-kilidi.js'), 'utf8');
 const walletSource = fs.readFileSync(path.join(ROOT_DIR, 'js/core/03-cuzdan.js'), 'utf8');
+const adminSource = fs.readFileSync(path.join(ROOT_DIR, 'js/admin/22-yonetici.js'), 'utf8');
 const kanonStart = 'function kilitAyarlariniHazirla()';
 const kanonEnd = 'const KANON_GRUPLARI=';
 if (routeBundle.includes(kanonStart)) {
@@ -237,6 +266,7 @@ if (routeBundle.includes(kanonStart)) {
 }
 routeBundle = replaceSourceRange(routeBundle, lockSource, 'function bolumErisimi(i)', 'const KANON_DISI_EVRENLER=', 'function bolumErisimi(i)', 'const KANON_DISI_EVRENLER=', 'page lock gate');
 routeBundle = replaceSourceRange(routeBundle, walletSource, 'function kilitAcik(n)', 'function cuzdanGoster()', 'function kilitAcik(n)', 'function cuzdanGoster()', 'product lock gate');
+routeBundle = replaceSourceRange(routeBundle, adminSource, 'const YONETICI_ANAHTAR=', 'function katmanListesi()', 'const YONETICI_ANAHTAR=', 'function katmanListesi()', 'admin session persistence');
 fs.writeFileSync(routeBundlePath, routeBundle, 'utf8');
 const hashGirdileri = [
   'index.html', 'manifest.webmanifest', 'package.json', 'veri.json',
@@ -431,7 +461,7 @@ const seoIndex = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
 // matching evrenler/{id}.json file. Private/draft database rows are never copied into output.
 // Deneme has no runtime catalog/payload; E126's generated path currently points to the
 // unsupported #/ev/site/e126 route. Exclude only these broken URLs until their routes are fixed.
-const excludedUnopenableWorldSlugs = new Set(['deneme', 'e126']);
+const excludedUnopenableWorldSlugs = new Set(['deneme']);
 const seoRouteAllowed = (item) => !(item && item.tur === 'evren' && excludedUnopenableWorldSlugs.has(String(item.slug || '').toLowerCase()));
 const staticSeoPages = [
   { tur: 'sayfa', path: '/tomye/', title: 'Tömye — TentiFor', description: 'Tömye evreni ve Tentiforverse arşiv içerikleri.' },

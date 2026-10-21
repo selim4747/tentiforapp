@@ -1,4 +1,4 @@
-const ROTA_HASH_KALIR = /^#\/(kartpostal\/|fan\/paylasim)/;
+const ROTA_HASH_KALIR = /^#\/(kartpostal\/|fan\/paylasim|evren\/e126(?:\/|$))/;
 const TF4_PUBLIC_ORIGIN = 'https://tentifor.com';
 
 function yoldanRota(yol) {
@@ -10,9 +10,10 @@ function yoldanRota(yol) {
   if (ilk === 'yonetici' || ilk === 'yönetici') return '#/yonetici';
   if (parcalar[0] === 'evren' && parcalar[1]) {
     if (['benim', 'acilan', 'fan', 'site', 'onizle'].includes(parcalar[1])) return '#/ev/' + parcalar.slice(1).join('/');
+    if (parcalar[1] === 'e126') return '#/evren/e126';
     if (parcalar[1] === 'e99') return '#/ev/e99';
     if (parcalar[1] === 'e25') return '#/ev/site/e25';
-    if (/^e\d+$/.test(parcalar[1])) return '#/ev/site/' + parcalar[1];
+    if (/^e\d+$/.test(parcalar[1])) return '#/ev/' + parcalar[1];
     return '#/ev/fan/' + parcalar[1];
   }
   return '#/' + parcalar.join('/');
@@ -22,9 +23,11 @@ function rotadanYol(rotaMetni) {
   const parcalar = String(rotaMetni || '').replace(/^#\/?/, '').split('/').filter(Boolean);
   if (!parcalar.length) return '/';
   const yol = (bolumler) => '/' + bolumler.map(encodeURIComponent).join('/') + '/';
+  if (parcalar[0] === 'evren' && parcalar[1] === 'e126' && parcalar.length === 2) return yol(['evren', 'e126']);
   if (parcalar[0] === 'yonetici' || parcalar[0] === 'yönetici') return '/yonetici/';
   if (parcalar[0] === 'ev') {
     if (parcalar[1] === 'e99' && parcalar.length === 2) return '/evren/e99/';
+    if (parcalar.length === 2 && /^e\d+$/.test(parcalar[1])) return yol(['evren', parcalar[1]]);
     if (parcalar[1] === 'site' && parcalar[2] && /^e\d+$/.test(parcalar[2]) && parcalar[2] !== 'e99') return yol(['evren', parcalar[2]]);
     if (parcalar[1] === 'fan' && parcalar[2] && (!/^e\d+$/.test(parcalar[2]) || !['e25', 'e99'].includes(parcalar[2])) && !['benim', 'acilan', 'fan', 'site'].includes(parcalar[2])) return yol(['evren', parcalar[2]]);
     return yol(['evren'].concat(parcalar.slice(1)));
@@ -33,8 +36,8 @@ function rotadanYol(rotaMetni) {
 }
 
 function rotaHashDuzelt(hash) {
-  const metin = String(hash || '');
-  return /^#[A-Za-z0-9_-]+$/.test(metin) ? '#/' + metin.slice(1) : metin;
+  // Router hashes begin with #/; ordinary #section fragments remain DOM anchors.
+  return String(hash || '');
 }
 
 function testFanEvrenRota(rotaMetni) {
@@ -66,6 +69,10 @@ function rotaAdresi(rotaMetni) {
 function rotaYolaCevir() {
   const hash = location.hash;
   if (!hash || hash.indexOf('#/') !== 0 || rotaHashKalir(hash) || location.protocol.indexOf('http') !== 0) return;
+  if (/^#\/(yonetici|yönetici)$/.test(hash) && location.pathname !== '/yonetici/') {
+    location.replace(location.origin + '/yonetici/' + location.search);
+    return;
+  }
   const yol = rotadanYol(hash);
   const eRota = hash.match(/^#\/ev\/site\/(e\d+)$/);
   if (yoldanRota(yol) === (hash === '#/' ? '' : hash) || (eRota && eRota[1] !== 'e25' && eRota[1] !== 'e99')) {
@@ -144,6 +151,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const notFound = document.body && document.body.hasAttribute('data-seo-not-found');
     const dynamicPublicPath = !hashRoute && !notFound && /^\/(?:u\/[^/]+|evren\/[^/]+|okuma-yolu\/[^/]+)\/?$/.test(location.pathname);
     if (dynamicPublicPath) return;
+    if (hashRoute && bolum === 'evren' && routeParts[1] === 'e126') {
+      document.title = 'E126 · e126 | TentiFor';
+      const description = document.querySelector('meta[name="description"]');
+      if (description) description.content = 'Fantastik · Bazı kişilerin bedenlerinin iki evren arasinda gezmesi';
+      const robots = document.querySelector('meta[name="robots"]');
+      if (robots) robots.setAttribute('content', 'index, follow');
+      const canonicalUrl = TF4_PUBLIC_ORIGIN + '/evren/e126/';
+      const canonical = document.querySelector('link[rel="canonical"]');
+      const openGraph = document.querySelector('meta[property="og:url"]');
+      const twitterUrl = document.querySelector('meta[name="twitter:url"]');
+      if (canonical) canonical.href = canonicalUrl;
+      if (openGraph) openGraph.content = canonicalUrl;
+      if (twitterUrl) twitterUrl.content = canonicalUrl;
+      return;
+    }
+    if (hashRoute && bolum === 'ev') return; // Other universe metadata belongs to the universe SEO handler.
     const publicRoute = !!(metadata && metadata[2] !== false);
     document.title = notFound ? 'Sayfa bulunamadı — TentiFor' : (metadata ? metadata[0] : 'TentiFor — Uygulama');
     const description = document.querySelector('meta[name="description"]');

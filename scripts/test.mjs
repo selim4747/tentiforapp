@@ -20,6 +20,7 @@ const tests = [
   'tests/native-durable-state.mjs',
   'tests/kullanici-simulasyonu.mjs',
   'tests/release-hygiene.mjs',
+  'tests/update-safety.mjs',
   'tests/6.6.1-release-hardening.mjs',
   'tests/changelog-removal.mjs',
   'tests/6.4.3-retired-universe-removal.mjs',
