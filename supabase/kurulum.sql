@@ -27,8 +27,8 @@ drop policy if exists "profiller herkese açık" on public.profiller;
 drop policy if exists "kendi profilini ekler" on public.profiller;
 drop policy if exists "kendi profilini günceller" on public.profiller;
 
-create policy "profiller herkese açık" on public.profiller
-  for select using (true);
+create policy "kendi profilini okur" on public.profiller
+  for select using (auth.uid() = id);
 create policy "kendi profilini ekler" on public.profiller
   for insert with check (auth.uid() = id);
 create policy "kendi profilini günceller" on public.profiller
@@ -1707,7 +1707,10 @@ create or replace view public.arsivci_seviyeleri as
   with p as (
     select p.id, p.kullanici_adi, p.gorunen_ad, s.tamlik, s.gun, s.madalya, s.katman, s.okunan_kutu, s.oyun_xp
     from public.profiller p left join public.istatistikler s on s.id = p.id
-    where p.kullanici_adi is not null and not coalesce(s.engelli or s.askida, false)),
+    where p.kullanici_adi is not null
+      and coalesce(p.profil_arama_gorunur, true)
+      and coalesce(p.profil_icerik_gorunur, true)
+      and not coalesce(s.engelli or s.askida or s.gizli, false)),
   x as (
     select p.*,
       coalesce(p.tamlik, 0) * 20 as x_tamlik,
@@ -3609,6 +3612,14 @@ select id, kullanici_adi, gorunen_ad, gorsel, tentifor_adi, hakkinda, vitrin,
 from public.profiller
 where coalesce(profil_arama_gorunur, true);
 grant select on public.public_profiller to anon, authenticated;
+-- Kullanıcı adı uygunluğu yalnızca boolean döndürür; profil satırı açığa çıkmaz.
+create or replace function public.kullanici_adi_uygun_mu(p_kullanici_adi text) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select case when btrim(coalesce(p_kullanici_adi, '')) !~ '^[a-z0-9_]{3,20}$' then false
+    else not exists (select 1 from public.profiller where kullanici_adi = lower(btrim(p_kullanici_adi))) end;
+$$;
+revoke all on function public.kullanici_adi_uygun_mu(text) from public;
+grant execute on function public.kullanici_adi_uygun_mu(text) to anon, authenticated;
 
 create index if not exists profiller_kullanici_adi_prefix_idx
   on public.profiller (lower(kullanici_adi));

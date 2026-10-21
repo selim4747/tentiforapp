@@ -1252,7 +1252,7 @@ textarea:focus,
 }
 
 
-/* 6.6.0 — tablet header taşmasını ve evren haritası genişlik zincirini sınırla. */
+/* 6.6.1 — tablet header taşmasını ve evren haritası genişlik zincirini sınırla. */
 @media (max-width: 820px) {
   .ust {
     min-width: 0;
@@ -1394,7 +1394,7 @@ textarea:focus,
   }
 }
 
-/* 6.6.0 map image controls: keep labels and form controls inside narrow screens. */
+/* 6.6.1 map image controls: keep labels and form controls inside narrow screens. */
 .evh-gorsel {
   box-sizing: border-box;
   min-width: 0;
