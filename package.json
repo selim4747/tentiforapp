@@ -14,6 +14,7 @@
     "test:live": "node tests/canli-ortam-simulasyonu.mjs",
     "test:map-browser": "node tests/map-route-playwright.mjs",
     "test:mobile-layout": "node tests/mobile-ui-overflow-playwright.mjs",
+    "test:mobile-layout:webkit": "TF_PLAYWRIGHT_ENGINE=webkit node tests/mobile-ui-overflow-playwright.mjs",
     "test:seo": "node tests/seo-playwright.mjs",
     "test:release": "node tests/release-hygiene.mjs",
     "lint": "node scripts/lint.mjs",

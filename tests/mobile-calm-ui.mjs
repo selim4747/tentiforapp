@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { chromium, firefox, webkit } from 'playwright';
+import { mockCloudflareRum } from './helpers/cloudflare-rum-mock.mjs';
 
 const engines = [['Chromium', chromium], ['Firefox', firefox], ['WebKit', webkit]];
 const results = [];
@@ -22,6 +23,7 @@ for (const [name, engine] of engines) {
     });
     const pageErrors = [];
     page.on('pageerror', (error) => pageErrors.push(error.message));
+    await mockCloudflareRum(page.context());
     await page.goto('http://127.0.0.1:3000/', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('.ana-tomye', { timeout: 15000 });
     await page.waitForSelector('#altMenu', { timeout: 15000 });

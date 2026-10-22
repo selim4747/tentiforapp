@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
+import { mockCloudflareRum } from './helpers/cloudflare-rum-mock.mjs';
 
 const port = Number(process.env.TF_MOBILE_UI_PORT || 3188);
 const baseURL = process.env.TF_MOBILE_UI_URL || `http://127.0.0.1:${port}`;
@@ -27,6 +28,7 @@ async function waitForApp(page) {
 
 async function measureRoute(width, route) {
   const page = await browser.newPage({ viewport: { width, height: 900 } });
+  await mockCloudflareRum(page.context());
   try {
     const response = await page.goto(`${baseURL}${route}`, { waitUntil: 'domcontentloaded' });
     assert.equal(response.status(), 200, `${route} should be served at ${width}px`);
@@ -81,6 +83,28 @@ async function measureRoute(width, route) {
       assert.equal(toolsPanel.overflow, width, `Araçlar paneli ${width}px sayfa taşması oluşturmamalı: ${JSON.stringify(toolsPanel)}`);
       await page.locator('[data-tf654-tools-toggle]').click();
     }
+    if (width <= 390 && route === '/') {
+      const theme = page.locator('header.ust > #temaAnahtar');
+      const rumPage = await browser.newPage();
+      await mockCloudflareRum(rumPage.context());
+      const rumProbe = await rumPage.evaluate(async () => {
+        const response = await fetch('https://cloudflareinsights.com/cdn-cgi/rum', {
+          method: 'POST', mode: 'cors', headers: { 'content-type': 'application/json' }, body: '{}'
+        });
+        return { ok: response.ok, status: response.status };
+      });
+      await rumPage.close();
+      assert.deepEqual(rumProbe, { ok: true, status: 204 }, `${width}px browser must receive a CORS-safe mocked Cloudflare RUM response`);
+      await page.locator('[data-mobil-menu]').click();
+      for (const category of ['Sayfalar', 'Ziyaretçi alanları', 'Görünüm', 'Keşif', 'Yönetim']) {
+        assert.equal(await page.locator('#mobilMenu .mm-grup-baslik').filter({ hasText: category }).count(), 1, `mobile menu should show the ${category} category`);
+      }
+      assert.equal(await theme.evaluate((element) => getComputedStyle(element).display), 'none', 'small-screen theme control is moved out of the crowded header');
+      assert.equal(await page.locator('#mobilMenu [data-mobil-eylem="tema"]').count(), 1, 'theme remains available in the mobile menu');
+      const menuGrid = await page.locator('#mobilMenu .mm-sayfalar').evaluate((element) => getComputedStyle(element).gridTemplateColumns);
+      assert.equal(menuGrid.trim().split(/\s+/).length, 2, `navigation uses a readable two-column layout at ${width}px: ${menuGrid}`);
+      await page.locator('#mobilMenu [data-mobil-kapat]').click();
+    }
     await page.close();
     return layout;
   } catch (error) {
@@ -98,10 +122,11 @@ try {
   server.stdout.on('data', (chunk) => { serverOutput += chunk; });
   server.stderr.on('data', (chunk) => { serverOutput += chunk; });
   await ready();
-  browser = await chromium.launch({ headless: true });
+  const engine = process.env.TF_PLAYWRIGHT_ENGINE === 'webkit' ? webkit : chromium;
+  browser = await engine.launch({ headless: true });
 
   const measurements = [];
-  for (const width of [375, 390, 768, 1024]) {
+  for (const width of [360, 375, 390, 768, 1024]) {
     for (const route of ['/', '/oyunlar/', '/harita/']) {
       measurements.push({ width, route, ...(await measureRoute(width, route)) });
     }
