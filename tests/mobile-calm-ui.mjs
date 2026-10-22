@@ -69,6 +69,8 @@ for (const [name, engine] of engines) {
         navBottom: Math.round(r(nav).bottom),
         tipBottom: tip ? Math.round(r(tip).bottom) : null,
         navTop: Math.round(r(nav).top),
+        primaryOverlapsNav: primaryBox.bottom > r(nav).top && primaryBox.top < r(nav).bottom,
+        readingToolbarVisible: Boolean(document.querySelector('.tf644-reading-toolbar') && getComputedStyle(document.querySelector('.tf644-reading-toolbar')).display !== 'none'),
         tourTag: tip?.tagName || null,
         tourOpen: Boolean(tip?.open),
         tourModal: Boolean(tip?.matches(':modal')),
@@ -96,6 +98,8 @@ for (const [name, engine] of engines) {
     assert.equal(mobile.quickAccessCoversPrimary, false, `${name}: floating quick access must not overlap the primary CTA`);
     assert.match(mobile.quickAccessLabel, /Hızlı Erişim/, `${name}: compact quick access remains screen-reader discoverable`);
     assert.ok(mobile.navHeight >= 60, `${name}: bottom navigation should include safe-area space`);
+    assert.equal(mobile.primaryOverlapsNav, false, `${name}: fixed bottom navigation must not cover the home primary CTA`);
+    assert.equal(mobile.readingToolbarVisible, false, `${name}: reading-only toolbar should not crowd the home hero`);
     if (mobile.tipBottom !== null) assert.ok(mobile.tipBottom <= mobile.navTop + 1, `${name}: onboarding tip must not cover bottom navigation`);
     assert.equal(mobile.tourTag, 'DIALOG', `${name}: first-visit tour must use an accessible dialog`);
     assert.ok(mobile.tourOpen && !mobile.tourModal, `${name}: first-visit tour must remain a non-modal accessible dialog`);
@@ -106,6 +110,14 @@ for (const [name, engine] of engines) {
     assert.equal(mobile.tourSkipLabel, 'Turu atla', `${name}: tour skip action must have an accessible label`);
     assert.equal(mobile.codeButtonText, 'Kod gir', `${name}: header code action should state what it does`);
     assert.equal(mobile.introText, 'Evrenleri keşfet; oku, oyna ya da kendi evrenini kur.', `${name}: home intro should avoid unexplained jargon`);
+
+    await page.locator('[data-mobil-menu]').click();
+    const bottomNavWhileMenuOpen = await page.locator('#altMenu').evaluate((element) => getComputedStyle(element).display);
+    assert.equal(bottomNavWhileMenuOpen, 'none', `${name}: fixed bottom navigation should not cover the open mobile menu`);
+    for (const category of ['Sayfalar', 'Ziyaretçi alanları', 'Görünüm', 'Keşif', 'Yönetim']) {
+      assert.equal(await page.locator('#mobilMenu .mm-grup-baslik').filter({ hasText: category }).count(), 1, `${name}: mobile menu should show ${category}`);
+    }
+    await page.locator('#mobilMenu [data-mobil-kapat]').click();
 
     await page.locator('[data-evren-git="harita:tomye"]').click();
     await page.waitForFunction(() => location.pathname === '/harita/');
