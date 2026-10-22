@@ -207,7 +207,30 @@
     if (document.body) document.body.removeAttribute('data-seo-not-found');
     document.querySelectorAll('.tf639-seo-fallback').forEach(function (el) { el.remove(); });
   }
+  function showPublicLoadError() {
+    var existing = document.querySelector('[data-public-seo-error]');
+    if (existing) return;
+    var host = document.querySelector('[data-seo-fallback]') || document.body;
+    if (!host) return;
+    var box = document.createElement('div');
+    box.className = 'tf639-seo-load-error';
+    box.setAttribute('data-public-seo-error', '');
+    box.setAttribute('role', 'alert');
+    var message = document.createElement('p');
+    message.textContent = 'Yayınlanmış içeriğin tamamı şu anda yüklenemedi. Aşağıdaki özet korunuyor; bağlantınızı kontrol edip yeniden deneyin.';
+    var retry = document.createElement('button');
+    retry.type = 'button'; retry.className = 'dugme dugme-sade'; retry.textContent = 'Yeniden dene';
+    retry.addEventListener('click', function () {
+      retry.disabled = true; retry.textContent = 'Yeniden deneniyor…';
+      handleRoute().finally(function () {
+        if (retry.isConnected) { retry.disabled = false; retry.textContent = 'Yeniden dene'; }
+      });
+    });
+    box.append(message, retry);
+    host.appendChild(box);
+  }
   async function handleRoute() {
+    document.querySelector('[data-public-seo-error]')?.remove();
     if (cardMaintenanceObserver) { cardMaintenanceObserver.disconnect(); cardMaintenanceObserver = null; }
     if (deferredMountObserver) { deferredMountObserver.disconnect(); deferredMountObserver = null; }
     pendingMount = null;
@@ -248,6 +271,7 @@
       if (current !== requestNo || lastKey !== type + ':' + id) return;
       var meta = item && item.tur === type ? metadata(item, path) : null;
       if (!item || !meta) { setMeta({ path: path, title: 'İçerik bulunamadı — TentiFor', description: 'Bu profil veya içerik herkese açık değil.', public: false }); return; }
+      document.querySelector('[data-public-seo-error]')?.remove();
       setMeta({ ...meta, public: true });
       if (type === 'profil') { if (mountProfileCard(item, meta)) unhideApp(); }
       else if (type === 'evren') { if (mountUniverseCard(item, meta)) unhideApp(); }
@@ -258,6 +282,7 @@
     } catch (_) {
       if (current !== requestNo) return;
       setMeta({ path: path, title: 'İçerik doğrulanamadı — TentiFor', description: 'İçeriğin yayın durumu doğrulanamadı.', public: false });
+      showPublicLoadError();
     }
   }
 

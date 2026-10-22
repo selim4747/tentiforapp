@@ -43,3 +43,9 @@ jobs:
 
       - name: Run Playwright SEO E2E
         run: npm run test:seo
+
+      - name: Run admin session and visual-content E2E
+        run: npm run test:admin-browser
+
+      - name: Run custom-universe visual asset E2E
+        run: npm run test:universe-visual-browser

@@ -166,6 +166,23 @@ if (routerBundleStart < 0 || routerBundleEnd <= routerBundleStart || !routeSourc
 routeBundle = routeBundle.slice(0, routerBundleStart)
   + routeSource.trimEnd() + '\n\n'
   + routeBundle.slice(routerBundleEnd);
+const mapSource = fs.readFileSync(path.join(ROOT_DIR, 'js/arsiv/09-medya-harita.js'), 'utf8');
+const mapSourceStart = mapSource.indexOf('let haritaURLVeriBekliyor=false;');
+const mapSourceEnd = mapSource.indexOf('function haritaYerDurumu(', mapSourceStart);
+const mapBundleStart = routeBundle.includes('let haritaURLVeriBekliyor=false;')
+  ? routeBundle.indexOf('let haritaURLVeriBekliyor=false;')
+  : routeBundle.indexOf('function haritaURLSeciminiYukle()');
+const mapBundleEnd = routeBundle.indexOf('function haritaYerDurumu(', mapBundleStart);
+const mapBundleFunctionStart = routeBundle.indexOf('function haritaURLSeciminiYukle()', mapBundleStart);
+if (mapSourceStart < 0 || mapSourceEnd <= mapSourceStart || mapBundleStart < 0 || mapBundleEnd <= mapBundleStart
+  || mapSource.indexOf('let haritaURLVeriBekliyor=false;', mapSourceStart + 1) >= 0
+  || mapBundleFunctionStart < 0
+  || routeBundle.indexOf('function haritaURLSeciminiYukle()', mapBundleFunctionStart + 1) >= 0) {
+  throw new Error('Map URL hydration source/bundle boundary is not unique; build stopped.');
+}
+routeBundle = routeBundle.slice(0, mapBundleStart)
+  + mapSource.slice(mapSourceStart, mapSourceEnd)
+  + routeBundle.slice(mapBundleEnd);
 fs.writeFileSync(routeBundlePath, routeBundle, 'utf8');
 const universeSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/44-evrenler.js'), 'utf8');
 const universeBundlePath = path.join(ROOT_DIR, 'js/paket-2.js');
@@ -212,6 +229,14 @@ const homepageRenderer = homepageSource.slice(homepageSourceRange.start, homepag
 if (homepageBundle.slice(homepageBundleRange.start, homepageBundleRange.end) !== homepageRenderer) {
   homepageBundle = homepageBundle.slice(0, homepageBundleRange.start) + homepageRenderer + homepageBundle.slice(homepageBundleRange.end);
 }
+const oldHomepageBoot = 'document.addEventListener("tf-veri-hazir",function(){setTimeout(anaEvrenlerCiz,0)})';
+const homepageDomReady = 'document.addEventListener("DOMContentLoaded",function(){document.documentElement.classList.contains("veri-hazir")&&setTimeout(anaEvrenlerCiz,0)})';
+const newHomepageBoot = 'document.documentElement.classList.contains("veri-hazir")?setTimeout(anaEvrenlerCiz,0):' + oldHomepageBoot + ',' + homepageDomReady;
+if (homepageSource.includes(newHomepageBoot)) {
+  const nestedHomepageBoot = /(?:document\.documentElement\.classList\.contains\("veri-hazir"\)\?setTimeout\(anaEvrenlerCiz,0\):)*document\.addEventListener\("tf-veri-hazir",function\(\)\{setTimeout\(anaEvrenlerCiz,0\)\}\)(?:,document\.addEventListener\("DOMContentLoaded",function\(\)\{document\.documentElement\.classList\.contains\("veri-hazir"\)&&setTimeout\(anaEvrenlerCiz,0\)\}\))?/g;
+  homepageBundle = homepageBundle.replace(nestedHomepageBoot, newHomepageBoot);
+  if (!homepageBundle.includes(newHomepageBoot)) throw new Error('paket-4.js ana sayfa açılış dinleyicisi bulunamadı; paket üretimi durduruldu.');
+}
 fs.writeFileSync(homepageBundlePath, homepageBundle, 'utf8');
 const updateSource = fs.readFileSync(path.join(ROOT_DIR, 'js/core/46-guncelleme.js'), 'utf8');
 const updateBundlePath = path.join(ROOT_DIR, 'js/paket-3.js');
@@ -222,6 +247,26 @@ for (const signature of ['function guncellemeBekletir()', 'async function guncel
   const sourceFunction = updateSource.slice(sourceRange.start, sourceRange.end);
   if (updateBundle.slice(bundleRange.start, bundleRange.end) !== sourceFunction) {
     updateBundle = updateBundle.slice(0, bundleRange.start) + sourceFunction + updateBundle.slice(bundleRange.end);
+  }
+}
+fs.writeFileSync(updateBundlePath, updateBundle, 'utf8');
+
+// Custom-world visual metadata is normalized in the serving bundle as well as
+// the readable source; otherwise portraits/items disappear on the next save.
+const worldExtensionSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/45-evrengezer.js'), 'utf8');
+for (const signature of ['function evrenVarlikGorselTemizle(a)', 'function evrenVarliklarTemizle(a)', 'function evrenEkTemizle(a,e)']) {
+  const sourceRange = functionRange(worldExtensionSource, signature, `World visual source ${signature}`);
+  const sourceFunction = worldExtensionSource.slice(sourceRange.start, sourceRange.end);
+  const bundleStart = updateBundle.indexOf(signature);
+  if (bundleStart >= 0) {
+    const bundleRange = functionRange(updateBundle, signature, `World visual bundle ${signature}`);
+    updateBundle = updateBundle.slice(0, bundleRange.start) + sourceFunction + updateBundle.slice(bundleRange.end);
+  } else if (signature !== 'function evrenEkTemizle(a,e)') {
+    const anchor = updateBundle.indexOf('function evrenEkTemizle(a,e)');
+    if (anchor < 0) throw new Error('paket-3.js evrenEkTemizle sınırı bulunamadı; paket üretimi durduruldu.');
+    updateBundle = updateBundle.slice(0, anchor) + sourceFunction + '\n' + updateBundle.slice(anchor);
+  } else {
+    throw new Error('paket-3.js evrenEkTemizle bulunamadı; paket üretimi durduruldu.');
   }
 }
 fs.writeFileSync(updateBundlePath, updateBundle, 'utf8');
