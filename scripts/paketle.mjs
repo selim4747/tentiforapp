@@ -187,6 +187,13 @@ fs.writeFileSync(routeBundlePath, routeBundle, 'utf8');
 const universeSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/44-evrenler.js'), 'utf8');
 const universeBundlePath = path.join(ROOT_DIR, 'js/paket-2.js');
 let universeBundle = fs.readFileSync(universeBundlePath, 'utf8');
+const mobileSource = fs.readFileSync(path.join(ROOT_DIR, 'js/core/42-mobil.js'), 'utf8');
+const mobileSourceRange = functionRange(mobileSource, 'function mobilMenuCiz()', 'Mobile menu source');
+const mobileBundleRange = functionRange(universeBundle, 'function mobilMenuCiz()', 'Mobile menu bundle');
+const mobileMenuRenderer = mobileSource.slice(mobileSourceRange.start, mobileSourceRange.end);
+if (universeBundle.slice(mobileBundleRange.start, mobileBundleRange.end) !== mobileMenuRenderer) {
+  universeBundle = universeBundle.slice(0, mobileBundleRange.start) + mobileMenuRenderer + universeBundle.slice(mobileBundleRange.end);
+}
 for (const signature of ['function evrenSayfaKur(e,n)', 'function evrenAdresiAc()']) {
   const sourceRange = functionRange(universeSource, signature, `Universe source ${signature}`);
   const bundleRange = functionRange(universeBundle, signature, `Universe bundle ${signature}`);

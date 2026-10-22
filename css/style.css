@@ -1437,6 +1437,24 @@ textarea:focus,
   .evh-gorsel > label:not(.dugme) select { width: 100%; flex-basis: auto; }
 }
 
+/* Small-screen control hierarchy and compact, grouped navigation. */
+@media (max-width: 390px) {
+  /* Theme remains available in the menu, keeping the main header focused. */
+  header.ust > #temaAnahtar { display: none !important; }
+  header.ust > .cuzdan-rozet { flex-basis: 6rem; max-width: 6rem; }
+  header.ust > .ust-araclar { margin-left: auto; }
+  .mobil-menu { padding-inline: 12px; }
+  .mm-sayfalar { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .mm-sayfa { min-height: 58px; flex-direction: row; justify-content: flex-start; gap: 8px; padding: 8px 10px; text-align: left; }
+  .mm-ikon { flex: 0 0 20px; }
+  .mm-ad { min-width: 0; overflow-wrap: anywhere; }
+  .mm-eylemler { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .mm-eylemler .mm-grup-baslik { grid-column: 1 / -1; margin: 10px 0 1px; padding: 7px 9px; border: 0; border-left: 3px solid var(--deniz); border-radius: 0 6px 6px 0; background: var(--kar); font-size: 10px; letter-spacing: .07em; }
+  .mm-eylemler .mm-eylem { box-sizing: border-box; min-height: 46px; padding: 8px 9px; font-size: 13px; }
+  .tf51-ust-eylemler { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .tf51-ust-eylemler .mm-eylem { min-width: 0; }
+}
+
 
 /* 6.6.2 — Mobile usability: safe fixed-nav space, readable tour, compact home and grouped menu. */
 @media (max-width: 760px) {
@@ -1453,5 +1471,4 @@ textarea:focus,
   html:has(.okuma-metin) .tf644-reading-toolbar { display: flex !important; }
   html:has(#mobilMenu:not([hidden])) #turIpucu, html:has(#perde:not([hidden])) #turIpucu, html:has(.tf642-panel:not([hidden])) #turIpucu { visibility: hidden !important; pointer-events: none !important; }
   .tur-ipucu, #turIpucu { position: fixed !important; z-index: 130 !important; pointer-events: auto !important; max-height: calc(100dvh - 100px); overflow: auto; }
-  html:has(#turIpucu[open]) .tf644-reading-toolbar { display: none !important; }
-}
+  html:has(#turIpucu[open]) .tf644-reading-toolbar { display: none !important; }}
