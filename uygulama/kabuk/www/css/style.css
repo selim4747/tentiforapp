@@ -1463,7 +1463,7 @@ textarea:focus,
   .mobil-menu-katman { z-index: 150 !important; overflow-y: auto; }
   .mobil-menu { max-height: 100dvh; overflow-y: auto; overscroll-behavior: contain; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important; }
   header.ust > .kod-btn { display: none !important; }
-  .mm-eylemler { display: flex !important; flex-direction: column; gap: 6px; }
+  .mm-eylemler { display: flex !important; flex-direction: column; gap: 6px; } /* overridden below for ≤390px */
   .mm-eylemler .mm-grup-baslik, .mm-sayfalar .mm-grup-baslik { margin: 12px 0 2px; padding: 5px 2px; border-bottom: 1px solid var(--buz); color: var(--murekkep-2); font: 600 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
   .mm-eylemler .mm-eylem { width: 100%; text-align: left; }
   .mm-sayfalar .mm-grup-baslik { grid-column: 1 / -1; }
@@ -1472,3 +1472,44 @@ textarea:focus,
   html:has(#mobilMenu:not([hidden])) #turIpucu, html:has(#perde:not([hidden])) #turIpucu, html:has(.tf642-panel:not([hidden])) #turIpucu { visibility: hidden !important; pointer-events: none !important; }
   .tur-ipucu, #turIpucu { position: fixed !important; z-index: 130 !important; pointer-events: auto !important; max-height: calc(100dvh - 100px); overflow: auto; }
   html:has(#turIpucu[open]) .tf644-reading-toolbar { display: none !important; }}
+
+/* ≤390px: compact 2-column actions (must come after 760px rules so it wins) */
+@media (max-width: 390px) {
+  header.ust > #temaAnahtar,
+  header.ust > .kod-btn { display: none !important; }
+  header.ust > .cuzdan-rozet { flex-basis: 5.5rem; max-width: 5.5rem; }
+  .mm-eylemler { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .mm-eylemler .mm-grup-baslik { grid-column: 1 / -1; margin: 10px 0 2px; padding: 6px 8px; border-left: 3px solid var(--deniz); background: var(--kar); font-size: 10px; letter-spacing: .06em; }
+  .mm-eylemler .mm-eylem { box-sizing: border-box; min-height: 46px; padding: 8px 9px; font-size: 13px; text-align: left; }
+  .mm-sayfalar { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .mm-sayfa { min-height: 56px; }
+}
+
+
+
+/* Compact universe cards on small screens */
+@media (max-width: 760px) {
+  .ana-evren { padding: 12px 14px; }
+  .ana-evren .ana-evren-ad { font-size: 15px; }
+  .ana-evren-sar { gap: 8px; }
+}
+
+/* Clearer menu group titles */
+.mm-grup-baslik {
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+@media (max-width: 390px) {
+  .mm-grup-baslik { font-size: 10px; padding: 6px 8px; }
+}
+
+/* Universe detail tabs: horizontal scroll on mobile */
+@media (max-width: 760px) {
+  .evren-sekmeler, .oyun-sekme, .tf-sekme {
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+  .evren-sekmeler::-webkit-scrollbar { display: none; }
+}
