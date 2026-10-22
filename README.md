@@ -1,9 +1,9 @@
-# TentiforApp — Tentiforverse Arşivi (v6.6.1)
+# TentiforApp — Tentiforverse Arşivi (v6.6.2)
 
 Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker. Tentiforverse evren arşivi: karakterler, kozmoloji, isim sistemi, takvim ve oyunlar.
 
 ## Özellikler
-- **Evren & Karakter Arşivi**: Tömye, E25, E26 ve E99 evrenleri.
+- **Evren & Karakter Arşivi**: E24 (Tömye), Ax-24, E25, E26 ve E99 evrenleri.
 - **Model Test Evreni (Eski arşiv içeriği)**: Evren Kurucu'nun tüm yeteneklerini (kurallar, harita, kişiler, ilişki ağı, hikâyeler, mektuplar, sözlük, açık sorular ve glif alfabesi) canlı sergileyen test evreni.
 - **Akıllı Sürüm & İçerik Bildirimleri**: Sadece gerçek sürüm farkında yeni sürüm uyarısı, yeni evren/içerik eklendiğinde tekrarlamayan akıllı bildirimler.
 - **Uygulama İçi Bildirim Ayarları & Mobil Moderasyon**: Sen sayfasından bildirim tercihleri ve mobil menüden tek tıkla moderasyon paneline erişim.

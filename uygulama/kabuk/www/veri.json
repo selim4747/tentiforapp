@@ -1,5 +1,5 @@
 {
-  "surum": "6.6.1",
+  "surum": "6.6.2",
   "guncelleme": "2026-10-01",
   "kilitAyarlar": {
     "genelAcik": false,
@@ -1231,50 +1231,6 @@
           "metin": "Bu zaman çizgisinde kökler aynıdır, yalnızca bazı sonuçlar değişir:\n\nKaelan'ın ailesi hayattadır — ama Kaelan yine de ruh deneyleri yapar; onu iten artık kayıp değil, saf meraktır. Feil yine ısrar karşısında bıkıp deneyimini anlatır (gerçek zaman çizgisinde sessizliği bir korumayken, burada mesele hafif olduğu için konuşur).\n\nTarı bu evrende deniz işini seçer, kütüphaneyi değil. Zafkı Eşci de denizci olmuştur; ikisi aynı işte bulunur. Yaşam ve Kaelan onları ziyaret ettiklerinde, kendi dünyalarındaki trajedinin izini hiç sezmeden, \"bu niye denizci oldu ki?\" diye düşünürler.\n\nL25 bu evrende takıntılı bir bilim adamı değil, tam zamanlı Starsaver'dır; ailesinden (Huj, Zal) hiç eksik yoktur, birlikte yıldız sistemlerini gezerler.\n\nSaek Luyot bu evrende de hâlâ katildir — kimliği sihirli biçimde silinmez. Ama artık kardeşi Feil bunu bilir; Saek, ruhunu ilk çıkardığı olaydan sonra ona anlatmıştır. Sıra gerçek zaman çizgisiyle aynıdır (önce olay, sonra itiraf); GTBT yalnızca sırrın ağırlığını hafifletir.\n\nFeil'in kendi geçmişine geri gitmesi bu zaman çizgisinde de aynen yaşanır — GTBT'yi orijinalden aşırı ayırmamak için bilinçli olarak değiştirilmemiştir.\n\nZafkı'nın bu evrende de denizci olmasının kökeni gerçek zaman çizgisiyle aynıdır: Tarı'nın bir gün restoranda söylediği \"babam denizciydi\" sözü Zafkı'nın aklında kalır. GTBT bu bağı silmez — yalnızca ikisini aynı mesleğe, aynı denize yaklaştırır. Kalpler hâlâ konuşmaz."
         }
       ]
-    }
-  ],
-  "katmanlar": [
-    {
-      "id": "son",
-      "ad": "Son",
-      "sira": 1,
-      "dogrulama": "0733e674685d46d5035bc3846facefda5ac0e5d17c3b33def130f4dc40d17a81"
-    },
-    {
-      "id": "kimlik",
-      "ad": "Kimlik",
-      "sira": 2,
-      "dogrulama": "36720be1f24ecb050fc306057bffe740ee96dc96f3ae7196d0d4d774935c767d"
-    },
-    {
-      "id": "tas",
-      "ad": "Taş",
-      "sira": 3,
-      "dogrulama": "e67b79fb1f275263acf536d1a9bf8c9874f7a7b7eea413ecc455b4b1bf69cfd4"
-    },
-    {
-      "id": "kutuphane",
-      "ad": "Kütüphane",
-      "sira": 4,
-      "dogrulama": "4e3b24248f91b181f1fcc2224e2bbe10c897c3c0d1d3b2ba9771df4eb1791d4c"
-    },
-    {
-      "id": "kenar",
-      "ad": "Kenar",
-      "sira": 5,
-      "dogrulama": "19cf232f649ebb5644d56033e601de28caf6fb1126fa1016ea800b6b7583b416"
-    },
-    {
-      "id": "kitap",
-      "ad": "Kitap",
-      "sira": 6,
-      "dogrulama": "b6b468da4ae6fb097dedf68c5d498427d4d904b0e797ccecd71bd972d16b6e05"
-    },
-    {
-      "id": "kanon",
-      "ad": "Kanon",
-      "sira": 7,
-      "dogrulama": "c67c7cd16181a78e64b9b66daac1f25311a3b1f25e82ce6790631c992ecc6a58"
     }
   ],
   "yoneticiOzet": "7b3b156ace4f030d8473274ec0e1555d7775a7251f9554bffc218123536696a4",
@@ -7132,6 +7088,87 @@
     "oyun_listesi": []
   },
   "kanonEvrenleri": {
+    "e24": {
+      "bicim": "tentifor-eser",
+      "surum": 1,
+      "tur": "evren",
+      "id": "e24",
+      "ad": "E24",
+      "yazar": "",
+      "erisim": "evren",
+      "ozet": "E24, Tömye’nin bulunduğu evrendir. Tömye’nin gezegensel arşivi ve yedi buz katmanı bu evrene bağlıdır.",
+      "kurallar": [
+        {
+          "ad": "E24 arşivi",
+          "tur": "arşiv",
+          "aciklama": "Tömye’nin anlatıları, haritası ve arşiv kayıtları E24 içinde yer alır."
+        },
+        {
+          "ad": "Buz katmanları",
+          "tur": "arşiv",
+          "aciklama": "Yedi buz katmanı E24 arşivine aittir; mevcut kilit ve doğrulama anahtarları değişmez."
+        }
+      ],
+      "kisiler": [],
+      "yerler": [
+        {
+          "id": "tomye",
+          "ad": "Tömye",
+          "tur": "Gezegen",
+          "not": "E24 içinde yer alan aysız gezegen; haritası ve takvimi Tömye arşivinde tutulur."
+        }
+      ],
+      "tarih": [],
+      "sozluk": [],
+      "ozelAlanlar": [],
+      "okuma_rehberi": [],
+      "oyun_listesi": [],
+      "katmanlar": [
+        {
+          "id": "son",
+          "ad": "Son",
+          "sira": 1,
+          "dogrulama": "0733e674685d46d5035bc3846facefda5ac0e5d17c3b33def130f4dc40d17a81"
+        },
+        {
+          "id": "kimlik",
+          "ad": "Kimlik",
+          "sira": 2,
+          "dogrulama": "36720be1f24ecb050fc306057bffe740ee96dc96f3ae7196d0d4d774935c767d"
+        },
+        {
+          "id": "tas",
+          "ad": "Taş",
+          "sira": 3,
+          "dogrulama": "e67b79fb1f275263acf536d1a9bf8c9874f7a7b7eea413ecc455b4b1bf69cfd4"
+        },
+        {
+          "id": "kutuphane",
+          "ad": "Kütüphane",
+          "sira": 4,
+          "dogrulama": "4e3b24248f91b181f1fcc2224e2bbe10c897c3c0d1d3b2ba9771df4eb1791d4c"
+        },
+        {
+          "id": "kenar",
+          "ad": "Kenar",
+          "sira": 5,
+          "dogrulama": "19cf232f649ebb5644d56033e601de28caf6fb1126fa1016ea800b6b7583b416"
+        },
+        {
+          "id": "kitap",
+          "ad": "Kitap",
+          "sira": 6,
+          "dogrulama": "b6b468da4ae6fb097dedf68c5d498427d4d904b0e797ccecd71bd972d16b6e05"
+        },
+        {
+          "id": "kanon",
+          "ad": "Kanon",
+          "sira": 7,
+          "dogrulama": "c67c7cd16181a78e64b9b66daac1f25311a3b1f25e82ce6790631c992ecc6a58"
+        }
+      ],
+      "harita": "tomye"
+    },
     "e26": {
       "bicim": "tentifor-eser",
       "surum": 1,
@@ -7179,7 +7216,7 @@
       "ad": "E25",
       "yazar": "",
       "erisim": "evren",
-      "ozet": "Evrengezerlerin evreni: Beyaz Taşlar, evrenler arası geçiş ve Evrengezer halkı. Melezlerin (Sabıka soyu) bilgileri burada ve Tömye'de ortaktır; anıları ve hikâyeleri Tömye arşivinde kalır.",
+      "ozet": "Evrengezerlerin evreni: Beyaz Taşlar, evrenler arası geçiş ve Evrengezer halkı. Melezlerin (Sabıka soyu) bilgileri burada ve Tömye'de ortaktır; anıları ve hikâyeleri E24 arşivinde kalır.",
       "kurallar": [],
       "kisiler": [
         {

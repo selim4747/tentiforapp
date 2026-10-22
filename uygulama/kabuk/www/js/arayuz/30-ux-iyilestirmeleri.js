@@ -98,17 +98,14 @@
   }
 
   function baslangicRehberi() {
-    if (!document.querySelector("main#tepe") || document.querySelector("#tfBaslangicRehberi")) return;
     var hero = document.querySelector("main#tepe > .hero");
-    var arama = document.querySelector("#kesif");
-    if (!hero || !arama) return;
     var girisli = typeof hesapKullanici !== "undefined" && !!hesapKullanici;
-    var kutu = document.createElement("section");
+    if (!hero || !girisli || document.querySelector("#tfBaslangicRehberi")) return;
+    var kutu = document.createElement("aside");
     kutu.id = "tfBaslangicRehberi";
-    kutu.className = "bolum tf-baslangic-rehberi";
-    kutu.setAttribute("aria-labelledby", "tfBaslangicBaslik");
-    var devam = girisli ? '<div class="tf-devam"><span class="oyun-etiket">Sana özel</span><b>Kaldığın yerden devam et</b><button class="dugme dugme-sade" data-gez-git="defter">Defterine dön</button></div>' : "";
-    kutu.innerHTML = '<div class="bolum-basi"><span class="etiket">İlk adım</span><h2 id="tfBaslangicBaslik">Nereden başlamalıyım?</h2><p class="bolum-alt">Tentifor’da ilk adımını seç; sonra istediğin zaman başka bir yola geçebilirsin.</p></div><div class="tf-baslangic-grid"><article><span aria-hidden="true">◌</span><h3>Tentifor’u keşfet</h3><p>Arşivdeki karakterleri, araçları ve oyunları birlikte gör.</p><a class="dugme" href="#/arsiv">Keşfe başla</a></article><article><span aria-hidden="true">▤</span><h3>Bir evren oku</h3><p>Bir dünyanın hikâyesine gir ve kaldığın yeri işaretle.</p><a class="dugme" href="#/okuma">Okumaya başla</a></article><article><span aria-hidden="true">＋</span><h3>Kendi evrenini oluştur</h3><p>Kendi dünyanı, kişilerini ve kurallarını tasarlamaya başla.</p><a class="dugme" href="#/atolye">Evrenini kur</a></article></div>' + devam;
+    kutu.className = "tf-devam tf-baslangic-rehberi";
+    kutu.setAttribute("aria-label", "Okumaya devam et");
+    kutu.innerHTML = '<span class="oyun-etiket">Sana özel</span><b>Kaldığın yerden devam et</b><button class="dugme dugme-sade" data-gez-git="defter">Defterine dön</button>';
     hero.insertAdjacentElement("afterend", kutu);
   }
 
