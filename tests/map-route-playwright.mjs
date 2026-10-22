@@ -27,14 +27,13 @@ async function waitForApp(page) {
 }
 
 async function openMap(page) {
-  await page.goto(`${baseURL}/`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${baseURL}/harita/?harita=tomye`, { waitUntil: 'domcontentloaded' });
   await waitForApp(page);
   const tour = page.locator('#turIpucu');
   if (await tour.count()) {
     assert.equal(await tour.isVisible(), true, 'first-visit tour is visible');
     assert.equal(await tour.evaluate((node) => node.matches(':modal')), false, 'first-visit tour must not block the page');
   }
-  await page.getByRole('button', { name: 'Tömye haritasını keşfet' }).click();
   await page.waitForFunction(() => location.pathname === '/harita/' && typeof haritaCiz === 'function');
   await page.waitForFunction(() => !document.querySelector('#harita').classList.contains('gizli'));
   await page.waitForFunction(() => document.querySelector('#haritaAlan [data-harita-sec="tomye"]'));

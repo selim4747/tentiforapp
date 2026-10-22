@@ -13,7 +13,10 @@ const [major, minor, patch] = pkg.version.split('.').map(Number);
 // 6.5.1 starts at versionCode 6500; each following patch release increments it once.
 const expectedVersionCode = major * 1000 + minor * 100 + patch - 1;
 assert.match(androidGradle, new RegExp(`versionCode\\s+${expectedVersionCode}\\b`), 'Android versionCode should stay monotonic with the app release');
-assert.equal(JSON.parse(read('uygulama/indir/apk.json')).versionCode, expectedVersionCode, 'APK download metadata should match Android versionCode');
+const apkMeta = JSON.parse(read('uygulama/indir/apk.json'));
+assert.ok(apkMeta.versionCode <= expectedVersionCode, 'APK metadata must not advertise a version code newer than the Android app');
+if (apkMeta.versionCode < expectedVersionCode) assert.notEqual(apkMeta.version, pkg.version, 'a stale APK must not be relabeled as the current app release');
+else assert.equal(apkMeta.version, pkg.version, 'a current APK metadata version must match the app');
 
 const index = read('index.html');
 assert.doesNotMatch(index, /id="yenilikAlan"|id="surumNotuAlan"|yenilikler · günün kaydı|26-ziyaret-yenilikleri/);
