@@ -275,6 +275,15 @@ html[data-site-tema~=katiller] { --deniz: #ff9aa8; }
     line-height: 1.64;
     color: var(--murekkep-2);
   }
+  @media (max-width: 390px) {
+    .ana-tomye .hero-baslik {
+      font-size: clamp(28px, 7.7vw, 30px);
+      line-height: 1.08;
+    }
+    .ana-tomye .hero-metin { line-height: 1.55; }
+    .ana-tomye .hero-eylem { margin-top: 12px; }
+    .hero-diger-yollar { display: none !important; }
+  }
   .hero-eylem {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
