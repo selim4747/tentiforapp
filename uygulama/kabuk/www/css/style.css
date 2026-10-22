@@ -275,6 +275,15 @@ html[data-site-tema~=katiller] { --deniz: #ff9aa8; }
     line-height: 1.64;
     color: var(--murekkep-2);
   }
+  @media (max-width: 390px) {
+    .ana-tomye .hero-baslik {
+      font-size: clamp(28px, 7.7vw, 30px);
+      line-height: 1.08;
+    }
+    .ana-tomye .hero-metin { line-height: 1.55; }
+    .ana-tomye .hero-eylem { margin-top: 12px; }
+    .hero-diger-yollar { display: none !important; }
+  }
   .hero-eylem {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1426,4 +1435,23 @@ textarea:focus,
   .evh-gorsel > label:not(.dugme) .kod-giris,
   .evh-gorsel > label:not(.dugme) input[type="range"],
   .evh-gorsel > label:not(.dugme) select { width: 100%; flex-basis: auto; }
+}
+
+
+/* 6.6.2 — Mobile usability: safe fixed-nav space, readable tour, compact home and grouped menu. */
+@media (max-width: 760px) {
+  body { padding-bottom: calc(var(--alt-h, 0px) + env(safe-area-inset-bottom, 0px) + 12px); }
+  html.menu-acik #altMenu.alt-menu { display: none !important; visibility: hidden !important; pointer-events: none !important; }
+  .mobil-menu-katman { z-index: 150 !important; overflow-y: auto; }
+  .mobil-menu { max-height: 100dvh; overflow-y: auto; overscroll-behavior: contain; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important; }
+  header.ust > .kod-btn { display: none !important; }
+  .mm-eylemler { display: flex !important; flex-direction: column; gap: 6px; }
+  .mm-eylemler .mm-grup-baslik, .mm-sayfalar .mm-grup-baslik { margin: 12px 0 2px; padding: 5px 2px; border-bottom: 1px solid var(--buz); color: var(--murekkep-2); font: 600 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .mm-eylemler .mm-eylem { width: 100%; text-align: left; }
+  .mm-sayfalar .mm-grup-baslik { grid-column: 1 / -1; }
+  html:not(:has(.okuma-metin)) .tf644-reading-toolbar { display: none !important; }
+  html:has(.okuma-metin) .tf644-reading-toolbar { display: flex !important; }
+  html:has(#mobilMenu:not([hidden])) #turIpucu, html:has(#perde:not([hidden])) #turIpucu, html:has(.tf642-panel:not([hidden])) #turIpucu { visibility: hidden !important; pointer-events: none !important; }
+  .tur-ipucu, #turIpucu { position: fixed !important; z-index: 130 !important; pointer-events: auto !important; max-height: calc(100dvh - 100px); overflow: auto; }
+  html:has(#turIpucu[open]) .tf644-reading-toolbar { display: none !important; }
 }

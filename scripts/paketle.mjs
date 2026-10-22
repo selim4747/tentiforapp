@@ -200,6 +200,44 @@ const newUniverseBoot = 'if(evrenDugmesiKur(),rota()==="#/evren/e126"||rota().in
 if (universeBundle.includes(oldUniverseBoot)) universeBundle = universeBundle.replace(oldUniverseBoot, newUniverseBoot);
 else if (!universeBundle.includes(newUniverseBoot)) throw new Error('paket-2.js E126 cold-route bootstrap guard bulunamadı; paket üretimi durduruldu.');
 fs.writeFileSync(universeBundlePath, universeBundle, 'utf8');
+const homepageSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/85-e25-ana-sayfa-evrenler.js'), 'utf8');
+const homepageBundlePath = path.join(ROOT_DIR, 'js/paket-4.js');
+let homepageBundle = fs.readFileSync(homepageBundlePath, 'utf8');
+const homepageHelperStart = homepageSource.indexOf('let anaSayfaRastgeleEvren=null;');
+const homepageRenderMarker = 'function anaEvrenlerCiz()';
+const homepageHelperEnd = homepageSource.indexOf(homepageRenderMarker, homepageHelperStart);
+if (homepageHelperStart < 0 || homepageHelperEnd <= homepageHelperStart) {
+  throw new Error('Ana sayfa rastgele evren yardımcısı kaynak aralığı bulunamadı; paket üretimi durduruldu.');
+}
+const homepageHelper = homepageSource.slice(homepageHelperStart, homepageHelperEnd);
+const bundledHelperStart = homepageBundle.indexOf('let anaSayfaRastgeleEvren=null;');
+const bundledHelperEnd = bundledHelperStart >= 0 ? homepageBundle.indexOf(homepageRenderMarker, bundledHelperStart) : -1;
+if (bundledHelperStart >= 0 && bundledHelperEnd > bundledHelperStart) {
+  homepageBundle = homepageBundle.slice(0, bundledHelperStart) + homepageHelper + homepageBundle.slice(bundledHelperEnd);
+} else if (bundledHelperStart < 0 && bundledHelperEnd < 0) {
+  const insertAt = homepageBundle.indexOf(homepageRenderMarker);
+  if (insertAt < 0 || homepageBundle.indexOf(homepageRenderMarker, insertAt + homepageRenderMarker.length) >= 0) {
+    throw new Error('paket-4.js ana sayfa evren render noktası tekil değil; paket üretimi durduruldu.');
+  }
+  homepageBundle = homepageBundle.slice(0, insertAt) + homepageHelper + homepageBundle.slice(insertAt);
+} else {
+  throw new Error('paket-4.js içinde rastgele evren yardımcısı kısmi; paket üretimi durduruldu.');
+}
+const homepageSourceRange = functionRange(homepageSource, homepageRenderMarker, 'Homepage universe source');
+const homepageBundleRange = functionRange(homepageBundle, homepageRenderMarker, 'Homepage universe bundle');
+const homepageRenderer = homepageSource.slice(homepageSourceRange.start, homepageSourceRange.end);
+if (homepageBundle.slice(homepageBundleRange.start, homepageBundleRange.end) !== homepageRenderer) {
+  homepageBundle = homepageBundle.slice(0, homepageBundleRange.start) + homepageRenderer + homepageBundle.slice(homepageBundleRange.end);
+}
+const oldHomepageBoot = 'document.addEventListener("tf-veri-hazir",function(){setTimeout(anaEvrenlerCiz,0)})';
+const homepageDomReady = 'document.addEventListener("DOMContentLoaded",function(){document.documentElement.classList.contains("veri-hazir")&&setTimeout(anaEvrenlerCiz,0)})';
+const newHomepageBoot = 'document.documentElement.classList.contains("veri-hazir")?setTimeout(anaEvrenlerCiz,0):' + oldHomepageBoot + ',' + homepageDomReady;
+if (homepageSource.includes(newHomepageBoot)) {
+  const nestedHomepageBoot = /(?:document\.documentElement\.classList\.contains\("veri-hazir"\)\?setTimeout\(anaEvrenlerCiz,0\):)*document\.addEventListener\("tf-veri-hazir",function\(\)\{setTimeout\(anaEvrenlerCiz,0\)\}\)(?:,document\.addEventListener\("DOMContentLoaded",function\(\)\{document\.documentElement\.classList\.contains\("veri-hazir"\)&&setTimeout\(anaEvrenlerCiz,0\)\}\))?/g;
+  homepageBundle = homepageBundle.replace(nestedHomepageBoot, newHomepageBoot);
+  if (!homepageBundle.includes(newHomepageBoot)) throw new Error('paket-4.js ana sayfa açılış dinleyicisi bulunamadı; paket üretimi durduruldu.');
+}
+fs.writeFileSync(homepageBundlePath, homepageBundle, 'utf8');
 const updateSource = fs.readFileSync(path.join(ROOT_DIR, 'js/core/46-guncelleme.js'), 'utf8');
 const updateBundlePath = path.join(ROOT_DIR, 'js/paket-3.js');
 let updateBundle = fs.readFileSync(updateBundlePath, 'utf8');
@@ -507,6 +545,8 @@ const staticSeoPages = [
   { tur: 'sayfa', path: '/atolye/', title: 'Atölye — TentiFor', description: 'TentiFor evren ve hikâye atölyesi.' },
   { tur: 'sayfa', path: '/yonetici/', title: 'Yönetici paneli — TentiFor', description: 'TentiFor yönetici paneli ve evren yönetim araçları.' },
   { tur: 'sayfa', path: '/okuma/', title: 'Okuma — TentiFor', description: 'TentiFor okuma alanı ve okuma rotaları.' },
+  { tur: 'evren', slug: 'e24', baslik: veri.kanonEvrenleri?.e24?.ad || 'E24', ozet: typeof veri.kanonEvrenleri?.e24?.ozet === 'string' ? veri.kanonEvrenleri.e24.ozet : '' },
+  { tur: 'evren', slug: 'ax24', baslik: veri.kanonEvrenleri?.ax24?.ad || 'Ax-24', ozet: typeof veri.kanonEvrenleri?.ax24?.ozet === 'string' ? veri.kanonEvrenleri.ax24.ozet : '' },
   { tur: 'evren', slug: 'e25', baslik: veri.kanonEvrenleri?.e25?.ad || 'E25', ozet: typeof veri.kanonEvrenleri?.e25?.ozet === 'string' ? veri.kanonEvrenleri.e25.ozet : '' },
   { tur: 'evren', slug: 'e99', baslik: veri.e99?.ad || 'E99', ozet: typeof veri.e99?.ozet === 'string' ? veri.e99.ozet : '' },
   ...approvedCanonicalUniversePages(ROOT_DIR, veri)

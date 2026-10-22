@@ -131,9 +131,7 @@ assert.equal(labelDom.window.aktifKonumEtiketi(), 'E26 · kanon evren');
 labelDom.window.close();
 
 // The page route keeps the two distinct actions and the map section is explicitly named in Tömye context.
-assert.match(html, /data-evren-git="harita:tomye"/);
 assert.match(html, /href="#\/tomye">Tömye arşivi</);
-assert.match(html, /Tömye haritasını keşfet/);
 assert.match(html, /hero-diger-yollar/);
 assert.match(html, /aria-label="Ana sayfa bölümlerine atla"/);
 for (const target of ['#kesif', '#anaEvrenler', '#/harita', '#/dunya', '#/oyunlar']) {

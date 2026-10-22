@@ -12,6 +12,8 @@ function yoldanRota(yol) {
     if (['benim', 'acilan', 'fan', 'site', 'onizle'].includes(parcalar[1])) return '#/ev/' + parcalar.slice(1).join('/');
     if (parcalar[1] === 'e126') return '#/evren/e126';
     if (parcalar[1] === 'e99') return '#/ev/e99';
+    if (parcalar[1] === 'e24') return '#/ev/site/e24';
+    if (parcalar[1] === 'ax24') return '#/ev/site/ax24';
     if (parcalar[1] === 'e25') return '#/ev/site/e25';
     if (/^e\d+$/.test(parcalar[1])) return '#/ev/' + parcalar[1];
     return '#/ev/fan/' + parcalar[1];
@@ -28,7 +30,7 @@ function rotadanYol(rotaMetni) {
   if (parcalar[0] === 'ev') {
     if (parcalar[1] === 'e99' && parcalar.length === 2) return '/evren/e99/';
     if (parcalar.length === 2 && /^e\d+$/.test(parcalar[1])) return yol(['evren', parcalar[1]]);
-    if (parcalar[1] === 'site' && parcalar[2] && /^e\d+$/.test(parcalar[2]) && parcalar[2] !== 'e99') return yol(['evren', parcalar[2]]);
+    if (parcalar[1] === 'site' && parcalar[2] && (/^e\d+$/.test(parcalar[2]) || parcalar[2] === 'ax24') && parcalar[2] !== 'e99') return yol(['evren', parcalar[2]]);
     if (parcalar[1] === 'fan' && parcalar[2] && (!/^e\d+$/.test(parcalar[2]) || !['e25', 'e99'].includes(parcalar[2])) && !['benim', 'acilan', 'fan', 'site'].includes(parcalar[2])) return yol(['evren', parcalar[2]]);
     return yol(['evren'].concat(parcalar.slice(1)));
   }
@@ -131,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const map = {
     arsiv: ['Ana sayfa — TentiFor', 'Tentiforverse arşivi', true],
     '': ['Ana sayfa — TentiFor', 'Tentiforverse arşivi', true],
-    tomye: ['Tömye — TentiFor', 'Tömye evreni ve arşiv içerikleri', true],
+    tomye: ['E24 · Tömye — TentiFor', 'E24 evreni, Tömye gezegeni ve arşiv içerikleri', true],
     harita: ['Harita — TentiFor', 'Tömye ve Ax-24 gezegen haritaları', true],
     fan: ['Fan evrenleri — TentiFor', 'TentiFor fan evrenleri ve hikâyeleri', true],
     oyunlar: ['Oyunlar — TentiFor', 'TentiFor oyunları', true],

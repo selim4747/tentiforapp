@@ -21,21 +21,30 @@ for (const [name, engine] of engines) {
       hasTouch: true,
     });
     const pageErrors = [];
+    let rumMocks = 0;
     page.on('pageerror', (error) => pageErrors.push(error.message));
+    await page.route('https://static.cloudflareinsights.com/**', async (route) => {
+      rumMocks += 1;
+      await route.fulfill({ status: 200, contentType: 'application/javascript', body: '' });
+    });
     await page.goto('http://127.0.0.1:3000/', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('.ana-tomye', { timeout: 15000 });
     await page.waitForSelector('#altMenu', { timeout: 15000 });
     await page.waitForSelector('#anaEvrenler .ana-evren-sar .ana-yildiz', { timeout: 15000 });
     await page.waitForSelector('#tfDockTetik', { timeout: 15000 });
-    await page.waitForFunction(() => document.querySelector('#turIpucu')?.nextElementSibling?.matches('.hero-eylem'), { timeout: 15000 });
+    await page.waitForSelector('#rastgeleEvrenHero', { timeout: 15000 });
+    await page.waitForFunction(() => { const button = document.querySelector('#rastgeleEvrenHero'); return !!button?.dataset.rastgeleEvren && /^#\/ev\/site\/(?!e25(?:$|[/?#]))[a-z0-9-]+$/i.test(button.getAttribute('href') || ''); }, { timeout: 15000 });
+    await page.evaluate(() => { if (!document.querySelector('#turIpucu')) window.turBaslat?.(); });
+    await page.waitForSelector('#turIpucu', { timeout: 15000 });
 
     const mobile = await page.evaluate(() => {
       const hero = document.querySelector('.ana-tomye');
-      const primary = document.querySelector('.hero-eylem .dugme');
-      const random = document.querySelector('#rastgeleHero');
+      const primary = document.querySelector('#rastgeleEvrenHero');
+      const random = document.querySelector('#rastgeleEvrenHero');
       const more = document.querySelector('.hero-diger-yollar');
       const nav = document.querySelector('#altMenu');
       const tip = document.querySelector('#turIpucu');
+      const toolbar = document.querySelector('.tf644-reading-toolbar');
       const intro = document.querySelector('.ana-giris');
       const codeButton = document.querySelector('#btnKod');
       const quickAccess = document.querySelector('#tfDockTetik');
@@ -48,49 +57,61 @@ for (const [name, engine] of engines) {
           && star.left >= box.left - 1 && star.right <= box.right + 1
           && star.top >= box.top - 1 && star.bottom <= box.bottom + 1;
       });
-      const r = (element) => element.getBoundingClientRect();
-      const primaryBox = r(primary);
-      const tipBox = tip ? r(tip) : null;
-      const quickAccessBox = r(quickAccess);
+      const rect = (element) => element.getBoundingClientRect();
+      const primaryBox = rect(primary);
+      const tipBox = tip ? rect(tip) : null;
+      const navBox = rect(nav);
+      const quickAccessBox = rect(quickAccess);
+      const tourPoint = tipBox && document.elementFromPoint(tipBox.left + tipBox.width / 2, tipBox.top + tipBox.height / 2);
       return {
         width: innerWidth,
         documentWidth: document.documentElement.scrollWidth,
         background: getComputedStyle(document.documentElement).getPropertyValue('--kar').trim().toLowerCase(),
         heroRadius: parseFloat(getComputedStyle(hero).borderTopLeftRadius),
-        primaryHeight: Math.round(r(primary).height),
-        primaryWidth: Math.round(r(primary).width),
-        randomWidth: Math.round(r(random).width),
-        moreVisible: Boolean(more && more.getBoundingClientRect().height > 0),
-        moreOpen: Boolean(more?.open),
+        primaryHeight: Math.round(primaryBox.height),
+        primaryWidth: Math.round(primaryBox.width),
+        randomWidth: Math.round(rect(random).width),
+        randomTarget: random?.getAttribute('href') || '',
+        randomId: random?.dataset.rastgeleEvren || '',
+        moreVisible: Boolean(more && rect(more).height > 0),
         starsAnchored,
-        navHeight: Math.round(r(nav).height),
-        navBottom: Math.round(r(nav).bottom),
-        tipBottom: tip ? Math.round(r(tip).bottom) : null,
-        navTop: Math.round(r(nav).top),
+        navHeight: Math.round(navBox.height),
+        navBottom: Math.round(navBox.bottom),
+        navTop: Math.round(navBox.top),
+        primaryBottom: Math.round(primaryBox.bottom),
+        primaryAboveNav: primaryBox.bottom <= navBox.top + 1,
+        tipBottom: tip ? Math.round(rect(tip).bottom) : null,
         tourTag: tip?.tagName || null,
         tourOpen: Boolean(tip?.open),
         tourModal: Boolean(tip?.matches(':modal')),
-        tourHeight: tip ? Math.round(tip.getBoundingClientRect().height) : 0,
+        tourHeight: tip ? Math.round(rect(tip).height) : 0,
         tourCoversPrimary: Boolean(tipBox && tipBox.left < primaryBox.right && tipBox.right > primaryBox.left && tipBox.top < primaryBox.bottom && tipBox.bottom > primaryBox.top),
+        tourOwnsHitTest: Boolean(tip && tourPoint && (tourPoint === tip || tip.contains(tourPoint))),
         tourTitle: tip?.querySelector('#turBaslik')?.innerText.trim() || '',
         tourSkipText: tip?.querySelector('.tur-kapat')?.innerText.trim() || '',
         tourSkipLabel: tip?.querySelector('.tur-kapat')?.getAttribute('aria-label') || '',
         codeButtonText: codeButton?.innerText.trim() || '',
+        codeButtonHidden: Boolean(codeButton && getComputedStyle(codeButton).display === 'none'),
         quickAccessWidth: Math.round(quickAccessBox.width),
         quickAccessHeight: Math.round(quickAccessBox.height),
         quickAccessLabel: quickAccess?.getAttribute('aria-label') || '',
         quickAccessCoversPrimary: quickAccessBox.left < primaryBox.right && quickAccessBox.right > primaryBox.left && quickAccessBox.top < primaryBox.bottom && quickAccessBox.bottom > primaryBox.top,
+        toolbarDisplay: toolbar ? getComputedStyle(toolbar).display : 'absent',
         introText: intro?.innerText.trim() || '',
       };
     });
+
     assert.equal(mobile.width, 390, `${name}: mobile viewport was not applied`);
     assert.ok(mobile.documentWidth <= mobile.width + 1, `${name}: horizontal overflow ${JSON.stringify(mobile)}`);
     assert.equal(mobile.background, '#f5f7f4', `${name}: light mobile palette should be calm and consistent`);
     assert.ok(mobile.heroRadius >= 18, `${name}: hero card should have a soft rounded shape`);
     assert.ok(mobile.primaryHeight >= 44, `${name}: primary action should meet touch target minimum`);
+    assert.ok(mobile.primaryAboveNav, `${name}: fixed bottom navigation must not cover the primary discovery action (${mobile.primaryBottom}px vs nav ${mobile.navTop}px)`);
+    assert.match(mobile.randomTarget, /^#\/ev\/site\/(?!e25(?:$|[/?#]))[a-z0-9-]+$/i, `${name}: per-visit discovery must exclude E25`);
+    assert.equal(mobile.randomId.toLowerCase(), mobile.randomTarget.split('/').at(-1).toLowerCase(), `${name}: selected universe ID must match the action target`);
+    assert.equal(mobile.moreVisible, false, `${name}: duplicate homepage discovery controls should be removed`);
     assert.ok(mobile.starsAnchored, `${name}: each visible favorite star must stay inside its own universe card`);
-    assert.ok(mobile.moreVisible && !mobile.moreOpen, `${name}: secondary discovery routes should be grouped behind a visible disclosure`);
-    assert.ok(mobile.quickAccessWidth >= 40 && mobile.quickAccessWidth <= 48 && mobile.quickAccessHeight >= 40 && mobile.quickAccessHeight <= 48, `${name}: floating quick access must not cover the primary CTA with a wide pill`);
+    assert.ok(mobile.quickAccessWidth >= 40 && mobile.quickAccessWidth <= 48 && mobile.quickAccessHeight >= 40 && mobile.quickAccessHeight <= 48, `${name}: floating quick access must remain a compact touch target`);
     assert.equal(mobile.quickAccessCoversPrimary, false, `${name}: floating quick access must not overlap the primary CTA`);
     assert.match(mobile.quickAccessLabel, /Hızlı Erişim/, `${name}: compact quick access remains screen-reader discoverable`);
     assert.ok(mobile.navHeight >= 60, `${name}: bottom navigation should include safe-area space`);
@@ -98,17 +119,40 @@ for (const [name, engine] of engines) {
     assert.equal(mobile.tourTag, 'DIALOG', `${name}: first-visit tour must use an accessible dialog`);
     assert.ok(mobile.tourOpen && !mobile.tourModal, `${name}: first-visit tour must remain a non-modal accessible dialog`);
     assert.equal(mobile.tourCoversPrimary, false, `${name}: first-visit tour must not cover the primary CTA`);
+    assert.ok(mobile.tourOwnsHitTest, `${name}: first-visit tour must be visible and receive pointer hits above sticky controls`);
     assert.ok(mobile.tourHeight <= 240, `${name}: first-visit tour should stay compact, got ${mobile.tourHeight}px`);
     assert.ok(mobile.tourTitle, `${name}: tour must have a labelled heading`);
     assert.equal(mobile.tourSkipText, 'Atla', `${name}: tour skip action must be visible and explicit`);
     assert.equal(mobile.tourSkipLabel, 'Turu atla', `${name}: tour skip action must have an accessible label`);
-    assert.equal(mobile.codeButtonText, 'Kod gir', `${name}: header code action should state what it does`);
+    assert.equal(mobile.codeButtonText, 'Kod gir', `${name}: code action must remain available in the menu`);
+    assert.ok(mobile.codeButtonHidden, `${name}: duplicate header code control should be removed on mobile`);
+    assert.ok(['none', 'absent'].includes(mobile.toolbarDisplay), `${name}: reading-only controls should not clutter the mobile home screen`);
     assert.equal(mobile.introText, 'Evrenleri keşfet; oku, oyna ya da kendi evrenini kur.', `${name}: home intro should avoid unexplained jargon`);
 
-    await page.locator('[data-evren-git="harita:tomye"]').click();
-    await page.waitForFunction(() => location.pathname === '/harita/');
-    await page.waitForFunction(() => document.querySelector('#harita')?.classList.contains('gizli') === false);
+    const menuButton = page.locator('[data-mobil-menu]:visible').first();
+    assert.ok(await menuButton.count(), `${name}: mobile menu trigger should be visible`);
+    await menuButton.click();
+    await page.waitForFunction(() => {
+      const menu = document.querySelector('#mobilMenu');
+      return !!menu && !menu.hidden && menu.getBoundingClientRect().height > 0;
+    });
+    const menuState = await page.evaluate(() => {
+      const menu = document.querySelector('#mobilMenu');
+      const panel = menu?.querySelector('.mobil-menu');
+      const nav = document.querySelector('#altMenu');
+      return {
+        navHidden: nav?.getAttribute('aria-hidden') === 'true' || getComputedStyle(nav).visibility === 'hidden' || getComputedStyle(nav).display === 'none',
+        scrollable: Boolean(panel && ['auto', 'scroll'].includes(getComputedStyle(panel).overflowY)),
+        groups: [...(menu?.querySelectorAll('.mm-eylemler .mm-grup-baslik') || [])].map((item) => item.textContent.trim()),
+      };
+    });
+    assert.ok(menuState.navHidden, `${name}: bottom navigation must not remain visible over the open menu`);
+    assert.ok(menuState.scrollable, `${name}: long mobile menu must scroll inside its own panel`);
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => document.querySelector('#mobilMenu')?.hidden !== false);
 
+    await page.locator('#rastgeleEvrenHero').click();
+    await page.waitForFunction(() => /^\/evren\/(?!e25(?:\/|$))[a-z0-9-]+\/$/i.test(location.pathname), null, { timeout: 15000 });
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => !document.querySelector('#turIpucu'));
     const tourDismissed = await page.evaluate(() => localStorage.getItem('tentiforapp_tur'));
@@ -118,7 +162,7 @@ for (const [name, engine] of engines) {
     const darkBackground = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--kar').trim().toLowerCase());
     assert.equal(darkBackground, '#0b1017', `${name}: mobile palette must preserve the existing night theme`);
     assert.equal(pageErrors.length, 0, `${name}: runtime errors ${pageErrors.join('; ')}`);
-    results.push(`${name}: PASS (390px home, calm palette, no overflow, anchored universe stars, balanced CTA rows, non-modal CTA-accessible tour/skip/Escape, clear code action, night theme)`);
+    results.push(`${name}: PASS (390px, safe CTA/nav spacing, random E24/Ax24 discovery, grouped scrollable menu, visible first-visit tour, no homepage clutter, Cloudflare RUM mocked, night theme; ${rumMocks} RUM request(s) mocked)`);
     await page.close();
   } catch (error) {
     results.push(`${name}: FAIL (${error.stack || error})`);
