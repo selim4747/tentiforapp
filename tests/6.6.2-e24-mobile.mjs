@@ -41,6 +41,11 @@ assert.equal(typeof choose, 'function');
 assert.equal(choose(data, () => 0)?.id, 'e24', 'the rich-universe pool should include E24');
 assert.equal(choose(data, () => 0.999)?.id, 'ax24', 'the rich-universe pool should include Ax-24');
 assert.notEqual(choose(data, () => 0.999)?.id, 'e25', 'E25 must never be selected for the homepage action');
+const fallbackSource = { kanonEvrenleri: {
+  oneArea: { id: 'oneArea', kurallar: ['a', 'b', 'c'] },
+  threeAreas: { id: 'threeAreas', kurallar: ['a'], kisiler: ['b'], yerler: ['c'] },
+} };
+assert.equal(choose(fallbackSource, () => 0)?.id, 'threeAreas', 'fallback must count distinct non-empty areas, not records within one area');
 helperDom.window.close();
 
 const routeDom = new JSDOM('<!doctype html><html><head><meta name="robots"></head><body></body></html>', {
@@ -60,7 +65,9 @@ const home = fs.readFileSync('index.html', 'utf8');
 assert.match(home, /id="rastgeleEvrenHero"/);
 assert.match(home, /E24 · Tömye · kanon/);
 assert.doesNotMatch(home, /Tömye haritasını keşfet/, 'the old single-destination hero CTA must be removed');
-const mobileSource = fs.readFileSync('tests/mobile-calm-ui.mjs', 'utf8');
-assert.match(mobileSource, /static\.cloudflareinsights\.com/,'mobile browser tests must mock Cloudflare RUM requests');
+const rumMock = fs.readFileSync('tests/helpers/cloudflare-rum-mock.mjs', 'utf8');
+const mobileSource = fs.readFileSync('tests/mobile-ui-overflow-playwright.mjs', 'utf8');
+assert.match(rumMock, /static\.cloudflareinsights\.com/,'mobile browser tests must provide a Cloudflare beacon mock');
+assert.match(mobileSource, /mockCloudflareRum\(page\.context\(\)\)/, 'mobile browser tests must install the shared Cloudflare RUM mock');
 
 console.log('6.6.2 E24 migration and mobile regression contracts: PASS');
