@@ -342,6 +342,8 @@ try {
   assert.ok(!(await page.locator('#evrenSayfa .eaw-reader').innerText()).includes('PW Gizli Taslak'), 'private draft is absent from reader text');
 
   const worldSnapshot = await page.evaluate((id) => JSON.parse(JSON.stringify(window.evrenBenimBul(id))), worldId);
+  worldSnapshot.ansiklopediMaddeleri = worldSnapshot.ansiklopediMaddeleri.filter((entry) => entry.durum === 'yayinda');
+  assert.equal(worldSnapshot.ansiklopediMaddeleri.length, 8, 'clean-profile fixture contains published records only, without local drafts');
   const publicMarkup = await page.evaluate(() => {
     const world = window.evrenSayfaVerisi().eser;
     window.EVS.kaynak = 'public';
@@ -442,8 +444,10 @@ try {
   const secondFailures = [];
   const secondInAppReads = [];
   const secondLocalHttpErrors = [];
+  const secondDialogs = [];
   secondPage.on('pageerror', (error) => secondErrors.push(error.message));
   secondPage.on('console', (message) => { if (message.type() === 'error') secondErrors.push(message.text()); });
+  secondPage.on('dialog', async (dialog) => { secondDialogs.push(dialog.message()); await dialog.accept(); });
   secondPage.on('request', (request) => secondRequests.push({ url: request.url(), method: request.method() }));
   secondPage.on('requestfailed', (request) => secondFailures.push({ url: request.url(), error: request.failure()?.errorText || 'unknown' }));
   secondPage.on('response', (response) => {
@@ -466,6 +470,38 @@ try {
   await secondPage.waitForSelector('#evrenSayfa .eaw-article h1', { timeout: 10000 });
   await secondPage.waitForSelector('#evrenSayfa .eaw-image-empty', { timeout: 10000 });
   assert.match(await secondPage.locator('#evrenSayfa .eaw-image-empty').textContent(), /yalnızca yazarın tarayıcı profilinde/, 'a second reader without the IndexedDB blob receives an explicit unavailable-image notice');
+  const emptySecondImageStore = await secondPage.evaluate(async (ids) => {
+    const world = window.evrenSayfaVerisi().eser;
+    for (const id of ids) {
+      const meta = world.ansiklopediMaddeleri.find((entry) => entry.id === id)?.gorsel;
+      if (!meta) return false;
+      const record = await window.evrenGorselVarlik.oku(meta, { kaynak: 'indexeddb' });
+      if (record?.url) URL.revokeObjectURL(record.url);
+      if (record?.blob?.size) return false;
+    }
+    return true;
+  }, [imageArticleId, plantId]);
+  assert.equal(emptySecondImageStore, true, 'second profile starts with article metadata but no IndexedDB image bytes');
+  await secondPage.locator('#evrenSayfa [data-eaw-edit]').click();
+  await secondPage.locator('#evrenSayfa [data-eaw-import]').setInputFiles({ name: 'clean-profile-backup.json', mimeType: 'application/json', buffer: backupBuffer });
+  await secondPage.waitForFunction(async ({ ids, deletedId }) => {
+    const world = window.evrenSayfaVerisi()?.eser;
+    if (!world) return false;
+    for (const id of ids) {
+      const meta = world.ansiklopediMaddeleri?.find((entry) => entry.id === id)?.gorsel;
+      if (!meta) return false;
+      const record = await window.evrenGorselVarlik.oku(meta, { kaynak: 'indexeddb' });
+      if (record?.url) URL.revokeObjectURL(record.url);
+      if (!record?.blob?.size) return false;
+    }
+    return world.ansiklopediMaddeleri.length === 8 && world.ansiklopediSilinenMaddeler.some((entry) => entry.id === deletedId);
+  }, { ids: [imageArticleId, plantId], deletedId: backupDeletedId }, { timeout: 20000 });
+  assert.ok(secondDialogs.some((message) => message.includes('mevcut ansiklopedi maddelerini')), 'clean-profile import also requires explicit replacement confirmation');
+  const cleanImportState = await secondPage.evaluate(() => {
+    const world = window.evrenSayfaVerisi().eser;
+    return { count: world.ansiklopediMaddeleri.length, deleted: world.ansiklopediSilinenMaddeler.map((entry) => entry.id), titles: world.ansiklopediMaddeleri.map((entry) => entry.baslik), status: document.querySelector('#evrenSayfa [data-eaw-status]')?.textContent || '' };
+  });
+  assert.equal(cleanImportState.count, 8, `portable backup imports into a second profile with empty image storage: ${JSON.stringify(cleanImportState)}`);
   await waitForObservedReads(secondRequests, secondInAppReads);
   await secondContext.close();
 
@@ -492,7 +528,7 @@ try {
   const writes = allRequests.filter((request) => new URL(request.url).origin !== baseURL && !['GET', 'HEAD'].includes(request.method) && !isObservedAppRead(request) && new URL(request.url).hostname !== 'static.cloudflareinsights.com');
   assert.deepEqual(writes, [], `disposable local test must not write to remote APIs: ${JSON.stringify(writes)}`);
   await context.close();
-  console.log('Universe encyclopedia Playwright: PASS (eight categories, 390px/desktop Wiki layout, sources, local-image visibility, JSON rollback/import, stable deep links, refresh, Back/Forward and private drafts).');
+  console.log('Universe encyclopedia Playwright: PASS (eight categories, 390px/desktop Wiki layout, sources, clean-profile image import/visibility, JSON rollback, stable deep links, refresh, Back/Forward and private drafts).');
 } catch (error) {
   console.error(error.stack || error);
   if (output) console.error(`Local server output:\n${output}`);
