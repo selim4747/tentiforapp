@@ -28,9 +28,12 @@
     if (summary.length > 5000) errors.push('Özet 5.000 karakteri aşmamalı.');
 
     var contentKeys = ['kurallar', 'kisiler', 'yerler', 'tarih', 'sozluk', 'belgeler', 'lorlar', 'cizimler', 'oyun_listesi'];
+    var encyclopedia = list(world.ansiklopediMaddeleri);
+    var publishedArticles = encyclopedia.filter(function (entry) { return entry && entry.durum === 'yayinda'; });
     var hasWriting = contentKeys.some(function (key) { return list(world[key]).some(populated); })
       || list(world.roman && world.roman.bolumler).some(populated)
       || list(world.harita && world.harita.yerler).some(populated)
+      || publishedArticles.some(populated)
       || Object.keys(world).some(function (key) { return /^ozel/.test(key) && populated(world[key]); });
     if (!hasWriting) errors.push('En az bir yazılı bölüm ekle: kural, kişi, yer, tarih, sözlük veya roman bölümü.');
 
@@ -45,6 +48,28 @@
         if (!item || typeof item !== 'object') errors.push((index + 1) + '. ' + groupNames[key] + ' geçersiz.');
         else if (!words(item.ad || item.baslik || item.olay || item.terim)) warnings.push((index + 1) + '. ' + groupNames[key] + ' başlıksız; okur listede tanıyamayabilir.');
         else if (!populated(item.aciklama || item.metin || item.tanim || item.ozet)) warnings.push((index + 1) + '. ' + groupNames[key] + ' için açıklama boş.');
+      });
+    });
+
+    var articleIds = new Set();
+    encyclopedia.forEach(function (entry, index) {
+      if (!entry || typeof entry !== 'object') { errors.push((index + 1) + '. ansiklopedi maddesi geçersiz.'); return; }
+      var entryId = words(entry.id);
+      if (!entryId) errors.push((index + 1) + '. ansiklopedi maddesinin kalıcı kimliği eksik.');
+      else if (articleIds.has(entryId)) errors.push('Ansiklopedi maddesi kimliği yineleniyor: ' + entryId);
+      else articleIds.add(entryId);
+      if (['bitki', 'hayvan', 'ozel'].indexOf(entry.tur) < 0) errors.push((index + 1) + '. ansiklopedi maddesinin kategorisi geçersiz.');
+      if (entry.durum === 'yayinda' && !words(entry.baslik)) errors.push((index + 1) + '. yayınlanmış ansiklopedi maddesinin adı eksik.');
+      else if (entry.durum !== 'yayinda' && !words(entry.baslik)) warnings.push((index + 1) + '. taslak ansiklopedi maddesi adsız; okura gösterilmez.');
+      if (entry.durum === 'yayinda' && !words(entry.ozet)) warnings.push('“' + words(entry.baslik).slice(0, 60) + '” maddesine kısa tanıtım eklemek iyi olur.');
+      if (entry.gorsel && entry.gorsel.kaynak === 'indexeddb' && entry.durum === 'yayinda') warnings.push('“' + words(entry.baslik).slice(0, 60) + '” maddesinin görseli yerel tarayıcı deposunda; başka okuyucuların cihazında bulunmayabilir.');
+    });
+    encyclopedia.forEach(function (entry) {
+      if (!entry || entry.durum !== 'yayinda') return;
+      list(entry.ilgiliIds).forEach(function (targetId) {
+        var target = encyclopedia.find(function (candidate) { return candidate && candidate.id === targetId; });
+        if (!target) errors.push('“' + words(entry.baslik).slice(0, 60) + '” maddesi bulunmayan ansiklopedi maddesine bağlanıyor: ' + targetId);
+        else if (target.durum !== 'yayinda') warnings.push('“' + words(entry.baslik).slice(0, 60) + '” maddesi taslak olan “' + words(target.baslik).slice(0, 60) + '” maddesine bağlanıyor; okurlar bağlantıyı göremez.');
       });
     });
 
