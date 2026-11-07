@@ -4,6 +4,10 @@ import { JSDOM } from 'jsdom';
 
 const source = fs.readFileSync('js/engine/v65-universe-publication-check.js', 'utf8');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { runScripts: 'outside-only' });
+dom.window.EVREN_ANSIKLOPEDI_SCHEMA = {
+  version: 1,
+  categories: ['bitki', 'hayvan', 'esya', 'ozel-esya', 'bina', 'ozel-bina', 'ozel-guc', 'diger'].map((id) => ({ id }))
+};
 dom.window.eval(source);
 const validate = dom.window.tf65EvrenYayinDenetle;
 assert.equal(typeof validate, 'function');
@@ -38,7 +42,7 @@ const wikiOnly = {
   ozet: 'Bitkiler ve hayvanlar hakkında kayıtlar içeren örnek evren.',
   ansiklopediMaddeleri: [
     { id: 'flora-1', tur: 'bitki', baslik: 'Ay çiçeği', ozet: 'Geceleri açar.', durum: 'yayinda', ilgiliIds: ['fauna-1'] },
-    { id: 'fauna-1', tur: 'hayvan', baslik: 'Göl tilkisi', durum: 'yayinda', ilgiliIds: ['flora-1'] },
+    { id: 'fauna-1', tur: 'hayvan', baslik: 'Göl tilkisi', ozet: 'Göl kıyısında yaşayan gece avcısı.', durum: 'yayinda', ilgiliIds: ['flora-1'] },
     { id: 'draft-1', tur: 'bitki', baslik: 'Taslak madde', durum: 'taslak' }
   ]
 };
@@ -52,6 +56,21 @@ assert.ok(validate(missingArticle).errors.some((item) => item.includes('bulunmay
 const duplicateArticle = structuredClone(wikiOnly);
 duplicateArticle.ansiklopediMaddeleri[1].id = 'flora-1';
 assert.ok(validate(duplicateArticle).errors.some((item) => item.includes('kimliği yineleniyor')), 'duplicate article IDs are rejected');
+const missingSummary = structuredClone(wikiOnly);
+missingSummary.ansiklopediMaddeleri[0].ozet = '';
+assert.ok(validate(missingSummary).errors.some((item) => item.includes('Ay çiçeği') && item.includes('kısa tanıtım gerekli')), 'published articles require a short introduction');
+const invalidCategory = structuredClone(wikiOnly);
+invalidCategory.ansiklopediMaddeleri[0].tur = 'dragon';
+assert.ok(validate(invalidCategory).errors.some((item) => item.includes('Ay çiçeği') && item.includes('kategorisi geçersiz')), 'publication uses the verified category schema');
+const draftLink = structuredClone(wikiOnly);
+draftLink.ansiklopediMaddeleri[0].ilgiliIds = ['draft-1'];
+assert.ok(validate(draftLink).warnings.some((item) => item.includes('Ay çiçeği') && item.includes('taslak')), 'links to draft articles are warned about');
+const localImage = structuredClone(wikiOnly);
+localImage.ansiklopediMaddeleri[0].gorsel = { id: 'local-image', kaynak: 'indexeddb' };
+assert.ok(validate(localImage).warnings.some((item) => item.includes('Ay çiçeği') && item.includes('IndexedDB')), 'local-only images identify the affected article');
+const unsafeSource = structuredClone(wikiOnly);
+unsafeSource.ansiklopediMaddeleri[0].kaynakca = [{ baslik: 'Unsafe source', url: 'javascript:alert(1)' }];
+assert.ok(validate(unsafeSource).errors.some((item) => item.includes('Ay çiçeği') && item.includes('HTTPS')), 'unsafe reference links block publication');
 
 const badMap = structuredClone(complete);
 badMap.harita.yerler[0].x = 101;
