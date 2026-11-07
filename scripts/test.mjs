@@ -35,6 +35,7 @@ const tests = [
   'tests/ortak-evren.mjs',
   'tests/android-native.mjs',
   'tests/6.1-universe-center.mjs',
+  'tests/universe-create-explore-playwright.mjs',
   'tests/mobile-menu-regression.mjs',
   'tests/6.6.2-e24-mobile.mjs',
   'tests/mobile-calm-ui.mjs',
