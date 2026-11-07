@@ -94,6 +94,16 @@ for (const [name, engine] of engines) {
     assert.ok(mobile.primaryHeight >= 44, `${name}: primary action should meet touch target minimum`);
     assert.ok(mobile.starsAnchored, `${name}: each visible favorite star must stay inside its own universe card`);
     assert.ok(mobile.moreVisible && !mobile.moreOpen, `${name}: secondary discovery routes should be grouped behind a visible disclosure`);
+    const discovery = page.locator('.hero-diger-yollar');
+    const discoverySummary = discovery.locator('summary');
+    assert.ok((await discoverySummary.boundingBox())?.height >= 44, `${name}: compact discovery disclosure should retain a 44px touch target`);
+    await discoverySummary.click();
+    assert.notEqual(await discovery.getAttribute('open'), null, `${name}: discovery disclosure should open on tap`);
+    for (const href of ['#/tomye', '#/harita', '#/dunya', '#/oyunlar']) {
+      assert.equal(await discovery.locator(`a[href="${href}"]`).isVisible(), true, `${name}: opened discovery should expose ${href}`);
+    }
+    await discoverySummary.click();
+    assert.equal(await discovery.getAttribute('open'), null, `${name}: discovery disclosure should close on a second tap`);
     assert.ok(mobile.quickAccessWidth >= 40 && mobile.quickAccessWidth <= 48 && mobile.quickAccessHeight >= 40 && mobile.quickAccessHeight <= 48, `${name}: floating quick access must not cover the primary CTA with a wide pill`);
     assert.equal(mobile.quickAccessCoversPrimary, false, `${name}: floating quick access must not overlap the primary CTA`);
     assert.match(mobile.quickAccessLabel, /Hızlı Erişim/, `${name}: compact quick access remains screen-reader discoverable`);
@@ -132,7 +142,7 @@ for (const [name, engine] of engines) {
     const darkBackground = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--kar').trim().toLowerCase());
     assert.equal(darkBackground, '#0b1017', `${name}: mobile palette must preserve the existing night theme`);
     assert.equal(pageErrors.length, 0, `${name}: runtime errors ${pageErrors.join('; ')}`);
-    results.push(`${name}: PASS (390px home, calm palette, no overflow, anchored universe stars, balanced CTA rows, non-modal CTA-accessible tour/skip/Escape, clear code action, night theme)`);
+    results.push(`${name}: PASS (390px home, compact expandable discovery, calm palette, no overflow, anchored universe stars, balanced CTA rows, non-modal CTA-accessible tour/skip/Escape, clear code action, night theme)`);
     await page.close();
   } catch (error) {
     results.push(`${name}: FAIL (${error.stack || error})`);
