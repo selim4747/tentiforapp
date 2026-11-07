@@ -33,6 +33,26 @@ const brokenGuide = structuredClone(complete);
 brokenGuide.okuma_rehberi.push({ baslik: 'Olmayan bölüm', dosya: 'roman:yok' });
 assert.equal(validate(brokenGuide).ok, false, 'bozuk roman bağlantısı yakalanmalı');
 
+const wikiOnly = {
+  tur: 'evren', ad: 'Ansiklopedi Dünyası',
+  ozet: 'Bitkiler ve hayvanlar hakkında kayıtlar içeren örnek evren.',
+  ansiklopediMaddeleri: [
+    { id: 'flora-1', tur: 'bitki', baslik: 'Ay çiçeği', ozet: 'Geceleri açar.', durum: 'yayinda', ilgiliIds: ['fauna-1'] },
+    { id: 'fauna-1', tur: 'hayvan', baslik: 'Göl tilkisi', durum: 'yayinda', ilgiliIds: ['flora-1'] },
+    { id: 'draft-1', tur: 'bitki', baslik: 'Taslak madde', durum: 'taslak' }
+  ]
+};
+assert.equal(validate(wikiOnly).ok, true, 'published encyclopedia entries count as written content');
+const draftOnly = structuredClone(wikiOnly);
+draftOnly.ansiklopediMaddeleri = [draftOnly.ansiklopediMaddeleri[2]];
+assert.ok(validate(draftOnly).errors.some((item) => item.includes('yazılı bölüm')), 'private drafts do not count as public written content');
+const missingArticle = structuredClone(wikiOnly);
+missingArticle.ansiklopediMaddeleri[0].ilgiliIds.push('missing-id');
+assert.ok(validate(missingArticle).errors.some((item) => item.includes('bulunmayan ansiklopedi maddesine')), 'broken encyclopedia links are rejected');
+const duplicateArticle = structuredClone(wikiOnly);
+duplicateArticle.ansiklopediMaddeleri[1].id = 'flora-1';
+assert.ok(validate(duplicateArticle).errors.some((item) => item.includes('kimliği yineleniyor')), 'duplicate article IDs are rejected');
+
 const badMap = structuredClone(complete);
 badMap.harita.yerler[0].x = 101;
 assert.ok(validate(badMap).errors.some((item) => item.includes('0–100')));

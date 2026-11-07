@@ -261,7 +261,7 @@ fs.writeFileSync(updateBundlePath, updateBundle, 'utf8');
 // Custom-world visual metadata is normalized in the serving bundle as well as
 // the readable source; otherwise portraits/items disappear on the next save.
 const worldExtensionSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/45-evrengezer.js'), 'utf8');
-for (const signature of ['function evrenVarlikGorselTemizle(a)', 'function evrenVarliklarTemizle(a)', 'function evrenEkTemizle(a,e)']) {
+for (const signature of ['function evrenVarlikGorselTemizle(a)', 'function evrenVarliklarTemizle(a)', 'function evrenAnsiklopediTemizle(a)', 'function evrenEkTemizle(a,e)']) {
   const sourceRange = functionRange(worldExtensionSource, signature, `World visual source ${signature}`);
   const sourceFunction = worldExtensionSource.slice(sourceRange.start, sourceRange.end);
   const bundleStart = updateBundle.indexOf(signature);

@@ -19,7 +19,9 @@
     "test:release": "node tests/release-hygiene.mjs",
     "lint": "node scripts/lint.mjs",
     "test:admin-browser": "node tests/admin-playwright.mjs",
-    "test:universe-visual-browser": "node tests/universe-visual-playwright.mjs"
+    "test:universe-visual-browser": "node tests/universe-visual-playwright.mjs",
+    "test:universe-encyclopedia": "node tests/6.6.3-universe-encyclopedia.mjs",
+    "test:universe-encyclopedia-browser": "node tests/universe-encyclopedia-playwright.mjs"
   },
   "keywords": [
     "tentifor",

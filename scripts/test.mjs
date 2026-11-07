@@ -29,6 +29,7 @@ const tests = [
   'tests/6.5-offline-sync-center.mjs',
   'tests/6.5-fan-map-image-assets.mjs',
   'tests/6.5-custom-universe-visual-assets.mjs',
+  'tests/6.6.3-universe-encyclopedia.mjs',
   'tests/github-media-worker.mjs',
   'tests/cakisma.mjs',
   'tests/ortak-evren.mjs',

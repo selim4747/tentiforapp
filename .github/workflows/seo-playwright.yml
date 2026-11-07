@@ -49,3 +49,6 @@ jobs:
 
       - name: Run custom-universe visual asset E2E
         run: npm run test:universe-visual-browser
+
+      - name: Run custom-universe encyclopedia E2E
+        run: npm run test:universe-encyclopedia-browser
