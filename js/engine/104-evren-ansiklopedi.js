@@ -2,24 +2,34 @@
 (function () {
   'use strict';
 
-  var TYPE_NAMES = { bitki: 'Bitki', hayvan: 'Hayvan', ozel: 'Diğer canlı / tür' };
   var BACKUP_FORMAT = 'tentifor-evren-ansiklopedi';
+  var BACKUP_VERSION = 2;
   var MAX_BACKUP_BYTES = 20 * 1024 * 1024;
-  var FIELDS = [
-    ['siniflandirma', 'Tür / sınıflandırma'], ['gorunum', 'Görünüş'], ['yasamDongusu', 'Yaşam döngüsü'],
-    ['beslenme', 'Beslenme'], ['davranis', 'Davranış'], ['kullanim', 'Kullanım / tehlike'], ['ekolojikRol', 'Ekolojik rol']
-  ];
+  var MAX_ARTICLES = 300;
+  var MAX_REVISIONS = 20;
+  var ARTICLE_PARAM = 'wiki';
   var selected = Object.create(null);
   var previewMode = Object.create(null);
+  var readerState = Object.create(null);
 
-  function installStyles() {
-    if (document.getElementById('eaw-styles')) return;
-    var style = document.createElement('style');
-    style.id = 'eaw-styles';
-    style.textContent = '.eaw-controls{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin:16px 0}.eaw-controls label,.eaw-entry label{display:block;margin:12px 0}.eaw-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}.eaw-card{padding:18px;border:1px solid var(--cizgi,#ced4da);background:var(--beyaz,#fff)}.eaw-card h4{margin:10px 0}.eaw-link{color:var(--deniz,#0f4c5c);font:inherit;font-weight:700;text-decoration:underline;background:none;border:0;padding:0;cursor:pointer;text-align:left}.eaw-entry{margin:16px 0}.eaw-entry input:not([type=checkbox]),.eaw-entry select,.eaw-entry textarea,.eaw-controls input,.eaw-controls select{display:block;width:100%;min-height:44px;margin-top:6px}.eaw-entry textarea{resize:vertical}.eaw-entry input[type=checkbox]{width:auto;min-height:auto;margin-right:8px}.eaw-entry select[multiple]{min-height:110px}.eaw-image-empty{min-height:70px;padding:20px;border:1px dashed var(--cizgi,#ced4da);color:var(--murekkep,#495057)}.eaw-article{max-width:980px;margin:16px auto}.eaw-article header{padding:20px 0}.eaw-article h3{font-size:1.6em;margin:8px 0}.eaw-intro{font-size:1.1em}.eaw-article-layout{display:grid;grid-template-columns:minmax(220px,360px) 1fr;gap:24px;margin:20px 0}.eaw-article-image,.eaw-fact{padding:14px;border:1px solid var(--cizgi,#ced4da);background:var(--beyaz,#fff)}.eaw-facts{display:grid;grid-template-columns:1fr 1fr;gap:12px}.eaw-fact b{color:var(--deniz,#0f4c5c)}.eaw-prose{line-height:1.7;margin:20px 0}.eaw-related,.eaw-tags{margin-top:14px}.eaw-tags span{display:inline-block;margin:4px 6px 4px 0;padding:3px 8px;border:1px solid var(--cizgi,#ced4da)}@media(max-width:700px){.eaw-controls,.eaw-article-layout,.eaw-facts{grid-template-columns:1fr}.eaw-list{grid-template-columns:1fr}.eaw-article{margin:8px 0}}';
-    document.head.appendChild(style);
+  function schema() {
+    var value = window.EVREN_ANSIKLOPEDI_SCHEMA;
+    if (!value && typeof window.evrenAnsiklopediTemizle === 'function') {
+      window.evrenAnsiklopediTemizle([]);
+      value = window.EVREN_ANSIKLOPEDI_SCHEMA;
+    }
+    return value && Array.isArray(value.categories) ? value : {
+      version: 1,
+      categories: [{ id: 'diger', ad: 'Diğer / özel tür', alanlar: [] }],
+      fields: {}
+    };
   }
-
+  function categories() { return schema().categories; }
+  function category(value) {
+    return categories().find(function (item) { return item.id === value; })
+      || categories().find(function (item) { return item.id === 'diger'; })
+      || { id: 'diger', ad: 'Diğer / özel tür', alanlar: [] };
+  }
   function esc(value) {
     return typeof window.kacir === 'function'
       ? window.kacir(value)
@@ -36,6 +46,32 @@
     return !!((state && state.kaynak === 'benim') || (page && page.kaynak === 'benim'));
   }
   function records(world) { return Array.isArray(world && world.ansiklopediMaddeleri) ? world.ansiklopediMaddeleri : []; }
+  function deletedRecords(world) { return Array.isArray(world && world.ansiklopediSilinenMaddeler) ? world.ansiklopediSilinenMaddeler : []; }
+  function indexedDbImages(entries) {
+    var images = [], seen = new Set;
+    function add(meta) {
+      if (!meta || meta.kaynak !== 'indexeddb' || !meta.id || seen.has(meta.id)) return;
+      seen.add(meta.id); images.push(meta);
+    }
+    (entries || []).forEach(function (entry) {
+      if (!entry || typeof entry !== 'object') return;
+      add(entry.gorsel);
+      (Array.isArray(entry.gecmis) ? entry.gecmis : []).forEach(function (revision) { add(revision && revision.madde && revision.madde.gorsel); });
+    });
+    return images;
+  }
+  function cleanupOrphanImages(previousEntries, remainingEntries) {
+    if (!window.evrenGorselVarlik || typeof window.evrenGorselVarlik.sil !== 'function') return Promise.resolve(0);
+    var retained = new Set(indexedDbImages(remainingEntries).map(function (meta) { return meta.id; }));
+    var obsolete = indexedDbImages(previousEntries).filter(function (meta) { return !retained.has(meta.id); });
+    return Promise.all(obsolete.map(function (meta) {
+      return Promise.resolve(window.evrenGorselVarlik.sil(meta, { kaynak: 'indexeddb' })).then(function () {
+        var urls = window.EVH_GORSEL_URL || {};
+        if (urls[meta.id]) { URL.revokeObjectURL(urls[meta.id]); delete urls[meta.id]; }
+        return false;
+      }).catch(function () { return true; });
+    })).then(function (failures) { return failures.filter(Boolean).length; });
+  }
   function sanitizeImage(meta) {
     return typeof window.evrenVarlikGorselTemizle === 'function' ? window.evrenVarlikGorselTemizle(meta) : null;
   }
@@ -49,10 +85,10 @@
   function imageHtml(meta, alt, worldId) {
     if (!meta) return '<div class="eaw-image-empty">Görsel eklenmemiş</div>';
     var url = imageUrl(meta);
-    if (url) return '<img src="' + esc(url) + '" alt="' + esc(alt || 'Ansiklopedi görseli') + '" loading="lazy" style="max-width:100%;max-height:300px;object-fit:contain">';
+    if (url) return '<img class="eaw-image" src="' + esc(url) + '" alt="' + esc(alt || 'Ansiklopedi görseli') + '" loading="lazy">';
     if (meta.kaynak === 'indexeddb' && typeof window.evrenGorselGoster === 'function') {
       window.evrenGorselGoster(meta, function () { if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz(); }, worldId);
-      return '<div class="eaw-image-empty" role="status">Görsel bu tarayıcıda bulunamadı. Yazarın görsel yedeğini paylaşması gerekir.</div>';
+      return '<div class="eaw-image-empty" role="status">Bu görsel yalnızca yazarın tarayıcı profilinde kayıtlı. Diğer okuyucular görseli göremeyebilir.</div>';
     }
     return '<div class="eaw-image-empty" role="status">Bu görsel bu cihazda mevcut değil.</div>';
   }
@@ -60,6 +96,7 @@
     try { if (window.crypto && window.crypto.randomUUID) return 'w' + window.crypto.randomUUID().replace(/-/g, ''); } catch (_) {}
     return 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   }
+  function now() { return new Date().toISOString(); }
   function getWorldForEdit() {
     var state = currentState();
     if (!state || state.kaynak !== 'benim' || !state.id || typeof window.evrenBenimBul !== 'function') return null;
@@ -68,147 +105,327 @@
   function mutate(mutator) {
     var state = currentState();
     if (!state || state.kaynak !== 'benim' || typeof window.evrenBenimDegistir !== 'function') throw new Error('Yalnızca kendi evrenini düzenleyebilirsin.');
-    window.evrenBenimDegistir(state.id, mutator);
+    var stored = window.evrenBenimDegistir(state.id, mutator);
+    if (stored === false) throw new Error('Değişiklik yerel depoya yazılamadı; mevcut ansiklopedi korunuyor.');
     var updated = getWorldForEdit();
     if (!updated) throw new Error('Ansiklopedi taslağı kaydedilemedi.');
     return updated;
   }
   function status(message, good) {
-    var node = document.querySelector('#evrenSayfa [data-eaw-status]');
+    var node = document.querySelector('#evrenSayfa [data-eaw-status]') || document.querySelector('[data-eaw-status]');
     if (node) { node.textContent = message; node.className = 'pencere-durum ' + (good ? 'iyi' : 'kotu'); }
   }
   function entryStatus(entryId, message, good) {
-    var node = document.querySelector('#evrenSayfa [data-eaw-entry-status="' + String(entryId).replace(/[^A-Za-z0-9_-]/g, '') + '"]');
+    var selector = '[data-eaw-entry-status="' + String(entryId).replace(/[^A-Za-z0-9_-]/g, '') + '"]';
+    var node = document.querySelector('#evrenSayfa ' + selector) || document.querySelector(selector);
     if (node) { node.textContent = message; node.className = 'pencere-durum ' + (good ? 'iyi' : 'kotu'); }
   }
-  function newEntry() {
-    mutate(function (world) {
-      if (!Array.isArray(world.ansiklopediMaddeleri)) world.ansiklopediMaddeleri = [];
-      if (world.ansiklopediMaddeleri.length >= 300) throw new Error('Bir evrende en fazla 300 ansiklopedi maddesi olabilir.');
-      world.ansiklopediMaddeleri.push({ id: id(), tur: 'bitki', baslik: '', ozet: '', aciklama: '', etiketler: [], habitat: '', ozellikler: {}, ilgiliIds: [], gorsel: null, spoiler: false, durum: 'taslak' });
-    });
-    if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz();
-  }
-  function blobDataUrl(blob) {
-    return new Promise(function (resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = function () { resolve(String(reader.result || '')); };
-      reader.onerror = function () { reject(new Error('Görsel yedek dosyasına eklenemedi.')); };
-      reader.readAsDataURL(blob);
+  function findEntry(world, entryId) { return records(world).find(function (entry) { return entry && entry.id === entryId; }); }
+  function currentWorldId(world) { return String(world && world.id || ''); }
+  function published(world) {
+    return records(world).filter(function (entry) {
+      return entry && entry.durum === 'yayinda' && String(entry.baslik || '').trim();
     });
   }
-  async function portableArticle(entry) {
-    var copy = JSON.parse(JSON.stringify(entry));
-    if (!copy.gorsel) return copy;
-    var meta = sanitizeImage(copy.gorsel);
-    if (!meta) throw new Error('Bir maddenin görsel metadata bilgisi geçersiz.');
-    if (meta.kaynak === 'embedded') { copy.gorsel = meta; return copy; }
-    if (!window.evrenGorselVarlik || typeof window.evrenGorselVarlik.disaAktar !== 'function') throw new Error('Yerel görsel yedek aracı hazır değil.');
-    var record = await window.evrenGorselVarlik.disaAktar(meta);
-    if (!record || !record.blob) throw new Error('Bir görsel dosyası bu cihazda bulunamadı.');
+  function safeExternalUrl(value) {
+    var raw = String(value == null ? '' : value).trim();
+    if (!raw || raw.length > 2048) return '';
     try {
-      meta.kaynak = 'embedded';
-      meta.veri = await blobDataUrl(record.blob);
-      copy.gorsel = sanitizeImage(meta);
-      if (!copy.gorsel) throw new Error('Gömülü görsel güvenli biçimde doğrulanamadı.');
-      return copy;
-    } finally { if (record.url) { try { URL.revokeObjectURL(record.url); } catch (_) {} } }
+      var parsed = new URL(raw);
+      if (parsed.protocol !== 'https:' || !parsed.hostname || parsed.username || parsed.password) return '';
+      return parsed.href;
+    } catch (_) { return ''; }
   }
-  async function exportEncyclopedia() {
-    var world = getWorldForEdit();
-    if (!world) throw new Error('Dışa aktarma yalnızca kendi evreninde kullanılabilir.');
-    var articles = records(world), portable = [];
-    for (var i = 0; i < articles.length; i += 1) portable.push(await portableArticle(articles[i]));
-    var payload = { format: BACKUP_FORMAT, version: 1, evrenId: world.id, evrenAdi: world.ad || '', maddeler: portable };
-    var blob = new Blob([JSON.stringify(payload)], { type: 'application/json;charset=utf-8' });
-    if (blob.size > MAX_BACKUP_BYTES) throw new Error('Ansiklopedi yedeği 20 MB sınırını aşıyor; daha az veya daha küçük görsel seç.');
-    var url = URL.createObjectURL(blob), anchor = document.createElement('a');
-    anchor.href = url; anchor.download = (String(world.id || 'evren').replace(/[^A-Za-z0-9_-]/g, '') || 'evren') + '-ansiklopedi.json';
-    document.body.appendChild(anchor); anchor.click(); anchor.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-    status('Ansiklopedi yedeği indirildi; maddeler ve görseller bu JSON dosyasına gömüldü.', true);
+  function articleParam() {
+    try { return new URL(window.location.href).searchParams.get(ARTICLE_PARAM) || ''; }
+    catch (_) { return ''; }
   }
-  async function importEncyclopedia(file) {
-    if (!file) return;
-    if (file.size > MAX_BACKUP_BYTES) throw new Error('Ansiklopedi yedeği 20 MB sınırını aşıyor.');
-    var payload;
-    try { payload = JSON.parse(await file.text()); } catch (_) { throw new Error('Dosya geçerli JSON değil.'); }
-    if (!payload || payload.format !== BACKUP_FORMAT || payload.version !== 1 || !Array.isArray(payload.maddeler) || payload.maddeler.length > 300) throw new Error('Bu, geçerli TentiFor ansiklopedi yedeği değil.');
-    var world = getWorldForEdit();
-    if (!world) throw new Error('İçe aktarma yalnızca kendi evreninde kullanılabilir.');
-    if (!window.confirm('Bu işlem evrendeki mevcut ansiklopedi maddelerinin tamamını içe aktarılan yedekle değiştirir. Devam edilsin mi?')) return;
-    var clean = typeof window.evrenAnsiklopediTemizle === 'function' ? window.evrenAnsiklopediTemizle(payload.maddeler) : null;
-    if (!Array.isArray(clean) || clean.length !== payload.maddeler.length) throw new Error('Yedekte geçersiz veya yinelenen ansiklopedi kaydı var.');
-    for (var validationIndex = 0; validationIndex < clean.length; validationIndex += 1) if (payload.maddeler[validationIndex].gorsel && !clean[validationIndex].gorsel) throw new Error('Yedekte geçersiz ansiklopedi görseli var; hiçbir kayıt değiştirilmedi.');
-    var uploads = [];
-    async function restore(meta) {
-      if (!meta) return null;
-      var safe = sanitizeImage(meta);
-      if (!safe) throw new Error('Yedekte geçersiz görsel metadata var.');
-      if (safe.kaynak !== 'embedded' || !safe.veri) throw new Error('Taşınabilir yedekte tüm görseller gömülü olmalıdır.');
-      if (!window.evrenGorselVarlik || typeof window.evrenGorselVarlik.gomuluAktar !== 'function') throw new Error('Yerel görsel geri yükleme aracı hazır değil.');
-      var restored = await window.evrenGorselVarlik.gomuluAktar(safe, safe.veri);
-      uploads.push(restored);
-      return restored;
-    }
+  function changeArticleUrl(articleId, mode, worldId) {
     try {
-      for (var i = 0; i < clean.length; i += 1) clean[i].gorsel = await restore(clean[i].gorsel);
-      var old = records(world).map(function (entry) { return entry.gorsel; }).filter(Boolean);
-      mutate(function (draft) { draft.ansiklopediMaddeleri = clean; });
-      var current = getWorldForEdit(), retained = new Set();
-      records(current).forEach(function (entry) { if (entry.gorsel && entry.gorsel.id) retained.add(entry.gorsel.id); });
-      for (var j = 0; j < old.length; j += 1) if (old[j].id && !retained.has(old[j].id) && old[j].kaynak === 'indexeddb') await window.evrenGorselVarlik.sil(old[j]).catch(function () {});
-      if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz();
-      status('Ansiklopedi yedeği içe aktarıldı; maddeler ve görseller bu cihazda saklanıyor.', true);
-    } catch (error) {
-      for (var k = 0; k < uploads.length; k += 1) if (uploads[k]) await window.evrenGorselVarlik.sil(uploads[k]).catch(function () {});
-      throw error;
+      var url = new URL(window.location.href);
+      if (articleId) url.searchParams.set(ARTICLE_PARAM, articleId);
+      else url.searchParams.delete(ARTICLE_PARAM);
+      var state = window.history.state && typeof window.history.state === 'object'
+        ? Object.assign({}, window.history.state) : {};
+      if (articleId && mode === 'push') state.__eaw = { worldId: worldId, articleId: articleId };
+      else delete state.__eaw;
+      if (mode === 'push') window.history.pushState(state, '', url.href);
+      else window.history.replaceState(state, '', url.href);
+      return true;
+    } catch (_) { return false; }
+  }
+  function selectedEntry(world) {
+    var key = currentWorldId(world), routeId = articleParam();
+    if (routeId) {
+      var fromUrl = published(world).find(function (entry) { return entry.id === routeId; });
+      if (fromUrl) { selected[key] = fromUrl.id; return fromUrl; }
+      delete selected[key];
+      return null;
     }
+    delete selected[key];
+    return null;
+  }
+  function collator() {
+    try { return new Intl.Collator('tr-TR', { sensitivity: 'base', numeric: true }); }
+    catch (_) { return { compare: function (a, b) { return String(a).localeCompare(String(b)); } }; }
+  }
+  function normalizeSearch(value) {
+    var text = String(value == null ? '' : value);
+    try { text = text.normalize('NFKC'); } catch (_) {}
+    return text.toLocaleLowerCase('tr-TR');
+  }
+  function searchable(entry) {
+    var fields = [];
+    fields.push(entry.baslik, entry.ozet, entry.giris, entry.aciklama, entry.habitat, entry.tur);
+    (entry.etiketler || []).forEach(function (item) { fields.push(item); });
+    Object.keys(entry.ozellikler || {}).forEach(function (key) { fields.push(key, entry.ozellikler[key]); });
+    (entry.kaynakca || []).forEach(function (source) { fields.push(source.baslik, source.aciklama, source.url); });
+    return normalizeSearch(fields.filter(Boolean).join(' '));
+  }
+  function readerSettings(world) {
+    var key = currentWorldId(world);
+    if (!readerState[key]) readerState[key] = { query: '', category: '', sort: 'az', view: 'liste' };
+    return readerState[key];
+  }
+  function dateLabel(value) {
+    if (!value || !Number.isFinite(Date.parse(value))) return 'Tarih belirtilmemiş';
+    try { return new Intl.DateTimeFormat('tr-TR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)); }
+    catch (_) { return new Date(value).toLocaleString('tr-TR'); }
+  }
+  function categoryOptions(entry) {
+    return categories().map(function (item) {
+      return '<option value="' + esc(item.id) + '"' + (entry.tur === item.id ? ' selected' : '') + '>' + esc(item.ad) + '</option>';
+    }).join('');
+  }
+  function articleSnapshot(entry) {
+    var copy = JSON.parse(JSON.stringify(entry || {}));
+    delete copy.gecmis;
+    delete copy.silindiAt;
+    return copy;
+  }
+  function saveRevision(entry, reason) {
+    if (!Array.isArray(entry.gecmis)) entry.gecmis = [];
+    entry.gecmis.push({
+      versiyon: Math.max(1, Number(entry.surum) || 1),
+      tarih: entry.sonDegisiklik || now(),
+      neden: String(reason || 'Düzenleme').slice(0, 160),
+      madde: articleSnapshot(entry)
+    });
+    if (entry.gecmis.length > MAX_REVISIONS) entry.gecmis = entry.gecmis.slice(-MAX_REVISIONS);
+  }
+  function applyRevision(entry, snapshot) {
+    var history = Array.isArray(entry.gecmis) ? entry.gecmis : [];
+    var nextVersion = Math.max(1, Number(entry.surum) || 1) + 1;
+    var stableId = entry.id;
+    Object.keys(entry).forEach(function (key) { if (key !== 'id') delete entry[key]; });
+    Object.assign(entry, articleSnapshot(snapshot), {
+      id: stableId,
+      durum: 'taslak',
+      gecmis: history,
+      surum: nextVersion,
+      sonDegisiklik: now()
+    });
+  }
+  function entryWarnings(entry, world) {
+    var notes = [];
+    (entry.ilgiliIds || []).forEach(function (targetId) {
+      var target = records(world).find(function (item) { return item && item.id === targetId; });
+      if (!target) notes.push('İlgili madde bulunamadı: ' + targetId + '.');
+      else if (target.durum !== 'yayinda') notes.push('“' + (target.baslik || 'Adsız madde') + '” taslak; okurlar bu bağlantıyı açamaz.');
+    });
+    if (entry.gorsel && entry.gorsel.kaynak === 'indexeddb' && entry.durum === 'yayinda') {
+      notes.push('Görsel yalnızca bu tarayıcı profilinde. Başka okuyucular görseli göremeyebilir.');
+    }
+    return notes;
+  }
+  function sourcesEditor(entry) {
+    var sources = Array.isArray(entry.kaynakca) ? entry.kaynakca : [];
+    return '<div class="eaw-sources-editor"><h4>Kaynakça</h4><p class="oyun-not">İsteğe bağlıdır. Bağlantılar yalnızca HTTPS olabilir; başlık ve açıklama HTML olarak çalıştırılmaz.</p>' +
+      (sources.length ? sources.map(function (source, index) {
+        return '<fieldset class="eaw-source" data-eaw-source="' + esc(entry.id) + ':' + index + '"><legend>Kaynak ' + (index + 1) + '</legend>' +
+          '<label>Kaynak başlığı <input class="kod-giris" maxlength="180" value="' + esc(source.baslik || '') + '" data-eaw-source-field="' + esc(entry.id) + ':' + index + ':baslik"></label>' +
+          '<label>Açıklama <textarea class="kod-giris" rows="2" maxlength="800" data-eaw-source-field="' + esc(entry.id) + ':' + index + ':aciklama">' + esc(source.aciklama || '') + '</textarea></label>' +
+          '<label>HTTPS bağlantısı <input class="kod-giris" type="url" maxlength="2048" value="' + esc(source.url || '') + '" placeholder="https://…" data-eaw-source-field="' + esc(entry.id) + ':' + index + ':url"></label>' +
+          '<button type="button" class="dugme dugme-sade" data-eaw-remove-source="' + esc(entry.id) + ':' + index + '">Kaynağı kaldır</button></fieldset>';
+      }).join('') : '<p class="eaw-muted">Henüz kaynak eklenmedi.</p>') +
+      '<button type="button" class="dugme dugme-sade" data-eaw-add-source="' + esc(entry.id) + '">+ Kaynak ekle</button></div>';
+  }
+  function revisionsHtml(entry) {
+    var history = Array.isArray(entry.gecmis) ? entry.gecmis.slice().reverse() : [];
+    if (!history.length) return '<details class="eaw-history"><summary>Düzenleme geçmişi</summary><p class="eaw-muted">Henüz önceki sürüm yok. İlk düzenlemeden sonra burada görünür.</p></details>';
+    return '<details class="eaw-history"><summary>Düzenleme geçmişi (' + history.length + ')</summary><ol>' + history.map(function (revision, index) {
+      return '<li><span>v' + esc(revision.versiyon) + ' · ' + esc(dateLabel(revision.tarih)) + (revision.neden ? ' · ' + esc(revision.neden) : '') + '</span> <button type="button" class="dugme dugme-sade" data-eaw-revert="' + esc(entry.id) + '" data-eaw-revision="' + (history.length - index - 1) + '">Bu sürüme dön</button></li>';
+    }).join('') + '</ol></details>';
   }
   function editorEntry(entry, world) {
-    var fields = entry.ozellikler || {};
-    var meta = sanitizeImage(entry.gorsel);
-    var image = imageHtml(meta, entry.baslik || 'Ansiklopedi maddesi', world.id);
-    return '<fieldset class="fan-grup eaw-entry" data-eaw-entry="' + esc(entry.id) + '"><legend>' + esc(TYPE_NAMES[entry.tur] || 'Madde') + ' · ' + esc(entry.baslik || 'Yeni madde') + '</legend>' +
-      '<label>Kategori <select class="kod-giris" data-eaw-field="' + esc(entry.id) + ':tur">' + ['bitki', 'hayvan', 'ozel'].map(function (type) { return '<option value="' + type + '"' + (entry.tur === type ? ' selected' : '') + '>' + esc(TYPE_NAMES[type]) + '</option>'; }).join('') + '</select></label>' +
+    var cat = category(entry.tur), fields = entry.ozellikler || {};
+    var meta = sanitizeImage(entry.gorsel), image = imageHtml(meta, entry.baslik || 'Ansiklopedi maddesi', world.id);
+    var dynamic = (cat.alanlar || []).map(function (key) {
+      var label = schema().fields && schema().fields[key] || key;
+      return '<label>' + esc(label) + ' <textarea class="kod-giris" rows="2" maxlength="2000" data-eaw-field="' + esc(entry.id) + ':ozellikler.' + esc(key) + '">' + esc(fields[key] || '') + '</textarea></label>';
+    }).join('');
+    var related = records(world).filter(function (item) { return item && item.id !== entry.id; }).map(function (item) {
+      var label = (item.baslik || 'Adsız madde') + ' · ' + category(item.tur).ad + (item.durum !== 'yayinda' ? ' · Taslak' : '');
+      return '<option value="' + esc(item.id) + '"' + ((entry.ilgiliIds || []).indexOf(item.id) >= 0 ? ' selected' : '') + '>' + esc(label) + '</option>';
+    }).join('');
+    var warnings = entryWarnings(entry, world);
+    return '<fieldset class="fan-grup eaw-entry" data-eaw-entry="' + esc(entry.id) + '"><legend>' + esc(cat.ad) + ' · ' + esc(entry.baslik || 'Yeni madde') + '</legend>' +
+      '<label>Kategori <select class="kod-giris" data-eaw-field="' + esc(entry.id) + ':tur">' + categoryOptions(entry) + '</select></label>' +
+      (entry.turEski ? '<p class="eaw-warning">Eski tür “' + esc(entry.turEski) + '” güvenli biçimde “' + esc(cat.ad) + '” olarak gösteriliyor; madde içeriği korunmuştur.</p>' : '') +
       '<label>Madde adı <input class="kod-giris" maxlength="120" value="' + esc(entry.baslik || '') + '" data-eaw-field="' + esc(entry.id) + ':baslik"></label>' +
       '<label>Kısa tanıtım <textarea class="kod-giris" rows="2" maxlength="500" data-eaw-field="' + esc(entry.id) + ':ozet">' + esc(entry.ozet || '') + '</textarea></label>' +
-      '<label>Açıklama <textarea class="kod-giris" rows="5" maxlength="12000" data-eaw-field="' + esc(entry.id) + ':aciklama">' + esc(entry.aciklama || '') + '</textarea></label>' +
-      '<label>Habitat / bulunduğu yerler <input class="kod-giris" maxlength="500" value="' + esc(entry.habitat || '') + '" data-eaw-field="' + esc(entry.id) + ':habitat"></label>' +
+      '<label>Giriş <textarea class="kod-giris" rows="3" maxlength="5000" data-eaw-field="' + esc(entry.id) + ':giris">' + esc(entry.giris || '') + '</textarea></label>' +
+      '<label>Açıklama <textarea class="kod-giris" rows="5" maxlength="16000" data-eaw-field="' + esc(entry.id) + ':aciklama">' + esc(entry.aciklama || '') + '</textarea></label>' +
+      '<label>Habitat / konum <input class="kod-giris" maxlength="500" value="' + esc(entry.habitat || '') + '" data-eaw-field="' + esc(entry.id) + ':habitat"></label>' +
       '<label>Etiketler (virgülle ayır) <input class="kod-giris" maxlength="500" value="' + esc((entry.etiketler || []).join(', ')) + '" data-eaw-field="' + esc(entry.id) + ':etiketler"></label>' +
-      FIELDS.map(function (field) { return '<label>' + esc(field[1]) + ' <textarea class="kod-giris" rows="2" maxlength="1000" data-eaw-field="' + esc(entry.id) + ':ozellikler.' + field[0] + '">' + esc(fields[field[0]] || '') + '</textarea></label>'; }).join('') +
-      '<label>İlgili maddeler <select class="kod-giris" multiple data-eaw-field="' + esc(entry.id) + ':ilgiliIds">' + records(world).filter(function (item) { return item.id !== entry.id; }).map(function (item) { return '<option value="' + esc(item.id) + '"' + ((entry.ilgiliIds || []).indexOf(item.id) >= 0 ? ' selected' : '') + '>' + esc(item.baslik || 'Adsız madde') + ' · ' + esc(TYPE_NAMES[item.tur] || 'Madde') + '</option>'; }).join('') + '</select></label>' +
+      (dynamic ? '<section class="eaw-specific-fields"><h4>' + esc(cat.ad) + ' özellikleri</h4>' + dynamic + '</section>' : '') +
+      '<label>İlgili maddeler <select class="kod-giris" multiple data-eaw-field="' + esc(entry.id) + ':ilgiliIds">' + related + '</select></label>' +
+      sourcesEditor(entry) +
       '<label>Durum <select class="kod-giris" data-eaw-field="' + esc(entry.id) + ':durum"><option value="taslak"' + (entry.durum !== 'yayinda' ? ' selected' : '') + '>Taslak (yalnızca sahibi görür)</option><option value="yayinda"' + (entry.durum === 'yayinda' ? ' selected' : '') + '>Yayında</option></select></label>' +
-      '<label><input type="checkbox" data-eaw-field="' + esc(entry.id) + ':spoiler"' + (entry.spoiler ? ' checked' : '') + '> Spoiler içeriyor</label>' +
-      '<div class="eaw-image-preview">' + image + '</div><label>Görsel yükle (bu tarayıcı profiline kaydedilir) <input class="kod-giris" type="file" accept="image/png,image/jpeg,image/webp" data-eaw-image="' + esc(entry.id) + '"></label>' +
-      '<p class="oyun-not">Görseller mevcut yerel görsel deposunda saklanır; başka cihazdaki okuyucuların görebilmesi için görsel yedeği ayrıca paylaşılmalıdır.</p>' +
-      '<p class="pencere-durum" role="status" data-eaw-entry-status="' + esc(entry.id) + '"></p><button type="button" class="dugme dugme-sade" data-eaw-delete="' + esc(entry.id) + '">Maddeyi sil</button></fieldset>';
+      '<label class="eaw-check"><input type="checkbox" data-eaw-field="' + esc(entry.id) + ':spoiler"' + (entry.spoiler ? ' checked' : '') + '> Spoiler içeriyor</label>' +
+      '<div class="eaw-image-preview">' + image + '</div><label>Görsel yükle (PNG, JPEG veya WebP; en fazla 10 MB) <input class="kod-giris" type="file" accept="image/png,image/jpeg,image/webp" data-eaw-image="' + esc(entry.id) + '"></label>' +
+      '<p class="oyun-not">Görseller dosya imzası, MIME türü ve boyut bakımından doğrulanıp bu tarayıcı profilindeki IndexedDB’de saklanır. Yayında bir maddedeki yalnızca yerel görsel için yükleme veya yayın onayı sırasında uyarı gösterilir.</p>' +
+      (warnings.length ? '<ul class="eaw-warning-list">' + warnings.map(function (note) { return '<li>' + esc(note) + '</li>'; }).join('') + '</ul>' : '') +
+      revisionsHtml(entry) +
+      '<p class="pencere-durum" role="status" data-eaw-entry-status="' + esc(entry.id) + '"></p>' +
+      '<div class="eaw-actions"><button type="button" class="dugme dugme-sade" data-eaw-save="' + esc(entry.id) + '">Değişiklikleri kaydet</button><button type="button" class="dugme dugme-sade" data-eaw-delete="' + esc(entry.id) + '">Geri alınabilir sil</button></div></fieldset>';
+  }
+  function deletedHtml(world) {
+    var items = deletedRecords(world);
+    if (!items.length) return '';
+    return '<details class="eaw-trash"><summary>Silinen maddeler (' + items.length + ')</summary><p class="oyun-not">Silme işlemi geri alınabilir. Geri yüklenen maddeler güvenlik için taslak durumuna alınır.</p><ul>' + items.map(function (entry) {
+      return '<li><span>' + esc(entry.baslik || 'Adsız madde') + ' · ' + esc(category(entry.tur).ad) + ' · ' + esc(dateLabel(entry.silindiAt)) + '</span> <button type="button" class="dugme dugme-sade" data-eaw-restore="' + esc(entry.id) + '">Geri yükle</button></li>';
+    }).join('') + '</ul></details>';
   }
   function editorHtml(world) {
     var entries = records(world);
-    return '<section class="eaw-editor"><div class="kutu-y"><h3>Ansiklopedi maddeleri</h3><p class="oyun-not">Bitki, hayvan veya kendi tür kategorini ayrı maddeler halinde yaz. Taslaklar yalnızca sana görünür; yayınlanan maddeler okuyucu listesindedir. İsteğe bağlı alanları boş bırakabilirsin.</p><button type="button" class="dugme" data-eaw-new>+ Ansiklopedi maddesi</button> <button type="button" class="dugme dugme-sade" data-eaw-preview>Okur önizlemesi</button> <button type="button" class="dugme dugme-sade" data-eaw-export>Dışa aktar</button> <label class="dugme dugme-sade" for="eaw-import-file">İçe aktar</label><input id="eaw-import-file" type="file" accept="application/json,.json" data-eaw-import hidden><p class="oyun-not">Yedek; taslakları, yayınlanan maddeleri ve gömülü görselleri taşır (en fazla 20 MB). İçe aktarma mevcut ansiklopedi maddelerinin tamamının yerine geçer.</p><p class="pencere-durum" role="status" data-eaw-status></p></div>' +
-      '<div class="eaw-entries">' + (entries.length ? entries.map(function (entry) { return editorEntry(entry, world); }).join('') : '<div class="kutu-y"><p class="oyun-not">Henüz ansiklopedi maddesi yok.</p></div>') + '</div></section>';
+    return '<section class="eaw-editor"><div class="kutu-y"><h2>Ansiklopedi maddeleri</h2><p class="oyun-not">Bitki, hayvan, eşya, bina, özel güç ve diğer türleri ayrı Wiki maddeleri olarak oluştur. Kategoriye özgü alanlar yalnızca ilgili türde görünür. Taslaklar okurlara açılmaz; her değişiklik bu evrenin mevcut yerel taslak akışına kaydedilir.</p>' +
+      '<div class="eaw-actions"><button type="button" class="dugme" data-eaw-new>+ Ansiklopedi maddesi</button><button type="button" class="dugme dugme-sade" data-eaw-preview>Okur önizlemesi</button><button type="button" class="dugme dugme-sade" data-eaw-export>Dışa aktar</button><label class="dugme dugme-sade eaw-file-label" for="eaw-import-file">İçe aktar</label><input id="eaw-import-file" type="file" accept="application/json,.json" data-eaw-import hidden></div>' +
+      '<p class="oyun-not">Yedek; yayınlanan ve taslak maddeleri, geçmişi, ilişkileri, kaynakçayı, silinen maddeleri ve paylaşılabilir veri olarak JSON’a gömülmüş görselleri taşır (en fazla 20 MB). İçe aktarma mevcut ansiklopedi maddelerinin tamamının yerine geçer ve önceden açık onay ister.</p><p class="pencere-durum" role="status" data-eaw-status></p></div>' +
+      '<div class="eaw-entries">' + (entries.length ? entries.map(function (entry) { return editorEntry(entry, world); }).join('') : '<div class="kutu-y"><p class="oyun-not">Henüz ansiklopedi maddesi yok.</p></div>') + '</div>' + deletedHtml(world) + '</section>';
   }
-  function published(world) { return records(world).filter(function (entry) { return entry && entry.durum === 'yayinda' && String(entry.baslik || '').trim(); }); }
   function indexHtml(world) {
-    var entries = published(world);
-    var cards = entries.map(function (entry) {
-      return '<article class="eaw-card" data-eaw-card data-category="' + esc(entry.tur) + '" data-search="' + esc([entry.baslik, entry.ozet, entry.habitat, (entry.etiketler || []).join(' ')].join(' ').toLocaleLowerCase('tr')) + '"><span class="oyun-etiket">' + esc(TYPE_NAMES[entry.tur] || 'Madde') + '</span><h4><button type="button" class="eaw-link" data-eaw-open="' + esc(entry.id) + '">' + esc(entry.baslik) + '</button></h4><p>' + esc(entry.ozet || '') + '</p>' + (entry.habitat ? '<p><b>Habitat:</b> ' + esc(entry.habitat) + '</p>' : '') + '<p class="eaw-tags">' + (entry.etiketler || []).map(function (tag) { return '<span>' + esc(tag) + '</span>'; }).join(' ') + '</p></article>';
-    }).join('');
-    return '<div class="eaw-index"><div class="eaw-controls"><label>Madde ara <input class="kod-giris" type="search" placeholder="Ad, tanıtım veya habitat" data-eaw-search></label><label>Kategori <select class="kod-giris" data-eaw-filter><option value="">Tüm kategoriler</option><option value="bitki">Bitkiler</option><option value="hayvan">Hayvanlar</option><option value="ozel">Diğer</option></select></label></div><div class="galeri-izgara eaw-list">' + (cards || '<p class="oyun-not">Bu evrende henüz yayınlanmış ansiklopedi maddesi yok.</p>') + '</div></div>';
+    var state = readerSettings(world), entries = published(world);
+    var categoryNav = '<button type="button" class="eaw-category-button' + (state.category ? '' : ' is-active') + '" data-eaw-category="" aria-pressed="' + (!state.category) + '">Tüm maddeler <span>' + entries.length + '</span></button>' +
+      categories().map(function (item) {
+        var count = entries.filter(function (entry) { return entry.tur === item.id; }).length;
+        return '<button type="button" class="eaw-category-button' + (state.category === item.id ? ' is-active' : '') + '" data-eaw-category="' + esc(item.id) + '" aria-pressed="' + (state.category === item.id) + '">' + esc(item.ad) + ' <span>' + count + '</span></button>';
+      }).join('');
+    var content = '<div class="eaw-index-layout"><nav class="eaw-category-nav" aria-label="Ansiklopedi kategorileri"><h3>Kategoriler</h3>' + categoryNav + '</nav><div class="eaw-index-main">' +
+      '<div class="eaw-controls"><label>Madde ara <input class="kod-giris" type="search" placeholder="Başlık, açıklama, özellik veya kaynak" value="' + esc(state.query) + '" data-eaw-search></label>' +
+      '<label>Sırala <select class="kod-giris" data-eaw-sort><option value="az"' + (state.sort === 'az' ? ' selected' : '') + '>Alfabetik (A–Z)</option><option value="za"' + (state.sort === 'za' ? ' selected' : '') + '>Alfabetik (Z–A)</option><option value="yeni"' + (state.sort === 'yeni' ? ' selected' : '') + '>Son değişiklik</option></select></label></div>' +
+      '<div class="eaw-view-controls" role="group" aria-label="Madde görünümü"><span>Görünüm</span>' +
+      [['liste', 'Liste'], ['alfabetik', 'Alfabetik indeks'], ['izgara', 'Kartlar']].map(function (view) { return '<button type="button" class="dugme dugme-sade' + (state.view === view[0] ? ' is-active' : '') + '" data-eaw-view="' + view[0] + '" aria-pressed="' + (state.view === view[0]) + '">' + view[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="eaw-results" data-eaw-results aria-live="polite"></div></div></div>';
+    var holder = document.createElement('div');
+    holder.innerHTML = '<section class="eaw-reader"><div class="eaw-content">' + content + '</div></section>';
+    renderResults(holder.firstElementChild, world);
+    return holder.querySelector('.eaw-content').innerHTML;
   }
-  function detailHtml(world, entry) {
-    var fields = entry.ozellikler || {};
-    var details = FIELDS.map(function (field) { return fields[field[0]] ? '<div class="eaw-fact"><b>' + esc(field[1]) + '</b><p>' + esc(fields[field[0]]) + '</p></div>' : ''; }).join('');
-    var related = (entry.ilgiliIds || []).map(function (relatedId) { var found = published(world).find(function (item) { return item.id === relatedId; }); return found ? '<button type="button" class="eaw-link" data-eaw-open="' + esc(found.id) + '">' + esc(found.baslik) + '</button>' : ''; }).filter(Boolean).join(' · ');
-    var meta = sanitizeImage(entry.gorsel);
-    var articleBody = '<div class="eaw-article-layout"><div class="eaw-article-image">' + imageHtml(meta, entry.baslik, world.id) + '</div><div class="eaw-facts">' + (entry.habitat ? '<div class="eaw-fact"><b>Habitat / bulunduğu yerler</b><p>' + esc(entry.habitat) + '</p></div>' : '') + details + '</div></div><div class="eaw-prose">' + esc(entry.aciklama || '').replace(/\n/g, '<br>') + '</div>' + (related ? '<div class="eaw-related"><b>İlgili maddeler:</b> ' + related + '</div>' : '') + '<p class="eaw-tags">' + (entry.etiketler || []).map(function (tag) { return '<span>' + esc(tag) + '</span>'; }).join(' ') + '</p>';
-    if (entry.spoiler) articleBody = '<details><summary>Spoiler içeriyor · İçeriği göster</summary>' + articleBody + '</details>';
-    return '<article class="eaw-article"><button type="button" class="dugme dugme-sade" data-eaw-back>← Ansiklopediye dön</button><header><span class="oyun-etiket">' + esc(TYPE_NAMES[entry.tur] || 'Madde') + '</span><h3>' + esc(entry.baslik) + '</h3><p class="eaw-intro">' + esc(entry.ozet || '') + '</p></header>' + articleBody + '</article>';
+  function entrySummary(entry) {
+    return '<span class="eaw-entry-type">' + esc(category(entry.tur).ad) + '</span><strong>' + esc(entry.baslik) + '</strong>' +
+      (entry.ozet ? '<span>' + esc(entry.ozet) + '</span>' : '') + (entry.habitat ? '<span class="eaw-entry-meta">Konum: ' + esc(entry.habitat) + '</span>' : '');
+  }
+  function renderResults(root, world) {
+    var target = root.querySelector('[data-eaw-results]');
+    if (!target) return;
+    var state = readerSettings(world);
+    var search = root.querySelector('[data-eaw-search]');
+    var sort = root.querySelector('[data-eaw-sort]');
+    if (search) state.query = search.value;
+    if (sort) state.sort = sort.value;
+    var compare = collator();
+    var query = normalizeSearch(state.query);
+    var entries = published(world).filter(function (entry) {
+      return (!state.category || entry.tur === state.category) && (!query || searchable(entry).indexOf(query) >= 0);
+    });
+    if (state.sort === 'za') entries.sort(function (a, b) { return compare.compare(b.baslik || '', a.baslik || ''); });
+    else if (state.sort === 'yeni') entries.sort(function (a, b) { return (Date.parse(b.sonDegisiklik) || 0) - (Date.parse(a.sonDegisiklik) || 0) || compare.compare(a.baslik || '', b.baslik || ''); });
+    else entries.sort(function (a, b) { return compare.compare(a.baslik || '', b.baslik || ''); });
+    var output = '';
+    if (!entries.length) {
+      output = '<div class="eaw-empty"><h3>Madde bulunamadı</h3><p>Arama sözcüğünü veya kategori filtresini değiştir. Taslaklar bu listede gösterilmez.</p></div>';
+    } else if (state.view === 'izgara') {
+      output = '<div class="eaw-card-grid">' + entries.map(function (entry) {
+        return '<article class="eaw-card"><span class="oyun-etiket">' + esc(category(entry.tur).ad) + '</span><h3><button type="button" class="eaw-link" data-eaw-open="' + esc(entry.id) + '">' + esc(entry.baslik) + '</button></h3>' +
+          (entry.ozet ? '<p>' + esc(entry.ozet) + '</p>' : '') + (entry.habitat ? '<p><b>Habitat / konum:</b> ' + esc(entry.habitat) + '</p>' : '') +
+          '<button type="button" class="eaw-read-link" data-eaw-open="' + esc(entry.id) + '">Maddeyi oku →</button></article>';
+      }).join('') + '</div>';
+    } else if (state.view === 'alfabetik') {
+      var groups = Object.create(null);
+      entries.forEach(function (entry) {
+        var letter = (String(entry.baslik || '').trim().charAt(0) || '#').toLocaleUpperCase('tr-TR');
+        (groups[letter] || (groups[letter] = [])).push(entry);
+      });
+      output = '<div class="eaw-alpha-index">' + Object.keys(groups).sort(compare.compare).map(function (letter) {
+        return '<section><h3>' + esc(letter) + '</h3><ul>' + groups[letter].map(function (entry) {
+          return '<li><button type="button" class="eaw-link" data-eaw-open="' + esc(entry.id) + '">' + esc(entry.baslik) + '</button> <span>' + esc(category(entry.tur).ad) + '</span></li>';
+        }).join('') + '</ul></section>';
+      }).join('') + '</div>';
+    } else {
+      output = '<ul class="eaw-list-view">' + entries.map(function (entry) {
+        return '<li><button type="button" class="eaw-list-entry" data-eaw-open="' + esc(entry.id) + '">' + entrySummary(entry) + '<span class="eaw-arrow" aria-hidden="true">›</span></button></li>';
+      }).join('') + '</ul>';
+    }
+    target.innerHTML = '<p class="eaw-result-count">' + entries.length + ' madde' + (query ? ' bulundu' : '') + '</p>' + output;
+    root.querySelectorAll('[data-eaw-category]').forEach(function (button) {
+      var active = button.getAttribute('data-eaw-category') === state.category;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    root.querySelectorAll('[data-eaw-view]').forEach(function (button) {
+      var active = button.getAttribute('data-eaw-view') === state.view;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  }
+  function detailHtml(world, entry, isOwner) {
+    var cat = category(entry.tur), fields = entry.ozellikler || {};
+    var facts = (cat.alanlar || []).map(function (key) {
+      var value = fields[key], label = schema().fields && schema().fields[key] || key;
+      return value ? '<div class="eaw-fact"><dt>' + esc(label) + '</dt><dd>' + esc(value).replace(/\n/g, '<br>') + '</dd></div>' : '';
+    }).join('');
+    var related = (entry.ilgiliIds || []).map(function (relatedId) {
+      var found = published(world).find(function (item) { return item.id === relatedId; });
+      return found ? '<li><button type="button" class="eaw-link" data-eaw-open="' + esc(found.id) + '">' + esc(found.baslik) + '</button> <span>' + esc(category(found.tur).ad) + '</span></li>' : '';
+    }).filter(Boolean).join('');
+    var references = (entry.kaynakca || []).map(function (source) {
+      var safe = safeExternalUrl(source.url);
+      var title = safe ? '<a href="' + esc(safe) + '" target="_blank" rel="noopener noreferrer">' + esc(source.baslik) + '</a>' : esc(source.baslik);
+      return '<li><strong>' + title + '</strong>' + (source.aciklama ? '<p>' + esc(source.aciklama) + '</p>' : '') + '</li>';
+    }).join('');
+    var imageMeta = sanitizeImage(entry.gorsel);
+    var infoFacts = (entry.habitat ? '<div class="eaw-fact"><dt>Habitat / konum</dt><dd>' + esc(entry.habitat) + '</dd></div>' : '') + facts;
+    var description = '<section><h2>Açıklama</h2><div class="eaw-prose">' + esc(entry.aciklama || 'Bu madde için henüz ayrıntılı açıklama eklenmemiş.').replace(/\n/g, '<br>') + '</div></section>';
+    var articleLayout = '<div class="eaw-article-layout"><aside class="eaw-infobox" aria-label="' + esc(cat.ad) + ' temel bilgileri"><div class="eaw-infobox-title">' + esc(entry.baslik) + '</div>' +
+      '<div class="eaw-article-image">' + imageHtml(imageMeta, entry.baslik, world.id) + '</div><dl class="eaw-facts">' + (infoFacts || '<div class="eaw-fact"><dt>Temel bilgiler</dt><dd>Ek bilgi belirtilmemiş.</dd></div>') + '</dl></aside>' +
+      '<div class="eaw-prose-column">' + (entry.giris ? '<section><h2>Giriş</h2><p class="eaw-intro">' + esc(entry.giris).replace(/\n/g, '<br>') + '</p></section>' : '') +
+      description + '</div></div>';
+    var body = entry.spoiler ? '<details class="eaw-spoiler"><summary>Spoiler içeriyor · İçeriği göster</summary>' + articleLayout + '</details>' : articleLayout;
+    body +=
+      (related ? '<section class="eaw-related"><h2>İlgili maddeler</h2><ul>' + related + '</ul></section>' : '') +
+      '<section class="eaw-bibliography"><h2>Kaynakça</h2>' + (references ? '<ol>' + references + '</ol>' : '<p class="eaw-muted">Bu maddeye henüz kaynakça eklenmemiş.</p>') + '</section>' +
+      '<footer class="eaw-modified">Son değişiklik: ' + esc(dateLabel(entry.sonDegisiklik)) + (entry.surum ? ' · v' + esc(entry.surum) : '') + '</footer>' +
+      '';
+    var share = isOwner ? '' : '<button type="button" class="dugme dugme-sade" data-eaw-copy="' + esc(entry.id) + '">Madde bağlantısını kopyala</button>';
+    return '<article class="eaw-article"><div class="eaw-article-top"><button type="button" class="dugme dugme-sade" data-eaw-back>← Ansiklopediye dön</button>' + share + '</div>' +
+      '<header><span class="oyun-etiket">' + esc(cat.ad) + '</span><h1>' + esc(entry.baslik) + '</h1>' + (entry.ozet ? '<p class="eaw-summary">' + esc(entry.ozet) + '</p>' : '') + '</header>' + body + '</article>';
   }
   function readerHtml(world) {
-    var idKey = String(world.id || '');
-    var entry = published(world).find(function (item) { return item.id === selected[idKey]; });
-    return '<section class="eaw-reader">' + (owner() ? '<button type="button" class="dugme dugme-sade" data-eaw-edit>← Düzenlemeye dön</button><p class="oyun-not">Bu, okuyucu önizlemesidir; taslak maddeler görünmez.</p>' : '') + '<div class="kutu-y"><h3>' + esc(world.ad || 'Evren') + ' · Ansiklopedi</h3><p class="oyun-not">Bitki, hayvan ve diğer yayınlanmış maddeler.</p></div><div class="eaw-content">' + (entry ? detailHtml(world, entry) : indexHtml(world)) + '</div></section>';
+    var idKey = currentWorldId(world), isOwner = owner(), entry = selectedEntry(world);
+    var preview = isOwner && previewMode[idKey];
+    return '<section class="eaw-reader" data-eaw-world="' + esc(idKey) + '">' +
+      (isOwner ? '<div class="eaw-preview-note"><p>' + (preview ? 'Okur önizlemesi: taslak maddeler ve yerel görseller başka okuyuculara açık değildir.' : 'Okur görünümü; taslak maddeler burada gösterilmez.') + '</p><button type="button" class="dugme dugme-sade" data-eaw-edit>← Düzenlemeye dön</button></div>' : '') +
+      '<header class="eaw-reader-head"><div><span class="oyun-etiket">Evren ansiklopedisi</span><h2>' + esc(world.ad || 'Evren') + '</h2><p>Türlerine göre gezin, alfabetik indeksi kullan veya tüm içerikte ara.</p></div><span class="eaw-total">' + published(world).length + ' yayınlanmış madde</span></header>' +
+      '<div class="eaw-content">' + (entry ? detailHtml(world, entry, isOwner) : indexHtml(world)) + '</div></section>';
+  }
+  function renderReaderContent(root, world) {
+    if (!root || !world) return;
+    var content = root.querySelector('.eaw-content');
+    if (!content) return;
+    var entry = selectedEntry(world);
+    content.innerHTML = entry ? detailHtml(world, entry, owner()) : indexHtml(world);
+    if (!entry) renderResults(root, world);
   }
   function hookTabs() {
     var oldTabs = window.evrenEkSekmeler;
@@ -217,7 +434,7 @@
         var result = oldTabs.apply(this, arguments);
         result = Array.isArray(result) ? result.slice() : [];
         var world = pageWorld(page);
-        if ((owner(page) || published(world).length) && !result.some(function (tab) { return tab && tab[0] === 'ansiklopedi'; })) result.push(['ansiklopedi', '📚 Ansiklopedi']);
+        if ((owner(page) || published(world).length) && !result.some(function (tab) { return tab && tab[0] === 'ansiklopedi'; })) result.push(['ansiklopedi', 'Ansiklopedi']);
         return result;
       };
       tabs.__eaw = true;
@@ -229,7 +446,7 @@
         var state = currentState();
         if (state && state.sekme === 'ansiklopedi') {
           var world = pageWorld(page);
-          return world ? (owner(page) ? (previewMode[String(world.id || '')] ? readerHtml(world) : editorHtml(world)) : readerHtml(world)) : '<p class="oyun-not">Evren verisi yüklenemedi.</p>';
+          return world ? (owner(page) ? (previewMode[currentWorldId(world)] ? readerHtml(world) : editorHtml(world)) : readerHtml(world)) : '<p class="oyun-not">Evren verisi yüklenemedi.</p>';
         }
         return oldSection.apply(this, arguments);
       };
@@ -244,99 +461,470 @@
       var html = original.apply(this, arguments);
       if (owner(page) && html.indexOf('data-eaw-card') < 0) {
         var marker = '<div class="evr-kartlar">';
-        if (html.indexOf(marker) >= 0) html = html.replace(marker, marker + '<button type="button" class="evr-kart" data-eaw-card data-evs-sekme="ansiklopedi"><b>📚 Ansiklopedi</b><span>Bitki, hayvan ve diğer türleri Wiki maddeleri olarak düzenle</span></button>');
+        if (html.indexOf(marker) >= 0) html = html.replace(marker, marker + '<button type="button" class="evr-kart" data-eaw-card data-evs-sekme="ansiklopedi"><b>Ansiklopedi</b><span>Bitki, hayvan, eşya, bina ve güçleri Wiki maddeleri olarak düzenle</span></button>');
       }
       return html;
     };
     wrapped.__eaw = true;
     window.evrKurucuHtml = wrapped;
   }
-  function findEntry(world, entryId) { return records(world).find(function (entry) { return entry && entry.id === entryId; }); }
+  function newEntry() {
+    mutate(function (world) {
+      if (!Array.isArray(world.ansiklopediMaddeleri)) world.ansiklopediMaddeleri = [];
+      if (world.ansiklopediMaddeleri.length >= MAX_ARTICLES) throw new Error('Bir evrende en fazla 300 ansiklopedi maddesi olabilir.');
+      world.ansiklopediMaddeleri.push({
+        id: id(), tur: categories()[0] && categories()[0].id || 'diger', baslik: '', ozet: '', giris: '', aciklama: '', etiketler: [], habitat: '',
+        ozellikler: {}, ilgiliIds: [], kaynakca: [], gorsel: null, spoiler: false, durum: 'taslak', surum: 1, sonDegisiklik: now(), gecmis: []
+      });
+    });
+    if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz();
+  }
+  function blobDataUrl(blob) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(String(reader.result || '')); };
+      reader.onerror = function () { reject(new Error('Görsel yedek dosyasına eklenemedi.')); };
+      reader.readAsDataURL(blob);
+    });
+  }
+  async function portableImage(meta) {
+    if (!meta) return null;
+    var clean = sanitizeImage(meta);
+    if (!clean) throw new Error('Bir maddenin görsel metadata bilgisi geçersiz.');
+    if (clean.kaynak === 'embedded') return clean;
+    if (clean.kaynak !== 'indexeddb' || !window.evrenGorselVarlik || typeof window.evrenGorselVarlik.disaAktar !== 'function') {
+      throw new Error('Görsel bu cihazda bulunamadı veya yedeklenebilir biçimde değil.');
+    }
+    var record = await window.evrenGorselVarlik.disaAktar(clean);
+    if (!record || !record.blob) throw new Error('Bir görsel dosyası bu cihazda bulunamadı.');
+    try {
+      clean.kaynak = 'embedded';
+      clean.veri = await blobDataUrl(record.blob);
+      var safe = sanitizeImage(clean);
+      if (!safe) throw new Error('Gömülü görsel güvenli biçimde doğrulanamadı.');
+      return safe;
+    } finally { if (record.url) { try { URL.revokeObjectURL(record.url); } catch (_) {} } }
+  }
+  async function portableArticle(entry) {
+    var copy = JSON.parse(JSON.stringify(entry));
+    copy.gorsel = await portableImage(copy.gorsel);
+    for (var i = 0; i < (copy.gecmis || []).length; i += 1) {
+      var revision = copy.gecmis[i];
+      if (revision && revision.madde) revision.madde.gorsel = await portableImage(revision.madde.gorsel);
+    }
+    return copy;
+  }
+  async function exportEncyclopedia() {
+    var world = getWorldForEdit();
+    if (!world) throw new Error('Dışa aktarma yalnızca kendi evreninde kullanılabilir.');
+    var articles = [], deleted = [];
+    for (var i = 0; i < records(world).length; i += 1) articles.push(await portableArticle(records(world)[i]));
+    for (var j = 0; j < deletedRecords(world).length; j += 1) deleted.push(await portableArticle(deletedRecords(world)[j]));
+    var payload = {
+      format: BACKUP_FORMAT, version: BACKUP_VERSION, schemaVersion: schema().version,
+      kategoriler: categories().map(function (item) { return item.id; }),
+      evrenId: world.id, evrenAdi: world.ad || '', maddeler: articles, silinenMaddeler: deleted
+    };
+    var blob = new Blob([JSON.stringify(payload)], { type: 'application/json;charset=utf-8' });
+    if (blob.size > MAX_BACKUP_BYTES) throw new Error('Ansiklopedi yedeği 20 MB sınırını aşıyor; daha az veya daha küçük görsel seç.');
+    var url = URL.createObjectURL(blob), anchor = document.createElement('a');
+    anchor.href = url; anchor.download = (String(world.id || 'evren').replace(/[^A-Za-z0-9_-]/g, '') || 'evren') + '-ansiklopedi.json';
+    document.body.appendChild(anchor); anchor.click(); anchor.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    status('Ansiklopedi yedeği indirildi; maddeler, kaynakça, geçmiş ve görseller JSON dosyasına eklendi.', true);
+  }
+  function validateImageMeta(meta) {
+    if (!meta) return true;
+    var clean = sanitizeImage(meta);
+    if (!clean || clean.kaynak !== 'embedded' || !clean.veri) return false;
+    var match = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/i.exec(clean.veri);
+    if (!match) return false;
+    var decodedBytes = Math.floor(match[2].length * 3 / 4);
+    return decodedBytes > 0 && decodedBytes <= 10 * 1024 * 1024 && clean.mime === 'image/' + match[1].toLowerCase();
+  }
+  function validateArticleImages(entry) {
+    if (!validateImageMeta(entry && entry.gorsel)) return false;
+    return (entry && Array.isArray(entry.gecmis) ? entry.gecmis : []).every(function (revision) {
+      return !revision || !revision.madde || validateImageMeta(revision.madde.gorsel);
+    });
+  }
+  function validateImportArticle(entry, version, seen) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) throw new Error('Yedekte geçersiz ansiklopedi maddesi var.');
+    var articleId = String(entry.id || '');
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(articleId)) throw new Error('Yedekte geçersiz veya eksik madde kimliği var.');
+    if (seen.has(articleId)) throw new Error('Yedekte yinelenen madde kimliği var: ' + articleId);
+    seen.add(articleId);
+    var status = entry.durum == null ? 'taslak' : String(entry.durum);
+    if (status !== 'taslak' && status !== 'yayinda') throw new Error('“' + String(entry.baslik || articleId).slice(0, 60) + '” maddesinin yayın durumu geçersiz.');
+    if (status === 'yayinda') {
+      if (!String(entry.baslik || '').trim()) throw new Error('Yayınlanmış bir madde başlıksız olamaz: ' + articleId);
+      if (!String(entry.ozet || '').trim()) {
+        var legacySummary = version === 1 ? String(entry.giris || entry.aciklama || '').trim() : '';
+        if (!legacySummary) throw new Error('“' + String(entry.baslik || articleId).slice(0, 60) + '” yayınlanmış maddesinin kısa tanıtımı eksik.');
+        entry.ozet = legacySummary.slice(0, 500);
+      }
+    }
+    var known = categories().some(function (item) { return item.id === entry.tur; });
+    if (version >= 2 && !known) throw new Error('“' + String(entry.baslik || articleId).slice(0, 60) + '” maddesinin kategorisi geçersiz.');
+    if (!Array.isArray(entry.ilgiliIds) || entry.ilgiliIds.length > 100) throw new Error('“' + String(entry.baslik || articleId).slice(0, 60) + '” maddesinin ilişkileri geçersiz.');
+    if (!Array.isArray(entry.kaynakca || []) || (entry.kaynakca || []).length > 40) throw new Error('“' + String(entry.baslik || articleId).slice(0, 60) + '” maddesinin kaynakçası geçersiz.');
+    if (entry.gecmis !== undefined && (!Array.isArray(entry.gecmis) || entry.gecmis.length > MAX_REVISIONS)) throw new Error('“' + String(entry.baslik || articleId).slice(0, 60) + '” maddesinin geçmişi bozuk veya 20 sürüm sınırını aşıyor.');
+    (entry.kaynakca || []).forEach(function (source) {
+      if (!source || typeof source !== 'object' || !String(source.baslik || '').trim()) throw new Error('Kaynak başlığı eksik veya geçersiz.');
+      if (source.url && !safeExternalUrl(source.url)) throw new Error('“' + String(source.baslik).slice(0, 80) + '” kaynağının bağlantısı güvenli HTTPS adresi değil.');
+    });
+    if (!validateArticleImages(entry)) throw new Error('“' + String(entry.baslik || articleId).slice(0, 60) + '” maddesinin görseli geçersiz veya yedeğe gömülmemiş.');
+    (entry.gecmis || []).forEach(function (revision) {
+      if (!revision || typeof revision !== 'object' || !revision.madde) throw new Error('Madde düzenleme geçmişi bozuk.');
+      if (!validateImageMeta(revision.madde.gorsel)) throw new Error('Düzenleme geçmişinde geçersiz veya gömülmemiş görsel var.');
+    });
+  }
+  function validateImport(payload) {
+    if (!payload || payload.format !== BACKUP_FORMAT || ![1, BACKUP_VERSION].includes(payload.version) || !Array.isArray(payload.maddeler) || payload.maddeler.length > MAX_ARTICLES) {
+      throw new Error('Bu, geçerli TentiFor ansiklopedi yedeği değil.');
+    }
+    if (payload.version >= 2) {
+      var expectedCategories = categories().map(function (item) { return item.id; });
+      if (payload.schemaVersion !== schema().version || !Array.isArray(payload.kategoriler) || payload.kategoriler.length !== expectedCategories.length || expectedCategories.some(function (id) { return payload.kategoriler.indexOf(id) < 0; })) {
+        throw new Error('Yedek ansiklopedi şeması bu sürümle uyumlu değil.');
+      }
+    }
+    var deleted = payload.silinenMaddeler == null ? [] : payload.silinenMaddeler;
+    if (!Array.isArray(deleted) || deleted.length > MAX_ARTICLES) throw new Error('Silinen maddeler listesi geçersiz.');
+    var seen = new Set;
+    payload.maddeler.forEach(function (entry) { validateImportArticle(entry, payload.version, seen); });
+    deleted.forEach(function (entry) { validateImportArticle(entry, payload.version, seen); });
+    var knownIds = seen;
+    payload.maddeler.concat(deleted).forEach(function (entry) {
+      (entry.ilgiliIds || []).forEach(function (targetId) {
+        if (!knownIds.has(targetId)) throw new Error('“' + String(entry.baslik || entry.id).slice(0, 60) + '” maddesi bulunmayan bağlantı hedefini içeriyor: ' + targetId);
+      });
+    });
+    var cleaned = typeof window.evrenAnsiklopediTemizle === 'function' ? window.evrenAnsiklopediTemizle(payload.maddeler) : null;
+    var cleanedDeleted = typeof window.evrenAnsiklopediTemizle === 'function' ? window.evrenAnsiklopediTemizle(deleted) : null;
+    if (!Array.isArray(cleaned) || cleaned.length !== payload.maddeler.length || !Array.isArray(cleanedDeleted) || cleanedDeleted.length !== deleted.length) {
+      throw new Error('Yedekte geçersiz veya yinelenen ansiklopedi kaydı var.');
+    }
+    return { entries: cleaned, deleted: cleanedDeleted };
+  }
+  async function importEncyclopedia(file) {
+    if (!file) return;
+    if (file.size > MAX_BACKUP_BYTES) throw new Error('Ansiklopedi yedeği 20 MB sınırını aşıyor.');
+    var payload;
+    try { payload = JSON.parse(await file.text()); } catch (_) { throw new Error('Dosya geçerli JSON değil.'); }
+    var validated = validateImport(payload);
+    var world = getWorldForEdit();
+    if (!world) throw new Error('İçe aktarma yalnızca kendi evreninde kullanılabilir.');
+    var hasPublishedImages = validated.entries.some(function (entry) { return entry.durum === 'yayinda' && !!entry.gorsel; });
+    var warning = hasPublishedImages ? '\n\nNot: Yedekteki görseller bu tarayıcı profilindeki IndexedDB’ye geri yüklenir. Başka okuyucular bu görselleri göremeyebilir.' : '';
+    if (!window.confirm('Bu işlem mevcut ansiklopedi maddelerini ve silinen madde listesini içe aktarılan yedekle değiştirir. Önceki içerik bu dosyada yoksa geri alınamaz.' + warning + '\n\nDevam edilsin mi?')) return;
+
+    var uploads = [], restoredByData = new Map;
+    async function restore(meta) {
+      if (!meta) return null;
+      var safe = sanitizeImage(meta);
+      if (!safe || safe.kaynak !== 'embedded' || !safe.veri) throw new Error('Taşınabilir yedekte tüm görseller gömülü olmalıdır.');
+      if (restoredByData.has(safe.veri)) return Object.assign({}, restoredByData.get(safe.veri), { alt: safe.alt || restoredByData.get(safe.veri).alt });
+      if (!window.evrenGorselVarlik || typeof window.evrenGorselVarlik.gomuluAktar !== 'function') throw new Error('Yerel görsel geri yükleme aracı hazır değil.');
+      var restored = await window.evrenGorselVarlik.gomuluAktar(safe, safe.veri);
+      if (!restored || !restored.id || restored.kaynak !== 'indexeddb') throw new Error('Gömülü görsel yerel depoya doğrulanarak kaydedilemedi.');
+      uploads.push(restored);
+      restoredByData.set(safe.veri, restored);
+      return restored;
+    }
+    async function restoreAll(entries) {
+      for (var i = 0; i < entries.length; i += 1) {
+        entries[i].gorsel = await restore(entries[i].gorsel);
+        for (var j = 0; j < (entries[i].gecmis || []).length; j += 1) {
+          var revision = entries[i].gecmis[j];
+          if (revision && revision.madde) revision.madde.gorsel = await restore(revision.madde.gorsel);
+        }
+      }
+    }
+    var beforeEntries = JSON.parse(JSON.stringify(records(world)));
+    var beforeDeleted = JSON.parse(JSON.stringify(deletedRecords(world)));
+    try {
+      await restoreAll(validated.entries);
+      await restoreAll(validated.deleted);
+      mutate(function (draft) {
+        draft.ansiklopediMaddeleri = validated.entries;
+        draft.ansiklopediSilinenMaddeler = validated.deleted;
+      });
+      var saved = getWorldForEdit();
+      if (!saved || JSON.stringify(records(saved)) !== JSON.stringify(validated.entries) || JSON.stringify(deletedRecords(saved)) !== JSON.stringify(validated.deleted)) {
+        throw new Error('İçe aktarma kaydı doğrulanamadı; mevcut maddeler geri yükleniyor.');
+      }
+      var cleanupFailures = await cleanupOrphanImages(beforeEntries.concat(beforeDeleted), records(saved).concat(deletedRecords(saved)));
+      if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz();
+      status(cleanupFailures ? 'Ansiklopedi yedeği içe aktarıldı; ancak ' + cleanupFailures + ' eski yerel görsel temizlenemedi.' : 'Ansiklopedi yedeği içe aktarıldı. Görseller bu tarayıcı profiline kaydedildi.', !cleanupFailures);
+    } catch (error) {
+      try {
+        mutate(function (draft) { draft.ansiklopediMaddeleri = beforeEntries; draft.ansiklopediSilinenMaddeler = beforeDeleted; });
+      } catch (_) {}
+      await cleanupOrphanImages(uploads.map(function (meta) { return { gorsel: meta }; }), beforeEntries.concat(beforeDeleted));
+      throw error;
+    }
+  }
+  function publishRequirements(entry) {
+    var missing = [];
+    if (!String(entry.baslik || '').trim()) missing.push('madde adı');
+    if (!String(entry.ozet || '').trim()) missing.push('kısa tanıtım');
+    return missing;
+  }
   function updateField(entryId, field, value) {
-    var allowed = ['tur', 'baslik', 'ozet', 'aciklama', 'habitat', 'etiketler', 'ilgiliIds', 'durum', 'spoiler'];
+    var allowed = ['tur', 'baslik', 'ozet', 'giris', 'aciklama', 'habitat', 'etiketler', 'ilgiliIds', 'durum', 'spoiler'];
     var world = getWorldForEdit(), current = world && findEntry(world, entryId);
-    if (!current) return;
+    if (!current) return false;
+    var parsed = value;
     if (field.indexOf('ozellikler.') === 0) {
       var key = field.slice('ozellikler.'.length);
-      if (!FIELDS.some(function (item) { return item[0] === key; })) return;
-      mutate(function (draft) { var target = findEntry(draft, entryId); if (target) { target.ozellikler = target.ozellikler || {}; target.ozellikler[key] = String(value || '').slice(0, 1000); } });
+      if (!Object.prototype.hasOwnProperty.call(schema().fields || {}, key)) return false;
+      parsed = String(value || '').slice(0, 2000);
+      if (current.ozellikler && current.ozellikler[key] === parsed) return true;
+      mutate(function (draft) {
+        var target = findEntry(draft, entryId); if (!target) return;
+        saveRevision(target, 'Özellik düzenlendi'); target.ozellikler = target.ozellikler || {}; target.ozellikler[key] = parsed;
+        target.surum = (Number(target.surum) || 1) + 1; target.sonDegisiklik = now();
+      });
     } else {
-      if (allowed.indexOf(field) < 0) return;
-      var parsed = value;
-      if (field === 'etiketler' || field === 'ilgiliIds') parsed = String(value || '').split(',').map(function (item) { return item.trim(); }).filter(Boolean).slice(0, field === 'etiketler' ? 30 : 100);
+      if (allowed.indexOf(field) < 0) return false;
+      if (field === 'tur' && !categories().some(function (item) { return item.id === value; })) return false;
+      if (field === 'durum' && value !== 'taslak' && value !== 'yayinda') return false;
+      if (field === 'durum' && value === 'yayinda') {
+        var missing = publishRequirements(current);
+        if (missing.length) { entryStatus(entryId, 'Yayın için önce ' + missing.join(' ve ') + ' ekle.', false); return false; }
+        if (current.gorsel && current.gorsel.kaynak === 'indexeddb') {
+          var accepted = window.confirm('Bu görsel yalnızca bu tarayıcı profilindeki IndexedDB’de. Yayınlarsan diğer okuyucular görseli göremeyebilir. Eksik görsel uyarısını kabul ederek maddeyi yayımlamak istiyor musun?');
+          if (!accepted) { entryStatus(entryId, 'Yayın iptal edildi; görsel paylaşılabilir değil.', false); return false; }
+        }
+      }
+      if (field === 'etiketler') parsed = String(value || '').split(',').map(function (item) { return item.trim(); }).filter(Boolean).slice(0, 30);
+      if (field === 'ilgiliIds') parsed = Array.isArray(value) ? value.slice(0, 100) : String(value || '').split(',').map(function (item) { return item.trim(); }).filter(Boolean).slice(0, 100);
       if (field === 'spoiler') parsed = !!value;
-      if (field === 'tur' && !Object.prototype.hasOwnProperty.call(TYPE_NAMES, value)) return;
-      if (field === 'durum' && value !== 'taslak' && value !== 'yayinda') return;
-      var max = { baslik: 120, ozet: 500, aciklama: 12000, habitat: 500 }[field];
+      var max = { baslik: 120, ozet: 500, giris: 5000, aciklama: 16000, habitat: 500 }[field];
       if (typeof parsed === 'string' && max) parsed = parsed.slice(0, max);
-      mutate(function (draft) { var target = findEntry(draft, entryId); if (target) target[field] = parsed; });
+      if (JSON.stringify(current[field]) === JSON.stringify(parsed)) return true;
+      mutate(function (draft) {
+        var target = findEntry(draft, entryId); if (!target) return;
+        saveRevision(target, field === 'durum' ? 'Yayın durumu değiştirildi' : 'Madde düzenlendi');
+        target[field] = parsed;
+        target.surum = (Number(target.surum) || 1) + 1; target.sonDegisiklik = now();
+      });
     }
-    entryStatus(entryId, 'Taslak bu evrene kaydedildi.', true);
+    entryStatus(entryId, 'Değişiklik bu evrenin taslağına kaydedildi (v' + ((Number(current.surum) || 1) + 1) + ').', true);
+    return true;
+  }
+  function updateSource(entryId, index, field, value) {
+    if (!['baslik', 'aciklama', 'url'].includes(field)) return;
+    var world = getWorldForEdit(), entry = world && findEntry(world, entryId);
+    if (!entry) return;
+    var parsed = String(value || '').trim();
+    if (field === 'baslik') parsed = parsed.slice(0, 180);
+    if (field === 'aciklama') parsed = String(value || '').slice(0, 800);
+    if (field === 'url' && parsed && !safeExternalUrl(parsed)) { entryStatus(entryId, 'Kaynak bağlantısı yalnızca geçerli HTTPS URL olabilir.', false); return; }
+    if (!Array.isArray(entry.kaynakca) || !entry.kaynakca[index] || entry.kaynakca[index][field] === parsed) return;
+    mutate(function (draft) {
+      var target = findEntry(draft, entryId); if (!target || !target.kaynakca || !target.kaynakca[index]) return;
+      saveRevision(target, 'Kaynakça düzenlendi'); target.kaynakca[index][field] = parsed;
+      target.surum = (Number(target.surum) || 1) + 1; target.sonDegisiklik = now();
+    });
+    entryStatus(entryId, 'Kaynakça taslağa kaydedildi.', true);
+  }
+  function addSource(entryId) {
+    mutate(function (draft) {
+      var target = findEntry(draft, entryId); if (!target) return;
+      target.kaynakca = Array.isArray(target.kaynakca) ? target.kaynakca : [];
+      if (target.kaynakca.length >= 40) throw new Error('Bir maddeye en fazla 40 kaynak eklenebilir.');
+      saveRevision(target, 'Kaynakça eklendi'); target.kaynakca.push({ baslik: 'Yeni kaynak', aciklama: '', url: '' });
+      target.surum = (Number(target.surum) || 1) + 1; target.sonDegisiklik = now();
+    });
+    if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz();
+  }
+  function removeSource(entryId, index) {
+    mutate(function (draft) {
+      var target = findEntry(draft, entryId); if (!target || !Array.isArray(target.kaynakca)) return;
+      saveRevision(target, 'Kaynakça kaldırıldı'); target.kaynakca.splice(index, 1);
+      target.surum = (Number(target.surum) || 1) + 1; target.sonDegisiklik = now();
+    });
+    if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz();
   }
   async function uploadEntryImage(entryId, file) {
     if (!file) return;
-    if (!window.evrenGorselVarlik || typeof window.evrenGorselVarlik.yukle !== 'function') throw new Error('Yerel görsel deposu hazır değil.');
     var world = getWorldForEdit(), entry = world && findEntry(world, entryId);
     if (!entry) throw new Error('Ansiklopedi maddesi bulunamadı.');
+    if (entry.durum === 'yayinda' && !window.confirm('Yüklenen görsel bu tarayıcı profilinin yerel deposunda kalır. Diğer okuyucular görseli göremeyebilir. Bu uyarıyı kabul ederek görseli eklemek istiyor musun?')) return;
+    if (!window.evrenGorselVarlik || typeof window.evrenGorselVarlik.yukle !== 'function') throw new Error('Yerel görsel deposu hazır değil.');
+    var previousImages = records(world).concat(deletedRecords(world));
     var uploaded = await window.evrenGorselVarlik.yukle(file, { tur: 'varlik', alt: entry.baslik || 'Ansiklopedi maddesi', kaplama: 'contain' });
-    try { mutate(function (draft) { var target = findEntry(draft, entryId); if (!target) throw new Error('Madde silinmiş.'); target.gorsel = uploaded; }); }
-    catch (error) { await window.evrenGorselVarlik.sil(uploaded).catch(function () {}); throw error; }
-    if (entry.gorsel && entry.gorsel.id !== uploaded.id) await window.evrenGorselVarlik.sil(entry.gorsel).catch(function () {});
+    var updated;
+    try {
+      updated = mutate(function (draft) {
+        var target = findEntry(draft, entryId); if (!target) throw new Error('Madde silinmiş.');
+        saveRevision(target, 'Görsel değiştirildi'); target.gorsel = uploaded;
+        target.surum = (Number(target.surum) || 1) + 1; target.sonDegisiklik = now();
+      });
+    } catch (error) { await window.evrenGorselVarlik.sil(uploaded).catch(function () {}); throw error; }
+    var cleanupFailures = await cleanupOrphanImages(previousImages, records(updated).concat(deletedRecords(updated)));
     if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz();
-    entryStatus(entryId, 'Görsel bu tarayıcı profiline kaydedildi.', true);
+    entryStatus(entryId, cleanupFailures ? 'Görsel kaydedildi ancak kullanılmayan eski görsel temizlenemedi.' : 'Görsel doğrulandı ve bu tarayıcı profiline kaydedildi.', !cleanupFailures);
   }
   function deleteEntry(entryId) {
     var world = getWorldForEdit(), entry = world && findEntry(world, entryId);
-    if (!entry || !window.confirm('Bu ansiklopedi maddesi silinsin mi?')) return;
-    mutate(function (draft) { draft.ansiklopediMaddeleri = records(draft).filter(function (item) { return item.id !== entryId; }); });
-    if (entry.gorsel && entry.gorsel.kaynak === 'indexeddb' && window.evrenGorselVarlik) window.evrenGorselVarlik.sil(entry.gorsel).catch(function () {});
+    if (!entry || !window.confirm('Madde geri alınabilir biçimde silinsin mi? Görsel ve geçmiş yedekte korunur.')) return;
+    var previousEntries = records(world).concat(deletedRecords(world));
+    var updated = mutate(function (draft) {
+      var target = findEntry(draft, entryId); if (!target) return;
+      draft.ansiklopediSilinenMaddeler = Array.isArray(draft.ansiklopediSilinenMaddeler) ? draft.ansiklopediSilinenMaddeler : [];
+      draft.ansiklopediSilinenMaddeler.push(Object.assign({}, target, { silindiAt: now() }));
+      if (draft.ansiklopediSilinenMaddeler.length > MAX_ARTICLES) draft.ansiklopediSilinenMaddeler.shift();
+      draft.ansiklopediMaddeleri = records(draft).filter(function (item) { return item.id !== entryId; });
+    });
+    if (articleParam() === entryId) changeArticleUrl('', 'replace', currentWorldId(world));
     if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz();
-  }
-  function filterCards(root) {
-    var query = (root.querySelector('[data-eaw-search]') || {}).value || '';
-    query = query.toLocaleLowerCase('tr');
-    var category = (root.querySelector('[data-eaw-filter]') || {}).value || '';
-    root.querySelectorAll('[data-eaw-card]').forEach(function (card) {
-      var text = card.getAttribute('data-search') || '';
-      card.hidden = (!!category && card.getAttribute('data-category') !== category) || (!!query && text.indexOf(query) < 0);
+    cleanupOrphanImages(previousEntries, records(updated).concat(deletedRecords(updated))).then(function (failures) {
+      if (failures) status('Madde silindi; ancak kullanılmayan eski görsellerden ' + failures + ' tanesi temizlenemedi.', false);
     });
   }
+  function restoreDeleted(entryId) {
+    var world = getWorldForEdit(), entry = world && deletedRecords(world).find(function (item) { return item && item.id === entryId; });
+    if (!entry) return;
+    var active = records(world);
+    if (active.some(function (item) { return item && item.id === entryId; })) throw new Error('Bu madde kimliği zaten etkin listede var; yinelenen kayda izin verilmedi.');
+    if (active.length >= MAX_ARTICLES) throw new Error('Bu evrende 300 etkin madde sınırı dolu. Önce bir maddeyi sil veya taslağını dışa aktar.');
+    mutate(function (draft) {
+      var deleted = deletedRecords(draft), index = deleted.findIndex(function (item) { return item && item.id === entryId; });
+      if (index < 0) return;
+      var restored = Object.assign({}, deleted[index]); delete restored.silindiAt; restored.durum = 'taslak';
+      restored.surum = (Number(restored.surum) || 1) + 1; restored.sonDegisiklik = now();
+      saveRevision(restored, 'Silinen madde geri yüklendi');
+      draft.ansiklopediMaddeleri = records(draft).concat([restored]);
+      draft.ansiklopediSilinenMaddeler = deleted.filter(function (_, itemIndex) { return itemIndex !== index; });
+    });
+    if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz();
+    status('Madde geri yüklendi ve taslak olarak kaydedildi.', true);
+  }
+  function revertRevision(entryId, historyIndex) {
+    var world = getWorldForEdit(), entry = world && findEntry(world, entryId), revision = entry && entry.gecmis && entry.gecmis[historyIndex];
+    if (!revision || !revision.madde) return;
+    if (!window.confirm('Bu eski sürüme dönülsün mü? Mevcut sürüm geçmişte korunur ve geri alınan madde taslak olarak kalır.')) return;
+    mutate(function (draft) {
+      var target = findEntry(draft, entryId), old = target && target.gecmis && target.gecmis[historyIndex];
+      if (!target || !old || !old.madde) return;
+      saveRevision(target, 'Önceki sürüme dönmeden önce');
+      applyRevision(target, old.madde);
+    });
+    if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz();
+    status('Önceki sürüm geri yüklendi ve taslak olarak kaydedildi.', true);
+  }
+  function copyArticleLink(entryId) {
+    var url = new URL(window.location.href);
+    url.searchParams.set(ARTICLE_PARAM, entryId);
+    var text = url.href, node = document.createElement('textarea');
+    var done = function () { status('Madde bağlantısı panoya kopyalandı.', true); };
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(text).then(done).catch(function () { fallbackCopy(); });
+    } else fallbackCopy();
+    function fallbackCopy() {
+      node.value = text; node.setAttribute('readonly', ''); node.style.position = 'fixed'; node.style.left = '-9999px';
+      document.body.appendChild(node); node.select();
+      try { if (!document.execCommand('copy')) throw new Error('copy failed'); done(); }
+      catch (_) { status('Bağlantı kopyalanamadı. Tarayıcı adres çubuğundaki URL’yi kopyala.', false); }
+      finally { node.remove(); }
+    }
+  }
+  function openArticle(root, world, entryId) {
+    var target = published(world).find(function (item) { return item.id === entryId; });
+    if (!target) return;
+    selected[currentWorldId(world)] = target.id;
+    changeArticleUrl(target.id, 'push', currentWorldId(world));
+    renderReaderContent(root, world);
+  }
+  function backToIndex(root, world) {
+    var state = window.history.state && window.history.state.__eaw;
+    var currentId = articleParam();
+    if (state && state.worldId === currentWorldId(world) && state.articleId === currentId) {
+      window.history.back();
+      return;
+    }
+    changeArticleUrl('', 'replace', currentWorldId(world));
+    delete selected[currentWorldId(world)];
+    renderReaderContent(root, world);
+  }
+  function installStyles() {
+    if (document.getElementById('eaw-styles')) return;
+    var style = document.createElement('style');
+    style.id = 'eaw-styles';
+    style.textContent = '.eaw-controls{display:grid;grid-template-columns:minmax(0,2fr) minmax(180px,1fr);gap:14px;margin:16px 0}.eaw-controls label,.eaw-entry label,.eaw-source label{display:block;margin:12px 0}.eaw-controls input,.eaw-controls select,.eaw-entry input:not([type=checkbox]),.eaw-entry select,.eaw-entry textarea,.eaw-source input,.eaw-source textarea{display:block;width:100%;min-width:0;min-height:44px;margin-top:6px}.eaw-entry textarea,.eaw-source textarea{resize:vertical}.eaw-check input{width:22px;height:22px;vertical-align:middle}.eaw-entry select[multiple]{min-height:120px}.eaw-actions,.eaw-view-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.eaw-file-label{display:inline-flex;align-items:center;min-height:44px}.eaw-entry{margin:16px 0}.eaw-editor h2,.eaw-reader h2{margin-top:0}.eaw-index-layout{display:grid;grid-template-columns:minmax(190px,240px) minmax(0,1fr);gap:24px;margin-top:18px}.eaw-category-nav{align-self:start;position:sticky;top:12px;display:flex;flex-direction:column;gap:7px;padding:14px;border:1px solid var(--cizgi,#ced4da);background:var(--beyaz,#fff)}.eaw-category-nav h3{margin:0 0 6px}.eaw-category-button{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px;padding:8px 10px;border:1px solid transparent;border-radius:6px;background:transparent;color:inherit;text-align:left;cursor:pointer;font:inherit}.eaw-category-button:hover,.eaw-category-button.is-active{background:color-mix(in srgb,var(--deniz,#0f4c5c) 9%,transparent);border-color:var(--cizgi,#ced4da)}.eaw-category-button span{font-size:.85em;opacity:.75}.eaw-view-controls{margin:10px 0 14px}.eaw-view-controls .is-active{font-weight:700;border-color:var(--deniz,#0f4c5c)}.eaw-results{min-width:0}.eaw-result-count,.eaw-muted{color:var(--murekkep,#495057);opacity:.8}.eaw-list-view{list-style:none;margin:0;padding:0;border-top:1px solid var(--cizgi,#ced4da)}.eaw-list-view li{border-bottom:1px solid var(--cizgi,#ced4da)}.eaw-list-entry{display:flex;position:relative;flex-direction:column;align-items:flex-start;gap:5px;width:100%;min-height:64px;padding:12px 40px 12px 10px;border:0;background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer}.eaw-list-entry:hover{background:color-mix(in srgb,var(--deniz,#0f4c5c) 7%,transparent)}.eaw-list-entry strong{font-size:1.05em}.eaw-entry-type,.eaw-entry-meta,.eaw-alpha-index li span{font-size:.88em;color:var(--murekkep,#495057);opacity:.82}.eaw-arrow{position:absolute;right:12px;top:16px;font-size:1.5em}.eaw-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:14px}.eaw-card{min-width:0;padding:18px;border:1px solid var(--cizgi,#ced4da);border-radius:8px;background:var(--beyaz,#fff)}.eaw-card h3{margin:10px 0}.eaw-link,.eaw-read-link{color:var(--deniz,#0f4c5c);font:inherit;font-weight:700;text-decoration:underline;background:none;border:0;padding:5px 0;cursor:pointer;text-align:left;overflow-wrap:anywhere}.eaw-read-link{display:inline-block;min-height:44px}.eaw-alpha-index{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.eaw-alpha-index section{padding:12px;border:1px solid var(--cizgi,#ced4da);border-radius:6px}.eaw-alpha-index h3{margin:0;border-bottom:1px solid var(--cizgi,#ced4da)}.eaw-alpha-index ul,.eaw-related ul,.eaw-bibliography ol{padding-left:22px}.eaw-alpha-index li,.eaw-related li,.eaw-bibliography li{padding:6px 0;overflow-wrap:anywhere}.eaw-empty{padding:20px;border:1px dashed var(--cizgi,#ced4da);border-radius:8px}.eaw-reader-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding:20px 0 14px;border-bottom:1px solid var(--cizgi,#ced4da)}.eaw-reader-head h2{font-size:1.65rem;margin:8px 0}.eaw-reader-head p{margin:0}.eaw-total{white-space:nowrap;color:var(--murekkep,#495057)}.eaw-article{max-width:1080px;margin:18px auto;min-width:0}.eaw-article-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.eaw-article header{padding:20px 0 14px}.eaw-article h1{font-size:clamp(1.7rem,4vw,2.4rem);line-height:1.18;margin:8px 0}.eaw-summary{font-size:1.16rem;line-height:1.6;max-width:72ch}.eaw-article-layout{display:grid;grid-template-columns:minmax(250px,340px) minmax(0,1fr);gap:24px;margin:14px 0}.eaw-infobox{align-self:start;min-width:0;border:1px solid var(--cizgi,#ced4da);background:var(--beyaz,#fff);border-radius:8px;overflow:hidden}.eaw-infobox-title{padding:12px;font-weight:700;text-align:center;background:color-mix(in srgb,var(--deniz,#0f4c5c) 10%,transparent)}.eaw-article-image{padding:12px}.eaw-image{display:block;width:100%;max-height:320px;object-fit:contain}.eaw-image-empty{min-height:70px;padding:16px;border:1px dashed var(--cizgi,#ced4da);color:var(--murekkep,#495057);overflow-wrap:anywhere}.eaw-facts{display:grid;grid-template-columns:1fr;gap:0;margin:0;padding:0 12px 10px}.eaw-fact{padding:9px 0;border-top:1px solid var(--cizgi,#ced4da);overflow-wrap:anywhere}.eaw-fact dt{font-weight:700;color:var(--deniz,#0f4c5c)}.eaw-fact dd{margin:4px 0 0;line-height:1.5}.eaw-prose-column{min-width:0}.eaw-prose-column h2,.eaw-related h2,.eaw-bibliography h2{font-size:1.28rem;border-bottom:1px solid var(--cizgi,#ced4da);padding-bottom:6px}.eaw-intro,.eaw-prose{line-height:1.78;overflow-wrap:anywhere}.eaw-related,.eaw-bibliography{margin-top:24px}.eaw-bibliography a{overflow-wrap:anywhere}.eaw-modified{margin-top:22px;padding:12px 0;border-top:1px solid var(--cizgi,#ced4da);font-size:.9em;color:var(--murekkep,#495057)}.eaw-tags{margin-top:12px}.eaw-tags span{display:inline-block;margin:4px 6px 4px 0;padding:4px 8px;border:1px solid var(--cizgi,#ced4da);border-radius:12px}.eaw-preview-note,.eaw-warning{padding:12px;border-left:4px solid #c98200;background:color-mix(in srgb,#e0a020 12%,transparent)}.eaw-preview-note{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.eaw-preview-note p{margin:0}.eaw-warning-list{color:#704d00}.eaw-history,.eaw-trash{margin:16px 0;padding:10px;border:1px solid var(--cizgi,#ced4da);border-radius:6px}.eaw-history summary,.eaw-trash summary{min-height:36px;cursor:pointer;font-weight:700}.eaw-history li,.eaw-trash li{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:6px 0}.eaw-source{padding:10px;border:1px solid var(--cizgi,#ced4da);border-radius:6px}.eaw-specific-fields{padding:4px 12px;border-left:3px solid var(--deniz,#0f4c5c)}.eaw-empty,.eaw-category-nav,.eaw-card,.eaw-infobox,.eaw-entry,.eaw-source{overflow-wrap:anywhere}@media(max-width:760px){.eaw-index-layout{grid-template-columns:minmax(0,1fr);gap:14px}.eaw-category-nav{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.eaw-category-nav h3{grid-column:1/-1}.eaw-category-button{padding:7px}.eaw-controls{grid-template-columns:minmax(0,1fr);gap:6px}.eaw-article-layout{grid-template-columns:minmax(0,1fr);gap:12px}.eaw-infobox{max-width:100%}.eaw-facts{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}.eaw-reader-head{align-items:flex-start;flex-direction:column}.eaw-total{white-space:normal}.eaw-alpha-index{grid-template-columns:minmax(0,1fr)}.eaw-card-grid{grid-template-columns:minmax(0,1fr)}.eaw-article{margin:8px 0}.eaw-article header{padding-top:14px}.eaw-article-top .dugme{min-height:44px}.eaw-actions .dugme,.eaw-view-controls .dugme{min-height:44px}}';
+    document.head.appendChild(style);
+  }
+
   hookTabs();
   hookCreator();
   installStyles();
-  document.addEventListener('tf-veri-hazir', function () { hookTabs(); hookCreator(); });
+  schema();
+  document.addEventListener('tf-veri-hazir', function () { hookTabs(); hookCreator(); schema(); });
+
   document.addEventListener('click', function (event) {
-    var target = event.target.closest && event.target.closest('[data-eaw-new], [data-eaw-delete], [data-eaw-open], [data-eaw-back], [data-eaw-export], [data-eaw-preview], [data-eaw-edit]');
+    var target = event.target && event.target.closest && event.target.closest('[data-eaw-new], [data-eaw-delete], [data-eaw-open], [data-eaw-back], [data-eaw-export], [data-eaw-preview], [data-eaw-edit], [data-eaw-category], [data-eaw-view], [data-eaw-copy], [data-eaw-add-source], [data-eaw-remove-source], [data-eaw-revert], [data-eaw-restore], [data-eaw-save]');
     if (target && target.hasAttribute('data-eaw-new')) { try { newEntry(); } catch (error) { status(error.message || 'Madde eklenemedi.', false); } return; }
     if (target && target.hasAttribute('data-eaw-export')) { exportEncyclopedia().catch(function (error) { status(error.message || 'Yedek indirilemedi.', false); }); return; }
-    if (target && target.hasAttribute('data-eaw-preview')) { var previewWorld = getWorldForEdit(); if (previewWorld) { previewMode[String(previewWorld.id || '')] = true; if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz(); } return; }
-    if (target && target.hasAttribute('data-eaw-edit')) { var editWorld = getWorldForEdit(); if (editWorld) { previewMode[String(editWorld.id || '')] = false; if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz(); } return; }
+    if (target && target.hasAttribute('data-eaw-preview')) { var previewWorld = getWorldForEdit(); if (previewWorld) { previewMode[currentWorldId(previewWorld)] = true; if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz(); } return; }
+    if (target && target.hasAttribute('data-eaw-edit')) { var editWorld = getWorldForEdit(); if (editWorld) { previewMode[currentWorldId(editWorld)] = false; if (typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz(); } return; }
     if (target && target.hasAttribute('data-eaw-delete')) { deleteEntry(target.getAttribute('data-eaw-delete')); return; }
+    if (target && target.hasAttribute('data-eaw-restore')) { try { restoreDeleted(target.getAttribute('data-eaw-restore')); } catch (error) { status(error.message || 'Madde geri yüklenemedi.', false); } return; }
+    if (target && target.hasAttribute('data-eaw-revert')) { revertRevision(target.getAttribute('data-eaw-revert'), Number(target.getAttribute('data-eaw-revision'))); return; }
+    if (target && target.hasAttribute('data-eaw-save')) { entryStatus(target.getAttribute('data-eaw-save'), 'Değişiklikler bu evrenin mevcut yerel taslağına kaydedildi.', true); return; }
+    if (target && target.hasAttribute('data-eaw-copy')) { copyArticleLink(target.getAttribute('data-eaw-copy')); return; }
+    if (target && target.hasAttribute('data-eaw-add-source')) { try { addSource(target.getAttribute('data-eaw-add-source')); } catch (error) { status(error.message || 'Kaynak eklenemedi.', false); } return; }
+    if (target && target.hasAttribute('data-eaw-remove-source')) { var sourceParts = target.getAttribute('data-eaw-remove-source').split(':'); removeSource(sourceParts[0], Number(sourceParts[1])); return; }
     var root = target && target.closest('.eaw-reader');
-    if (root && target.hasAttribute('data-eaw-open')) {
-      var page = typeof window.evrenSayfaVerisi === 'function' ? window.evrenSayfaVerisi() : null;
-      var world = pageWorld(page), item = world && findEntry(world, target.getAttribute('data-eaw-open'));
-      if (world && item && item.durum === 'yayinda') { selected[String(world.id || '')] = item.id; root.querySelector('.eaw-content').innerHTML = detailHtml(world, item); }
-      return;
+    var page = typeof window.evrenSayfaVerisi === 'function' ? window.evrenSayfaVerisi() : null;
+    var world = pageWorld(page);
+    if (root && world && target.hasAttribute('data-eaw-category')) {
+      readerSettings(world).category = target.getAttribute('data-eaw-category') || '';
+      renderResults(root, world); return;
     }
-    if (root && target.hasAttribute('data-eaw-back')) { var current = pageWorld(typeof window.evrenSayfaVerisi === 'function' ? window.evrenSayfaVerisi() : null); if (current) { delete selected[String(current.id || '')]; root.querySelector('.eaw-content').innerHTML = indexHtml(current); } }
+    if (root && world && target.hasAttribute('data-eaw-view')) {
+      readerSettings(world).view = target.getAttribute('data-eaw-view') || 'liste';
+      renderResults(root, world); return;
+    }
+    if (root && world && target.hasAttribute('data-eaw-open')) { openArticle(root, world, target.getAttribute('data-eaw-open')); return; }
+    if (root && world && target.hasAttribute('data-eaw-back')) { backToIndex(root, world); }
   });
   document.addEventListener('change', function (event) {
-    var field = event.target.closest && event.target.closest('[data-eaw-field]');
+    var field = event.target && event.target.closest && event.target.closest('[data-eaw-field]');
     if (field && currentState() && currentState().kaynak === 'benim') {
       var parts = field.getAttribute('data-eaw-field').split(':'), fieldName = parts.slice(1).join(':');
-      updateField(parts[0], fieldName, field.type === 'checkbox' ? field.checked : field.multiple ? Array.from(field.selectedOptions).map(function (option) { return option.value; }) : field.value);
+      var value = field.type === 'checkbox' ? field.checked : field.multiple ? Array.from(field.selectedOptions).map(function (option) { return option.value; }) : field.value;
+      var changed = updateField(parts[0], fieldName, value);
+      if (changed && fieldName === 'tur' && typeof window.evrenSayfaCiz === 'function') window.evrenSayfaCiz();
       return;
     }
-    var image = event.target.closest && event.target.closest('[data-eaw-image]');
+    var source = event.target && event.target.closest && event.target.closest('[data-eaw-source-field]');
+    if (source && currentState() && currentState().kaynak === 'benim') {
+      var sourceParts = source.getAttribute('data-eaw-source-field').split(':'), sourceField = sourceParts.pop(), sourceIndex = Number(sourceParts.pop()), sourceId = sourceParts.join(':');
+      updateSource(sourceId, sourceIndex, sourceField, source.value); return;
+    }
+    var image = event.target && event.target.closest && event.target.closest('[data-eaw-image]');
     if (image && currentState() && currentState().kaynak === 'benim') uploadEntryImage(image.getAttribute('data-eaw-image'), image.files && image.files[0]).catch(function (error) { entryStatus(image.getAttribute('data-eaw-image'), error.message || 'Görsel yüklenemedi.', false); });
-    var backup = event.target.closest && event.target.closest('[data-eaw-import]');
+    var backup = event.target && event.target.closest && event.target.closest('[data-eaw-import]');
     if (backup && currentState() && currentState().kaynak === 'benim') importEncyclopedia(backup.files && backup.files[0]).catch(function (error) { status(error.message || 'Yedek içe aktarılamadı.', false); });
-    var filter = event.target.closest && event.target.closest('[data-eaw-filter]');
-    if (filter) filterCards(filter.closest('.eaw-reader'));
+    var sort = event.target && event.target.closest && event.target.closest('[data-eaw-sort]');
+    if (sort) {
+      var reader = sort.closest('.eaw-reader'), page = typeof window.evrenSayfaVerisi === 'function' ? window.evrenSayfaVerisi() : null;
+      var world = pageWorld(page); if (reader && world) renderResults(reader, world);
+    }
   });
   document.addEventListener('input', function (event) {
-    var search = event.target.closest && event.target.closest('[data-eaw-search]');
-    if (search) filterCards(search.closest('.eaw-reader'));
+    var search = event.target && event.target.closest && event.target.closest('[data-eaw-search]');
+    if (search) {
+      var reader = search.closest('.eaw-reader'), page = typeof window.evrenSayfaVerisi === 'function' ? window.evrenSayfaVerisi() : null;
+      var world = pageWorld(page); if (reader && world) renderResults(reader, world);
+    }
+  });
+  window.addEventListener('popstate', function () {
+    var root = document.querySelector('#evrenSayfa .eaw-reader');
+    var state = currentState(), page = typeof window.evrenSayfaVerisi === 'function' ? window.evrenSayfaVerisi() : null;
+    var world = pageWorld(page);
+    if (root && state && state.sekme === 'ansiklopedi' && world) renderReaderContent(root, world);
   });
 }());

@@ -1,4 +1,4 @@
-/* TentiforApp 6.5.5 — evren yayın/önizleme öncesi kalite denetimi. */
+/* TentiFor 6.6 — evren yayın/önizleme öncesi kalite denetimi. */
 (function () {
   'use strict';
   function list(value) { return Array.isArray(value) ? value : []; }
@@ -12,6 +12,21 @@
   function bytes(value) {
     var json = JSON.stringify(value);
     try { return new TextEncoder().encode(json).length; } catch (_) { return unescape(encodeURIComponent(json)).length; }
+  }
+  function safeUrl(value) {
+    if (!words(value) || words(value).length > 2048) return false;
+    try {
+      var url = new URL(words(value));
+      return url.protocol === 'https:' && !!url.hostname && !url.username && !url.password;
+    } catch (_) { return false; }
+  }
+  function schemaCategories() {
+    var schema = window.EVREN_ANSIKLOPEDI_SCHEMA;
+    if (!schema && typeof window.evrenAnsiklopediTemizle === 'function') {
+      window.evrenAnsiklopediTemizle([]);
+      schema = window.EVREN_ANSIKLOPEDI_SCHEMA;
+    }
+    return schema && Array.isArray(schema.categories) ? schema.categories : [];
   }
   function validate(world) {
     var errors = [];
@@ -27,6 +42,12 @@
     if (summary.length < 30) errors.push('Özet en az 30 karakter olmalı; okur evrenin temel fikrini anlayabilmeli.');
     if (summary.length > 5000) errors.push('Özet 5.000 karakteri aşmamalı.');
 
+    var rawEncyclopedia = world.ansiklopediMaddeleri;
+    if (rawEncyclopedia !== undefined && !Array.isArray(rawEncyclopedia)) errors.push('Ansiklopedi maddeleri listesi bozuk.');
+    if (Array.isArray(rawEncyclopedia) && rawEncyclopedia.length > 300) errors.push('Ansiklopedi 300 madde sınırını aşıyor.');
+    var rawDeleted = world.ansiklopediSilinenMaddeler;
+    if (rawDeleted !== undefined && !Array.isArray(rawDeleted)) errors.push('Silinen ansiklopedi maddeleri listesi bozuk.');
+    if (Array.isArray(rawDeleted) && rawDeleted.length > 300) errors.push('Silinen maddeler listesi 300 kayıt sınırını aşıyor.');
     var contentKeys = ['kurallar', 'kisiler', 'yerler', 'tarih', 'sozluk', 'belgeler', 'lorlar', 'cizimler', 'oyun_listesi'];
     var encyclopedia = list(world.ansiklopediMaddeleri);
     var publishedArticles = encyclopedia.filter(function (entry) { return entry && entry.durum === 'yayinda'; });
@@ -51,25 +72,55 @@
       });
     });
 
+    var categories = schemaCategories();
+    var categoryIds = new Set(categories.map(function (item) { return item && item.id; }).filter(Boolean));
     var articleIds = new Set();
+    var trashedIds = new Set();
+    list(world.ansiklopediSilinenMaddeler).forEach(function (entry, index) {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) { errors.push((index + 1) + '. silinen ansiklopedi maddesi geçersiz.'); return; }
+      var deletedId = words(entry.id);
+      if (!deletedId) errors.push((index + 1) + '. silinen ansiklopedi maddesinin kalıcı kimliği eksik.');
+      else if (trashedIds.has(deletedId)) errors.push('Silinen ansiklopedi maddesi kimliği yineleniyor: ' + deletedId);
+      else trashedIds.add(deletedId);
+    });
     encyclopedia.forEach(function (entry, index) {
-      if (!entry || typeof entry !== 'object') { errors.push((index + 1) + '. ansiklopedi maddesi geçersiz.'); return; }
+      var prefix = (index + 1) + '. ansiklopedi maddesi';
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) { errors.push(prefix + ' geçersiz.'); return; }
       var entryId = words(entry.id);
-      if (!entryId) errors.push((index + 1) + '. ansiklopedi maddesinin kalıcı kimliği eksik.');
+      if (!entryId) errors.push(prefix + ' kalıcı kimliği eksik.');
       else if (articleIds.has(entryId)) errors.push('Ansiklopedi maddesi kimliği yineleniyor: ' + entryId);
+      else if (trashedIds.has(entryId)) errors.push('Ansiklopedi kimliği hem etkin hem silinen listede bulunuyor: ' + entryId);
       else articleIds.add(entryId);
-      if (['bitki', 'hayvan', 'ozel'].indexOf(entry.tur) < 0) errors.push((index + 1) + '. ansiklopedi maddesinin kategorisi geçersiz.');
-      if (entry.durum === 'yayinda' && !words(entry.baslik)) errors.push((index + 1) + '. yayınlanmış ansiklopedi maddesinin adı eksik.');
-      else if (entry.durum !== 'yayinda' && !words(entry.baslik)) warnings.push((index + 1) + '. taslak ansiklopedi maddesi adsız; okura gösterilmez.');
-      if (entry.durum === 'yayinda' && !words(entry.ozet)) warnings.push('“' + words(entry.baslik).slice(0, 60) + '” maddesine kısa tanıtım eklemek iyi olur.');
-      if (entry.gorsel && entry.gorsel.kaynak === 'indexeddb' && entry.durum === 'yayinda') warnings.push('“' + words(entry.baslik).slice(0, 60) + '” maddesinin görseli yerel tarayıcı deposunda; başka okuyucuların cihazında bulunmayabilir.');
+      var title = words(entry.baslik).slice(0, 60) || 'Adsız madde';
+      if (!categoryIds.has(entry.tur)) errors.push('“' + title + '” maddesinin kategorisi geçersiz.');
+      if (entry.durum !== 'yayinda' && entry.durum !== 'taslak') errors.push('“' + title + '” maddesinin yayın durumu geçersiz.');
+      if (entry.durum === 'yayinda') {
+        if (!words(entry.baslik)) errors.push('“' + title + '” maddesinin yayınlanmış adı eksik.');
+        if (!words(entry.ozet)) errors.push('“' + title + '” maddesinin yayınlanması için kısa tanıtım gerekli.');
+      } else if (!words(entry.baslik)) warnings.push('“' + title + '” taslağı adsız; okura gösterilmez.');
+      if (entry.kaynakca !== undefined && !Array.isArray(entry.kaynakca)) errors.push('“' + title + '” maddesinin kaynakçası geçersiz.');
+      if (entry.gecmis !== undefined && (!Array.isArray(entry.gecmis) || entry.gecmis.length > 20)) errors.push('“' + title + '” maddesinin düzenleme geçmişi 20 sürüm sınırını aşıyor veya bozuk.');
+      list(entry.kaynakca).forEach(function (source, sourceIndex) {
+        if (!source || typeof source !== 'object' || !words(source.baslik)) errors.push('“' + title + '” maddesinin ' + (sourceIndex + 1) + '. kaynağında başlık eksik.');
+        else if (source.url && !safeUrl(source.url)) errors.push('“' + title + '” maddesinin “' + words(source.baslik).slice(0, 60) + '” kaynağındaki bağlantı güvenli HTTPS URL değil.');
+      });
+      if (entry.gecmis !== undefined && (!Array.isArray(entry.gecmis) || entry.gecmis.length > 20)) errors.push('“' + title + '” maddesinin düzenleme geçmişi geçersiz veya 20 sürüm sınırını aşıyor.');
+      if (entry.gorsel && entry.durum === 'yayinda' && entry.gorsel.kaynak === 'indexeddb') {
+        warnings.push('“' + title + '” maddesinin görseli yalnızca yazarın IndexedDB deposunda; diğer okuyucular görseli göremeyebilir. Yayın onayı bu riski açıkça belirtmelidir.');
+      }
     });
     encyclopedia.forEach(function (entry) {
       if (!entry || entry.durum !== 'yayinda') return;
+      var sourceTitle = words(entry.baslik).slice(0, 60) || 'Adsız madde';
+      if (entry.ilgiliIds !== undefined && !Array.isArray(entry.ilgiliIds)) {
+        errors.push('“' + sourceTitle + '” maddesinin ilgili madde listesi geçersiz.');
+        return;
+      }
       list(entry.ilgiliIds).forEach(function (targetId) {
         var target = encyclopedia.find(function (candidate) { return candidate && candidate.id === targetId; });
-        if (!target) errors.push('“' + words(entry.baslik).slice(0, 60) + '” maddesi bulunmayan ansiklopedi maddesine bağlanıyor: ' + targetId);
-        else if (target.durum !== 'yayinda') warnings.push('“' + words(entry.baslik).slice(0, 60) + '” maddesi taslak olan “' + words(target.baslik).slice(0, 60) + '” maddesine bağlanıyor; okurlar bağlantıyı göremez.');
+        if (!target && trashedIds.has(targetId)) warnings.push('“' + sourceTitle + '” maddesi silinmiş bir maddeye bağlanıyor: ' + targetId + '.');
+        else if (!target) errors.push('“' + sourceTitle + '” maddesi bulunmayan ansiklopedi maddesine bağlanıyor: ' + targetId);
+        else if (target.durum !== 'yayinda') warnings.push('“' + sourceTitle + '” maddesi taslak olan “' + words(target.baslik).slice(0, 60) + '” maddesine bağlanıyor; okurlar bu bağlantıyı açamaz.');
       });
     });
 
