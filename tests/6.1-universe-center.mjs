@@ -12,12 +12,19 @@ const data = JSON.parse(fs.readFileSync(path.join(root, 'veri.json'), 'utf8'));
 
 assert.equal(data.surum, pkg.version);
 assert.match(pkg.version, /^\d+\.\d+\.\d+(?:\.\d+)?$/);
-assert.match(index, /js\/engine\/101-v61-universe\.js\?v=612/);
-for (const token of ['Evren Merkezi', 'Zaman çizelgesi', 'İlişkiler', 'Ansiklopedi', 'Notlar', 'Beni şaşırt', 'Spoilerli kayıtları göster', 'tf61-wizard-form']) {
+assert.match(index, /js\/engine\/101-v61-universe\.js\?v=613/);
+for (const token of ['Evren Merkezi', 'Zaman çizelgesi', 'İlişkiler', 'Ansiklopedi', 'Notlar', 'Beni şaşırt', 'Spoilerli kayıtları göster', 'tf61-wizard-form', 'İlk içerikleri şimdi ekle', 'tf61-extra-fields']) {
   assert.ok(source.includes(token), `6.1 modülünde eksik sözleşme: ${token}`);
 }
 assert.match(source, /typeof created === 'string' \? created : created\.id/);
-for (const token of ['tf61-center', 'tf61-stat-grid', 'tf61-timeline', 'tf61-wizard', 'tf61-form-grid']) {
+const optionalStart = source.indexOf('<details class=\"tf61-extra\">');
+const optionalEnd = source.indexOf('</details>', optionalStart);
+assert.ok(optionalStart > source.indexOf('id=\"tf61-ozet\"') && optionalEnd > optionalStart, 'starter fields must follow core identity fields inside a collapsed optional group');
+for (const field of ['tf61-kisiler', 'tf61-yerler', 'tf61-kurallar', 'tf61-sozluk']) {
+  const fieldStart = source.indexOf('id=\"' + field + '\"');
+  assert.ok(fieldStart > optionalStart && fieldStart < optionalEnd, field + ' must remain inside the optional starter group');
+}
+for (const token of ['tf61-center', 'tf61-stat-grid', 'tf61-timeline', 'tf61-wizard', 'tf61-form-grid', '.tf61-extra>summary']) {
   assert.ok(css.includes(token), `6.1 stilinde eksik seçici: ${token}`);
 }
 for (const token of ['.alt-menu.alt-menu-evren{grid-template-columns:repeat(6,1fr)}', 'html:has(.es-katman) .alt-menu', 'html:has(.perde:not([hidden])) .alt-menu', 'html:has(.mobil-menu-katman) .alt-menu']) {

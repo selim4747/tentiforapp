@@ -1529,3 +1529,16 @@ textarea:focus,
   }
   .evren-sekmeler::-webkit-scrollbar { display: none; }
 }
+
+/* 6.1: start a world with only its name and core idea; starter content stays optional. */
+.tf61-extra{margin:4px 0 16px;border:1px solid var(--buz);border-radius:6px;background:var(--kar)}
+.tf61-extra>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;cursor:pointer;list-style:none;color:var(--deniz);font:12px var(--mono)}
+.tf61-extra>summary::-webkit-details-marker{display:none}
+.tf61-extra>summary::after{content:"＋";font-size:16px}
+.tf61-extra[open]>summary::after{content:"−"}
+.tf61-extra>summary span{color:var(--murekkep-2);font:11px var(--govde)}
+.tf61-extra>summary:focus-visible{outline:2px solid var(--deniz);outline-offset:2px}
+.tf61-extra-fields{padding:10px 14px 0}
+@media(max-width:680px){.tf61-extra>summary{align-items:flex-start;flex-wrap:wrap}.tf61-extra>summary span{flex:1 1 100%}}
+@media(max-width:680px){.tf61-wizard-head{padding-bottom:12px;margin-bottom:12px}.tf61-wizard form>label,.tf61-form-grid label{margin-bottom:10px}.tf61-wizard-footer{gap:8px}}
+@media(max-width:680px){.tf61-extra>summary{display:grid;grid-template-columns:1fr auto;align-items:center}.tf61-extra>summary b{grid-column:1;grid-row:1}.tf61-extra>summary span{grid-column:1;grid-row:2;flex:auto}.tf61-extra>summary::after{grid-column:2;grid-row:1/3}}

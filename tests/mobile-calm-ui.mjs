@@ -129,6 +129,8 @@ for (const [name, engine] of engines) {
     }
     await page.locator('#mobilMenu [data-mobil-kapat]').click();
 
+    await page.locator('#evrenSecBtn').click();
+    await page.waitForSelector('#evrenSecici .es-panel');
     await page.locator('[data-evren-git="harita:tomye"]').click();
     await page.waitForFunction(() => location.pathname === '/harita/');
     await page.waitForFunction(() => document.querySelector('#harita')?.classList.contains('gizli') === false);
