@@ -82,22 +82,84 @@ try {
   await page.locator('#evrenSecici [data-es-yeni]').click();
   await page.waitForSelector('#tf61-wizard-form');
   await page.evaluate(() => document.fonts.ready);
-  assert.equal(await page.locator('.tf61-extra').getAttribute('open'), null, 'başlangıç alanları ilk görünümde isteğe bağlı ve kapalı olmalı');
+  assert.equal(await page.locator('.tf61-extra').getAttribute('open'), null, 'başlangıç seçenekleri ilk görünümde isteğe bağlı ve kapalı olmalı');
   assert.ok(await page.locator('#tf61-ad').isVisible(), 'evren adı hemen düzenlenebilir olmalı');
   assert.ok(await page.locator('#tf61-ozet').isVisible(), 'temel fikir hemen düzenlenebilir olmalı');
+  assert.equal(await page.locator('#tf61-profil').isVisible(), false, 'profil seçicisi ilk görünümü büyütmemek için kapalı bölümde kalmalı');
 
   const submitBox = await page.locator('#tf61-wizard-form button[type="submit"]').boundingBox();
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   assert.ok(submitBox && submitBox.y >= 0 && submitBox.y + submitBox.height <= viewportHeight,
     `390px mobilde ana oluşturma eylemi ilk ekranda görünmeli (buton=${JSON.stringify(submitBox)}, yükseklik=${viewportHeight})`);
+  await page.setViewportSize({ width: 320, height: 844 });
+  const compactSubmit = await page.locator('#tf61-wizard-form button[type="submit"]').boundingBox();
+  assert.ok(compactSubmit && compactSubmit.y >= 0 && compactSubmit.y + compactSubmit.height <= 844, `320px mobilde oluşturma eylemi ilk ekranda görünmeli: ${JSON.stringify(compactSubmit)}`);
+  await page.setViewportSize({ width: 390, height: 844 });
 
   await page.locator('.tf61-extra > summary').click();
   assert.equal(await page.locator('.tf61-extra').getAttribute('open'), '', 'isteğe bağlı başlangıç içeriği dokunmayla açılmalı');
+  const profilePicker = page.locator('#tf61-profil');
+  assert.ok(await profilePicker.isVisible(), 'profil seçimi başlangıç seçeneklerinde bulunmalı');
+  assert.equal(await profilePicker.locator('option').count(), 8, 'boş başlangıç ve yedi profil sunulmalı');
+  await profilePicker.selectOption('fantastik');
+  await page.locator('#tf61-profile-note').waitFor();
+  assert.match(await page.locator('#tf61-profile-note').textContent(), /Yalnızca boş bölümler doldurulur/);
   for (const field of ['#tf61-kisiler', '#tf61-yerler', '#tf61-kurallar', '#tf61-sozluk']) {
     assert.ok(await page.locator(field).isVisible(), `${field} isteğe bağlı bölüm açılınca erişilebilir olmalı`);
   }
+  await page.locator('#tf61-ad').fill('P3 profile test');
+  await page.locator('#tf61-tur').fill('Fantastik deney');
+  await page.locator('#tf61-ozet').fill('Sihirli bir evren.');
+  await page.locator('#tf61-kisiler').fill('Ada');
+  await page.locator('#tf61-kurallar').fill('İlk kural');
+  await page.locator('#tf61-wizard-form button[type="submit"]').click();
+  await page.waitForFunction(() => location.hash.startsWith('#/ev/benim/'));
+  await page.waitForSelector('#evrenSayfa');
+  const starterState = await page.evaluate(() => {
+    const id = decodeURIComponent(location.hash.split('/').pop());
+    const item = window.fanEserlerim().find((x) => x.id === id);
+    return { people: item.kisiler.map((x) => x.ad), rules: item.kurallar.map((x) => x.ad), customFields: item.ozelAlanlar.map((x) => x.ad), mapPlaces: item.harita.yerler.length };
+  });
+  assert.deepEqual(starterState.people, ['Ada'], 'şablon seçimi kullanıcının ilk karakterini korumalı');
+  assert.deepEqual(starterState.rules, ['İlk kural'], 'şablon seçimi kullanıcının ilk kuralını korumalı');
+  assert.ok(starterState.customFields.includes('Mevsimler'), 'şablon boş özel alanlara başlangıç içeriği eklemeli');
+  assert.equal(starterState.mapPlaces, 5, 'şablon boş ana haritayı doldurmalı');
+
+  await page.locator('#evrenSayfa [data-evs-sekme="kurucu"]').click();
+  await page.waitForSelector('#evrenSayfa .evr-kurucu');
+  assert.equal(await page.locator('#evrenSayfa [data-evt-tur]').count(), 7, 'kurucu profilleri ilk içerik girildikten sonra da görünür kalmalı');
+  assert.ok(await page.locator('#evrenSayfa').getByText(/mevcut içerik korunur/).count(), 'profil kartları koruma davranışını açıklamalı');
+  const profileOrder = await page.evaluate(() => {
+    const profile = document.querySelector('#evrenSayfa [data-evt-tur]');
+    const steps = document.querySelector('#evrenSayfa .evk-adimlar');
+    return !!(profile && (!steps || (profile.compareDocumentPosition(steps) & Node.DOCUMENT_POSITION_FOLLOWING)));
+  });
+  assert.ok(profileOrder, 'profil kartları adım listesinden önce gelmeli');
+  await page.locator('#evrenSayfa .evr-kurucu button.evr-adim[data-evr-adim="dunya"]').click();
+  await page.waitForSelector('#evrenSayfa .evr-kurucu [data-fan-ekle="ozelAlanlar"]');
+  assert.ok(await page.locator('#evrenSayfa .evr-kurucu fieldset').filter({ hasText: 'Özel alanlar' }).count(), 'kodsuz özel alan grubu belirgin etiket taşımalı');
+  await page.locator('#evrenSayfa .evr-kurucu [data-fan-ekle="ozelAlanlar"]').click();
+  await page.waitForSelector('#evrenSayfa .evr-kurucu [data-fan-alan="ozelAlanlar.1.ad"]');
+  await page.locator('#evrenSayfa .evr-kurucu [data-fan-alan="ozelAlanlar.1.ad"]').fill('Işık düzeni');
+  await page.locator('#evrenSayfa .evr-kurucu [data-fan-alan="ozelAlanlar.1.deger"]').fill('Geceleyin gökyüzü yeşil parlar.');
+  await page.locator('#evrenSayfa .evr-kurucu [data-fan-alan="kurallar.0.tur"]').fill('anı-zamanı');
+  await page.waitForTimeout(650);
+  const saved = await page.evaluate(() => {
+    const id = decodeURIComponent(location.hash.split('/').pop());
+    const item = window.fanEserlerim().find((x) => x.id === id);
+    return { ruleType: item.kurallar[0].tur, field: item.ozelAlanlar.find((x) => x.ad === 'Işık düzeni') };
+  });
+  assert.equal(saved.ruleType, 'anı-zamanı', 'serbest kural türü kaydedilmeli');
+  assert.equal(saved.field.deger, 'Geceleyin gökyüzü yeşil parlar.', 'kodsuz özel alan değeri kaydedilmeli');
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('#evrenSayfa');
+  await page.locator('#evrenSayfa [data-evs-sekme="kurucu"]').click();
+  await page.locator('#evrenSayfa .evr-kurucu button.evr-adim[data-evr-adim="dunya"]').click();
+  await page.waitForSelector('#evrenSayfa .evr-kurucu [data-fan-alan="kurallar.0.tur"]');
+  assert.equal(await page.locator('#evrenSayfa .evr-kurucu [data-fan-alan="kurallar.0.tur"]').inputValue(), 'anı-zamanı', 'serbest tür yenileme sonrası korunmalı');
+  assert.equal(await page.locator('#evrenSayfa .evr-kurucu [data-fan-alan="ozelAlanlar.1.deger"]').inputValue(), 'Geceleyin gökyüzü yeşil parlar.', 'özel alan yenileme sonrası korunmalı');
   assert.deepEqual(pageErrors, [], `tarayıcı çalışma zamanı hatası olmamalı: ${pageErrors.join('; ')}`);
-  console.log('universe create/explore UX: PASS (320/390/430/1280px search, active selector access, optional starter fields, first-screen create action)');
+  console.log('universe create/explore UX: PASS (320/390px first-screen CTA; 7 profiles; safe profile merge; no-code field and free rule persistence)');
 } finally {
   if (browser) await browser.close();
   if (server && server.exitCode === null) server.kill('SIGKILL');

@@ -206,6 +206,18 @@ const oldUniverseBoot = 'if(evrenDugmesiKur(),rota().indexOf("#/ev/")===0)';
 const newUniverseBoot = 'if(evrenDugmesiKur(),rota()==="#/evren/e126"||rota().indexOf("#/ev/")===0)';
 if (universeBundle.includes(oldUniverseBoot)) universeBundle = universeBundle.replace(oldUniverseBoot, newUniverseBoot);
 else if (!universeBundle.includes(newUniverseBoot)) throw new Error('paket-2.js E126 cold-route bootstrap guard bulunamadı; paket üretimi durduruldu.');
+const customFieldSource = fs.readFileSync(path.join(ROOT_DIR, 'js/studio/40-fan-atolye.js'), 'utf8');
+const customFieldSourceLabel = 'ad:"Özel alanlar · kendi alanların"';
+const customFieldBundleLabel = 'ad:"Kendi alanların"';
+if (!customFieldSource.includes(customFieldSourceLabel)) {
+  throw new Error('Kodsuz özel alan etiketi kaynağı beklenen biçimde değil; paket üretimi durduruldu.');
+}
+const oldCustomFieldLabels = universeBundle.split(customFieldBundleLabel).length - 1;
+const newCustomFieldLabels = universeBundle.split(customFieldSourceLabel).length - 1;
+if (oldCustomFieldLabels === 1) universeBundle = universeBundle.replace(customFieldBundleLabel, customFieldSourceLabel);
+else if (oldCustomFieldLabels !== 0 || newCustomFieldLabels !== 1) {
+  throw new Error('paket-2.js özel alan etiketi tekil değil; paket üretimi durduruldu.');
+}
 fs.writeFileSync(universeBundlePath, universeBundle, 'utf8');
 const homepageSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/85-e25-ana-sayfa-evrenler.js'), 'utf8');
 const homepageBundlePath = path.join(ROOT_DIR, 'js/paket-4.js');
@@ -275,6 +287,14 @@ for (const signature of ['function evrenVarlikGorselTemizle(a)', 'function evren
   } else {
     throw new Error('paket-3.js evrenEkTemizle bulunamadı; paket üretimi durduruldu.');
   }
+}
+const quickStartSource = fs.readFileSync(path.join(ROOT_DIR, 'js/studio/53-evren-kurulum.js'), 'utf8');
+const quickStartSignature = 'function evkKartHtml(a,n)';
+const quickStartSourceRange = functionRange(quickStartSource, quickStartSignature, 'Quick-start source profile card');
+const quickStartBundleRange = functionRange(updateBundle, quickStartSignature, 'Quick-start package profile card');
+const quickStartRenderer = quickStartSource.slice(quickStartSourceRange.start, quickStartSourceRange.end);
+if (updateBundle.slice(quickStartBundleRange.start, quickStartBundleRange.end) !== quickStartRenderer) {
+  updateBundle = updateBundle.slice(0, quickStartBundleRange.start) + quickStartRenderer + updateBundle.slice(quickStartBundleRange.end);
 }
 fs.writeFileSync(updateBundlePath, updateBundle, 'utf8');
 
@@ -424,7 +444,7 @@ if (fs.existsSync(indexPath)) {
     );
   }
   indexIcerik = indexIcerik.replace(/((?:js|css)\/(?!style\.css\?v=|engine\/101-v61-universe\.js\?v=)[^"'\s?]+\?v=)[^"'&\s]+/g, `$1${karma}`);
-  indexIcerik = indexIcerik.replace(/js\/engine\/101-v61-universe\.js\?v=[^"']+/g, 'js/engine/101-v61-universe.js?v=613');
+  indexIcerik = indexIcerik.replace(/js\/engine\/101-v61-universe\.js\?v=[^"']+/g, 'js/engine/101-v61-universe.js?v=614');
   indexIcerik = indexIcerik.replace(/css\/style\.css\?v=[^"']+/g, `css/style.css?v=${cssHash}`);
   indexIcerik = indexIcerik.replace(/js\/arayuz\/33-ux-644\.js(?:\?v=[^"']+)?/g, `js/arayuz/33-ux-644.js?v=${karma}`);
   indexIcerik = indexIcerik.replace(/js\/arayuz\/34-ux-645\.js(?:\?v=[^"']+)?/g, `js/arayuz/34-ux-645.js?v=${karma}`);
