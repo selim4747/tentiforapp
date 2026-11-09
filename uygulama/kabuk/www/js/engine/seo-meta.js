@@ -95,7 +95,7 @@
       return { path: path, title: name.slice(0, 30) + ' · ' + slug.slice(0, 10) + ' | TentiFor', description: safeText(item.ozet, 155) || (name + ' — TentiFor’te yayımlanmış bir evren.'), author: safeText(item.yazar_adi || item.yazar || 'TentiFor', 80), kind: 'Evren', ogType: 'article' };
     }
     var readTitle = safeText(item.baslik || 'Okuma yolu', 120);
-    return { path: path, title: readTitle.slice(0, 32) + ' · Okuma yolu | TentiFor', description: safeText(item.aciklama, 155) || (readTitle + ' — ' + safeText(item.yazar_adi || item.yazar || 'TentiFor', 80) + ' tarafından paylaşılan herkese açık okuma rotası.'), author: safeText(item.yazar_adi || item.yazar || 'TentiFor', 80), kind: 'Okuma yolu', ogType: 'article' };
+    var readingMinutes = Math.max(1, Math.min(90, Number(item.okuma_dakika || item.okumaDakika || (Array.isArray(item.adimlar) ? item.adimlar.length * 3 : 3)) || 3)); return { path: path, title: readTitle.slice(0, 32) + ' · Okuma yolu | TentiFor', description: safeText(item.aciklama, 155) || (readTitle + ' — ' + safeText(item.yazar_adi || item.yazar || 'TentiFor', 80) + ' tarafından paylaşılan herkese açık okuma rotası.'), author: safeText(item.yazar_adi || item.yazar || 'TentiFor', 80), readingMinutes: readingMinutes, kind: 'Okuma yolu', ogType: 'article' };
   }
   function announcePublicItem(item, meta) {
     var pending = { item: item, meta: meta };
@@ -187,7 +187,8 @@
     var label = document.createElement('p'); label.className = 'tf639-seo-kind'; label.textContent = 'Herkese açık okuma yolu';
     var title = document.createElement('h1'); title.id = 'tf639ReadPathTitle'; title.textContent = safeText(item.baslik || 'Okuma yolu', 120);
     var byline = document.createElement('p'); byline.className = 'tf639-seo-author'; byline.textContent = 'Yazar: ' + meta.author;
-    panel.append(close, label, title, byline);
+    var duration = document.createElement('p'); duration.className = 'tf639-seo-duration oyun-not'; duration.textContent = 'Tahmini okuma: ' + Number(meta.readingMinutes || 3) + ' dakika · Spoilersız paylaşım kartı';
+    panel.append(close, label, title, byline, duration);
     if (item.aciklama) { var description = document.createElement('p'); description.textContent = safeText(item.aciklama, 600); panel.appendChild(description); }
     var steps = Array.isArray(item.adimlar) ? item.adimlar.slice(0, 100) : [];
     var list = document.createElement('ol'); list.setAttribute('aria-label', 'Okuma sırası');

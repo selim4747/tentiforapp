@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const seo = fs.readFileSync('js/engine/seo-meta.js', 'utf8');
+const sharing = fs.readFileSync('js/engine/secure-sharing.js', 'utf8');
+const tasks = fs.readFileSync('js/engine/okuma-serisi-gorevler.js', 'utf8');
+const wizard = fs.readFileSync('js/studio/53-evren-kurulum.js', 'utf8');
+const migration = fs.readFileSync('supabase/migrations/20261111_p3_engagement_cards_tasks.sql', 'utf8');
+assert.match(seo, /readingMinutes/);
+assert.match(seo, /Spoilersız paylaşım kartı/);
+assert.match(sharing, /Tahmini okuma/);
+assert.match(sharing, /navigator\.share/);
+assert.match(tasks, /sure_dk/);
+assert.match(tasks, /sonraki/);
+assert.match(wizard, /Taslağın otomatik kaydedilir/);
+assert.match(migration, /create or replace function public\.kesif_gorevlerim/);
+assert.match(migration, /sonraki/);
+console.log('6.6.4 P3 engagement: PASS (reading cards, progressive draft guidance and actionable tasks)');

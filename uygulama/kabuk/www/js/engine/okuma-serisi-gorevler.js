@@ -36,7 +36,7 @@
       var list = box.querySelector('[data-tf636-liste]');
       if (list) list.innerHTML = rows.map(function (x) {
         var done = Number(x.ilerleme) >= Number(x.hedef);
-        return '<div class="tf636-gorev"><b>' + esc(x.ad) + '</b><span class="oyun-not">' + esc(x.aciklama) + '</span><progress max="' + Number(x.hedef) + '" value="' + Number(x.ilerleme) + '"></progress><small>' + Number(x.ilerleme) + '/' + Number(x.hedef) + ' · +' + Number(x.xp) + ' XP' + (done ? ' · tamamlandı' : '') + '</small></div>';
+        return '<div class="tf636-gorev"><b>' + esc(x.ad) + '</b><span class="oyun-not">' + esc(x.aciklama) + '</span><progress max="' + Number(x.hedef) + '" value="' + Number(x.ilerleme) + '"></progress><small>' + Number(x.ilerleme) + '/' + Number(x.hedef) + ' · +' + Number(x.xp) + ' XP · yaklaşık ' + Number(x.sure_dk || 5) + ' dk' + (done ? ' · tamamlandı' : '') + '</small>' + (x.sonraki ? '<p class="oyun-not tf636-sonraki">Sonraki adım: ' + esc(x.sonraki) + '</p>' : '') + '</div>';
       }).join('');
     } finally { drawInFlight = false; }
   }
