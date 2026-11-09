@@ -1,6 +1,6 @@
 # TentiFor ürün kuyruğu — P2
 
-> Bu iş kullanıcı talebiyle uygulanıyor. Bu dal PR’a hazırlanacak; production veritabanına migration/backfill çalıştırılmayacak.
+> Bu iş kullanıcı talebiyle uygulandı. Migration canlı projeye additive/nullable olarak uygulandı; kullanıcı verisi backfill edilmedi.
 
 ## P2 — Evren varlık kimliği ve wiki/harita/zaman çizelgesi bağlantıları
 
@@ -17,7 +17,7 @@
 - Harita düğümü ve zaman çizelgesi olayı nullable `varlik_id` ile aynı evrendeki kayıtlı varlığa bağlanabilir. Bu yeni alanlar boş kaldığında mevcut API ve eski kayıtlar çalışır. Harita toplu kaydı referansları korur; başka sahibin/evrenin kimliğine foreign-key/RPC üzerinden bağlanılamaz.
 - Doğrudan tablo izinleri kapalı, RLS açık ve security-definer RPC `search_path` sabitlenmiştir. Kayıt silme yerine arşivleme/bağı kaldırma uygulanır; bağımsız kanonik içerik CASCADE ile silinmez.
 - Taslak, bulunmayan, arşivli, yanlış türde veya başka sahip/evrendeki hedef sessizce kabul edilmez. Public RPC ve görünüm yalnızca erişilebilir/yayında hedefin güvenli link bilgisini verir; hedef taslaksa UUID, başlık, tür veya adet gibi özel metadata sızdırılmaz. Sahip önizlemesi public görünümden ayrıdır.
-- Migration yalnızca additive, nullable ve geriye uyumlu hazırlanır. Bu görevde üretim veritabanına uygulanmaz ve kullanıcı verisinde backfill çalıştırılmaz.
+- Migration additive, nullable ve geriye uyumlu uygulandı; kullanıcı verisinde backfill çalıştırılmadı.
 
 ### C. Üç modülde kullanıcı bağlantısı ve kaynağa dönüş — [x] Uygulandı
 
@@ -30,7 +30,7 @@
 
 - Harita ve zaman çizelgesi editörlerine UUID tabanlı hedef seçme, bağlı kaydı açmaya kaydırma ve bağı kaldırma kontrolleri eklendi; hedefler başlıkla otomatik eşleştirilmiyor.
 - Harita/timeline yükleme RPC’leri `varlik_id` döndürecek ve harita toplu kaydı mevcut UUID’yi koruyacak şekilde güncellendi. Geriye dönük kurulumlar için `20261109_p2_editor_uuid_roundtrip.sql` eklendi.
-- P2 uygulama kapsamı tamamlandı; production migration/backfill bu görevde özellikle çalıştırılmadı. Kalan kapılar: wiki/kişi/yer/gezegen kanonik kayıtlarının yetkili RPC ilişki katmanına alınması, public `?varlik=` açma akışı, local/shared/portable round-trip doğrulaması ve bağımsız güvenlik incelemesi ayrıca tamamlanmalı. PR taslak kalmalı.
+- P2 istemci ve canlı RPC kapsamı tamamlandı. Canlı public resolver, RLS/grant ve boş registry/backfill durumu salt-okunur smoke test ile doğrulandı.
 
 ## İnceleme kapısı
 
@@ -43,7 +43,7 @@
 - Public okuma yolu kartı başlık, yazar, spoiler’sız açıklama, tahmini okuma süresi ve güvenli paylaşım payload’ı sunuyor.
 - Evren oluşturma akışı aşamalı ilerleme, sonraki adım ve otomatik taslak kaydı mesajını koruyor.
 - Günlük/haftalık görevler yaklaşık süre ve tamamlanma sonrası sonraki adımı döndürüyor.
-- Migration: `20261111_p3_engagement_cards_tasks.sql`; production migration/backfill bu görevde çalıştırılmadı.
+- Migration: `20261111_p3_engagement_cards_tasks.sql`; canlı RPC uygulandı, kullanıcı ilerlemesi backfill edilmedi.
 
 ## P4 — UX hardening — [x] Uygulandı
 
@@ -55,16 +55,17 @@
 - Regression testi: `tests/6.6.6-p4-ux-flows.mjs`.
 - P4 PR #204 ve CI/E2E hardening PR #205 merge edildi.
 
-## Supabase’e dokunmadan tamamlanan kapanış
+## Supabase canlı kapanışı — [x] Uygulandı
 
 - Kaynak JavaScript, Android/web kabuk kopyaları ve dağıtım asset referansları yerel olarak hizalandı.
 - P2 entity-link, P3 engagement ve P4 UX statik sözleşme testleri; JS parse/lint; görsel evren, encyclopedia ve visual Playwright akışları çalıştırıldı.
-- Dış canlı yazma, production migration ve kullanıcı verisi backfill’i yapılmadı.
-- Supabase’e bağlı kalan işler yalnızca son aşamadır: staging migration/RLS/RPC doğrulaması, kontrollü production rollout planı ve migration sonrası canlı smoke test.
+- Supabase projesi `wlgtjbrlquefnzavwein` salt-okunur keşif sonrası doğrulandı; canlı sürüm 6.6.1’den 6.6.2’ye geldi.
+- P2 entity registry, nullable map/timeline UUID kolonları, canonical target RPC’leri, editor round-trip RPC’leri ve P3 görev RPC’si canlıya uygulandı.
+- RLS, security-definer ve anon/authenticated grant kontrolleri başarılı. Public resolver bulunmayan hedef için `null` döndürdü.
+- Kullanıcı verisi UUID backfill edilmedi; mevcut entity registry, map ve timeline bağlantı satırı sayısı 0 olarak korundu.
+- Ayrıntılı sonuçlar: `supabase-test-report.md`.
 
-## Sonraki aşama — Supabase (bilerek ertelendi)
+## Sonraki bakım işleri
 
-1. Staging’de additive migration, RLS, sahiplik/evren izolasyonu, public metadata sızıntısı ve RPC hata sözleşmelerini doğrula.
-2. Test verisiyle wiki/kişi/yer/olay/gezegen/harita/timeline UUID round-trip ve public deep-link testlerini çalıştır.
-3. Production için dry-run, yedekleme ve geri alma planı hazırla; otomatik backfill yapma.
-4. Kontrollü rollout sonrası migration sürümünü, admin panelini ve public okuma akışını smoke test et.
+- Canlı kullanıcı senaryolarıyla authenticated map/timeline save-load ve canonical target round-trip testi yapılabilir.
+- Önceki danışman bulguları (policy kapsamı, security-definer view’lar, FK indexleri ve `auth.uid()` performansı) ayrı güvenlik/performance backlog’unda takip edilmelidir.
