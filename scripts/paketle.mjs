@@ -218,6 +218,26 @@ if (oldCustomFieldLabels === 1) universeBundle = universeBundle.replace(customFi
 else if (oldCustomFieldLabels !== 0 || newCustomFieldLabels !== 1) {
   throw new Error('paket-2.js özel alan etiketi tekil değil; paket üretimi durduruldu.');
 }
+for (const signature of ['function fanUuid(a)', 'function fanYeniVarlikId()', 'function fanTemizle(a)', 'function fanHaritaTemizle(a)']) {
+  const sourceRange = functionRange(customFieldSource, signature, `Fan identity source ${signature}`);
+  const sourceFunction = customFieldSource.slice(sourceRange.start, sourceRange.end);
+  const bundleStart = universeBundle.indexOf(signature);
+  if (bundleStart >= 0) {
+    const bundleRange = functionRange(universeBundle, signature, `Fan identity bundle ${signature}`);
+    universeBundle = universeBundle.slice(0, bundleRange.start) + sourceFunction + universeBundle.slice(bundleRange.end);
+  } else if (signature === 'function fanUuid(a)' || signature === 'function fanYeniVarlikId()') {
+    const anchor = universeBundle.indexOf('function fanTemizle(a)');
+    if (anchor < 0) throw new Error('paket-2.js fanTemizle sınırı bulunamadı; paket üretimi durduruldu.');
+    universeBundle = universeBundle.slice(0, anchor) + sourceFunction + '\n' + universeBundle.slice(anchor);
+  } else {
+    throw new Error(`paket-2.js içinde ${signature} bulunamadı; paket üretimi durduruldu.`);
+  }
+}
+const oldFanAdd = 'u.alanlar.forEach(function(s){c[s[0]]=""}),(o[u.k]=o[u.k]||[]).push(c)';
+const newFanAdd = 'u.alanlar.forEach(function(s){c[s[0]]=""}),["kisiler","yerler","tarih"].includes(e.fanEkle)&&(c.varlikId=fanYeniVarlikId()),(o[u.k]=o[u.k]||[]).push(c)';
+if (!customFieldSource.includes(newFanAdd)) throw new Error('Fan entity creation source is not synchronized; package generation stopped.');
+if (universeBundle.includes(oldFanAdd)) universeBundle = universeBundle.replace(oldFanAdd, newFanAdd);
+else if (!universeBundle.includes(newFanAdd)) throw new Error('paket-2.js fan entity add handler is not synchronized; package generation stopped.');
 fs.writeFileSync(universeBundlePath, universeBundle, 'utf8');
 const homepageSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/85-e25-ana-sayfa-evrenler.js'), 'utf8');
 const homepageBundlePath = path.join(ROOT_DIR, 'js/paket-4.js');
@@ -273,7 +293,7 @@ fs.writeFileSync(updateBundlePath, updateBundle, 'utf8');
 // Custom-world visual metadata is normalized in the serving bundle as well as
 // the readable source; otherwise portraits/items disappear on the next save.
 const worldExtensionSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/45-evrengezer.js'), 'utf8');
-for (const signature of ['function evrenVarlikGorselTemizle(a)', 'function evrenVarliklarTemizle(a)', 'function evrenAnsiklopediTemizle(a)', 'function evrenEkTemizle(a,e)']) {
+for (const signature of ['function evrenVarlikUuidTemizle(value)', 'function evrenVarlikIdYeni()', 'function evrenVarlikAdaylari(world,includeLegacy)', 'function evrenVarlikBul(world,id,publicOnly)', 'function evrenVarlikLazyKimlikAta(worldId,token)', 'function evrenVarlikGorselTemizle(a)', 'function evrenVarliklarTemizle(a)', 'function evrenAnsiklopediTemizle(a)', 'function evrenEkTemizle(a,e)']) {
   const sourceRange = functionRange(worldExtensionSource, signature, `World visual source ${signature}`);
   const sourceFunction = worldExtensionSource.slice(sourceRange.start, sourceRange.end);
   const bundleStart = updateBundle.indexOf(signature);
@@ -287,6 +307,31 @@ for (const signature of ['function evrenVarlikGorselTemizle(a)', 'function evren
   } else {
     throw new Error('paket-3.js evrenEkTemizle bulunamadı; paket üretimi durduruldu.');
   }
+}
+const canonicalCleanerSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/51-evren-oyunlari.js'), 'utf8');
+const canonicalCleanerSignature = 'function evrenIcerikTemizle(a,n)';
+const canonicalCleanerSourceRange = functionRange(canonicalCleanerSource, canonicalCleanerSignature, 'Canonical world-content cleaner source');
+const canonicalCleanerBundleRange = functionRange(updateBundle, canonicalCleanerSignature, 'Canonical world-content cleaner package');
+const canonicalCleaner = canonicalCleanerSource.slice(canonicalCleanerSourceRange.start, canonicalCleanerSourceRange.end);
+if (updateBundle.slice(canonicalCleanerBundleRange.start, canonicalCleanerBundleRange.end) !== canonicalCleaner) {
+  updateBundle = updateBundle.slice(0, canonicalCleanerBundleRange.start) + canonicalCleaner + updateBundle.slice(canonicalCleanerBundleRange.end);
+}
+const deepProfileSource = fs.readFileSync(path.join(ROOT_DIR, 'js/studio/87-yildiz-sablon-okuma.js'), 'utf8');
+const deepProfileSignature = 'function evtDerinUygula(a,t)';
+const deepProfileSourceRange = functionRange(deepProfileSource, deepProfileSignature, 'Deep-profile source');
+const deepProfileBundleRange = functionRange(homepageBundle, deepProfileSignature, 'Deep-profile package');
+const deepProfile = deepProfileSource.slice(deepProfileSourceRange.start, deepProfileSourceRange.end);
+if (homepageBundle.slice(deepProfileBundleRange.start, deepProfileBundleRange.end) !== deepProfile) {
+  homepageBundle = homepageBundle.slice(0, deepProfileBundleRange.start) + deepProfile + homepageBundle.slice(deepProfileBundleRange.end);
+}
+fs.writeFileSync(homepageBundlePath, homepageBundle, 'utf8');
+const mapPresetSource = fs.readFileSync(path.join(ROOT_DIR, 'js/engine/56-harita-araclari.js'), 'utf8');
+const mapPresetSignature = 'function evtUygula(t,e)';
+const mapPresetSourceRange = functionRange(mapPresetSource, mapPresetSignature, 'Map-preset source');
+const mapPresetBundleRange = functionRange(updateBundle, mapPresetSignature, 'Map-preset package');
+const mapPreset = mapPresetSource.slice(mapPresetSourceRange.start, mapPresetSourceRange.end);
+if (updateBundle.slice(mapPresetBundleRange.start, mapPresetBundleRange.end) !== mapPreset) {
+  updateBundle = updateBundle.slice(0, mapPresetBundleRange.start) + mapPreset + updateBundle.slice(mapPresetBundleRange.end);
 }
 const quickStartSource = fs.readFileSync(path.join(ROOT_DIR, 'js/studio/53-evren-kurulum.js'), 'utf8');
 const quickStartSignature = 'function evkKartHtml(a,n)';
@@ -444,7 +489,7 @@ if (fs.existsSync(indexPath)) {
     );
   }
   indexIcerik = indexIcerik.replace(/((?:js|css)\/(?!style\.css\?v=|engine\/101-v61-universe\.js\?v=)[^"'\s?]+\?v=)[^"'&\s]+/g, `$1${karma}`);
-  indexIcerik = indexIcerik.replace(/js\/engine\/101-v61-universe\.js\?v=[^"']+/g, 'js/engine/101-v61-universe.js?v=614');
+  indexIcerik = indexIcerik.replace(/js\/engine\/101-v61-universe\.js\?v=[^"']+/g, 'js/engine/101-v61-universe.js?v=615');
   indexIcerik = indexIcerik.replace(/css\/style\.css\?v=[^"']+/g, `css/style.css?v=${cssHash}`);
   indexIcerik = indexIcerik.replace(/js\/arayuz\/33-ux-644\.js(?:\?v=[^"']+)?/g, `js/arayuz/33-ux-644.js?v=${karma}`);
   indexIcerik = indexIcerik.replace(/js\/arayuz\/34-ux-645\.js(?:\?v=[^"']+)?/g, `js/arayuz/34-ux-645.js?v=${karma}`);

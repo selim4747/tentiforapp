@@ -239,6 +239,8 @@
         var original = input.kisiler[index];
         if (!person || !original) return;
         if (original.id) person.id = String(original.id).replace(/[^\w-]/g, '').slice(0, 40);
+        var entityId = String(original.varlikId || '').toLowerCase();
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(entityId)) person.varlikId = entityId;
         if (original.gizliKimlikAnaId) person.gizliKimlikAnaId = String(original.gizliKimlikAnaId).replace(/[^\w-]/g, '').slice(0, 40);
         if (original.gizliKimlikSira) person.gizliKimlikSira = Math.max(1, Math.min(MAX_IDENTITIES, Number(original.gizliKimlikSira) || 1));
       });
