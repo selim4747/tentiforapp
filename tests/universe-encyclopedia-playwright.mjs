@@ -113,6 +113,14 @@ try {
     await page.locator('#evrenSayfa [data-eaw-new]').click();
     await page.waitForFunction(() => (window.evrenSayfaVerisi()?.eser?.ansiklopediMaddeleri || []).some((entry) => !entry.baslik && entry.durum === 'taslak'), null, { timeout: 10000 });
     const entryId = await page.evaluate(() => window.evrenSayfaVerisi().eser.ansiklopediMaddeleri.find((entry) => !entry.baslik && entry.durum === 'taslak').id);
+    const categoryField = page.locator(`[data-eaw-field="${entryId}:tur"]`);
+    if (await categoryField.count() === 0) {
+      // A full page redraw avoids a race between the legacy shell and the encyclopedia extension after local persistence.
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.waitForFunction((id) => window.evrenSayfaVerisi()?.eser?.id === id, worldId, { timeout: 15000 });
+      await page.locator('#evrenSayfa [data-evs-sekme="ansiklopedi"]').click();
+      await page.waitForSelector(`[data-eaw-field="${entryId}:tur"]`, { timeout: 10000 });
+    }
     await page.locator(`[data-eaw-field="${entryId}:tur"]`).selectOption(type);
     const specific = page.locator(`[data-eaw-field="${entryId}:ozellikler.${field}"]`);
     await specific.waitFor({ state: 'visible', timeout: 5000 });
