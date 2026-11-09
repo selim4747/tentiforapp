@@ -4393,7 +4393,7 @@ begin
     'durum','tamam',
     'duzenleyebilir',duzenleyebilir,
     'herkese_acik',case when duzenleyebilir then herkese else false end,
-    'dugumler',coalesce((select jsonb_agg(jsonb_build_object('id',q.id,'tip',q.tip,'baslik',q.baslik,'aciklama',q.aciklama,'x',q.x,'y',q.y,'yayinda',q.yayinda) order by q.olusturma,q.id) from (select id,tip,baslik,aciklama,x,y,yayinda,olusturma from public.evren_harita_dugumleri where sahibi=asil and evren_id=evren and (duzenleyebilir or (herkese and yayinda)) order by olusturma,id limit 150) q),'[]'::jsonb),
+    'dugumler',coalesce((select jsonb_agg(jsonb_build_object('id',q.id,'tip',q.tip,'baslik',q.baslik,'aciklama',q.aciklama,'x',q.x,'y',q.y,'yayinda',q.yayinda,'varlik_id',q.varlik_id) order by q.olusturma,q.id) from (select id,tip,baslik,aciklama,x,y,yayinda,varlik_id,olusturma from public.evren_harita_dugumleri where sahibi=asil and evren_id=evren and (duzenleyebilir or (herkese and yayinda)) order by olusturma,id limit 150) q),'[]'::jsonb),
     'baglar',coalesce((select jsonb_agg(jsonb_build_object('id',q.id,'kaynak',q.kaynak,'hedef',q.hedef,'tur',q.tur,'etiket',q.etiket) order by q.olusturma,q.id) from (select b.id,b.kaynak,b.hedef,b.tur,b.etiket,b.olusturma from public.evren_harita_baglari b where b.sahibi=asil and b.evren_id=evren and (duzenleyebilir or (herkese and exists(select 1 from public.evren_harita_dugumleri a where a.sahibi=b.sahibi and a.evren_id=b.evren_id and a.id=b.kaynak and a.yayinda) and exists(select 1 from public.evren_harita_dugumleri z where z.sahibi=b.sahibi and z.evren_id=b.evren_id and z.id=b.hedef and z.yayinda))) order by b.olusturma,b.id limit 300) q),'[]'::jsonb)
   );
 end;
@@ -4424,8 +4424,8 @@ begin
   if not exists (select 1 from public.evren_gorsel_alanlari where evren_id=evren and sahibi=asil) then raise exception 'evren için yetki yok'; end if;
   delete from public.evren_harita_baglari where sahibi=asil and evren_id=evren;
   delete from public.evren_harita_dugumleri where sahibi=asil and evren_id=evren;
-  insert into public.evren_harita_dugumleri(sahibi,evren_id,id,tip,baslik,aciklama,x,y,yayinda)
-  select asil,evren,(v->>'id')::uuid,v->>'tip',btrim(v->>'baslik'),coalesce(v->>'aciklama',''),(v->>'x')::numeric,(v->>'y')::numeric,coalesce((v->>'yayinda')::boolean,false)
+  insert into public.evren_harita_dugumleri(sahibi,evren_id,id,tip,baslik,aciklama,x,y,yayinda,varlik_id)
+  select asil,evren,(v->>'id')::uuid,v->>'tip',btrim(v->>'baslik'),coalesce(v->>'aciklama',''),(v->>'x')::numeric,(v->>'y')::numeric,coalesce((v->>'yayinda')::boolean,false),nullif(v->>'varlik_id','')::uuid
   from jsonb_array_elements(p_dugumler) d(v);
   insert into public.evren_harita_baglari(sahibi,evren_id,id,kaynak,hedef,tur,etiket)
   select asil,evren,(v->>'id')::uuid,(v->>'kaynak')::uuid,(v->>'hedef')::uuid,v->>'tur',coalesce(v->>'etiket','')
@@ -4482,7 +4482,7 @@ begin
   duzenleyebilir:=uid is not null and (uid=asil or (exists(select 1 from public.ortak_evrenler o where o.id=evren and o.sahip=asil) and public.ortak_uye_mi(evren)));
   if not duzenleyebilir and not herkese then return jsonb_build_object('durum','yok','olaylar','[]'::jsonb,'baglar','[]'::jsonb); end if;
   return jsonb_build_object('durum','tamam','duzenleyebilir',duzenleyebilir,
-    'olaylar',coalesce((select jsonb_agg(jsonb_build_object('id',q.id,'zaman',q.zaman,'baslik',q.baslik,'aciklama',q.aciklama,'tur',q.tur,'sira',q.sira,'durum',q.durum) order by q.sira,q.zaman,q.olusturma) from (select id,zaman,baslik,aciklama,tur,sira,durum,olusturma from public.evren_zaman_olaylari where sahibi=asil and evren_id=evren and (duzenleyebilir or durum='yayinda') order by sira,zaman,olusturma limit 500) q),'[]'::jsonb),
+    'olaylar',coalesce((select jsonb_agg(jsonb_build_object('id',q.id,'zaman',q.zaman,'baslik',q.baslik,'aciklama',q.aciklama,'tur',q.tur,'sira',q.sira,'durum',q.durum,'varlik_id',q.varlik_id) order by q.sira,q.zaman,q.olusturma) from (select id,zaman,baslik,aciklama,tur,sira,durum,varlik_id,olusturma from public.evren_zaman_olaylari where sahibi=asil and evren_id=evren and (duzenleyebilir or durum='yayinda') order by sira,zaman,olusturma limit 500) q),'[]'::jsonb),
     'baglar',coalesce((select jsonb_agg(jsonb_build_object('id',q.id,'kaynak',q.kaynak,'hedef',q.hedef,'etiket',q.etiket) order by q.olusturma,q.id) from (select b.id,b.kaynak,b.hedef,b.etiket,b.olusturma from public.evren_zaman_baglari b where b.sahibi=asil and b.evren_id=evren and (duzenleyebilir or (exists(select 1 from public.evren_zaman_olaylari a where a.sahibi=b.sahibi and a.evren_id=b.evren_id and a.id=b.kaynak and a.durum='yayinda') and exists(select 1 from public.evren_zaman_olaylari z where z.sahibi=b.sahibi and z.evren_id=b.evren_id and z.id=b.hedef and z.durum='yayinda'))) order by b.olusturma,b.id limit 500) q),'[]'::jsonb));
 end;
 $$;
@@ -5326,7 +5326,7 @@ create table if not exists public.evren_varliklari (
   varlik_id uuid primary key default gen_random_uuid(),
   sahibi uuid not null references auth.users(id) on delete cascade,
   evren_id text not null check (char_length(btrim(evren_id)) between 1 and 80),
-  kaynak_turu text not null check (kaynak_turu in ('harita_dugumu','zaman_olayi')),
+  kaynak_turu text not null check (kaynak_turu in ('harita_dugumu','zaman_olayi','kisi','yer','tarih','gezegen','wiki')),
   kaynak_kaydi_id uuid not null,
   olusturma timestamptz not null default now(),
   unique (sahibi, evren_id, varlik_id),
@@ -5391,18 +5391,21 @@ declare
 begin
   if uid is null then return jsonb_build_object('durum','giris'); end if;
   if char_length(evren) not between 1 and 80 or p_kaynak_kaydi_id is null
-     or p_kaynak_turu is null or p_kaynak_turu not in ('harita_dugumu','zaman_olayi') then
+     or p_kaynak_turu is null or p_kaynak_turu not in ('harita_dugumu','zaman_olayi','kisi','yer','tarih','gezegen','wiki') then
     return jsonb_build_object('durum','gecersiz');
   end if;
   asil := public.evren_gorsel_yetki_kontrol(evren);
   if p_kaynak_turu = 'harita_dugumu' then
     select d.varlik_id into bagli from public.evren_harita_dugumleri d
       where d.sahibi = asil and d.evren_id = evren and d.id = p_kaynak_kaydi_id for update;
-  else
+    if not found then return jsonb_build_object('durum','yok'); end if;
+  elsif p_kaynak_turu = 'zaman_olayi' then
     select e.varlik_id into bagli from public.evren_zaman_olaylari e
       where e.sahibi = asil and e.evren_id = evren and e.id = p_kaynak_kaydi_id for update;
+    if not found then return jsonb_build_object('durum','yok'); end if;
+  elsif p_kaynak_turu in ('kisi','yer','tarih','gezegen','wiki') then
+    if p_kaynak_kaydi_id is null then return jsonb_build_object('durum','gecersiz'); end if;
   end if;
-  if not found then return jsonb_build_object('durum','yok'); end if;
 
   insert into public.evren_varliklari (sahibi, evren_id, kaynak_turu, kaynak_kaydi_id)
     values (asil, evren, p_kaynak_turu, p_kaynak_kaydi_id)
@@ -5416,7 +5419,7 @@ begin
     if p_kaynak_turu = 'harita_dugumu' then
       update public.evren_harita_dugumleri set varlik_id = varlik
         where sahibi = asil and evren_id = evren and id = p_kaynak_kaydi_id and varlik_id is null;
-    else
+    elsif p_kaynak_turu = 'zaman_olayi' then
       update public.evren_zaman_olaylari set varlik_id = varlik
         where sahibi = asil and evren_id = evren and id = p_kaynak_kaydi_id and varlik_id is null;
     end if;
@@ -5426,6 +5429,39 @@ end;
 $$;
 revoke all on function public.evren_varlik_kaydet(text, text, uuid) from public, anon;
 grant execute on function public.evren_varlik_kaydet(text, text, uuid) to authenticated;
+
+create or replace function public.evren_varlik_kaydet_kanonik(
+  p_evren_id text, p_kaynak_turu text, p_kaynak_kaydi_id uuid, p_varlik_id uuid
+) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare evren text := btrim(coalesce(p_evren_id,'')); asil uuid;
+begin
+  if auth.uid() is null or char_length(evren) not between 1 and 80
+     or p_kaynak_turu not in ('kisi','yer','tarih','gezegen','wiki')
+     or p_kaynak_kaydi_id is null or p_varlik_id is null then
+    return jsonb_build_object('durum','gecersiz');
+  end if;
+  asil := public.evren_gorsel_yetki_kontrol(evren);
+  if exists (select 1 from public.evren_varliklari v
+      where v.sahibi=asil and v.evren_id=evren and v.kaynak_turu=p_kaynak_turu
+        and v.kaynak_kaydi_id=p_kaynak_kaydi_id and v.varlik_id<>p_varlik_id) then
+    return jsonb_build_object('durum','cakisma');
+  end if;
+  if exists (select 1 from public.evren_varliklari v
+      where v.sahibi=asil and v.evren_id=evren and v.varlik_id=p_varlik_id
+        and (v.kaynak_turu<>p_kaynak_turu or v.kaynak_kaydi_id<>p_kaynak_kaydi_id)) then
+    return jsonb_build_object('durum','cakisma');
+  end if;
+  insert into public.evren_varliklari (varlik_id,sahibi,evren_id,kaynak_turu,kaynak_kaydi_id)
+    values (p_varlik_id,asil,evren,p_kaynak_turu,p_kaynak_kaydi_id)
+    on conflict (sahibi,evren_id,kaynak_turu,kaynak_kaydi_id) do nothing;
+  return jsonb_build_object('durum','tamam','varlik_id',p_varlik_id);
+exception when unique_violation then
+  return jsonb_build_object('durum','cakisma');
+end;
+$$;
+revoke all on function public.evren_varlik_kaydet_kanonik(text,text,uuid,uuid) from public, anon;
+grant execute on function public.evren_varlik_kaydet_kanonik(text,text,uuid,uuid) to authenticated;
 
 create or replace function public.evren_varlik_bagla(
   p_evren_id text, p_kaynak_turu text, p_kaynak_kaydi_id uuid, p_varlik_id uuid
@@ -5470,7 +5506,7 @@ begin
         where e.sahibi = asil and e.evren_id = evren and e.id = hedef_kaydi) then
         return jsonb_build_object('durum','gecersiz');
       end if;
-    else
+    elsif hedef_turu not in ('kisi','yer','tarih','gezegen','wiki') then
       return jsonb_build_object('durum','gecersiz');
     end if;
   end if;
@@ -5549,7 +5585,6 @@ revoke all on function public.evren_varlik_bilgisi(text, text, uuid) from public
 grant execute on function public.evren_varlik_bilgisi(text, text, uuid) to anon, authenticated;
 
 notify pgrst, 'reload schema';
-
 create or replace function public.kurulum_surumu() returns text
 language sql stable security definer set search_path = '' as $$ select '6.6.2'::text $$;
 revoke all on function public.kurulum_surumu() from public;

@@ -10,9 +10,9 @@ const admin = read('js/admin/22-yonetici.js');
 const account = read('js/core/28-hesap.js');
 
 assert.equal(packageJson.version, '6.6.2');
-assert.match(read('js/admin/74-yonetim-kurulum.js'), /KURULUM_BEKLENEN="6\.6\.1"/);
-assert.match(read('js/paket-4.js'), /KURULUM_BEKLENEN="6\.6\.1"/);
-assert.match(read('supabase/kurulum.sql'), /select '6\.6\.1'::text/);
+assert.match(read('js/admin/74-yonetim-kurulum.js'), /KURULUM_BEKLENEN="6\.6\.2"/);
+assert.match(read('js/paket-4.js'), /KURULUM_BEKLENEN="6\.6\.2"/);
+assert.match(read('supabase/kurulum.sql'), /select '6\.6\.2'::text/);
 assert.match(read('supabase/migrations/20261020_evren_harita_gorsel_varlik.sql'), /select '6\.6\.1'::text/);
 
 const veriBranch = sw.indexOf('if (u.pathname === "/veri.json")');

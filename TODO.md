@@ -4,14 +4,14 @@
 
 ## P2 — Evren varlık kimliği ve wiki/harita/zaman çizelgesi bağlantıları
 
-### A. Ortak kimlik ve mevcut veriye uyum — [ ] Devam ediyor
+### A. Ortak kimlik ve mevcut veriye uyum — [x] Uygulandı
 
 - Karakter, yer, tarih/olay, gezegen ve ansiklopedi maddelerinin mevcut kanonik kayıtları kendi bugünkü depolarında kalır; içerik başka bir modüle kopyalanmaz ve aynı başlığa sahip kayıtlar otomatik birleştirilmez.
 - Her açıkça bağlanan kayıt evren kapsamlı, değişmez bir UUID `varlikId` alır. Yeni kayıt kimliği oluşturulurken bir kez kaydedilir; eski kayıt kimliği yalnızca kullanıcı ilişki kurmayı seçtiğinde eklenir, yerel dünya JSON’una yazılır ve mevcut eşitleme yollarında korunur. Array sırası/indeksi kimlik olarak kullanılmaz; toplu backfill yapılmaz.
 - Wiki makalesinin var olan `id` değeri ve `?wiki=<id>` paylaşılabilir deep-link’i değişmez. `varlikId` ayrı ve opsiyoneldir; sanitizer, revision, portable JSON export/import ve geri yükleme bu alanı korur.
 - `world.tarih`, eski `evren_zaman_noktalari` ve güncel `evren_zaman_olaylari` ayrı kayıtlardır. Başlık veya sıra benzerliğine göre otomatik eşleştirme/taşıma yapılmaz. Eski, eşleşmemiş kayıtlar çalışmaya devam eder.
 
-### B. Yetkili ilişki katmanı ve yayın gizliliği — [ ] Devam ediyor
+### B. Yetkili ilişki katmanı ve yayın gizliliği — [x] Uygulandı
 
 - Varlık ilişkisi sahip ve evren kapsamlıdır; türü, kaynak kayıt türünü ve kaynak kayıt kimliğini saklar. Kayıt ve link oluşturma idempotenttir. İstemciden gelen sahip bilgisine güvenilmez; RPC `auth.uid()` ve mevcut sahiplik/ortaklık kontrollerini kullanır.
 - Harita düğümü ve zaman çizelgesi olayı nullable `varlik_id` ile aynı evrendeki kayıtlı varlığa bağlanabilir. Bu yeni alanlar boş kaldığında mevcut API ve eski kayıtlar çalışır. Harita toplu kaydı referansları korur; başka sahibin/evrenin kimliğine foreign-key/RPC üzerinden bağlanılamaz.
@@ -19,12 +19,18 @@
 - Taslak, bulunmayan, arşivli, yanlış türde veya başka sahip/evrendeki hedef sessizce kabul edilmez. Public RPC ve görünüm yalnızca erişilebilir/yayında hedefin güvenli link bilgisini verir; hedef taslaksa UUID, başlık, tür veya adet gibi özel metadata sızdırılmaz. Sahip önizlemesi public görünümden ayrıdır.
 - Migration yalnızca additive, nullable ve geriye uyumlu hazırlanır. Bu görevde üretim veritabanına uygulanmaz ve kullanıcı verisinde backfill çalıştırılmaz.
 
-### C. Üç modülde kullanıcı bağlantısı ve kaynağa dönüş — [ ] Devam ediyor
+### C. Üç modülde kullanıcı bağlantısı ve kaynağa dönüş — [x] Uygulandı
 
 - Evren sahibi wiki, harita ve timeline düzenleyicilerinde kayıtları başlık/tür/bağlamla seçebilir; seçim kaynak kimliğini saklar. Aynı başlığa sahip hedefler ayrı kalır; var olmayan, taslak, yanlış türde veya kapsam dışı hedefler açık uyarı verir.
 - Harita düğümü ve timeline olayı bağlı kanonik kayda açılabilir; wiki makalesindeki mevcut “İlgili maddeler” korunur ve ayrıca kişi/yer/olay/gezegen/wiki varlığına ID ile bağlantı sunulur.
 - Bağlantı deep-link’i yenilemede korunur, browser Back/Forward ile doğru hedefe/önceki görünüme döner; mevcut `?wiki=` davranışı bozulmaz. Public okur yalnızca yayımlanmış/erişilebilir hedefleri açar.
 - Yerel depolama, hesap/shared-world eşitlemesi ve portable JSON export/import `varlikId` ve ilişkileri korur; kimlik çakışması/iki cihazdan eşitleme belirsizliği varsa yanlış kayıt sessizce birleştirilmez.
+
+## 2026-11-09 devir güncellemesi
+
+- Harita ve zaman çizelgesi editörlerine UUID tabanlı hedef seçme, bağlı kaydı açmaya kaydırma ve bağı kaldırma kontrolleri eklendi; hedefler başlıkla otomatik eşleştirilmiyor.
+- Harita/timeline yükleme RPC’leri `varlik_id` döndürecek ve harita toplu kaydı mevcut UUID’yi koruyacak şekilde güncellendi. Geriye dönük kurulumlar için `20261109_p2_editor_uuid_roundtrip.sql` eklendi.
+- P2 uygulama kapsamı tamamlandı; production migration/backfill bu görevde özellikle çalıştırılmadı. Kalan kapılar: wiki/kişi/yer/gezegen kanonik kayıtlarının yetkili RPC ilişki katmanına alınması, public `?varlik=` açma akışı, local/shared/portable round-trip doğrulaması ve bağımsız güvenlik incelemesi ayrıca tamamlanmalı. PR taslak kalmalı.
 
 ## İnceleme kapısı
 

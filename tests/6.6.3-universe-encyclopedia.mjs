@@ -31,6 +31,7 @@ function extractFunction(text, signature) {
 }
 
 const imageSanitizer = extractFunction(sanitizerSource, 'function evrenVarlikGorselTemizle(a)');
+const uuidSanitizer = extractFunction(sanitizerSource, 'function evrenVarlikUuidTemizle(value)');
 const wikiSanitizer = extractFunction(sanitizerSource, 'function evrenAnsiklopediTemizle(a)');
 const sanitizerContext = {
   URL,
@@ -45,7 +46,7 @@ const sanitizerContext = {
     { id: 'draft-1', tur: 'hayvan', baslik: '', durum: 'bad', spoiler: true }
   ]
 };
-const sanitized = vm.runInNewContext(`${imageSanitizer}\n${wikiSanitizer}\nevrenAnsiklopediTemizle(input)`, sanitizerContext);
+const sanitized = vm.runInNewContext(`const EVREN_VARLIK_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;\n${imageSanitizer}\n${uuidSanitizer}\n${wikiSanitizer}\nevrenAnsiklopediTemizle(input)`, sanitizerContext);
 const expectedCategories = [
   ['bitki', 'Bitki'], ['hayvan', 'Hayvan'], ['esya', 'Eşya'], ['ozel-esya', 'Özel eşya'],
   ['bina', 'Bina'], ['ozel-bina', 'Özel bina'], ['ozel-guc', 'Özel güç'], ['diger', 'Diğer / özel tür']

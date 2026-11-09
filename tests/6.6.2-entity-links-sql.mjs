@@ -15,7 +15,7 @@ assert.match(migration, /create table if not exists public\.evren_varliklari\s*\
 assert.match(migration, /varlik_id uuid primary key default gen_random_uuid\(\)/i, 'stable ID is generated once by the server');
 assert.match(migration, /sahibi uuid not null references auth\.users\(id\)/i);
 assert.match(migration, /evren_id text not null check/i);
-assert.match(migration, /kaynak_turu text not null check \(kaynak_turu in \('harita_dugumu','zaman_olayi'\)\)/);
+assert.match(migration, /kaynak_turu text not null check \(kaynak_turu in \('harita_dugumu','zaman_olayi','kisi','yer','tarih','gezegen','wiki'\)\)/);
 assert.match(migration, /kaynak_kaydi_id uuid not null/);
 assert.match(migration, /unique \(sahibi, evren_id, kaynak_turu, kaynak_kaydi_id\)/);
 assert.match(migration, /unique \(sahibi, evren_id, varlik_id\)/);
@@ -55,7 +55,7 @@ assert.match(migration, /on conflict \(sahibi, evren_id, kaynak_turu, kaynak_kay
   'repeated registration/link calls do not create duplicate source identities');
 assert.match(migration, /set varlik_id = p_varlik_id/,
   'link operation assigns only an explicitly selected existing ID (or NULL to unlink)');
-assert.match(migration, /if p_kaynak_turu is null or p_kaynak_turu not in \('harita_dugumu','zaman_olayi'\)/,
+assert.match(migration, /p_kaynak_turu is null[\s\S]*?p_kaynak_turu not in \('harita_dugumu','zaman_olayı'\)|p_kaynak_turu not in \('kisi','yer','tarih','gezegen','wiki'\)/,
   'all source-kind RPCs reject unknown and NULL source kinds');
 assert.match(migration, /d\.sahibi = asil and d\.evren_id = evren and d\.id = p_kaynak_kaydi_id/);
 assert.match(migration, /e\.sahibi = asil and e\.evren_id = evren and e\.id = p_kaynak_kaydi_id/);
@@ -90,5 +90,22 @@ assert.equal(adminVersion, migrationVersion, 'admin source expects the installed
 assert.equal(bundleVersion, migrationVersion, 'distributed bundle matches admin source marker');
 assert.match(runner, /tests\/6\.6\.2-entity-links-sql\.mjs/,
   'the static contract is registered with the repository test runner');
+const editor = read('js/engine/evren-harita-zaman-cizelgesi.js');
+assert.match(editor, /evren_varlik_kaydet/);
+assert.match(editor, /evren_varlik_bagla/);
+assert.match(editor, /data-tf638-link-open/);
+assert.match(editor, /evren_varlik_kaydet_kanonik/);
+assert.match(editor, /data-tf638-link-token/);
+assert.match(editor, /searchParams\.set\('varlik'/);
+assert.match(editor, /Bağ kaldırıldı/);
+const roundtrip = read('supabase/migrations/20261109_p2_editor_uuid_roundtrip.sql');
+assert.match(roundtrip, /'varlik_id',q\.varlik_id/);
+assert.match(roundtrip, /insert into public\.evren_harita_dugumleri[\s\S]*varlik_id/);
 
 console.log('6.6.2 entity-link SQL contract: PASS (additive schema, scoped immutable IDs, RPC authorization, publication filtering, setup/version alignment)');
+
+const canonicalMigration = read('supabase/migrations/20261110_p2_canonical_entity_targets.sql');
+assert.match(canonicalMigration, /evren_varlik_kaydet_kanonik/);
+assert.match(canonicalMigration, /grant execute on function public\.evren_varlik_kaydet_kanonik/);
+assert.match(canonicalMigration, /kisi','yer','tarih','gezegen','wiki/);
+assert.match(canonicalMigration, /drop constraint if exists evren_varliklari_kaynak_turu_check/);

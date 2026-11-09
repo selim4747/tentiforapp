@@ -4,7 +4,7 @@ create table if not exists public.evren_varliklari (
   varlik_id uuid primary key default gen_random_uuid(),
   sahibi uuid not null references auth.users(id) on delete cascade,
   evren_id text not null check (char_length(btrim(evren_id)) between 1 and 80),
-  kaynak_turu text not null check (kaynak_turu in ('harita_dugumu','zaman_olayi')),
+  kaynak_turu text not null check (kaynak_turu in ('harita_dugumu','zaman_olayi','kisi','yer','tarih','gezegen','wiki')),
   kaynak_kaydi_id uuid not null,
   olusturma timestamptz not null default now(),
   unique (sahibi, evren_id, varlik_id),
@@ -69,18 +69,21 @@ declare
 begin
   if uid is null then return jsonb_build_object('durum','giris'); end if;
   if char_length(evren) not between 1 and 80 or p_kaynak_kaydi_id is null
-     or p_kaynak_turu is null or p_kaynak_turu not in ('harita_dugumu','zaman_olayi') then
+     or p_kaynak_turu is null or p_kaynak_turu not in ('harita_dugumu','zaman_olayi','kisi','yer','tarih','gezegen','wiki') then
     return jsonb_build_object('durum','gecersiz');
   end if;
   asil := public.evren_gorsel_yetki_kontrol(evren);
   if p_kaynak_turu = 'harita_dugumu' then
     select d.varlik_id into bagli from public.evren_harita_dugumleri d
       where d.sahibi = asil and d.evren_id = evren and d.id = p_kaynak_kaydi_id for update;
-  else
+    if not found then return jsonb_build_object('durum','yok'); end if;
+  elsif p_kaynak_turu = 'zaman_olayi' then
     select e.varlik_id into bagli from public.evren_zaman_olaylari e
       where e.sahibi = asil and e.evren_id = evren and e.id = p_kaynak_kaydi_id for update;
+    if not found then return jsonb_build_object('durum','yok'); end if;
+  elsif p_kaynak_turu in ('kisi','yer','tarih','gezegen','wiki') then
+    if p_kaynak_kaydi_id is null then return jsonb_build_object('durum','gecersiz'); end if;
   end if;
-  if not found then return jsonb_build_object('durum','yok'); end if;
 
   insert into public.evren_varliklari (sahibi, evren_id, kaynak_turu, kaynak_kaydi_id)
     values (asil, evren, p_kaynak_turu, p_kaynak_kaydi_id)
@@ -94,7 +97,7 @@ begin
     if p_kaynak_turu = 'harita_dugumu' then
       update public.evren_harita_dugumleri set varlik_id = varlik
         where sahibi = asil and evren_id = evren and id = p_kaynak_kaydi_id and varlik_id is null;
-    else
+    elsif p_kaynak_turu = 'zaman_olayi' then
       update public.evren_zaman_olaylari set varlik_id = varlik
         where sahibi = asil and evren_id = evren and id = p_kaynak_kaydi_id and varlik_id is null;
     end if;
@@ -104,6 +107,39 @@ end;
 $$;
 revoke all on function public.evren_varlik_kaydet(text, text, uuid) from public, anon;
 grant execute on function public.evren_varlik_kaydet(text, text, uuid) to authenticated;
+
+create or replace function public.evren_varlik_kaydet_kanonik(
+  p_evren_id text, p_kaynak_turu text, p_kaynak_kaydi_id uuid, p_varlik_id uuid
+) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare evren text := btrim(coalesce(p_evren_id,'')); asil uuid;
+begin
+  if auth.uid() is null or char_length(evren) not between 1 and 80
+     or p_kaynak_turu not in ('kisi','yer','tarih','gezegen','wiki')
+     or p_kaynak_kaydi_id is null or p_varlik_id is null then
+    return jsonb_build_object('durum','gecersiz');
+  end if;
+  asil := public.evren_gorsel_yetki_kontrol(evren);
+  if exists (select 1 from public.evren_varliklari v
+      where v.sahibi=asil and v.evren_id=evren and v.kaynak_turu=p_kaynak_turu
+        and v.kaynak_kaydi_id=p_kaynak_kaydi_id and v.varlik_id<>p_varlik_id) then
+    return jsonb_build_object('durum','cakisma');
+  end if;
+  if exists (select 1 from public.evren_varliklari v
+      where v.sahibi=asil and v.evren_id=evren and v.varlik_id=p_varlik_id
+        and (v.kaynak_turu<>p_kaynak_turu or v.kaynak_kaydi_id<>p_kaynak_kaydi_id)) then
+    return jsonb_build_object('durum','cakisma');
+  end if;
+  insert into public.evren_varliklari (varlik_id,sahibi,evren_id,kaynak_turu,kaynak_kaydi_id)
+    values (p_varlik_id,asil,evren,p_kaynak_turu,p_kaynak_kaydi_id)
+    on conflict (sahibi,evren_id,kaynak_turu,kaynak_kaydi_id) do nothing;
+  return jsonb_build_object('durum','tamam','varlik_id',p_varlik_id);
+exception when unique_violation then
+  return jsonb_build_object('durum','cakisma');
+end;
+$$;
+revoke all on function public.evren_varlik_kaydet_kanonik(text,text,uuid,uuid) from public, anon;
+grant execute on function public.evren_varlik_kaydet_kanonik(text,text,uuid,uuid) to authenticated;
 
 create or replace function public.evren_varlik_bagla(
   p_evren_id text, p_kaynak_turu text, p_kaynak_kaydi_id uuid, p_varlik_id uuid
@@ -148,7 +184,7 @@ begin
         where e.sahibi = asil and e.evren_id = evren and e.id = hedef_kaydi) then
         return jsonb_build_object('durum','gecersiz');
       end if;
-    else
+    elsif hedef_turu not in ('kisi','yer','tarih','gezegen','wiki') then
       return jsonb_build_object('durum','gecersiz');
     end if;
   end if;

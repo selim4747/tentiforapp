@@ -117,7 +117,7 @@
     nodeBox.innerHTML = state.nodes.map(function (node) {
       var selected = state.selected === node.id;
       var typeName = (mapTypes.find(function (t) { return t[0] === node.tip; }) || [node.tip,node.tip])[1];
-      return '<div class="tf638-node tf638-node-' + esc(node.tip) + (selected ? ' is-selected' : '') + (node.yayinda ? ' is-published' : '') + '" data-tf638-node-card="' + esc(node.id) + '" style="left:' + (Number(node.x) / 10) + '%;top:' + (Number(node.y) / 10) + '%" role="group" aria-label="' + esc(node.baslik) + ', ' + esc(typeName) + '"><button type="button" class="tf638-node-handle" data-tf638-node="' + esc(node.id) + '" aria-label="' + esc(node.baslik) + ', ' + esc(typeName) + '. Ok tuşlarıyla taşı" aria-pressed="' + selected + '"><span class="tf638-node-type">' + esc(typeName) + '</span><b>' + esc(node.baslik) + '</b>' + (node.aciklama ? '<small>' + esc(node.aciklama) + '</small>' : '') + '</button>' + (state.canEdit ? '<div class="tf638-node-controls"><button type="button" data-tf638-publish-node="' + esc(node.id) + '" aria-label="' + (node.yayinda ? 'Yayından kaldır' : 'Yayınla') + '">' + (node.yayinda ? 'Yayında' : 'Taslak') + '</button><button type="button" data-tf638-delete-node="' + esc(node.id) + '" aria-label="Düğümü sil">Sil</button></div>' : '') + '</div>';
+      return '<div class="tf638-node tf638-node-' + esc(node.tip) + (selected ? ' is-selected' : '') + (node.yayinda ? ' is-published' : '') + '" data-tf638-node-card="' + esc(node.id) + '" style="left:' + (Number(node.x) / 10) + '%;top:' + (Number(node.y) / 10) + '%" role="group" aria-label="' + esc(node.baslik) + ', ' + esc(typeName) + '"><button type="button" class="tf638-node-handle" data-tf638-node="' + esc(node.id) + '" aria-label="' + esc(node.baslik) + ', ' + esc(typeName) + '. Ok tuşlarıyla taşı" aria-pressed="' + selected + '"><span class="tf638-node-type">' + esc(typeName) + '</span><b>' + esc(node.baslik) + '</b>' + (node.aciklama ? '<small>' + esc(node.aciklama) + '</small>' : '') + '</button>' + (state.canEdit ? '<div class="tf638-node-controls"><button type="button" data-tf638-publish-node="' + esc(node.id) + '" aria-label="' + (node.yayinda ? 'Yayından kaldır' : 'Yayınla') + '">' + (node.yayinda ? 'Yayında' : 'Taslak') + '</button><button type="button" data-tf638-delete-node="' + esc(node.id) + '" aria-label="Düğümü sil">Sil</button></div>' + relationControl(state, 'harita_dugumu', node.id, node.varlik_id) : '') + '</div>';
     }).join('');
     svg.innerHTML = state.links.map(function (link) {
       var from = state.nodes.find(function (n) { return n.id === link.kaynak; });
@@ -145,6 +145,72 @@
       if (select) select.innerHTML = eventOptions || '<option value="">Önce olay ekle</option>';
     });
   }
+  function localEntityCandidates(state) {
+    var world = typeof evrenSayfaVerisi === 'function' && evrenSayfaVerisi();
+    world = world && world.eser;
+    return typeof evrenVarlikAdaylari === 'function' ? evrenVarlikAdaylari(world, !!state.canEdit).filter(function (item) {
+      return item && item.varlikId && item.tur !== 'harita' && !item.gizli && (state.canEdit || item.tur !== 'wiki' || item.durum === 'yayinda');
+    }) : [];
+  }
+  function relationOptions(state, sourceKind, sourceId) {
+    var rows = [];
+    state.nodes.forEach(function (item) { rows.push({ kind: 'harita_dugumu', id: item.id, title: item.baslik, type: 'Harita düğümü', varlikId: item.varlik_id }); });
+    state.events.forEach(function (item) { rows.push({ kind: 'zaman_olayi', id: item.id, title: item.baslik, type: 'Zaman olayı', varlikId: item.varlik_id }); });
+    localEntityCandidates(state).forEach(function (item) { rows.push({ kind: item.tur, id: item.varlikId, title: item.baslik, type: item.label.split(' · ')[0], varlikId: item.varlikId, legacy: item.legacy }); });
+    return rows.filter(function (item) { return !(item.kind === sourceKind && item.id === sourceId); }).map(function (item) {
+      return '<option value="' + esc(item.kind + ':' + item.id) + '">' + esc(item.type + ' · ' + item.title + (item.legacy ? ' · kimlik seçimde oluşturulur' : '')) + '</option>';
+    }).join('');
+  }
+  function linkedEntity(state, currentId) {
+    if (!currentId) return null;
+    var found = null;
+    state.nodes.concat(state.events).some(function (item) { if (item.varlik_id === currentId) { found = { kind: item.id && state.nodes.indexOf(item) >= 0 ? 'harita_dugumu' : 'zaman_olayi', id: item.id, title: item.baslik, local: false }; return true; } return false; });
+    if (found) return found;
+    var item = localEntityCandidates(state).find(function (candidate) { return candidate.varlikId === currentId; });
+    return item ? { kind: item.tur, id: item.varlikId, title: item.baslik, local: true, record: item.record, candidate: item } : null;
+  }
+  function relationControl(state, sourceKind, sourceId, currentId) {
+    var linked = linkedEntity(state, currentId);
+    if (!state.canEdit) return linked ? '<div class="tf638-entity-link tf638-entity-link-readonly" data-tf638-entity-link="' + esc(sourceKind + ':' + sourceId) + '" data-tf638-link-token="' + esc(linked.kind + ':' + linked.id) + '"><button type="button" class="dugme dugme-sade" data-tf638-link-open>Bağlı kaydı aç: ' + esc(linked.title) + '</button></div>' : '';
+    var selected = linked ? linked.kind + ':' + linked.id : '';
+    var options = relationOptions(state, sourceKind, sourceId).replace('value="' + selected + '"', 'value="' + selected + '" selected');
+    return '<div class="tf638-entity-link" data-tf638-entity-link="' + esc(sourceKind + ':' + sourceId) + '"><label>Bağlı kanonik kayıt<select class="kod-giris" data-tf638-link-target><option value="">Bağ yok</option>' + options + '</select></label><small data-tf638-link-current>' + (linked ? 'Bağlı: ' + esc(linked.title) : 'Henüz bağlantı seçilmedi.') + '</small><button type="button" class="dugme dugme-sade" data-tf638-link-save>Bağı kaydet</button><button type="button" class="dugme dugme-sade" data-tf638-link-open' + (linked ? '' : ' hidden') + '>Bağlı kaydı aç</button></div>';
+  }
+  function relationTarget(state, token) {
+    var parts = String(token || '').split(':'), kind = parts[0], id = parts.slice(1).join(':');
+    if (parts.length < 2) return null;
+    if (kind === 'harita_dugumu') return state.nodes.find(function (item) { return item.id === id; });
+    if (kind === 'zaman_olayi') return state.events.find(function (item) { return item.id === id; });
+    var candidate = localEntityCandidates(state).find(function (item) { return item.tur === kind && item.varlikId === id; });
+    return candidate ? { id: candidate.varlikId, varlikId: candidate.varlikId, legacy: candidate.legacy, record: candidate.record, local: true } : null;
+  }
+  function saveRelation(panel, state, container) {
+    var source = String(container.dataset.tf638EntityLink || '').split(':'), sourceKind = source[0], sourceId = source[1];
+    var sourceRecord = sourceKind === 'harita_dugumu' ? state.nodes.find(function (item) { return item.id === sourceId; }) : state.events.find(function (item) { return item.id === sourceId; });
+    var token = container.querySelector('[data-tf638-link-target]').value, target = relationTarget(state, token);
+    if (!sourceRecord) { status(panel, 'Bağ kaynağı bulunamadı.', false); return; }
+    var targetKind = target ? token.split(':')[0] : null;
+    var register = function (kind, id, preferred) {
+      if (preferred && ['kisi','yer','tarih','gezegen','wiki'].indexOf(kind) >= 0) return rpc('evren_varlik_kaydet_kanonik', { p_evren_id: state.id, p_kaynak_turu: kind, p_kaynak_kaydi_id: id, p_varlik_id: preferred });
+      return rpc('evren_varlik_kaydet', { p_evren_id: state.id, p_kaynak_turu: kind, p_kaynak_kaydi_id: id });
+    };
+    var prepareTarget = function () {
+      if (!target || !target.local || !target.legacy) return Promise.resolve();
+      var stable = typeof evrenVarlikIdYeni === 'function' ? evrenVarlikIdYeni() : '';
+      if (!stable) return Promise.reject(new Error('Güvenli UUID üretilemedi; bağlantı kaydedilmedi.'));
+      if (typeof evrenBenimDegistir !== 'function') return Promise.reject(new Error('Yerel evren düzenleyicisi hazır değil.'));
+      evrenBenimDegistir(state.id, function (world) { if (target.record) target.record.varlikId = stable; });
+      target.id = stable; target.varlikId = stable; target.legacy = false;
+      return Promise.resolve();
+    };
+    status(panel, 'Bağlantı doğrulanıyor…', false);
+    prepareTarget().then(function () { return Promise.all([register(sourceKind, sourceId), target ? register(targetKind, target.id, target.local ? target.id : null) : Promise.resolve({ varlik_id: null })]); }).then(function (values) {
+      return rpc('evren_varlik_bagla', { p_evren_id: state.id, p_kaynak_turu: sourceKind, p_kaynak_kaydi_id: sourceId, p_varlik_id: values[1] && values[1].varlik_id || null });
+    }).then(function (result) {
+      if (!result || result.durum !== 'tamam') throw new Error(result && result.durum === 'gecersiz' ? 'Seçilen kayıt bu evren için geçerli değil.' : 'Bağlantı kaydedilemedi.');
+      sourceRecord.varlik_id = result.varlik_id || null; render(panel, state); status(panel, target ? 'Bağlantı kaydedildi.' : 'Bağ kaldırıldı.', true);
+    }).catch(function (error) { status(panel, error.message || 'Bağlantı kaydedilemedi.', false); });
+  }
   function renderEvents(panel, state) {
     var list = panel.querySelector('[data-tf638-events]');
     if (!list) return;
@@ -153,7 +219,7 @@
     list.innerHTML = state.events.length ? state.events.map(function (event) {
       var clash = counts[String(event.zaman || '').trim().toLocaleLowerCase('tr')] > 1;
       var relationships = state.eventLinks.filter(function (link) { return link.kaynak === event.id || link.hedef === event.id; }).length;
-      return '<article class="tf638-event"><div class="tf638-event-marker" aria-hidden="true"></div><div class="tf638-event-body"><div class="tf638-event-tags"><span class="oyun-etiket">' + esc(event.zaman) + '</span><span class="oyun-etiket">' + esc((eventTypes.find(function (t) { return t[0] === event.tur; }) || [event.tur,event.tur])[1]) + '</span><span class="oyun-etiket tf638-state-' + esc(event.durum) + '">' + (event.durum === 'yayinda' ? 'Yayında' : 'Taslak') + '</span>' + (clash ? '<span class="oyun-etiket tf638-conflict">Dönem çakışması</span>' : '') + '</div><h5>' + esc(event.baslik) + '</h5>' + (event.aciklama ? '<p>' + esc(event.aciklama) + '</p>' : '') + (relationships ? '<small>' + relationships + ' olay bağlantısı</small>' : '') + (state.canEdit ? '<div class="tf638-event-actions"><button type="button" class="dugme dugme-sade" data-tf638-edit-event="' + esc(event.id) + '">Düzenle</button><button type="button" class="dugme dugme-sade" data-tf638-delete-event="' + esc(event.id) + '">Sil</button></div>' : '') + '</div></article>';
+      return '<article class="tf638-event"><div class="tf638-event-marker" aria-hidden="true"></div><div class="tf638-event-body"><div class="tf638-event-tags"><span class="oyun-etiket">' + esc(event.zaman) + '</span><span class="oyun-etiket">' + esc((eventTypes.find(function (t) { return t[0] === event.tur; }) || [event.tur,event.tur])[1]) + '</span><span class="oyun-etiket tf638-state-' + esc(event.durum) + '">' + (event.durum === 'yayinda' ? 'Yayında' : 'Taslak') + '</span>' + (clash ? '<span class="oyun-etiket tf638-conflict">Dönem çakışması</span>' : '') + '</div><h5>' + esc(event.baslik) + '</h5>' + (event.aciklama ? '<p>' + esc(event.aciklama) + '</p>' : '') + (relationships ? '<small>' + relationships + ' olay bağlantısı</small>' : '') + (state.canEdit ? '<div class="tf638-event-actions"><button type="button" class="dugme dugme-sade" data-tf638-edit-event="' + esc(event.id) + '">Düzenle</button><button type="button" class="dugme dugme-sade" data-tf638-delete-event="' + esc(event.id) + '">Sil</button></div>' + relationControl(state, 'zaman_olayi', event.id, event.varlik_id) : '') + '</div></article>';
     }).join('') : '<p class="oyun-not">' + (state.canEdit ? 'Henüz olay yok; formdan ilk noktayı ekle.' : 'Yayınlanmış olay bulunmuyor.') + '</p>';
     var forms = panel.querySelectorAll('[data-tf638-event-form], [data-tf638-event-link-form]');
     forms.forEach(function (form) { form.hidden = !state.canEdit; });
@@ -241,6 +307,10 @@
       }
     });
     panel.addEventListener('click', function (event) {
+      var linkSave = event.target.closest('[data-tf638-link-save]');
+      if (linkSave) { saveRelation(panel, state, linkSave.closest('[data-tf638-entity-link]')); return; }
+      var linkOpen = event.target.closest('[data-tf638-link-open]');
+      if (linkOpen) { var box = linkOpen.closest('[data-tf638-entity-link]'); var targetSelect = box.querySelector('[data-tf638-link-target]'); var chosen = relationTarget(state, targetSelect ? targetSelect.value : box.dataset.tf638LinkToken); if (chosen && chosen.local) { var url = new URL(window.location.href); url.searchParams.set('varlik', chosen.varlikId || chosen.id); history.pushState({}, '', url.href); if (typeof EVS !== 'undefined' && EVS) EVS.sekme = 'ansiklopedi'; if (typeof evrenSayfaCiz === 'function') evrenSayfaCiz(); } else if (chosen) { var targetEl = panel.querySelector('[data-tf638-node-card="' + chosen.id + '"]') || panel.querySelector('[data-tf638-edit-event="' + chosen.id + '"]'); if (targetEl) targetEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); } return; }
       var nodeButton = event.target.closest('[data-tf638-node]');
       if (nodeButton && !event.target.closest('[data-tf638-publish-node],[data-tf638-delete-node]')) { state.selected = nodeButton.dataset.tf638Node; renderMap(panel, state); return; }
       var zoom = event.target.closest('[data-tf638-zoom]');
