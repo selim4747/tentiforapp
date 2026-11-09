@@ -45,15 +45,26 @@
 - Günlük/haftalık görevler yaklaşık süre ve tamamlanma sonrası sonraki adımı döndürüyor.
 - Migration: `20261111_p3_engagement_cards_tasks.sql`; production migration/backfill bu görevde çalıştırılmadı.
 
-## P4 — UX hardening — [ ] Devam ediyor
+## P4 — UX hardening — [x] Uygulandı
 
 - P0 attribute uyuşmazlıkları düzeltildi: onboarding kapatma, dışa aktarma, ödeme bildirimi, sessize alma, engelleme ve yenileme artık HTML’de üretilen tireli `data-tf64-*` adlarını doğrudan kontrol ediyor.
 - P0 DOM regression testi eklendi: `tests/6.6.5-p4-ux-hardening.mjs`.
-- Sıradaki P4 işleri: gerçek Playwright smoke akışı, kalıcı onboarding ilerlemesi, okuma araç çubuğu, eşitleme çatışma ekranı ve offline paket yönetimi.
-
-## P4 — UX hardening — [ ] Devam ediyor
-
 - Okuma araç çubuğuna canlı bölüm ilerlemesi eklendi; yazı ölçeği, sepya ve kaldığın yeri kaydet akışları korunuyor.
 - Eşitleme kartına yerel sürümü koru, hesap sürümünü koru ve birleştir seçenekleri eklendi; seçim cihazda açıkça saklanıyor ve durum mesajı gösteriliyor.
 - Offline paket listesinde paket güncelleme eylemi ve yerel okuma ilerlemesinin korunacağı bilgisi görünür hâle getirildi.
-- Regression: `tests/6.6.6-p4-ux-flows.mjs`.
+- Regression testi: `tests/6.6.6-p4-ux-flows.mjs`.
+- P4 PR #204 ve CI/E2E hardening PR #205 merge edildi.
+
+## Supabase’e dokunmadan tamamlanan kapanış
+
+- Kaynak JavaScript, Android/web kabuk kopyaları ve dağıtım asset referansları yerel olarak hizalandı.
+- P2 entity-link, P3 engagement ve P4 UX statik sözleşme testleri; JS parse/lint; görsel evren, encyclopedia ve visual Playwright akışları çalıştırıldı.
+- Dış canlı yazma, production migration ve kullanıcı verisi backfill’i yapılmadı.
+- Supabase’e bağlı kalan işler yalnızca son aşamadır: staging migration/RLS/RPC doğrulaması, kontrollü production rollout planı ve migration sonrası canlı smoke test.
+
+## Sonraki aşama — Supabase (bilerek ertelendi)
+
+1. Staging’de additive migration, RLS, sahiplik/evren izolasyonu, public metadata sızıntısı ve RPC hata sözleşmelerini doğrula.
+2. Test verisiyle wiki/kişi/yer/olay/gezegen/harita/timeline UUID round-trip ve public deep-link testlerini çalıştır.
+3. Production için dry-run, yedekleme ve geri alma planı hazırla; otomatik backfill yapma.
+4. Kontrollü rollout sonrası migration sürümünü, admin panelini ve public okuma akışını smoke test et.
