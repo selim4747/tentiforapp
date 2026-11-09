@@ -54,6 +54,7 @@ try {
   const pageErrors = [];
   const consoleErrors = [];
   const requests = [];
+  let cleanupStarted = false;
   page.on('pageerror', (error) => pageErrors.push(error.message));
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('request', (request) => requests.push({ url: request.url(), method: request.method() }));
@@ -174,6 +175,7 @@ try {
   assert.equal(await page.locator('#evrenSayfa [data-eva-varlik-kart]').count(), 4, 'all asset editor cards return after a reload');
 
   // Emulate a new device: delete the original local image blobs and metadata before restoring the portable file.
+  cleanupStarted = true;
   const cleanStore = await page.evaluate(async () => {
     const pageData = window.evrenSayfaVerisi();
     const list = window.fanEserlerim();
