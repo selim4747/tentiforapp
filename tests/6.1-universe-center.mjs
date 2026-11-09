@@ -14,7 +14,7 @@ const data = JSON.parse(fs.readFileSync(path.join(root, 'veri.json'), 'utf8'));
 
 assert.equal(data.surum, pkg.version);
 assert.match(pkg.version, /^\d+\.\d+\.\d+(?:\.\d+)?$/);
-assert.match(index, /js\/engine\/101-v61-universe\.js\?v=614/);
+assert.match(index, /js\/engine\/101-v61-universe\.js\?v=615/);
 for (const token of ['Evren Merkezi', 'Zaman çizelgesi', 'İlişkiler', 'Ansiklopedi', 'Notlar', 'Beni şaşırt', 'Spoilerli kayıtları göster', 'tf61-wizard-form', 'Başlangıç seçenekleri', 'Hazır başlangıç profili', 'Yalnızca boş bölümler', 'tf61-extra-fields']) {
   assert.ok(source.includes(token), `6.1 modülünde eksik sözleşme: ${token}`);
 }
