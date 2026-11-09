@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const ux = fs.readFileSync('js/arayuz/33-ux-644.js', 'utf8');
+const offline = fs.readFileSync('js/engine/92-v51-dashboard.js', 'utf8');
+assert.match(ux, /data-tf644-reading-progress/);
+assert.match(ux, /İlerleme:/);
+assert.match(ux, /data-tf644-conflict-panel/);
+assert.match(ux, /data-tf644-conflict-action="local"/);
+assert.match(ux, /data-tf644-conflict-action="remote"/);
+assert.match(ux, /data-tf644-conflict-action="merge"/);
+assert.match(ux, /tentiforapp_644_conflict_choice/);
+assert.match(offline, /ilerleme korunuyor/);
+assert.match(offline, /Paketi güncelle/);
+console.log('6.6.6 P4 UX flows: PASS (reading progress, conflict choices and offline package status)');

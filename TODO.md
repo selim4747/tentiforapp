@@ -50,3 +50,10 @@
 - P0 attribute uyuşmazlıkları düzeltildi: onboarding kapatma, dışa aktarma, ödeme bildirimi, sessize alma, engelleme ve yenileme artık HTML’de üretilen tireli `data-tf64-*` adlarını doğrudan kontrol ediyor.
 - P0 DOM regression testi eklendi: `tests/6.6.5-p4-ux-hardening.mjs`.
 - Sıradaki P4 işleri: gerçek Playwright smoke akışı, kalıcı onboarding ilerlemesi, okuma araç çubuğu, eşitleme çatışma ekranı ve offline paket yönetimi.
+
+## P4 — UX hardening — [ ] Devam ediyor
+
+- Okuma araç çubuğuna canlı bölüm ilerlemesi eklendi; yazı ölçeği, sepya ve kaldığın yeri kaydet akışları korunuyor.
+- Eşitleme kartına yerel sürümü koru, hesap sürümünü koru ve birleştir seçenekleri eklendi; seçim cihazda açıkça saklanıyor ve durum mesajı gösteriliyor.
+- Offline paket listesinde paket güncelleme eylemi ve yerel okuma ilerlemesinin korunacağı bilgisi görünür hâle getirildi.
+- Regression: `tests/6.6.6-p4-ux-flows.mjs`.

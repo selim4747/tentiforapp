@@ -32,11 +32,11 @@
     if (find('#tf644ReadingToolbar')) return;
     var host = find('#okuma') || find('#evrenSayfa') || find('main'); if (!host) return;
     var bar = document.createElement('div'); bar.id = 'tf644ReadingToolbar'; bar.className = 'tf644-reading-toolbar'; bar.setAttribute('role', 'toolbar'); bar.setAttribute('aria-label', 'Okuma araçları');
-    bar.innerHTML = '<span class="tf644-reading-label">Okuma araçları</span><button type="button" data-tf644-reading="minus" aria-label="Yazıyı küçült">A−</button><button type="button" data-tf644-reading="plus" aria-label="Yazıyı büyüt">A+</button><button type="button" data-tf644-reading="sepya" aria-pressed="' + (state.reading.sepya ? 'true' : 'false') + '">Sepya</button><button type="button" data-tf644-reading="save">Kaldığım yeri kaydet</button><span class="tf644-reading-status" data-tf644-reading-status></span>';
+    bar.innerHTML = '<span class="tf644-reading-label">Okuma araçları</span><button type="button" data-tf644-reading="minus" aria-label="Yazıyı küçült">A−</button><button type="button" data-tf644-reading="plus" aria-label="Yazıyı büyüt">A+</button><button type="button" data-tf644-reading="sepya" aria-pressed="' + (state.reading.sepya ? 'true' : 'false') + '">Sepya</button><button type="button" data-tf644-reading="save">Kaldığım yeri kaydet</button><span class="tf644-reading-progress" data-tf644-reading-progress role="status">İlerleme: 0%</span><span class="tf644-reading-status" data-tf644-reading-status></span>';
     host.insertBefore(bar, host.firstChild);
     applyReading();
   }
-  function applyReading() { document.documentElement.style.setProperty('--tf644-reading-scale', String(state.reading.scale)); document.documentElement.toggleAttribute('data-tf644-sepya', state.reading.sepya); var b = find('#tf644ReadingToolbar [data-tf644-reading="sepya"]'); if (b) b.setAttribute('aria-pressed', state.reading.sepya ? 'true' : 'false'); }
+  function applyReading() { document.documentElement.style.setProperty('--tf644-reading-scale', String(state.reading.scale)); document.documentElement.toggleAttribute('data-tf644-sepya', state.reading.sepya); var b = find('#tf644ReadingToolbar [data-tf644-reading="sepya"]'); if (b) b.setAttribute('aria-pressed', state.reading.sepya ? 'true' : 'false'); var progress = find('[data-tf644-reading-progress]'); var article = find('.okuma-metin, .uzun-metin, .evs-roman, .fan-metin'); if (progress && article) { var rect = article.getBoundingClientRect(), total = Math.max(1, article.scrollHeight - window.innerHeight); progress.textContent = 'İlerleme: ' + Math.min(100, Math.max(0, Math.round(Math.max(0, -rect.top) / total * 100))) + '%'; } }
   function breadcrumb() {
     var main = find('main'); if (!main || !location.hash || location.hash === '#/' || location.hash === '#/arsiv') { var old = find('#tf644Breadcrumb'); if (old) old.remove(); return; }
     var parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean); if (!parts.length) return;
@@ -64,7 +64,7 @@
   }
   function syncConflict() {
     var card = find('.tf-esitleme-yeni'); if (!card || card.querySelector('[data-tf644-conflict]')) return;
-    var button = document.createElement('button'); button.type = 'button'; button.className = 'dugme dugme-sade'; button.dataset.tf644Conflict = '1'; button.textContent = 'Çakışmayı incele'; card.querySelector('.dugme') && card.querySelector('.dugme').after(button);
+    var button = document.createElement('button'); button.type = 'button'; button.className = 'dugme dugme-sade'; button.dataset.tf644Conflict = '1'; button.textContent = 'Çakışmayı incele'; card.querySelector('.dugme') && card.querySelector('.dugme').after(button); var panel = document.createElement('div'); panel.className = 'tf644-conflict-panel'; panel.hidden = true; panel.setAttribute('data-tf644-conflict-panel', ''); panel.innerHTML = '<p class="oyun-not">Yerel ve hesap sürümü farklıysa bir tarafı seçmeden veri üzerine yazılmaz.</p><div class="oyun-sira"><button type="button" class="dugme dugme-sade" data-tf644-conflict-action="local">Yerel sürümü koru</button><button type="button" class="dugme dugme-sade" data-tf644-conflict-action="remote">Hesap sürümünü koru</button><button type="button" class="dugme" data-tf644-conflict-action="merge">Birleştir</button></div><p class="pencere-durum" data-tf644-conflict-status role="status"></p>'; card.appendChild(panel);
   }
   function notificationTools() {
     var area = find('#bildirimAlan'); if (!area || area.querySelector('[data-tf644-read-all]')) return;
@@ -73,7 +73,7 @@
   }
   function refresh() { clearTimeout(timer); timer = setTimeout(function () { onboarding(); readingToolbar(); breadcrumb(); searchEnhancement(); wizardDraft(); syncConflict(); notificationTools(); }, 80); }
   document.addEventListener('click', function (e) {
-    var t = e.target.closest && e.target.closest('[data-tf644-reading], [data-tf644-conflict], [data-tf644-read-all]'); if (!t) return;
+    var t = e.target.closest && e.target.closest('[data-tf644-reading], [data-tf644-conflict], [data-tf644-conflict-action], [data-tf644-read-all]'); if (!t) return;
     if (t.dataset.tf644Reading) {
       var action = t.dataset.tf644Reading;
       if (action === 'minus') state.reading.scale = Math.max(.9, state.reading.scale - .1);
@@ -82,7 +82,7 @@
       if (action === 'save') { state.resume = { route: location.hash, title: document.title, savedAt: new Date().toISOString() }; announce('Okuma konumu kaydedildi', 'basari'); }
       save(); applyReading(); var status = find('[data-tf644-reading-status]'); if (status) status.textContent = action === 'save' ? 'Kaydedildi' : 'Yazı ayarı güncellendi'; return;
     }
-    if (t.dataset.tf644Conflict) { announce('Başka cihazdaki ilerleme bulundu. Tekrar eşitle düğmesiyle güvenli birleştirme başlatabilirsin.', 'bilgi'); return; }
+    if (t.dataset.tf644Conflict) { var panel = find('[data-tf644-conflict-panel]'); if (panel) panel.hidden = !panel.hidden; return; } if (t.dataset.tf644ConflictAction) { var status = find('[data-tf644-conflict-status]'); var action = t.dataset.tf644ConflictAction; try { localStorage.setItem('tentiforapp_644_conflict_choice', action); } catch (_) {} if (status) status.textContent = action === 'local' ? 'Yerel sürüm korunacak; yeniden eşitleme bekleniyor.' : action === 'remote' ? 'Hesap sürümü korunacak; yerel değişiklikler temizlenmeden önce tekrar eşitleme yapılacak.' : 'Birleştirme seçildi; çakışan alanlar korunarak tekrar eşitleme başlatılacak.'; announce('Eşitleme tercihi kaydedildi', 'basari'); return; }
     if (t.dataset.tf644ReadAll) { var status = find('[data-tf644-notification-status]'); if (typeof window.bildirimleriOkundu === 'function') window.bildirimleriOkundu(); else if (status) status.textContent = 'Bildirimler bu cihazda okundu olarak işaretlendi.'; announce('Bildirim merkezi güncellendi', 'basari'); }
   });
   document.addEventListener('DOMContentLoaded', refresh); window.addEventListener('hashchange', refresh); window.addEventListener('online', refresh); window.addEventListener('offline', refresh);
