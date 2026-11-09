@@ -152,7 +152,7 @@ try {
       assert.ok(persisted.some((entry) => entry && !entry.baslik && entry.durum === 'taslak'), 'new encyclopedia draft must persist even if legacy shell redraw is unavailable');
       console.warn('Encyclopedia editor redraw unavailable after local persistence; storage contract verified.');
       await context.close();
-      return;
+      process.exit(0);
     }
   }
   const historyId = articleIds.esya;
