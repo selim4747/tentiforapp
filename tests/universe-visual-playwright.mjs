@@ -54,8 +54,11 @@ try {
   const pageErrors = [];
   const consoleErrors = [];
   const requests = [];
+  let cleanupStarted = false;
   page.on('pageerror', (error) => pageErrors.push(error.message));
-  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  page.on('console', (message) => { if (message.type() === 'error' && !(cleanupStarted && message.text().includes('ERR_FILE_NOT_FOUND') && message.location().url.startsWith('blob:'))) consoleErrors.push(message.text() + (message.location().url ? ' @ ' + message.location().url : '')); });
+  page.on('requestfailed', (request) => { if (!(cleanupStarted && request.url().startsWith('blob:'))) consoleErrors.push('Failed request: ' + request.url() + ' · ' + (request.failure()?.errorText || 'unknown')); });
+  page.on('response', (response) => { if (response.status() >= 400) consoleErrors.push('HTTP ' + response.status() + ': ' + response.url()); });
   page.on('request', (request) => requests.push({ url: request.url(), method: request.method() }));
 
   // The admin route intentionally avoids homepage discovery/leaderboard sync; all test data stays local.
@@ -174,6 +177,7 @@ try {
   assert.equal(await page.locator('#evrenSayfa [data-eva-varlik-kart]').count(), 4, 'all asset editor cards return after a reload');
 
   // Emulate a new device: delete the original local image blobs and metadata before restoring the portable file.
+  cleanupStarted = true;
   const cleanStore = await page.evaluate(async () => {
     const pageData = window.evrenSayfaVerisi();
     const list = window.fanEserlerim();
