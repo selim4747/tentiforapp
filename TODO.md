@@ -36,3 +36,11 @@
 
 - Uygulama tamamlandığında bir salt-okunur bağımsız kod incelemesi; sahip/evren sınırları, public metadata sızıntısı, sanitizer/import uyumu, toplu harita save ve mevcut deep-link geriye uyumluluğunu denetleyecek.
 - Otomatik Webdev LSP kaydı bulunmadığı için doğrulama mevcut lint, JS parse, statik SQL/RLS sözleşmeleri ve dış canlı yazmaları engellenmiş testlerle yapılacak. Production migration/backfill veya gerçek kullanıcı verisi üzerinde test yapılmayacak.
+
+## P3 — Ürün bağlılığı ve keşif — [x] Uygulandı
+
+- SEO/CI asset sürümleri service worker ve Android kabukta hizalandı.
+- Public okuma yolu kartı başlık, yazar, spoiler’sız açıklama, tahmini okuma süresi ve güvenli paylaşım payload’ı sunuyor.
+- Evren oluşturma akışı aşamalı ilerleme, sonraki adım ve otomatik taslak kaydı mesajını koruyor.
+- Günlük/haftalık görevler yaklaşık süre ve tamamlanma sonrası sonraki adımı döndürüyor.
+- Migration: `20261111_p3_engagement_cards_tasks.sql`; production migration/backfill bu görevde çalıştırılmadı.

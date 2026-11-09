@@ -100,6 +100,7 @@
       path: meta.path,
       title: clean(meta.title, 100),
       description: clean(meta.description, 180),
+      readingMinutes: Number(meta.readingMinutes || 0),
       verifiedPublic: true
     };
     button.setAttribute('aria-label', (clean(meta.kind, 40) || 'İçerik') + ' bağlantısını paylaş');
@@ -156,7 +157,8 @@
         setAccountMessage('Profilin şu anda herkese açık değil; paylaşım bağlantısı oluşturulmadı.', false);
         return;
       }
-      var payload = { title: target.title || 'TentiFor', text: target.description || 'TentiFor’te herkese açık içerik', url: shareUrl };
+      var duration = target.readingMinutes > 0 ? ' Tahmini okuma: ' + target.readingMinutes + ' dakika.' : '';
+      var payload = { title: target.title || 'TentiFor', text: (target.description || 'TentiFor’te herkese açık içerik') + duration + ' Spoilersız paylaşım kartı.', url: shareUrl };
       var mode = '';
       try {
         if (window.TentiforKopru && typeof window.TentiforKopru.paylas === 'function') {
