@@ -7,7 +7,7 @@ Tömye'nin gökyüzünde ay yoktur, ama ayları 28 gün çeker. Tentiforverse ev
 - **Model Test Evreni (Eski arşiv içeriği)**: Evren Kurucu'nun tüm yeteneklerini (kurallar, harita, kişiler, ilişki ağı, hikâyeler, mektuplar, sözlük, açık sorular ve glif alfabesi) canlı sergileyen test evreni.
 - **Akıllı Sürüm & İçerik Bildirimleri**: Sadece gerçek sürüm farkında yeni sürüm uyarısı, yeni evren/içerik eklendiğinde tekrarlamayan akıllı bildirimler.
 - **Uygulama İçi Bildirim Ayarları & Mobil Moderasyon**: Sen sayfasından bildirim tercihleri ve mobil menüden tek tıkla moderasyon paneline erişim.
-- **Kozmoloji & Takvim**: 13 aylık takvim, isim motoru, sözlük.
+- **Kozmoloji & Takvim**: 11 aylık takvim, isim motoru, sözlük.
 - **Evrengezer ve Fan Hikaye Atölyesi**: Evren üretimi, karakter tasarımı ve fan hikayeleri.
 - **PWA & Çevrimdışı Desteği**: Service Worker ile tam çevrimdışı çalışma.
 - **Public SEO & Paylaşım Kartları**: Görünürlüğü açık profiller, yayımlanmış evrenler ve public okuma rotaları için crawler sayfaları; uygulama içi Open Graph/Twitter metadata ve indirilebilir PNG paylaşım kartı. SSR bulunmadığında kullanılan build-time fallback için [SEO notlarına](docs/seo-prerender.md) bakın.
